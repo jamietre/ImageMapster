@@ -82,13 +82,13 @@ Based on code originally written by David Lynch
         listKey: 'value',
         listSelectedAttribute: 'selected',
         listSelectedClass: '',
-        showToolTips: false,
-        toolTipClose: ['mouseout'],
+        showToolTip: false,
+        toolTipClose: ['area-mouseout'],
         toolTipContainer: '<div style="border: 2px solid black; background: #EEEEEE; position:absolute; width:160px; padding:4px; margin: 4px;"></div>',
         onClick: null,
         onShowToolTip: null,
         onGetList: null,
-        onCreateTooltip: null,
+        onShowTooltip: null,
         useAreaData: false,
         areas: []
     };
