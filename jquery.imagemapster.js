@@ -1,12 +1,17 @@
-/* ImageMapster 1.0.6
+/* ImageMapster - A jQuery plugin to enhance image maps. 
+
 Copyright 2011 James Treworgy
 
 Project home page http://www.outsharked.com/imagemapster
 
-A jQuery plugin to enhance image maps. 
+Version 1.0.7 - April 27, 2011
 
-4/27/2011 version 1.0.6
--- bugfixes only (not working properly with no mapKey, staticState=false not working)
+-- added "area-click" option for tooltip closing (closes when any area is clicked)
+-- rounded corners & dropshadow on default tooltip
+-- added singleSelect option
+-- don't show tooltip again when using 'tooltip-click' to close if mousing over the same area (causing flicker when hidden/reshown)
+-- add tooltip itself to data passed in onShowTooltip (can be changed by client)
+
 
 Based on code originally written by David Lynch
 (c) 2011 https://github.com/kemayo/maphilight/
@@ -49,6 +54,10 @@ Based on code originally written by David Lynch
         }
     };
     $.mapster = {};
+    $.mapster.default_tooltip_container = function () {
+        return '<div style="border: 2px solid black; background: #EEEEEE; position:absolute; width:160px; padding:4px; margin: 4px; -moz-box-shadow: 3px 3px 5px #535353; ' +
+                '-webkit-box-shadow: 3px 3px 5px #535353; box-shadow: 3px 3px 5px #535353; -moz-border-radius: 6px 6px 6px 6px; -webkit-border-radius: 6px; border-radius: 6px 6px 6px 6px;"></div>';
+    }
     $.mapster.defaults = {
         fill: true,
         fillColor: '000000',
@@ -61,6 +70,7 @@ Based on code originally written by David Lynch
         staticState: null,
         selected: false,
         isSelectable: true,
+        singleSelect: false,
         wrapClass: false,
         boundList: null,
         sortList: false,
@@ -72,7 +82,7 @@ Based on code originally written by David Lynch
         listSelectedClass: null,
         showToolTips: false,
         toolTipClose: ['area-mouseout'],
-        toolTipContainer: '<div style="border: 2px solid black; background: #EEEEEE; position:absolute; width:160px; padding:4px; margin: 4px;"></div>',
+        toolTipContainer: $.mapster.default_tooltip_container(),
         onClick: null,
         onShowToolTip: null,
         onGetList: null,
@@ -250,6 +260,8 @@ Based on code originally written by David Lynch
             if (map_data.activeToolTip) {
                 map_data.activeToolTip.remove();
                 map_data.activeToolTip = null;
+                map_data.activeToolTipID = -1;
+                $(map_data.image).unbind('mouseout.mapster');
             }
         }
         // configure new canvas with area options 
@@ -370,10 +382,84 @@ Based on code originally written by David Lynch
 
             set_areas_selected(map_data, selected_list);
         }
+
+        function bind_tooltip_close(map_data, option, event, obj) {
+            if (map_data.options.toolTipClose.indexOf(option) >= 0) {
+                obj.unbind(event + '.mapster').bind(event + '.mapster', function () {
+                    clear_tooltip(map_data);
+                });
+            }
+        }
+        function show_tooltip(map_data, area, area_options) {
+            var opts, area_id, tooltip, left, top, alignLeft, alignTop, container, tooltipCss;
+            opts = map_data.options;
+            area_id = area_options.id;
+            container = $(map_data.options.toolTipContainer);
+            if (area_options.toolTip instanceof jQuery) {
+                tooltip = container.html(area_options.toolTip);
+            } else {
+                tooltip = container.text(area_options.toolTip);
+            }
+
+            alignLeft = true;
+            alignTop = true;
+            var coords = $.mapster.utils.area_corner(area, alignLeft, alignTop);
+
+            clear_tooltip(map_data);
+            tooltip.hide();
+
+            $(map_data.image).after(tooltip);
+            map_data.activeToolTip = tooltip;
+            map_data.activeToolTipID = area_id;
+
+            // Try to upper-left align it first, if that doesn't work, change the parameters
+            left = coords[0] - tooltip.outerWidth(true);
+            top = coords[1] - tooltip.outerHeight(true);
+            if (left < 0) {
+                alignLeft = false;
+            }
+            if (top < 0) {
+                alignTop = false;
+            }
+            coords = $.mapster.utils.area_corner(area, alignLeft, alignTop);
+            left = coords[0] - (alignLeft ? tooltip.outerWidth(true) : 0);
+            top = coords[1] - (alignTop ? tooltip.outerHeight(true) : 0);
+
+            tooltipCss = { "left": left + "px", "top": top + "px" };
+
+            if (!tooltip.css("z-index") || tooltip.css("z-index") == "auto") {
+                tooltipCss["z-index"] = "2000";
+            }
+            tooltip.css(tooltipCss).addClass('mapster_tooltip');
+
+            bind_tooltip_close(map_data, 'tooltip-click', 'click', tooltip);
+            // not working properly- closes too soon sometimes
+            bind_tooltip_close(map_data, 'img-mouseout', 'mouseout', $(map_data.image));
+
+            if (me.has_canvas) {
+                tooltip.css("opacity", "0");
+                tooltip.show();
+                fader(tooltip[0], 0);
+            } else {
+                tooltip.show();
+            }
+            if (opts.onShowToolTip && typeof opts.onShowToolTip == 'function') {
+                var obj = {
+                    target: area,
+                    tooltip: tooltip,
+                    areaTarget: $(area),
+                    areaOptions: area_options,
+                    key: map_data.data[area_id].key,
+                    selected: map_data.selected_list[area_id]
+                };
+                opts.onShowToolTip.call(area, obj);
+            }
+        }
         // EVENTS
         function mouseover(map_data) {
-            var area, area_options, area_id, tooltip, left, top, alignLeft, alignTop, container, tooltipCss;
+            var area, area_options, area_id;
             area = this;
+
             if ($.mapster.utils.isTrueFalse(map_data.options.staticState)) {
                 return;
             }
@@ -382,66 +468,8 @@ Based on code originally written by David Lynch
             if (area_options.staticState !== true && area_options.staticState !== false) {
                 add_shape_group(map_data, map_data.overlay_canvas, area_id, "highlighted");
             }
-            if (map_data.options.showToolTip && area_options.toolTip) {
-                container = $(map_data.options.toolTipContainer);
-                if (area_options.toolTip instanceof jQuery) {
-                    tooltip = container.html(area_options.toolTip);
-                } else {
-                    tooltip = container.text(area_options.toolTip);
-                }
-
-                alignLeft = true;
-                alignTop = true;
-                var coords = $.mapster.utils.area_corner(area, alignLeft, alignTop);
-
-                clear_tooltip(map_data);
-                tooltip.hide();
-
-                $(map_data.image).after(tooltip);
-                map_data.activeToolTip = tooltip;
-
-                // Try to upper-left align it first, if that doesn't work, change the parameters
-                left = coords[0] - tooltip.outerWidth(true);
-                top = coords[1] - tooltip.outerHeight(true);
-                if (left < 0) {
-                    alignLeft = false;
-                }
-                if (top < 0) {
-                    alignTop = false;
-                }
-                coords = $.mapster.utils.area_corner(area, alignLeft, alignTop);
-                left = coords[0] - (alignLeft ? tooltip.outerWidth(true) : 0);
-                top = coords[1] - (alignTop ? tooltip.outerHeight(true) : 0);
-
-                tooltipCss = { "left": left + "px", "top": top + "px" };
-
-                if (!tooltip.css("z-index") || tooltip.css("z-index") == "auto") {
-                    tooltipCss["z-index"] = "2000";
-                }
-                tooltip.css(tooltipCss).addClass('mapster_tooltip');
-
-                if (map_data.options.toolTipClose.indexOf('tooltip-click') >= 0) {
-                    tooltip.bind("click", function () {
-                        clear_tooltip(map_data);
-                    });
-                }
-                if (me.has_canvas) {
-                    tooltip.css("opacity", "0");
-                    tooltip.show();
-                    fader(tooltip[0], 0);
-                } else {
-                    tooltip.show();
-                }
-                if (map_data.options.onShowToolTip && typeof map_data.options.onShowToolTip == 'function') {
-                    var obj = {
-                        target: area,
-                        areaTarget: $(area),
-                        areaOptions: area_options,
-                        key: map_data.data[area_id].key,
-                        selected: map_data.selected_list[area_id]
-                    };
-                    map_data.options.onShowToolTip.call(area, obj);
-                }
+            if (map_data.options.showToolTip && area_options.toolTip && map_data.activeToolTipID != area_id) {
+                show_tooltip(map_data, area, area_options);
             }
         }
         function mouseout(map_data) {
@@ -457,17 +485,22 @@ Based on code originally written by David Lynch
             e.preventDefault();
             area = this;
             opts = map_data.options;
-            area_options = options_from_area(map_data,area);
+            area_options = options_from_area(map_data, area);
 
             area_id = id_from_area(map_data, area);
+            key = map_data.data[area_id].key;
+
+            if (map_data.options.toolTipClose && map_data.options.toolTipClose.indexOf('area-click') >= 0) {
+                clear_tooltip(map_data);
+            }
 
             if (opts.isSelectable && area_options.isSelectable) {
                 selected = $.mapster.impl.toggle_selection(map_data, area_id);
-
-                if (opts.boundList && opts.boundList.length > 0) {
-                    list_target = setBoundListProperties(map_data, map_data.data[area_id].key, selected);
-                }
             }
+            if (opts.boundList && opts.boundList.length > 0) {
+                list_target = setBoundListProperties(map_data, key, selected);
+            }
+
 
             if (opts.onClick && typeof (opts.onClick == 'function')) {
                 var obj = {
@@ -541,15 +574,9 @@ Based on code originally written by David Lynch
                 setBoundListProperties(map_data, key_list, selected);
             }
         };
-        me.add_selection = function (map_data, area_id) {
-            var name;
-            if (map_data.selected_list[area_id]) { return; }
-            // don't use effects for setting static canvas
-            map_data.selected_list[area_id] = true;
-
-            name = "static_" + area_id.toString();
-            add_shape_group(map_data, map_data.base_canvas, area_id, name, { fade: false });
-        };
+        me.close_tooltip = function () {
+            clear_tooltip();
+        }
         me.remove_selection = function (map_data, area_id) {
             var canvas_temp, list_temp;
 
@@ -575,6 +602,24 @@ Based on code originally written by David Lynch
                 $(map_data.base_canvas).show();
             }
             me.clear_highlight(map_data);
+        };
+        me.add_selection = function (map_data, area_id) {
+            var name, list;
+            list = map_data.selected_list;
+            if (list[area_id]) { return; }
+            list[area_id] = true;
+
+            // need to add the new one first so that the double-opacity effect leaves the current one highlighted for singleSelect
+            if (map_data.options.singleSelect) {
+                for (var i = 0; i < list.length; i++) {
+                    if (list[i] && i != area_id) {
+                        me.remove_selection(map_data, i);
+                    }
+                }
+            }
+            // don't use effects for setting static canvas
+            name = "static_" + area_id.toString();
+            add_shape_group(map_data, map_data.base_canvas, area_id, name, { fade: false });
         };
         me.toggle_selection = function (map_data, area_id) {
             var selected;
