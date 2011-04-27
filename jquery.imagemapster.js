@@ -1,24 +1,12 @@
-/* ImageMapster 1.0.5
+/* ImageMapster 1.0.6
 Copyright 2011 James Treworgy
 
 Project home page http://www.outsharked.com/imagemapster
 
 A jQuery plugin to enhance image maps. 
 
-1.0.5
--- only add z-index if missing for tooltips
--- stopped using area.data for area options, instead added "areas" option (array). data still supported with useAreaData option flag.
---  too many problems with multiple areas.
--- added quotes for key attribute selector
--- added options for closing tool tips
-
-4/20/2011   Released 1.0.4
--- Allow using jQuery object for tooltip contents
--- fixed tooltip in IE6
-
-4/19/2011   Released 1.01
--- refactored to use clean namespace
--- added simple mouseover dialog
+4/27/2011 version 1.0.6
+-- bugfixes only (not working properly with no mapKey, staticState=false not working)
 
 Based on code originally written by David Lynch
 (c) 2011 https://github.com/kemayo/maphilight/
@@ -72,7 +60,7 @@ Based on code originally written by David Lynch
         fade: true,
         staticState: null,
         selected: false,
-        isSelectable: false,
+        isSelectable: true,
         wrapClass: false,
         boundList: null,
         sortList: false,
@@ -81,14 +69,14 @@ Based on code originally written by David Lynch
         mapValue: 'text',
         listKey: 'value',
         listSelectedAttribute: 'selected',
-        listSelectedClass: '',
-        showToolTip: false,
+        listSelectedClass: null,
+        showToolTips: false,
         toolTipClose: ['area-mouseout'],
         toolTipContainer: '<div style="border: 2px solid black; background: #EEEEEE; position:absolute; width:160px; padding:4px; margin: 4px;"></div>',
         onClick: null,
         onShowToolTip: null,
         onGetList: null,
-        onShowTooltip: null,
+        onCreateTooltip: null,
         useAreaData: false,
         areas: []
     };
@@ -126,33 +114,41 @@ Based on code originally written by David Lynch
             padding: 0,
             border: 0
         };
+        function id_from_key(map_data, key) {
+            if (key && map_data.xref && map_data.xref.hasOwnProperty(key)) {
+                return map_data.xref[key];
+            } else {
+                return -1;
+            }
+        }
         function id_from_area(map_data, area) {
-            var $area, key, area_id = -1;
+            var $area, key, area_id;
             $area = $(area);
             key = $area.attr(map_data.options.mapKey);
-            if (key) {
-                if (map_data.xref && map_data.xref[key] >= 0) {
-                    area_id = map_data.xref[key];
-                }
-            }
+            area_id = id_from_key(map_data, key);
             return area_id;
         }
-        function options_from_area(map_data, area, base_options, override_options) {
-            var area_id, opts, area_option_id;
-            area_id = id_from_area(map_data, area);
+
+        function options_from_area_id(map_data, area_id, override_options) {
+            var opts, area_option_id;
             area_option_id = map_data.data[area_id].area_option_id;
-            opts = {};
+
             if (area_option_id >= 0) {
                 opts = map_data.options.areas[area_option_id];
+            } else {
+                opts = {};
             }
-
-            if (map_data.options.staticState === true || map_data.options.staticState === false) {
+            if ($.mapster.utils.isTrueFalse(map_data.options.staticState)) {
                 opts.selected = map_data.options.staticState;
             }
-
             opts.id = area_id;
-
-            return $.extend({}, base_options, opts, override_options);
+            return $.extend({}, map_data.area_options, opts, override_options);
+        }
+        function options_from_key(map_data, key) {
+            return options_from_area_id(map_data, id_from_key(map_data, key));
+        }
+        function options_from_area(map_data, area, override_options) {
+            return options_from_area_id(map_data, id_from_area(map_data, area), override_options);
         }
         function shape_from_area(area) {
             var i, coords = area.getAttribute('coords').split(',');
@@ -173,12 +169,9 @@ Based on code originally written by David Lynch
             var areas = map_data.map.find('area[' + map_data.options.mapKey + '="' + map_data.data[area_id].key + '"]');
 
             for (var i = areas.length - 1; i >= 0; i--) {
-                var subarea_options = options_from_area(map_data, areas[i], map_data.area_options, override_options);
-
-                if (subarea_options.staticState !== false && subarea_options.staticState !== true) {
-                    var shape = shape_from_area(areas[i]);
-                    me.add_shape_to(specific_canvas, shape[0], shape[1], subarea_options, name);
-                }
+                var subarea_options = options_from_area(map_data, areas[i], override_options);
+                var shape = shape_from_area(areas[i]);
+                me.add_shape_to(specific_canvas, shape[0], shape[1], subarea_options, name);
             }
             if (!me.has_canvas) {
                 me.add_shape_to(specific_canvas, "rect", "0,0,0,0", { fillOpacity: 0 }, name);
@@ -261,7 +254,7 @@ Based on code originally written by David Lynch
         }
         // configure new canvas with area options 
         function initialize_map(map_data) {
-            var $area, area, areas, i, opts, area_options, key, area_id, group, group_value, group_data_index, map_key_xref, group_list = [], selected_list = [];
+            var $area, area, areas, i, opts, area_options, key, area_id, group, default_group, group_value, group_data_index, map_key_xref, group_list = [], selected_list = [];
 
             // avoid creating a function in a loop
             function mouseover_hook(e) {
@@ -278,34 +271,41 @@ Based on code originally written by David Lynch
             }
 
             opts = map_data.options;
-
             areas = $(map_data.map).find('area[coords]');
             map_key_xref = {};
+            default_group = opts.mapKey == "mapster_id";
             for (i = 0; i < areas.length; i++) {
                 area_id = 0;
                 area = areas[i];
                 $area = $(area);
+
                 group = $area.attr(opts.mapKey);
 
-                if (group) {
+                if (group || default_group) {
                     if (opts.mapValue) {
                         group_value = $area.attr(opts.mapValue);
                     }
-                    group_data_index = $.mapster.utils.arrayIndexOfProp(group_list, 'key', group);
-                    if (group_data_index >= 0) {
-                        area_id = group_data_index;
-                        if (group_value && !group_list[area_id].value) {
-                            group_list[area_id].value = group_value;
-                        }
+                    if (default_group) {
+                        // set an attribute so we can refer to the area by index from the DOM object if no key
+                        area_id = group_list.push({ key: -1, value: group_value, area_option_id: -1 }) - 1;
+                        group = area_id;
+                        group_list[area_id].key = area_id;
+                        $area.attr('mapster_id', area_id);
                     } else {
-                        area_id = group_list.push({ key: group, value: group_value, area_option_id: -1 }) - 1;
-                        map_key_xref[group] = area_id;
+                        group_data_index = $.mapster.utils.arrayIndexOfProp(group_list, 'key', group);
+                        if (group_data_index >= 0) {
+                            area_id = group_data_index;
+                            if (group_value && !group_list[area_id].value) {
+                                group_list[area_id].value = group_value;
+                            }
+                        } else {
+                            area_id = group_list.push({ key: group, value: group_value, area_option_id: -1 }) - 1;
+                        }
                     }
-                    $area.mouseover(mouseover_hook).mouseout(mouseout_hook);
+                    map_key_xref[group] = area_id;
                 }
 
-                if (map_data.options.useAreaData && !map_data.options.staticState) {
-
+                if (map_data.options.useAreaData && !$.mapster.utils.isTrueFalse(map_data.options.staticState)) {
                     area_options = $area.data('mapster');
                     key = $area.attr(map_data.options.mapKey);
                     // add any old format options to new format array
@@ -313,7 +313,7 @@ Based on code originally written by David Lynch
                         $.extend(area_options, { key: key });
 
                         // if a static state, use it, otherwise use selected.
-                        area_options.selected = (area_options.staticState === true || area_options.staticState === false) ?
+                        area_options.selected = ($.mapster.utils.isTrueFalse(area_options.staticState)) ?
                             area_options.staticState :
                                 (area_options.selected ? true : false);
 
@@ -321,14 +321,16 @@ Based on code originally written by David Lynch
                     }
                 }
             }
+
             map_data.data = group_list;
             map_data.xref = map_key_xref;
+
             // build an xref of area-specific properties to speed access
             // refer by: map_data.options[map_data.data[x].area_option_id]
             for (i = 0; i < map_data.options.areas.length; i++) {
-                area_options = map_data.options.areas[i];
-                area_id = map_data.xref[area_options.key];
+                area_id = id_from_key(map_data, map_data.options.areas[i].key);
                 map_data.data[area_id].area_option_id = i;
+                area_options = options_from_area_id(map_data, area_id);
                 selected_list[area_id] = area_options.selected;
             }
 
@@ -358,12 +360,13 @@ Based on code originally written by David Lynch
                     opts.boundList = returnedList;
                 }
             }
-            if (opts.isSelectable) {
-                areas.bind('click', onclick_hook);
-            }
-            if (opts.listenToList) {
+
+            if (opts.listenToList && opts.boundList) {
                 opts.boundList.bind('click', listclick_hook);
             }
+
+            areas.bind('click', onclick_hook);
+            areas.mouseover(mouseover_hook).mouseout(mouseout_hook);
 
             set_areas_selected(map_data, selected_list);
         }
@@ -371,12 +374,12 @@ Based on code originally written by David Lynch
         function mouseover(map_data) {
             var area, area_options, area_id, tooltip, left, top, alignLeft, alignTop, container, tooltipCss;
             area = this;
-            if (map_data.options.staticState === true || map_data.options.staticState === false) {
+            if ($.mapster.utils.isTrueFalse(map_data.options.staticState)) {
                 return;
             }
-            area_options = options_from_area(map_data, area, map_data.area_options);
+            area_options = options_from_area(map_data, area);
             area_id = area_options.id;
-            if (area_options.staticState !== false) {
+            if (area_options.staticState !== true && area_options.staticState !== false) {
                 add_shape_group(map_data, map_data.overlay_canvas, area_id, "highlighted");
             }
             if (map_data.options.showToolTip && area_options.toolTip) {
@@ -449,14 +452,16 @@ Based on code originally written by David Lynch
             me.clear_highlight(map_data);
         }
         function click(map_data, e) {
+            var area, key, selected, list_target, opts, area_id, area_options;
+
             e.preventDefault();
-            var area, key, selected, list_target, opts, area_id;
             area = this;
             opts = map_data.options;
+            area_options = options_from_area(map_data,area);
 
             area_id = id_from_area(map_data, area);
 
-            if (map_data.options.isSelectable) {
+            if (opts.isSelectable && area_options.isSelectable) {
                 selected = $.mapster.impl.toggle_selection(map_data, area_id);
 
                 if (opts.boundList && opts.boundList.length > 0) {
@@ -469,7 +474,7 @@ Based on code originally written by David Lynch
                     target: area,
                     listTarget: list_target,
                     areaTarget: $(area),
-                    areaOptions: options_from_area(map_data, area, map_data.area_options),
+                    areaOptions: options_from_area(map_data, area),
                     key: key,
                     selected: map_data.selected_list[area_id]
                 };
@@ -596,6 +601,9 @@ Based on code originally written by David Lynch
 				    }
 			    );
                 $.mapster.ie_config_complete = true;
+            }
+            if (!opts.mapKey) {
+                opts.mapKey = 'mapster_id';
             }
 
             return this.each(function () {
@@ -824,6 +832,9 @@ Based on code originally written by David Lynch
                 }
             }
             return obj;
+        },
+        isTrueFalse: function (obj) {
+            return obj === true || obj === false;
         },
         arrayIndexOfProp: function (arr, prop, obj) {
             var i = arr.length;
