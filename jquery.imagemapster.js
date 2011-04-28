@@ -536,7 +536,6 @@ Based on code originally written by David Lynch
             } else {
                 key_list = key;
             }
-
         };
         // Select or unselect areas identified by key -- a string, a csv string, or array of strings. 
         // if set_bound is true, the bound list will also be updated. Default is true
