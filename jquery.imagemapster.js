@@ -1,12 +1,11 @@
-/* ImageMapster - A jQuery plugin to enhance image maps. 
-
+/* ImageMapster 1.0.7
 Copyright 2011 James Treworgy
 
 Project home page http://www.outsharked.com/imagemapster
 
-Version 1.0.7 - April 27, 2011
+A jQuery plugin to enhance image maps. 
 
--- added "area-click" option for tooltip closing (closes when any area is clicked)
+4/27/2011 version 1.0.7
 -- rounded corners & dropshadow on default tooltip
 -- added singleSelect option
 -- don't show tooltip again when using 'tooltip-click' to close if mousing over the same area (causing flicker when hidden/reshown)
@@ -57,7 +56,7 @@ Based on code originally written by David Lynch
     $.mapster.default_tooltip_container = function () {
         return '<div style="border: 2px solid black; background: #EEEEEE; position:absolute; width:160px; padding:4px; margin: 4px; -moz-box-shadow: 3px 3px 5px #535353; ' +
                 '-webkit-box-shadow: 3px 3px 5px #535353; box-shadow: 3px 3px 5px #535353; -moz-border-radius: 6px 6px 6px 6px; -webkit-border-radius: 6px; border-radius: 6px 6px 6px 6px;"></div>';
-    }
+    };
     $.mapster.defaults = {
         fill: true,
         fillColor: '000000',
@@ -124,6 +123,11 @@ Based on code originally written by David Lynch
             padding: 0,
             border: 0
         };
+        // utility functions
+        function isTrueFalse(obj) {
+            return obj === true || obj === false;
+        }
+        // end utility functions
         function id_from_key(map_data, key) {
             if (key && map_data.xref && map_data.xref.hasOwnProperty(key)) {
                 return map_data.xref[key];
@@ -148,8 +152,11 @@ Based on code originally written by David Lynch
             } else {
                 opts = {};
             }
-            if ($.mapster.utils.isTrueFalse(map_data.options.staticState)) {
+            if (isTrueFalse(map_data.options.staticState)) {
                 opts.selected = map_data.options.staticState;
+                opts.isSelectable = false;
+            } else if (isTrueFalse(opts.staticState)) {
+                opts.isSelectable = false;
             }
             opts.id = area_id;
             return $.extend({}, map_data.area_options, opts, override_options);
@@ -183,6 +190,7 @@ Based on code originally written by David Lynch
                 var shape = shape_from_area(areas[i]);
                 me.add_shape_to(specific_canvas, shape[0], shape[1], subarea_options, name);
             }
+            // hack to ensure IE finishes rendering. still not sure why this is necessary.
             if (!me.has_canvas) {
                 me.add_shape_to(specific_canvas, "rect", "0,0,0,0", { fillOpacity: 0 }, name);
             }
@@ -317,18 +325,12 @@ Based on code originally written by David Lynch
                     map_key_xref[group] = area_id;
                 }
 
-                if (map_data.options.useAreaData && !$.mapster.utils.isTrueFalse(map_data.options.staticState)) {
+                if (map_data.options.useAreaData && !isTrueFalse(map_data.options.staticState)) {
                     area_options = $area.data('mapster');
                     key = $area.attr(map_data.options.mapKey);
                     // add any old format options to new format array
                     if (area_options) {
                         $.extend(area_options, { key: key });
-
-                        // if a static state, use it, otherwise use selected.
-                        area_options.selected = ($.mapster.utils.isTrueFalse(area_options.staticState)) ?
-                            area_options.staticState :
-                                (area_options.selected ? true : false);
-
                         map_data.options.areas.push(area_options);
                     }
                 }
@@ -343,7 +345,10 @@ Based on code originally written by David Lynch
                 area_id = id_from_key(map_data, map_data.options.areas[i].key);
                 map_data.data[area_id].area_option_id = i;
                 area_options = options_from_area_id(map_data, area_id);
-                selected_list[area_id] = area_options.selected;
+
+                // if a static state, use it, otherwise use selected.
+                selected_list[area_id] = (isTrueFalse(area_options.staticState)) ?
+                            area_options.staticState : area_options.selected;
             }
 
             if (opts.isSelectable && opts.onGetList) {
@@ -460,12 +465,12 @@ Based on code originally written by David Lynch
             var area, area_options, area_id;
             area = this;
 
-            if ($.mapster.utils.isTrueFalse(map_data.options.staticState)) {
+            if (isTrueFalse(map_data.options.staticState)) {
                 return;
             }
             area_options = options_from_area(map_data, area);
             area_id = area_options.id;
-            if (area_options.staticState !== true && area_options.staticState !== false) {
+            if (!isTrueFalse(area_options.staticState)) {
                 add_shape_group(map_data, map_data.overlay_canvas, area_id, "highlighted");
             }
             if (map_data.options.showToolTip && area_options.toolTip && map_data.activeToolTipID != area_id) {
@@ -490,11 +495,7 @@ Based on code originally written by David Lynch
             area_id = id_from_area(map_data, area);
             key = map_data.data[area_id].key;
 
-            if (map_data.options.toolTipClose && map_data.options.toolTipClose.indexOf('area-click') >= 0) {
-                clear_tooltip(map_data);
-            }
-
-            if (opts.isSelectable && area_options.isSelectable) {
+            if (area_options.isSelectable) {
                 selected = $.mapster.impl.toggle_selection(map_data, area_id);
             }
             if (opts.boundList && opts.boundList.length > 0) {
@@ -513,7 +514,6 @@ Based on code originally written by David Lynch
                 };
                 opts.onClick.call(area, obj);
             }
-
         }
         function list_click(map_data) {
             //
@@ -526,11 +526,24 @@ Based on code originally written by David Lynch
             }
         }
         // PUBLIC FUNCTIONS
+        // simulate a click event. This is like toggle, but causes events to run also. 
+        // NOT IMPLEMENTED YET
+        me.click = function (selected, key) {
+            var map_data, key_list;
+            map_data = get_map_data(this.get(0));
+            if (key instanceof Array) {
+                key_list = key.join(",");
+            } else {
+                key_list = key;
+            }
+
+        };
         // Select or unselect areas identified by key -- a string, a csv string, or array of strings. 
         // if set_bound is true, the bound list will also be updated. Default is true
+
         me.set = function (selected, key, set_bound) {
             var lastParent, parent, map_data, key_list, area_id, do_set_bound;
-            do_set_bound = set_bound == 'undefined' ? true : set_bound;
+            do_set_bound = isTrueFalse(set_bound) ? set_bound : true;
             map_data = get_map_data(this.get(0));
             function setSelection(area_id) {
                 if (selected === true) {
@@ -576,7 +589,7 @@ Based on code originally written by David Lynch
         };
         me.close_tooltip = function () {
             clear_tooltip();
-        }
+        };
         me.remove_selection = function (map_data, area_id) {
             var canvas_temp, list_temp;
 
@@ -877,9 +890,6 @@ Based on code originally written by David Lynch
                 }
             }
             return obj;
-        },
-        isTrueFalse: function (obj) {
-            return obj === true || obj === false;
         },
         arrayIndexOfProp: function (arr, prop, obj) {
             var i = arr.length;
