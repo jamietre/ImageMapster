@@ -1,9 +1,12 @@
-/* ImageMapster 1.0.7
+/* ImageMapster 1.0.8
 Copyright 2011 James Treworgy
 
 Project home page http://www.outsharked.com/imagemapster
 
 A jQuery plugin to enhance image maps. 
+
+5/5/2011 version 1.0.8
+-- bug fix: properly handle commands issued after mapster binding if image wasn't ready at bind time
 
 4/27/2011 version 1.0.7
 -- rounded corners & dropshadow on default tooltip
@@ -56,7 +59,7 @@ Based on code originally written by David Lynch
     $.mapster.default_tooltip_container = function () {
         return '<div style="border: 2px solid black; background: #EEEEEE; position:absolute; width:160px; padding:4px; margin: 4px; -moz-box-shadow: 3px 3px 5px #535353; ' +
                 '-webkit-box-shadow: 3px 3px 5px #535353; box-shadow: 3px 3px 5px #535353; -moz-border-radius: 6px 6px 6px 6px; -webkit-border-radius: 6px; border-radius: 6px 6px 6px 6px;"></div>';
-    };
+    }
     $.mapster.defaults = {
         fill: true,
         fillColor: '000000',
@@ -210,29 +213,41 @@ Based on code originally written by David Lynch
             return true;
         }
         /// return current map_data for an image or area
-        function get_map_data(obj, remove) {
-            var img, id, index;
-            switch (obj.tagName.toLowerCase()) {
-                case 'area':
-                    id = $(obj).parent().attr('name');
-                    img = $("img[usemap='#" + id + "']").get(0);
-                    break;
-                case 'img':
-                    img = obj;
-                    break;
-            }
-            if (!img) { return null; }
+       	function get_map_data_index(obj) {
+	    var img, id, index=-1;
+	    switch (obj.tagName.toLowerCase()) {
+		case 'area':
+		    id = $(obj).parent().attr('name');
+		    img = $("img[usemap='#" + id + "']").get(0);
+		    break;
+		case 'img':
+		    img = obj;
+		    break;
+	    }
+	    if (img) {
+		index = $.mapster.utils.arrayIndexOfProp(me.map_cache, 'image', img);
+	    }
+	    return index;
 
-            index = $.mapster.utils.arrayIndexOfProp(me.map_cache, 'image', img);
-            if (!remove) {
-                return index >= 0 ? me.map_cache[index] : null;
+       	}
+        function get_map_data(obj, ignore_errors) {
+            var index = get_map_data_index(obj);
+            if (index>=0) {
+		 return me.map_cache[index];
+ 	    }
+
+            if (!ignore_errors) {
+                throw ('Unable to obtain map data for object');
             } else {
-                return me.map_cache.splice(index, 1);
+                return null;
             }
         }
 
         function remove_map_data(obj) {
-            get_map_data(obj, true);
+            var index = get_map_data_index(obj);
+            if (index>=0) {
+                me.map_cache.splice(index, 1);
+            }
         }
         // Causes changes to the bound list based on the user action (select or deselect)
         // area: the jQuery area object
@@ -527,7 +542,6 @@ Based on code originally written by David Lynch
         }
         // PUBLIC FUNCTIONS
         // simulate a click event. This is like toggle, but causes events to run also. 
-        // NOT IMPLEMENTED YET
         me.click = function (selected, key) {
             var map_data, key_list;
             map_data = get_map_data(this.get(0));
@@ -536,7 +550,8 @@ Based on code originally written by David Lynch
             } else {
                 key_list = key;
             }
-        };
+
+        }
         // Select or unselect areas identified by key -- a string, a csv string, or array of strings. 
         // if set_bound is true, the bound list will also be updated. Default is true
 
@@ -544,6 +559,10 @@ Based on code originally written by David Lynch
             var lastParent, parent, map_data, key_list, area_id, do_set_bound;
             do_set_bound = isTrueFalse(set_bound) ? set_bound : true;
             map_data = get_map_data(this.get(0));
+            if (!map_data.complete) {
+                map_data.commands.push({ command: 'set', args: arguments });
+                return;
+            }
             function setSelection(area_id) {
                 if (selected === true) {
                     $.mapster.impl.add_selection(map_data, area_id);
@@ -588,7 +607,7 @@ Based on code originally written by David Lynch
         };
         me.close_tooltip = function () {
             clear_tooltip();
-        };
+        }
         me.remove_selection = function (map_data, area_id) {
             var canvas_temp, list_temp;
 
@@ -665,7 +684,20 @@ Based on code originally written by David Lynch
 
             return this.each(function () {
                 var img, wrap, options, area_options, map, canvas, overlay_canvas, usemap, map_data;
+
+                // save ref to this image even if we can't access it yet. commands will be queued
                 img = $(this);
+                map_data = get_map_data(this,true);
+                if (!map_data) {
+                    map_data = {
+                        image: this,
+                        complete: false,
+                        commands: [],
+                        data: [],
+                        xref: {}
+                    };
+                    $.mapster.impl.map_cache.push(map_data);
+                }
 
                 if (!is_image_loaded(this)) {
                     // If the image isn't fully loaded, this won't work right.  Try again later.
@@ -674,6 +706,8 @@ Based on code originally written by David Lynch
                     }, 200);
                 }
 
+                
+                // for backward compatibility with jquery "data" on areas
                 options = $.extend({}, opts, img.data('mapster'));
                 area_options = $.extend({}, $.mapster.area_defaults);
                 $.mapster.utils.mergeObjects(area_options, options);
@@ -685,11 +719,6 @@ Based on code originally written by David Lynch
                 map = $('map[name="' + usemap.substr(1) + '"]');
 
                 if (!(img.is('img') && usemap && map.size() > 0)) { return; }
-
-                // make sure not already bound, reset if so
-                if (get_map_data(this)) {
-                    remove_map_data(this);
-                }
 
                 wrap = $('<div></div>').css({
                     display: 'block',
@@ -723,20 +752,25 @@ Based on code originally written by David Lynch
                     img.before(overlay_canvas);
                 }
                 // save profile data in an object
-                map_data = {
+                $.extend(map_data, {
                     options: options,
                     area_options: area_options,
                     map: map,
-                    image: img.get(0),
                     base_canvas: canvas,
                     overlay_canvas: overlay_canvas,
                     selected_list: []
-                };
+                });
 
                 initialize_map(map_data);
-                $.mapster.impl.map_cache.push(map_data);
+                //$.mapster.impl.map_cache.push(map_data);
 
-                //img.addClass('selected');
+                // process queued commands
+                if (!map_data.complete) {
+                    map_data.complete = true;
+                    for (var i = 0; i < map_data.commands.length; i++) {
+                        methods[map_data.commands[i].command].apply($(this), map_data.commands[i].args);
+                    }
+                }
             });
         };
         me.init = function () {
