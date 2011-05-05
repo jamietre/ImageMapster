@@ -59,7 +59,7 @@ Based on code originally written by David Lynch
     $.mapster.default_tooltip_container = function () {
         return '<div style="border: 2px solid black; background: #EEEEEE; position:absolute; width:160px; padding:4px; margin: 4px; -moz-box-shadow: 3px 3px 5px #535353; ' +
                 '-webkit-box-shadow: 3px 3px 5px #535353; box-shadow: 3px 3px 5px #535353; -moz-border-radius: 6px 6px 6px 6px; -webkit-border-radius: 6px; border-radius: 6px 6px 6px 6px;"></div>';
-    }
+    };
     $.mapster.defaults = {
         fill: true,
         fillColor: '000000',
@@ -551,7 +551,7 @@ Based on code originally written by David Lynch
                 key_list = key;
             }
 
-        }
+        };
         // Select or unselect areas identified by key -- a string, a csv string, or array of strings. 
         // if set_bound is true, the bound list will also be updated. Default is true
 
@@ -607,7 +607,7 @@ Based on code originally written by David Lynch
         };
         me.close_tooltip = function () {
             clear_tooltip();
-        }
+        };
         me.remove_selection = function (map_data, area_id) {
             var canvas_temp, list_temp;
 
