@@ -558,6 +558,28 @@ Based on code originally written by David Lynch
             }
 
         };
+        
+        me.get = function(type) {
+            var i, data_len,result,type_array, item,
+               map_data = get_map_data(this.get(0));
+            if (!map_data) {
+                return;
+            }
+            data_len=map_data.data.length;
+            type_array = type && type.toLowerCase()==='array';
+            result = type_array ? [] : '';
+            for (var sel in map_data.selected_list) {
+            	if (map_data.selected_list.hasOwnProperty(sel)) {
+            	    item = map_data.data[sel]
+            	    if (type_array) {
+            	        result.push(item.key);
+                    } else {
+		        result+=(result?',':'')+item.key;
+            	    }
+            	}
+            }
+       	    return result;
+        };
         // Select or unselect areas identified by key -- a string, a csv string, or array of strings. 
         // if set_bound is true, the bound list will also be updated. Default is true
 
@@ -984,6 +1006,7 @@ Based on code originally written by David Lynch
         bind: $.mapster.impl.bind,
         unbind: $.mapster.impl.unbind,
         set: $.mapster.impl.set,
+        get: $.mapster.impl.get,
         select: function () {
             $.mapster.impl.set.call(this, true);
         },
