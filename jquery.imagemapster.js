@@ -5,6 +5,10 @@ Project home page http://www.outsharked.com/imagemapster
 
 A jQuery plugin to enhance image maps. 
 
+version 1.0.9 (unreleased)
+-- add unbind options
+-- clear command queue after processing
+
 5/5/2011 version 1.0.8
 -- bug fix: properly handle commands issued after mapster binding if image wasn't ready at bind time
 
@@ -50,7 +54,7 @@ Based on code originally written by David Lynch
         if (methods[method]) {
             return methods[method].apply(this, Array.prototype.slice.call(arguments, 1));
         } else if (typeof method === 'object' || !method) {
-            return methods.create.apply(this, arguments);
+            return methods.bind.apply(this, arguments);
         } else {
             $.error('Method ' + method + ' does not exist on jQuery.mapster');
         }
@@ -397,8 +401,8 @@ Based on code originally written by David Lynch
                 opts.boundList.bind('click', listclick_hook);
             }
 
-            areas.bind('click', onclick_hook);
-            areas.mouseover(mouseover_hook).mouseout(mouseout_hook);
+            areas.bind('click.mapster', onclick_hook);
+            areas.bind('mouseover.mapster',mouseover_hook).bind('mouseout.mapster',mouseout_hook);
 
             set_areas_selected(map_data, selected_list);
         }
@@ -664,7 +668,19 @@ Based on code originally written by David Lynch
             }
             return selected;
         };
-        me.create = function (opts) {
+        me.unbind = function(preserveState) {
+            var map_data= get_map_data(this.get(0));
+            if (!preserveState) {
+            	$(map_data.base_canvas).remove();
+            	clear_tooltip(map_data);
+            }
+            var areas = $(map_data.map).find('area[coords]');
+            areas.unbind('click.mapster')
+            	.unbind('mouseover.mapster')
+            	.unbind('mouseout.mapster');
+            remove_map_data(this.get(0));
+        };
+        me.bind = function (opts) {
             opts = $.extend({}, $.mapster.defaults, opts);
 
             if ($.browser.msie && !me.has_canvas && !me.ie_config_complete) {
@@ -770,6 +786,7 @@ Based on code originally written by David Lynch
                     for (var i = 0; i < map_data.commands.length; i++) {
                         methods[map_data.commands[i].command].apply($(this), map_data.commands[i].args);
                     }
+                    map_data.commands=[];
                 }
             });
         };
@@ -962,14 +979,16 @@ Based on code originally written by David Lynch
 
     /// Code that gets executed when the plugin is first loaded
     methods = {
-        create: $.mapster.impl.create,
+        bind: $.mapster.impl.bind,
+        unbind: $.mapster.impl.unbind,
         set: $.mapster.impl.set,
         select: function () {
             $.mapster.impl.set.call(this, true);
         },
         deselect: function () {
             $.mapster.impl.set.call(this, false);
-        }
+        },
+        
     };
     $.mapster.impl.init();
 })(jQuery);
