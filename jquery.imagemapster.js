@@ -669,16 +669,21 @@ Based on code originally written by David Lynch
             return selected;
         };
         me.unbind = function(preserveState) {
-            var map_data= get_map_data(this.get(0));
-            if (!preserveState) {
-            	$(map_data.base_canvas).remove();
-            	clear_tooltip(map_data);
-            }
-            var areas = $(map_data.map).find('area[coords]');
-            areas.unbind('click.mapster')
-            	.unbind('mouseover.mapster')
-            	.unbind('mouseout.mapster');
-            remove_map_data(this.get(0));
+            this.each(function(e) {
+		    var map_data= get_map_data(e,true);
+		    if (!map_data) {
+			return;
+		    }
+		    if (!preserveState) {
+			$(map_data.base_canvas).remove();
+			clear_tooltip(map_data);
+		    }
+		    var areas = $(map_data.map).find('area[coords]');
+		    areas.unbind('click.mapster')
+			.unbind('mouseover.mapster')
+			.unbind('mouseout.mapster');
+		    remove_map_data(this.get(0));
+	    });
         };
         me.bind = function (opts) {
             opts = $.extend({}, $.mapster.defaults, opts);
