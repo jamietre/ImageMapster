@@ -570,7 +570,7 @@ Based on code originally written by David Lynch
             result = type_array ? [] : '';
             for (var sel in map_data.selected_list) {
             	if (map_data.selected_list.hasOwnProperty(sel)) {
-            	    item = map_data.data[sel]
+            	    item = map_data.data[sel];
             	    if (type_array) {
             	        result.push(item.key);
                     } else {
