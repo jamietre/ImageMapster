@@ -1,4 +1,4 @@
-/* ImageMapster 1.0.8
+/* ImageMapster 1.0.9
 Copyright 2011 James Treworgy
 
 Project home page http://www.outsharked.com/imagemapster
@@ -644,6 +644,7 @@ Based on code originally written by David Lynch
             if (do_set_bound && map_data.options.boundList) {
                 setBoundListProperties(map_data, key_list, selected);
             }
+            return this;
         };
         me.close_tooltip = function () {
             clear_tooltip();
@@ -706,7 +707,7 @@ Based on code originally written by David Lynch
         };
 
          me.unbind = function(preserveState) {
-            this.each(function(e) {
+            return this.each(function(e) {
                 var map_data= get_map_data(this,true);
                 if (!map_data) {
 	            return;
