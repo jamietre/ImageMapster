@@ -362,12 +362,14 @@ Based on code originally written by David Lynch
             // refer by: map_data.options[map_data.data[x].area_option_id]
             for (i = 0; i < map_data.options.areas.length; i++) {
                 area_id = id_from_key(map_data, map_data.options.areas[i].key);
-                map_data.data[area_id].area_option_id = i;
-                area_options = options_from_area_id(map_data, area_id);
-
-                // if a static state, use it, otherwise use selected.
-                selected_list[area_id] = (isTrueFalse(area_options.staticState)) ?
-                            area_options.staticState : area_options.selected;
+                if (area_id>=0) {
+                    map_data.data[area_id].area_option_id = i;
+                    area_options = options_from_area_id(map_data, area_id);
+ 
+                    // if a static state, use it, otherwise use selected.
+                    selected_list[area_id] = (isTrueFalse(area_options.staticState)) ?
+                                area_options.staticState : area_options.selected;
+                }
             }
 
             if (opts.isSelectable && opts.onGetList) {
@@ -669,21 +671,16 @@ Based on code originally written by David Lynch
             return selected;
         };
         me.unbind = function(preserveState) {
-            this.each(function(e) {
-		    var map_data= get_map_data(e,true);
-		    if (!map_data) {
-			return;
-		    }
-		    if (!preserveState) {
-			$(map_data.base_canvas).remove();
-			clear_tooltip(map_data);
-		    }
-		    var areas = $(map_data.map).find('area[coords]');
-		    areas.unbind('click.mapster')
-			.unbind('mouseover.mapster')
-			.unbind('mouseout.mapster');
-		    remove_map_data(this.get(0));
-	    });
+            var map_data= get_map_data(this.get(0));
+            if (!preserveState) {
+            	$(map_data.base_canvas).remove();
+            	clear_tooltip(map_data);
+            }
+            var areas = $(map_data.map).find('area[coords]');
+            areas.unbind('click.mapster')
+            	.unbind('mouseover.mapster')
+            	.unbind('mouseout.mapster');
+            remove_map_data(this.get(0));
         };
         me.bind = function (opts) {
             opts = $.extend({}, $.mapster.defaults, opts);
