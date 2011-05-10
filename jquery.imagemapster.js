@@ -6,6 +6,8 @@ Project home page http://www.outsharked.com/imagemapster
 A jQuery plugin to enhance image maps. 
 
 version 1.0.9 (unreleased)
+-- handle exceptions better (when acting on unbound images)
+-- add 'get' method to retrieve selections
 -- add unbind options
 -- clear command queue after processing
 
@@ -246,7 +248,17 @@ Based on code originally written by David Lynch
                 return null;
             }
         }
-
+	function clear_map_data(map_data) {
+            var $canvas = $(map_data.base_canvas);
+            if ($canvas.length) {
+                $canvas.remove();
+            }
+            $canvas = $(map_data.overlay_canvas);
+            if ($canvas.length) {
+                $canvas.remove();
+            }
+            clear_tooltip(map_data);
+	}
         function remove_map_data(obj) {
             var index = get_map_data_index(obj);
             if (index>=0) {
@@ -692,19 +704,25 @@ Based on code originally written by David Lynch
             }
             return selected;
         };
-        me.unbind = function(preserveState) {
-            var map_data= get_map_data(this.get(0));
-            if (!preserveState) {
-            	$(map_data.base_canvas).remove();
-            	clear_tooltip(map_data);
-            }
-            var areas = $(map_data.map).find('area[coords]');
-            areas.unbind('click.mapster')
-            	.unbind('mouseover.mapster')
-            	.unbind('mouseout.mapster');
-            remove_map_data(this.get(0));
-        };
-        me.bind = function (opts) {
+
+         me.unbind = function(preserveState) {
+            this.each(function(e) {
+                var map_data= get_map_data(this,true);
+                if (!map_data) {
+	            return;
+                }
+                if (!preserveState) {
+                    clear_map_data(map_data);
+                    remove_map_data(this);
+                }
+        
+                var areas = $(map_data.map).find('area[coords]');
+                areas.unbind('click.mapster')
+                  .unbind('mouseover.mapster')
+                  .unbind('mouseout.mapster');
+            });
+      };
+      me.bind = function (opts) {
             opts = $.extend({}, $.mapster.defaults, opts);
 
             if ($.browser.msie && !me.has_canvas && !me.ie_config_complete) {
@@ -728,16 +746,20 @@ Based on code originally written by David Lynch
                 // save ref to this image even if we can't access it yet. commands will be queued
                 img = $(this);
                 map_data = get_map_data(this,true);
-                if (!map_data) {
-                    map_data = {
-                        image: this,
-                        complete: false,
-                        commands: [],
-                        data: [],
-                        xref: {}
-                    };
-                    $.mapster.impl.map_cache.push(map_data);
+                if (map_data) {
+                    clear_map_data(map_data);
+                    remove_map_data(this);
                 }
+                
+		    map_data = {
+			image: this,
+			complete: false,
+			commands: [],
+			data: [],
+			xref: {}
+		    };
+		    $.mapster.impl.map_cache.push(map_data);
+
 
                 if (!is_image_loaded(this)) {
                     // If the image isn't fully loaded, this won't work right.  Try again later.
