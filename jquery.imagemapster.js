@@ -709,18 +709,17 @@ Based on code originally written by David Lynch
          me.unbind = function(preserveState) {
             return this.each(function(e) {
                 var map_data= get_map_data(this,true);
-                if (!map_data) {
-	            return;
-                }
-                if (!preserveState) {
-                    clear_map_data(map_data);
-                    remove_map_data(this);
-                }
-        
-                var areas = $(map_data.map).find('area[coords]');
-                areas.unbind('click.mapster')
-                  .unbind('mouseover.mapster')
-                  .unbind('mouseout.mapster');
+                if (map_data) {
+			if (!preserveState) {
+			    clear_map_data(map_data);
+			    remove_map_data(this);
+			}
+
+			var areas = $(map_data.map).find('area[coords]');
+			areas.unbind('click.mapster')
+			  .unbind('mouseover.mapster')
+			  .unbind('mouseout.mapster');
+	        }
             });
       };
       me.bind = function (opts) {
