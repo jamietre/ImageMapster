@@ -727,7 +727,7 @@ Based on code originally written by David Lynch
                 return;
             }
             map_data.selected_list[area_id] = false;
-            clear_selections(map_data);
+            clear_selections(map_data,area_id);
             refresh_selections(map_data);
             clear_highlight(map_data);
         };
@@ -1076,8 +1076,12 @@ Based on code originally written by David Lynch
                     var toClear = $(map_data.overlay_canvas).find('[name="highlighted"]');
                     toClear.remove();
                 };
-                clear_selections = function(map_data) {
-                    $(map_data.base_canvas).find('[name^="static"]').remove();
+                clear_selections = function(map_data,area_id) {
+                    if (area_id) {
+                        $(map_data.base_canvas).find('[name="static_' + area_id.toString() + '"]').remove();
+                    } else {
+                        $(map_data.base_canvas).find('[name^="static"]').remove();
+                    }
                 };
             }
         };
