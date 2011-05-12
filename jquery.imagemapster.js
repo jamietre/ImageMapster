@@ -124,11 +124,12 @@ Based on code originally written by David Lynch
 // utility functions
     $.mapster.utils = {
         area_corner: function (area, left, top) {
-            var bestX, bestY, curX, curY, coords;
+            var bestX, bestY, curX, curY, coords,j,len;
             coords = $(area).attr('coords').split(',');
             bestX = left ? 999999 : -1;
             bestY = top ? 999999 : -1;
-            for (var j = 0; j < coords.length; j += 2) {
+            len=coords.length;
+            for (j = 0; j < len; j += 2) {
                 curX = parseInt(coords[j], 10);
                 curY = parseInt(coords[j + 1], 10);
 
@@ -143,12 +144,12 @@ Based on code originally written by David Lynch
         },
         // sorta like $.extend but limits to updating existing properties on the base object.
         mergeObjects: function (base) {
-            var obj,i,len;
+            var obj,i,len,prop;
             if (arguments) {
                 len=arguments.length;
                 for (i = 1; i < len; i++) {
                     obj = arguments[i];
-                    for (var prop in obj) {
+                    for (prop in obj) {
                         if (obj.hasOwnProperty(prop) && base.hasOwnProperty(prop)) {
                             base[prop] = obj[prop];
                         }
@@ -172,17 +173,15 @@ Based on code originally written by David Lynch
 
     };
     $.mapster.impl = (function () {
-        var me = {}; 
-        var u = $.mapster.utils;
-        var map_cache = [];
-        var ie_config_complete = false;
-        var has_canvas = null;
-        // rendering functions - defs are determined by browser in init code
-        var create_canvas_for = null;
-        var add_shape_to = null;
-        var clear_highlight = null;
-        // other stuff
-        var canvas_style = {
+        var me = {},
+          u = $.mapster.utils,
+          map_cache = [],
+          ie_config_complete = false,
+          has_canvas = null,
+          create_canvas_for = null,
+          add_shape_to = null,
+          clear_highlight = null,
+          canvas_style = {
             position: 'absolute',
             left: 0,
             top: 0,
@@ -209,7 +208,7 @@ Based on code originally written by David Lynch
         }
 
         function options_from_area_id(map_data, area_id, override_options) {
-            var opts, area_option_id;
+            var opts;
 
             opts = map_data.data[area_id].area_options;
             if (u.isTrueFalse(map_data.options.staticState)) {
@@ -221,9 +220,6 @@ Based on code originally written by David Lynch
             opts.id = area_id;
             return $.extend({}, map_data.area_options, opts, override_options);
         }
-        function options_from_key(map_data, key) {
-            return options_from_area_id(map_data, id_from_key(map_data, key));
-        }
         function options_from_area(map_data, area, override_options) {
             return options_from_area_id(map_data, id_from_area(map_data, area), override_options);
         }
@@ -233,8 +229,8 @@ Based on code originally written by David Lynch
             return [area.getAttribute('shape').toLowerCase().substr(0, 4), coords];
         }
         function create_canvas(img) {
-            var $img = $(img);
-            var canvas = create_canvas_for(img);
+            var $img = $(img),
+                canvas = create_canvas_for(img);
             $(canvas).css(canvas_style);
             canvas.width = $img.width();
             canvas.height = $img.height();
@@ -243,12 +239,11 @@ Based on code originally written by David Lynch
         // initialize the plugin
         // remember area_options.id === area_id id is just stored as an option
         function add_shape_group(map_data, specific_canvas, area_id, name, override_options) {
-            var subarea_options,shape,
+            var subarea_options,shape,i,
                 areas = map_data.map.find('area[' + map_data.options.mapKey + '="' + map_data.data[area_id].key + '"]'),
                 areas_length=areas.length;
                 
-
-            for (var i = areas_length - 1; i >= 0; i--) {
+            for (i = areas_length - 1; i >= 0; i--) {
                 subarea_options = options_from_area(map_data, areas[i], override_options);
                 shape = shape_from_area(areas[i]);
                 add_shape_to(specific_canvas, shape[0], shape[1], subarea_options, name);
@@ -271,8 +266,8 @@ Based on code originally written by David Lynch
         }
         // Configures selections from a separate list. 
         function set_areas_selected(map_data, selected_list) {
-            var list_len = selected_list.length;
-            for (var i = 0; i < list_len; i++) {
+            var i, list_len = selected_list.length;
+            for (i = 0; i < list_len; i++) {
                 if (selected_list[i]) {
                    set_area_selected(map_data, i);
                 }
@@ -375,8 +370,7 @@ Based on code originally written by David Lynch
         // rebind based on new area options 
         function set_area_options(map_data,areas) {
             var i,area_id,area_options,
-                selected_list = [],
-                opts = map_data.options;
+                selected_list = [];
             // refer by: map_data.options[map_data.data[x].area_option_id]
             for (i = 0; i < areas.length; i++) {
                 area_options = areas[i];
@@ -507,19 +501,19 @@ Based on code originally written by David Lynch
             }
         }
         function show_tooltip(map_data, area, area_options) {
-            var opts, area_id, tooltip, left, top, alignLeft, alignTop, container, tooltipCss;
-            opts = map_data.options;
-            area_id = area_options.id;
-            container = $(map_data.options.toolTipContainer);
+            var tooltip, left, top, tooltipCss,coords,
+                opts = map_data.options,
+                area_id = area_options.id,
+                alignLeft = true,
+                alignTop = true,
+                container = $(map_data.options.toolTipContainer);
             if (area_options.toolTip instanceof jQuery) {
                 tooltip = container.html(area_options.toolTip);
             } else {
                 tooltip = container.text(area_options.toolTip);
             }
 
-            alignLeft = true;
-            alignTop = true;
-            var coords = u.area_corner(area, alignLeft, alignTop);
+            coords = u.area_corner(area, alignLeft, alignTop);
 
             clear_tooltip(map_data);
             tooltip.hide();
@@ -612,6 +606,7 @@ Based on code originally written by David Lynch
             {
                 selected = me.toggle_selection(map_data, area_id);
             }
+            
             if (opts.boundList && opts.boundList.length > 0) {
                 list_target = setBoundListProperties(map_data, key, selected);
             }
@@ -648,7 +643,7 @@ Based on code originally written by David Lynch
         };
         
         me.get = function(key) {
-            var i, len,result,type_array, item,area_id,
+            var i, len,result,area_id,
                map_data = get_map_data(this.get(0));
             if (!map_data) {
                 return;
@@ -757,7 +752,6 @@ Based on code originally written by David Lynch
         }
 
         me.add_selection = function (map_data, area_id) {
-            var list_temp,list_len;
             // need to add the new one first so that the double-opacity effect leaves the current one highlighted for singleSelect
 
             if (map_data.options.singleSelect) {
@@ -968,19 +962,21 @@ Based on code originally written by David Lynch
             });
         };
         me.init = function () {
-            var has_VML = document.namespaces;
+            var i,context,
+                has_VML = document.namespaces;
             // define indexOf for IE6
             if (!Array.prototype.indexOf) {
                 Array.prototype.indexOf = function (searchElement /*, fromIndex */) {
+                    var t,n,k,len;
                     if (this === null) {
                         throw new TypeError();
                     }
-                    var t = Object(this);
-                    var len = t.length >>> 0;
+                    t = Object(this);
+                    len = t.length >>> 0;
                     if (len === 0) {
                         return -1;
                     }
-                    var n = 0;
+                    n = 0;
                     if (arguments.length > 0) {
                         n = Number(arguments[1]);
                         if (n !== n) // shortcut for verifying if it's NaN
@@ -992,7 +988,7 @@ Based on code originally written by David Lynch
                     if (n >= len)
                     { return -1; }
 
-                    var k = n >= 0 ? n : Math.max(len - Math.abs(n), 0);
+                    k = n >= 0 ? n : Math.max(len - Math.abs(n), 0);
 
                     for (; k < len; k++) {
                         if (k in t && t[k] === searchElement)
@@ -1025,7 +1021,7 @@ Based on code originally written by David Lynch
                         }
                         return 'rgba(' + hex_to_decimal(color.substr(0, 2)) + ',' + hex_to_decimal(color.substr(2, 2)) + ',' + hex_to_decimal(color.substr(4, 2)) + ',' + opacity + ')';
                     }
-                    var i, context = canvas.getContext('2d');
+                    context = canvas.getContext('2d');
                     context.beginPath();
                     if (shape == 'rect') {
                         context.rect(coords[0], coords[1], coords[2] - coords[0], coords[3] - coords[1]);
