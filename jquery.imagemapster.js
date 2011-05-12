@@ -5,7 +5,8 @@ Project home page http://www.outsharked.com/imagemapster
 
 A jQuery plugin to enhance image maps. 
 
-version 1.0.9 (unreleased)
+version 1.0.9
+-- add 'options' option
 -- add 'rebind' option
 -- add isDeselectable option
 -- handle exceptions better (when acting on unbound images)
@@ -92,7 +93,7 @@ Based on code originally written by David Lynch
         listKey: 'value',
         listSelectedAttribute: 'selected',
         listSelectedClass: null,
-        showToolTips: false,
+        showToolTip: false,
         toolTipClose: ['area-mouseout'],
         toolTipContainer: $.mapster.default_tooltip_container(),
         onClick: null,
@@ -190,7 +191,7 @@ Based on code originally written by David Lynch
         };
         me.test = function(obj) {
             return eval(obj);
-        }
+        };
         // end utility functions
         function id_from_key(map_data, key) {
             if (key && map_data.xref && map_data.xref.hasOwnProperty(key)) {
@@ -209,13 +210,7 @@ Based on code originally written by David Lynch
 
         function options_from_area_id(map_data, area_id, override_options) {
             var opts, area_option_id;
-            //area_option_id = map_data.data[area_id].area_option_id;
 
-//            if (area_option_id >= 0) {
-  //              opts = map_data.options.areas[area_option_id];
-    ///        } else {
-       //         opts = {};
-         //   }
             opts = map_data.data[area_id].area_options;
             if (u.isTrueFalse(map_data.options.staticState)) {
                 opts.selected = map_data.options.staticState;
@@ -290,7 +285,7 @@ Based on code originally written by David Lynch
         /// return current map_data for an image or area
        	function get_map_data_index(obj) {
 	    var img, id, index=-1;
-	    switch (obj.tagName.toLowerCase()) {
+	    switch (obj.tagName && obj.tagName.toLowerCase()) {
 		case 'area':
 		    id = $(obj).parent().attr('name');
 		    img = $("img[usemap='#" + id + "']").get(0);
@@ -801,20 +796,57 @@ Based on code originally written by David Lynch
                     clear_events(map_data);
     	        }
             });
-    };
+      };
+      function merge_areas(map_data,areas) {
+        var i,index,len,
+            map_areas=map_data.options.areas;
+        if (areas) {
+            len = areas.length;
+            for (i=0;i<len;i++) {
+                index=u.arrayIndexOfProp(map_areas,"key",areas[i].key);
+                if (index>=0) {
+                    $.extend(map_areas[index],areas[i]);
+                } else {
+                    map_areas.push(areas[i]);
+                }
+            }
+        }
+      }
+      function merge_options(map_data,options) {
+          var areas;
+          areas=map_data.options.areas;
+          $.extend(map_data.options,options);
+          map_data.options.areas=areas;
+          merge_areas(map_data,options.areas);      
+          // refreshe the area_option template
+          u.mergeObjects(map_data.area_options, options);
+      }
       // refresh options. 
       me.rebind = function(options) {
           var map_data;
           this.filter('img').each(function() {
               map_data=get_map_data(this,true);
               if (map_data) {
-                 $.extend(map_data.options,options);
+                  merge_options(map_data,options);
+                  // this will only update new areas that may have been passed
+                  set_area_options(map_data,options.areas || {});
               }
-              u.mergeObjects(map_data.area_options, options);
-              // this will only update new areas that may have been passed
-              set_area_options(map_data,options.areas || {});
           });
           return this;
+      };
+      me.options=function(options) {
+        var map_data,
+           img = this.filter('img').first().get(0);
+        map_data=get_map_data(img,true);
+        if (!map_data) {
+            return;
+        }
+        if (options) {
+            merge_options(map_data,options);
+            return this;
+        } else {
+            return map_data.options;
+        }
       };
       me.bind = function (opts) {
         var style,shapes;
@@ -1085,6 +1117,7 @@ Based on code originally written by David Lynch
         deselect: function () {
             $.mapster.impl.set.call(this, false);
         },
+        options: $.mapster.impl.options,
         test: $.mapster.impl.test
     };
     $.mapster.impl.init();

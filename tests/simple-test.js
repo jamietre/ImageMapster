@@ -35,6 +35,29 @@ Test.prototype.addTest = function (name, test) {
     };
     this.tests.push(testData);
 };
+Test.prototype._arrayEq = function(arr1,arr2) {
+    var err;
+        if (!(arr1.length && (arr1.length>-1))) {
+        err='Test case has no length property';
+    }
+    if (!(arr2.length && (arr2.length>-1))) {
+        err='Expected value has no length property';
+    }
+    if (!err && arr1.length != arr2.length) {
+        err='Arrays different length (test: ' + arr1.length + ', arr2expected: ' + expected.length;
+    }
+    if (!err) {
+        for (var e=0;e<arr1.length;e++) {
+            if (arr1[e]!==arr2[e]) {
+                err="Arrays not equal starting at element " + count +".";
+                break;
+            }
+        }
+    }
+    
+    return err;
+
+};
 Test.prototype.assertEq = function (testCase, expected, description) {
     var err ;
     this.startTest();
@@ -48,21 +71,31 @@ Test.prototype.assertEq = function (testCase, expected, description) {
     this.endTest(err,description);
 };
 // test that object properties (shallow) match
-Test.prototype.objectPropsEq = function(testcase,expected,description) {
-    function compare(t1,t2, t1name, t2name) {
-        var err;
-        for (var prop in expected) {
-            if (expected.hasOwnProperty(prop)) {
-                if (!testcase[prop]) {
-                   err='Property ' + prop + ' in ' + t1name + ' does not exist in ' + t2name;
-                   break;
+Test.prototype.assertPropsEq = function(testcase,expected,description) {
+        var me=this,err;
+        function compare(t1,t2, t1name, t2name) {
+        if (t1 && t1!==t2) {
+            for (var prop in t2) {
+                if (t2.hasOwnProperty(prop)) {
+                    if (t1[prop]===undefined) {
+                       err='Property ' + prop + ' in ' + t1name + ' does not exist in ' + t2name;
+                       break;
+                    }
+                    if (t1 instanceof Array && t2 instanceof Array) {
+                        err=me._arrayEq(t1,t2);
+                        break;
+                    }
+                    if (typeof t1[prop]==='object' && typeof t2[prop]==='object') {
+                        err=compare(t1[prop],t2[prop],t1name+'.'+prop,t2name+'.'+prop);
+                        break;
+                    }
+                    if (t1[prop]!==t2[prop]) {
+                       err='Property ' + prop + ' in ' + t1name + ' does not match same property in ' + t2name;
+                       break;           
+                    }
                 }
-                if (testcase[prop]!==expected[prop]) {
-                   err='Property ' + prop + ' in ' + t1name + ' does not match same property in ' + t2name;
-                   break;           
-                }
-            }
-        } 
+            } 
+        }
         return err;
     }
     var err;
@@ -78,30 +111,13 @@ Test.prototype.objectPropsEq = function(testcase,expected,description) {
     }
     this.endTest(err,description);
 };
+
 Test.prototype.assertArrayEq = function(testcase, expected, description) {
     var err;
     this.startTest();
 
-    if (!(testcase.length && (testcase.length>-1))) {
-        err='Test case has no length property';
-    }
-    if (!(expected.length && (expected.length>-1))) {
-        err='Expected value has no length property';
-    }
-    if (!err && testcase.length != expected.length) {
-        err='Arrays different length (test: ' + testcase.length + ', expected: ' + expected.length;
-    }
-    if (!err) {
-        for (var e=0;e<testcase.length;e++) {
-            if (testcase[e]!==expected[e]) {
-                err="Arrays not equal starting at element " + count +".";
-                break;
-            }
-        }
-    }
-    if (err)  {
-        this.addError(err,description);
-    }
+    err = this._arrayEq(testcase,expected);
+    this.endTest(err,description);
 };
 Test.prototype.assertInstanceOf = function(testcase, expected, description) {
     var err,

@@ -78,19 +78,19 @@ mapster_tests = function (options)
        var obj = {a: "a", b: "b"};
        var otherObj = {a: "a2", b: "b2", c: "c"};
        result = u.mergeObjects(obj,otherObj);
-       ut.objectPropsEq(result,{a:"a2",b:"b2"},"Merge with extra properties");
+       ut.assertPropsEq(result,{a:"a2",b:"b2"},"Merge with extra properties");
        // input object should not be affected
-       ut.objectPropsEq(obj,{a:"a2",b:"b2"},"Test input object following merge matches output");
+       ut.assertPropsEq(obj,{a:"a2",b:"b2"},"Test input object following merge matches output");
        
        otherObj={a:"a3" };
        result = u.mergeObjects(result,otherObj);
-       ut.objectPropsEq(result,{a:"a3",b:"b2"},"Merge with missing properties");
+       ut.assertPropsEq(result,{a:"a3",b:"b2"},"Merge with missing properties");
        
        // test several at once
        otherObj= {b:"b4"};
        otherObj2 = {a:"a4"};
        result = u.mergeObjects(obj,otherObj,otherObj2);
-       ut.objectPropsEq(result,{a:"a4",b:"b4"}, "Merge with mutiple inputs");
+       ut.assertPropsEq(result,{a:"a4",b:"b4"}, "Merge with mutiple inputs");
        
        obj={test:"test"};
        var arr = [{name:"test1",value:"value1"},{name:"test2",value:"value2"},{name:"test3",value:obj}];
@@ -121,6 +121,21 @@ mapster_tests = function (options)
         if (disableCanvas) {
             map.mapster('test','has_canvas=false');    
         }
+        
+        // options
+
+        var initialOpts = $.extend({},$.mapster.defaults,map_options);
+        var opts = map.mapster('options');
+
+        ut.assertPropsEq(opts,initialOpts,"Options retrieved match initial options");
+        var newOpts = {isSelectable: false, areas: [{key:'MT',isDeselectable:false}]};
+        map.mapster('options',newOpts);
+        opts = map.mapster('options');
+        ut.assertPropsEq(opts,$.extend(true,{},initialOpts,newOpts),"Options retrieved match updated value");
+        ut.assertEq(opts.areas.length,6,"Area option was added");
+        // put them back or nothing will work...
+        opts = map.mapster('options',{isSelectable:true, areas: [{key: 'MT',isDeselectable:true}]});
+                
         ut.assertInstanceOf(map, "jQuery", "Plugin returns jQuery object");
         ut.assertArrayEq(map,$("#usa_image"),"Plugin returns jquery same object as invocation");
 
