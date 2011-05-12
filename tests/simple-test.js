@@ -6,7 +6,7 @@ V1.0 James Treworgy
 This code is in the public domain
 */
 
-function test(options) {
+function Test(options) {
     this.tests = [];
     this.title="Unit Tests for unnamed project";
     $.extend(this, options);
@@ -17,17 +17,17 @@ function test(options) {
     this._fail_count = 0;
 }
 
-test.prototype.startTest = function() {
+Test.prototype.startTest = function() {
     this._test_count++;
 };
-test.prototype.addTest = function (name, test) {
+Test.prototype.addTest = function (name, test) {
     var testData = {
         name: name,
         test: test
     };
     this.tests.push(testData);
 };
-test.prototype.assertEq = function (testCase, expected, description) {
+Test.prototype.assertEq = function (testCase, expected, description) {
     var err = '';
     this.startTest();
     if (typeof testCase != typeof expected) {
@@ -41,7 +41,7 @@ test.prototype.assertEq = function (testCase, expected, description) {
         this.addError(err,description);
     }
 };
-test.prototype.assertArrayEq = function(testcase, expected, description) {
+Test.prototype.assertArrayEq = function(testcase, expected, description) {
     var err;
     this.startTest();
 
@@ -66,7 +66,7 @@ test.prototype.assertArrayEq = function(testcase, expected, description) {
         this.addError(err,description);
     }
 };
-test.prototype.assertInstanceOf = function(testcase, expected, description) {
+Test.prototype.assertInstanceOf = function(testcase, expected, description) {
     var err,
         test = eval("testcase instanceof " + expected);
     this.startTest();
@@ -77,12 +77,12 @@ test.prototype.assertInstanceOf = function(testcase, expected, description) {
         this.addError(err,description);
     }  
 };
-test.prototype.addError = function (err,test) {
+Test.prototype.addError = function (err,test) {
     this.output.append('<span>Failed test ' + this._test_count + ': ' + err + ' in test "' + test + '"</span><br>');
     this._fail_count++;
 };
 // run all tests if no name provided
-test.prototype.run = function (test) {
+Test.prototype.run = function (test) {
     var i, started = false;
     function startTest(test) {
         if (!started) {

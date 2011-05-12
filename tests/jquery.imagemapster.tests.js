@@ -1,9 +1,11 @@
+
+
 mapster_tests = function (options)
 {
     var has_canvas =  !$.browser.msie && !!document.createElement('canvas').getContext;
-    var map_test = new test(options);
+    var map_test = new Test(options);
+    var map;
 
-    me = this;
     var clickCalledBack=false;
     var onClickCallbackThis=null;
     var onClickCallback = function(e) {
@@ -65,10 +67,24 @@ mapster_tests = function (options)
         ]
     };
     
-    map_test.addTest("Mapster-Basic-Tests", function (ut)
-    {
-        var map = $("#usa_image").mapster(map_options);
-        
+    map_test.addTest("Mapster-Internal-Unit-Tests",function(ut) {
+         map = $("#usa_image").mapster(map_options);
+         var result = $.mapster.impl.test("isTrueFalse(true)");
+         ut.assertEq(result,true,"isTrueFalse returns true=true");   
+         var result = $.mapster.impl.test("isTrueFalse(false)");
+         ut.assertEq(result,true,"isTrueFalse returns false=true");   
+         var result = $.mapster.impl.test("isTrueFalse(null)");
+         ut.assertEq(result,false,"isTrueFalse returns null=false");   
+    });
+    
+
+    
+    var basicTests = function (ut,disableCanvas)
+    {       
+        map = $("#usa_image").mapster(map_options);
+        if (disableCanvas) {
+            map.mapster('test','has_canvas=false');    
+        }
         ut.assertInstanceOf(map, "jQuery", "Plugin returns jQuery object");
         ut.assertArrayEq(map,$("#usa_image"),"Plugin returns jquery same object as invocation");
 
@@ -139,6 +155,9 @@ mapster_tests = function (options)
         
         //TODO: 
         // document "rebind" 
+        // document "isDeselectable"
+        // finish & document "click"
+        
         return;
 
         // cleanup tests - skip to play with map afterwards
@@ -151,8 +170,16 @@ mapster_tests = function (options)
         map.mapster('unbind');
         ut.assertEq($('canvas').length,0,'No canvases remain after an unbind.');
         
-    });
+    };
+    if (has_canvas) {
+         map_test.addTest("Mapster Basic Tests - hasCanvas disabled",function(ut) {
+            basicTests(ut,true);
+         });    
+         
+    }
+    
+     map_test.addTest("Mapster Basic Tests",basicTests);    
+
     return map_test;
 };
-
 
