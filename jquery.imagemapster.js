@@ -260,7 +260,8 @@ Based on code originally written by David Lynch
         }
         // internal function to actually set the area
         function set_area_selected(map_data,area_id) {
-            var list = map_data.selected_list;
+            var name,
+                list = map_data.selected_list;
             if (list[area_id]) { return; }
             list[area_id] = true;
 
