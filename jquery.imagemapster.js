@@ -181,6 +181,7 @@ Based on code originally written by David Lynch
           create_canvas_for = null,
           add_shape_to = null,
           clear_highlight = null,
+          clear_selections = null,
           canvas_style = {
             position: 'absolute',
             left: 0,
@@ -275,11 +276,11 @@ Based on code originally written by David Lynch
         }
         function is_image_loaded(img) {
             if (!img.complete) { return false; } // IE
-            if (typeof img.naturalWidth != "undefined" && img.naturalWidth === 0) { return false; } // Others
+            if (typeof img.naturalWidth !== "undefined" && img.naturalWidth === 0) { return false; } // Others
             return true;
         }
         /// return current map_data for an image or area
-       	function get_map_data_index(obj) {
+        function get_map_data_index(obj) {
 	    var img, id, index=-1;
 	    switch (obj.tagName && obj.tagName.toLowerCase()) {
 		case 'area':
@@ -410,7 +411,7 @@ Based on code originally written by David Lynch
             opts = map_data.options;
             areas = $(map_data.map).find('area[coords]');
             map_key_xref = {};
-            default_group = opts.mapKey == "mapster_id";
+            default_group = opts.mapKey === "mapster_id";
             for (i = 0; i < areas.length; i++) {
                 area_id = 0;
                 area = areas[i];
@@ -461,13 +462,13 @@ Based on code originally written by David Lynch
             if (opts.isSelectable && opts.onGetList) {
                 sorted_list = group_list.slice(0);
                 if (opts.sortList) {
-                    if (opts.sortList == "desc") {
+                    if (opts.sortList === "desc") {
                         sort_func = function (a, b) {
-                            return a == b ? 0 : (a > b ? -1 : 1);
+                            return a === b ? 0 : (a > b ? -1 : 1);
                         };
                     } else {
                         sort_func = function (a, b) {
-                            return a == b ? 0 : (a < b ? -1 : 1);
+                            return a === b ? 0 : (a < b ? -1 : 1);
                         };
                     }
 
@@ -726,12 +727,8 @@ Based on code originally written by David Lynch
                 return;
             }
             map_data.selected_list[area_id] = false;
-            if (!has_canvas) {
-                // for canvass-less browsers
-                $(map_data.base_canvas).find('[name="static_' + area_id.toString() + '"]').remove();
-            } else {
-                refresh_selections(map_data);
-            }
+            clear_selections(map_data);
+            refresh_selections(map_data);
             clear_highlight(map_data);
         };
         function refresh_selections(map_data) {
@@ -755,6 +752,7 @@ Based on code originally written by David Lynch
             // need to add the new one first so that the double-opacity effect leaves the current one highlighted for singleSelect
 
             if (map_data.options.singleSelect) {
+                clear_selections(map_data);
                 map_data.selected_list=[];
             }
 
@@ -1050,6 +1048,9 @@ Based on code originally written by David Lynch
                 clear_highlight = function (map_data) {
                     map_data.overlay_canvas.getContext('2d').clearRect(0, 0, map_data.overlay_canvas.width, map_data.overlay_canvas.height);
                 };
+                clear_selections = function() {
+                    return null;
+                }
             } else {   // ie executes this code
                 create_canvas_for = function (img) {
                     return $('<var style="zoom:1;overflow:hidden;display:block;width:' + img.width + 'px;height:' + img.height + 'px;"></var>').get(0);
@@ -1074,6 +1075,9 @@ Based on code originally written by David Lynch
                 clear_highlight = function (map_data) {
                     var toClear = $(map_data.overlay_canvas).find('[name="highlighted"]');
                     toClear.remove();
+                };
+                clear_selections = function(map_data) {
+                    $(map_data.base_canvas).find('[name^="static"]').remove();
                 };
             }
         };
