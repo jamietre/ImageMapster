@@ -2,7 +2,6 @@
 
 mapster_tests = function (options)
 {
-    var has_canvas =  !$.browser.msie && !!document.createElement('canvas').getContext;
     var map_test = new Test(options);
     var map;
 
@@ -67,21 +66,58 @@ mapster_tests = function (options)
         ]
     };
     
-    map_test.addTest("Mapster-Internal-Unit-Tests",function(ut) {
-         map = $("#usa_image").mapster(map_options);
-         var result = $.mapster.impl.test("isTrueFalse(true)");
+    map_test.addTest("Mapster Utility Function Tests",function(ut) {
+        var u = $.mapster.utils;
+        var result = u.isTrueFalse(true);
          ut.assertEq(result,true,"isTrueFalse returns true=true");   
-         var result = $.mapster.impl.test("isTrueFalse(false)");
+         result = u.isTrueFalse(false);
          ut.assertEq(result,true,"isTrueFalse returns false=true");   
-         var result = $.mapster.impl.test("isTrueFalse(null)");
+         result = u.isTrueFalse(null);
          ut.assertEq(result,false,"isTrueFalse returns null=false");   
+       
+       var obj = {a: "a", b: "b"};
+       var otherObj = {a: "a2", b: "b2", c: "c"};
+       result = u.mergeObjects(obj,otherObj);
+       ut.objectPropsEq(result,{a:"a2",b:"b2"},"Merge with extra properties");
+       // input object should not be affected
+       ut.objectPropsEq(obj,{a:"a2",b:"b2"},"Test input object following merge matches output");
+       
+       otherObj={a:"a3" };
+       result = u.mergeObjects(result,otherObj);
+       ut.objectPropsEq(result,{a:"a3",b:"b2"},"Merge with missing properties");
+       
+       // test several at once
+       otherObj= {b:"b4"};
+       otherObj2 = {a:"a4"};
+       result = u.mergeObjects(obj,otherObj,otherObj2);
+       ut.objectPropsEq(result,{a:"a4",b:"b4"}, "Merge with mutiple inputs");
+       
+       obj={test:"test"};
+       var arr = [{name:"test1",value:"value1"},{name:"test2",value:"value2"},{name:"test3",value:obj}];
+
+       var index = u.arrayIndexOfProp(arr,"name","test2");
+        ut.assertEq(index,1,"arrayIndexOfProp returns correct value for string");
+        index = u.arrayIndexOfProp(arr,"value",obj);
+        ut.assertEq(index,2,"arrayIndexOfProp returns correct value for object & last element");
+        index = u.arrayIndexOfProp(arr,"name","test1");
+        ut.assertEq(index,0,"arrayIndexOfProp returns correct value for first element");
+        index = u.arrayIndexOfProp(arr,"foo","bar");
+        ut.assertEq(index,-1,"Missing property handled correctly");
+        index = u.arrayIndexOfProp(arr,"name","bar");
+        ut.assertEq(index,-1,"Missing property value handled correctly");
     });
     
 
     
     var basicTests = function (ut,disableCanvas)
     {       
+        
         map = $("#usa_image").mapster(map_options);
+        var has_canvas =  map.mapster("test","has_canvas");
+        // testing with no canvas on a browser that doesn't support it anyway doesn't make sense, regular test will cover it
+        if (!has_canvas && disableCanvas) {
+            return;
+        }
         if (disableCanvas) {
             map.mapster('test','has_canvas=false');    
         }
@@ -152,15 +188,16 @@ mapster_tests = function (options)
         ut.assertEq(map.mapster('get','ME'),true,"Could not deselect one item marked as !isDeselectable");
         $('area[state="CA"]').first().click();
         ut.assertEq(map.mapster('get','CA'),false,"Could deselect other items ");
-        
-        //TODO: 
-        // document "rebind" 
-        // document "isDeselectable"
-        // finish & document "click"
-        
-        return;
+
+
+        // restore internal canvas setting or these tests won't work
+        if (disableCanvas) {
+            map.mapster('test','has_canvas=true');    
+        }
 
         // cleanup tests - skip to play with map afterwards
+        // return;
+
         if (has_canvas) {
             ut.assertEq($('canvas').length,2,'There are 2 canvases.');
             map.mapster(map_options);
@@ -168,15 +205,14 @@ mapster_tests = function (options)
         }
         
         map.mapster('unbind');
-        ut.assertEq($('canvas').length,0,'No canvases remain after an unbind.');
-        
+        ut.assertEq($('canvas').length,0,'No canvases remain after an unbind.');       
     };
-    if (has_canvas) {
-         map_test.addTest("Mapster Basic Tests - hasCanvas disabled",function(ut) {
-            basicTests(ut,true);
-         });    
-         
-    }
+
+     map_test.addTest("Mapster Basic Tests - hasCanvas disabled",function(ut) {
+        basicTests(ut,true);
+     });    
+     
+     
     
      map_test.addTest("Mapster Basic Tests",basicTests);    
 

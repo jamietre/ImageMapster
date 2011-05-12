@@ -59,8 +59,6 @@ Based on code originally written by David Lynch
             return methods[method].apply(this, Array.prototype.slice.call(arguments, 1));
         } else if (typeof method === 'object' || !method) {
             return methods.bind.apply(this, arguments);
-        } else if (method.length >= 4 && method.substring(0,4)=='test') {
-            return $.mapster.impl[method].apply(this, Array.prototype.slice.call(arguments, 1));
         } else 
         {
             $.error('Method ' + method + ' does not exist on jQuery.mapster');
@@ -122,9 +120,59 @@ Based on code originally written by David Lynch
             isDeselectable: def.isDeselectable
         };
     } ());
+// utility functions
+    $.mapster.utils = {
+        area_corner: function (area, left, top) {
+            var bestX, bestY, curX, curY, coords;
+            coords = $(area).attr('coords').split(',');
+            bestX = left ? 999999 : -1;
+            bestY = top ? 999999 : -1;
+            for (var j = 0; j < coords.length; j += 2) {
+                curX = parseInt(coords[j], 10);
+                curY = parseInt(coords[j + 1], 10);
 
+                if (top ? curY < bestY : curY > bestY) {
+                    bestY = curY;
+                    if (left ? curX < bestX : curX > bestX) {
+                        bestX = curX;
+                    }
+                }
+            }
+            return [bestX, bestY];
+        },
+        // sorta like $.extend but limits to updating existing properties on the base object.
+        mergeObjects: function (base) {
+            var obj,i,len;
+            if (arguments) {
+                len=arguments.length;
+                for (i = 1; i < len; i++) {
+                    obj = arguments[i];
+                    for (var prop in obj) {
+                        if (obj.hasOwnProperty(prop) && base.hasOwnProperty(prop)) {
+                            base[prop] = obj[prop];
+                        }
+                    }
+                }
+            }
+            return base;
+        },
+        arrayIndexOfProp: function (arr, prop, obj) {
+            var i = arr.length;
+            while (i--) {
+                if (arr[i][prop] === obj) {
+                    return i;
+                }
+            }
+            return -1;
+        },
+        isTrueFalse: function(obj) {
+            return obj === true || obj === false;
+        }
+
+    };
     $.mapster.impl = (function () {
         var me = {}; 
+        var u = $.mapster.utils;
         var map_cache = [];
         var ie_config_complete = false;
         var has_canvas = null;
@@ -142,10 +190,6 @@ Based on code originally written by David Lynch
         };
         me.test = function(obj) {
             return eval(obj);
-        }
-        // utility functions
-        function isTrueFalse(obj) {
-            return obj === true || obj === false;
         }
         // end utility functions
         function id_from_key(map_data, key) {
@@ -173,10 +217,10 @@ Based on code originally written by David Lynch
        //         opts = {};
          //   }
             opts = map_data.data[area_id].area_options;
-            if (isTrueFalse(map_data.options.staticState)) {
+            if (u.isTrueFalse(map_data.options.staticState)) {
                 opts.selected = map_data.options.staticState;
                 opts.isSelectable = false;
-            } else if (isTrueFalse(opts.staticState)) {
+            } else if (u.isTrueFalse(opts.staticState)) {
                 opts.isSelectable = false;
             }
             opts.id = area_id;
@@ -256,7 +300,7 @@ Based on code originally written by David Lynch
 		    break;
 	    }
 	    if (img) {
-		index = $.mapster.utils.arrayIndexOfProp(map_cache, 'image', img);
+		index = u.arrayIndexOfProp(map_cache, 'image', img);
 	    }
 	    return index;
 
@@ -347,7 +391,7 @@ Based on code originally written by David Lynch
                     //area_options = options_from_area_id(map_data, area_id);
  
                     // if a static state, use it, otherwise use selected.
-                    selected_list[area_id] = (isTrueFalse(area_options.staticState)) ?
+                    selected_list[area_id] = (u.isTrueFalse(area_options.staticState)) ?
                                 area_options.staticState : area_options.selected;
                 }
             }
@@ -395,7 +439,7 @@ Based on code originally written by David Lynch
                         group_list[area_id].key = area_id;
                         $area.attr('mapster_id', area_id);
                     } else {
-                        group_data_index = $.mapster.utils.arrayIndexOfProp(group_list, 'key', group);
+                        group_data_index = u.arrayIndexOfProp(group_list, 'key', group);
                         if (group_data_index >= 0) {
                             area_id = group_data_index;
                             if (group_value && !group_list[area_id].value) {
@@ -408,7 +452,7 @@ Based on code originally written by David Lynch
                     map_key_xref[group] = area_id;
                 }
 
-                if (opts.useAreaData && !isTrueFalse(opts.staticState)) {
+                if (opts.useAreaData && !u.isTrueFalse(opts.staticState)) {
                     area_options = $area.data('mapster');
                     key = $area.attr(opts.mapKey);
                     // add any old format options to new format array
@@ -479,7 +523,7 @@ Based on code originally written by David Lynch
 
             alignLeft = true;
             alignTop = true;
-            var coords = $.mapster.utils.area_corner(area, alignLeft, alignTop);
+            var coords = u.area_corner(area, alignLeft, alignTop);
 
             clear_tooltip(map_data);
             tooltip.hide();
@@ -497,7 +541,7 @@ Based on code originally written by David Lynch
             if (top < 0) {
                 alignTop = false;
             }
-            coords = $.mapster.utils.area_corner(area, alignLeft, alignTop);
+            coords = u.area_corner(area, alignLeft, alignTop);
             left = coords[0] - (alignLeft ? tooltip.outerWidth(true) : 0);
             top = coords[1] - (alignTop ? tooltip.outerHeight(true) : 0);
 
@@ -536,12 +580,12 @@ Based on code originally written by David Lynch
             var area, area_options, area_id;
             area = this;
 
-            if (isTrueFalse(map_data.options.staticState)) {
+            if (u.isTrueFalse(map_data.options.staticState)) {
                 return;
             }
             area_options = options_from_area(map_data, area);
             area_id = area_options.id;
-            if (!isTrueFalse(area_options.staticState)) {
+            if (!u.isTrueFalse(area_options.staticState)) {
                 add_shape_group(map_data, map_data.overlay_canvas, area_id, "highlighted");
             }
             if (map_data.options.showToolTip && area_options.toolTip && map_data.activeToolTipID != area_id) {
@@ -633,7 +677,7 @@ Based on code originally written by David Lynch
 
         me.set = function (selected, key, set_bound) {
             var lastParent, parent, map_data, key_list, area_id, do_set_bound,i,len;
-            do_set_bound = isTrueFalse(set_bound) ? set_bound : true;
+            do_set_bound = u.isTrueFalse(set_bound) ? set_bound : true;
             map_data = get_map_data(this.get(0));
             if (!map_data.complete) {
                 map_data.commands.push({ command: 'set', args: arguments });
@@ -766,7 +810,7 @@ Based on code originally written by David Lynch
               if (map_data) {
                  $.extend(map_data.options,options);
               }
-              $.mapster.utils.mergeObjects(map_data.area_options, options);
+              u.mergeObjects(map_data.area_options, options);
               // this will only update new areas that may have been passed
               set_area_options(map_data,options.areas || {});
           });
@@ -827,7 +871,7 @@ Based on code originally written by David Lynch
                 // for backward compatibility with jquery "data" on areas
                 options = $.extend({}, opts, img.data('mapster'));
                 area_options = $.extend({}, $.mapster.area_defaults);
-                $.mapster.utils.mergeObjects(area_options, options);
+                u.mergeObjects(area_options, options);
 
                 // jQuery bug with Opera, results in full-url#usemap being returned from jQuery's attr.
                 // So use raw getAttribute instead.
@@ -1006,53 +1050,7 @@ Based on code originally written by David Lynch
         };
         return me;
     } ());
-    // utility functions
-    $.mapster.utils = {
-        area_corner: function (area, left, top) {
-            var bestX, bestY, curX, curY, coords;
-            coords = $(area).attr('coords').split(',');
-            bestX = left ? 999999 : -1;
-            bestY = top ? 999999 : -1;
-            for (var j = 0; j < coords.length; j += 2) {
-                curX = parseInt(coords[j], 10);
-                curY = parseInt(coords[j + 1], 10);
-
-                if (top ? curY < bestY : curY > bestY) {
-                    bestY = curY;
-                    if (left ? curX < bestX : curX > bestX) {
-                        bestX = curX;
-                    }
-                }
-            }
-            return [bestX, bestY];
-        },
-        // sorta like $.extend but limits to updating existing properties on the base object.
-        mergeObjects: function (base) {
-            var obj,i;
-            if (arguments) {
-                for (i = 0; i < arguments.length; i++) {
-                    obj = arguments[i];
-                    for (var prop in obj) {
-                        if (obj.hasOwnProperty(prop) && base.hasOwnProperty(prop)) {
-                            base[prop] = obj[prop];
-                        }
-                    }
-                }
-            }
-            return obj;
-        },
-        arrayIndexOfProp: function (arr, prop, obj) {
-            var i = arr.length;
-            while (i--) {
-                if (arr[i][prop] === obj) {
-                    return i;
-                }
-            }
-            return -1;
-        }
-    };
-
-
+    
     // A plugin selector to return nodes where an attribute matches any item from a comma-separated list. The list should not be quoted.
     // Will be more efficient (and easier) than selecting each one individually
     // usage: $('attrMatches("attribute_name","item1,item2,...");
@@ -1086,7 +1084,8 @@ Based on code originally written by David Lynch
         },
         deselect: function () {
             $.mapster.impl.set.call(this, false);
-        }
+        },
+        test: $.mapster.impl.test
     };
     $.mapster.impl.init();
 })(jQuery);

@@ -16,9 +16,17 @@ function Test(options) {
     this._test_count= 0;
     this._fail_count = 0;
 }
-
+Test.prototype.addError = function (err,test) {
+    this.output.append('<span>Failed test ' + this._test_count + ': ' + err + ' in test "' + test + '"</span><br>');
+    this._fail_count++;
+};
 Test.prototype.startTest = function() {
     this._test_count++;
+};
+Test.prototype.endTest = function(err,description) {
+    if (err) {
+        this.addError(err,description);
+    }
 };
 Test.prototype.addTest = function (name, test) {
     var testData = {
@@ -28,7 +36,7 @@ Test.prototype.addTest = function (name, test) {
     this.tests.push(testData);
 };
 Test.prototype.assertEq = function (testCase, expected, description) {
-    var err = '';
+    var err ;
     this.startTest();
     if (typeof testCase != typeof expected) {
         err = 'Test case type "' + typeof testCase + '" != expected type "' + typeof expected + '"';
@@ -37,9 +45,38 @@ Test.prototype.assertEq = function (testCase, expected, description) {
     if (!err && testCase != expected) {
         err = '"' + testCase + '" != "' + expected + '"';
     }
-    if (err) {
-        this.addError(err,description);
+    this.endTest(err,description);
+};
+// test that object properties (shallow) match
+Test.prototype.objectPropsEq = function(testcase,expected,description) {
+    function compare(t1,t2, t1name, t2name) {
+        var err;
+        for (var prop in expected) {
+            if (expected.hasOwnProperty(prop)) {
+                if (!testcase[prop]) {
+                   err='Property ' + prop + ' in ' + t1name + ' does not exist in ' + t2name;
+                   break;
+                }
+                if (testcase[prop]!==expected[prop]) {
+                   err='Property ' + prop + ' in ' + t1name + ' does not match same property in ' + t2name;
+                   break;           
+                }
+            }
+        } 
+        return err;
     }
+    var err;
+    this.startTest();
+    if (typeof testcase != 'object' || typeof expected != 'object') {
+        err='Test cases are not both objects';
+    }
+    if (!err) {
+        err=compare(testcase,expected,"test","expected");
+    }
+    if (!err) {
+        err=compare(expected,testcase,"expected","testcase");
+    }
+    this.endTest(err,description);
 };
 Test.prototype.assertArrayEq = function(testcase, expected, description) {
     var err;
@@ -77,10 +114,7 @@ Test.prototype.assertInstanceOf = function(testcase, expected, description) {
         this.addError(err,description);
     }  
 };
-Test.prototype.addError = function (err,test) {
-    this.output.append('<span>Failed test ' + this._test_count + ': ' + err + ' in test "' + test + '"</span><br>');
-    this._fail_count++;
-};
+
 // run all tests if no name provided
 Test.prototype.run = function (test) {
     var i, started = false;
