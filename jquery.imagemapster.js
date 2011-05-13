@@ -5,7 +5,10 @@ Project home page http://www.outsharked.com/imagemapster
 
 A jQuery plugin to enhance image maps.
 
-(unreleased) version 1.0.10
+version 1.0.11
+-- add altImage options
+
+version 1.0.10
 -- ignore errors when binding mapster to invalid elements
 -- minor performance improvements
 -- fixed command queue problem (broke in 1.0.9)
@@ -114,6 +117,10 @@ Based on code originally written by David Lynch
         onGetList: null,
         onCreateTooltip: null,
         useAreaData: false,
+        altImage: null,
+        altImageFill: true,
+        altImageStroke: false,
+        altImageOpacity: 0.7,
         areas: []
     };
     // Used to filter the options when applied to an area
@@ -132,11 +139,15 @@ Based on code originally written by David Lynch
             staticState: def.staticState,
             selected: def.selected,
             isSelectable: def.isSelectable,
-            isDeselectable: def.isDeselectable
+            isDeselectable: def.isDeselectable,
+            altImageFill: def.altImageFill,
+            altImageStroke: def.altImageStroke,
+            altImageOpacity: def.altImageOpacity
         };
     }());
     // utility functions
     $.mapster.utils = {
+        // returns the best corner it can find
         area_corner: function (area, left, top) {
             var bestX, bestY, curX, curY, coords,j,len;
             coords = $(area).attr('coords').split(',');
@@ -156,6 +167,20 @@ Based on code originally written by David Lynch
                 }
             }
             return [bestX, bestY];
+        },
+        //returns actual corners
+        coords_corners: function (coords) {
+            var curX,curY,minX=999999,minY=999999,maxX=0,maxY=0,j,len;        
+            len=coords.length;
+            for (j = 0; j < len; j += 2) {
+                curX = parseInt(coords[j], 10);
+                curY = parseInt(coords[j + 1], 10);
+                if (curX<minX) {minX=curX;}
+                if (curY<minY) {minY=curY;}
+                if (curX>maxX) {maxX=curX;}
+                if (curY>maxY) {maxY=curY;}
+            }
+            return [minX,minY,maxX,maxY];
         },
         // sorta like $.extend but limits to updating existing properties on the base object.
         mergeObjects: function (base)
@@ -193,7 +218,43 @@ Based on code originally written by David Lynch
         isTrueFalse: function(obj)
         {
             return obj === true || obj === false;
-        }
+        },
+        whenReady: (function() {
+            var conditions=[],i,len,item,defaults;
+            var do_timer_ref;
+            var do_timer= function(options,no_reset) {
+                if (!no_reset) {
+                    defaults= {
+                        iterations: 20,
+                        description: "No description",
+                        that: null
+                        //object,property,value,callback
+                    };
+                    conditions.push($.extend(defaults,options));
+                }
+                len=conditions.length;
+                for (i=0; i<len; i++) {
+                    item=conditions[i];
+                    if (item.object[item.property]===item.value) {
+                        conditions.splice(i, 1);
+                        item.callback.apply(item.that,item.args);
+                    }
+                    else {
+                        if (item.iterations-- > 0) {
+                            setTimeout(function() {
+                                do_timer_ref(options,true);
+                            },100);
+                        }
+                        else {
+                            alert("Required condition never met: '" + item.description + "'");
+                        }
+                    }
+                }
+            }
+            ;
+            do_timer_ref=do_timer;
+            return do_timer;
+        })()
     };
     $.mapster.impl = (function ()
     {
@@ -204,11 +265,13 @@ Based on code originally written by David Lynch
         has_canvas = null,
         create_canvas_for = null,
         add_shape_to = null,
+        add_alt_shape=null,
         clear_highlight = null,
         clear_selections = null,
         refresh_selections = null,
         is_image_loaded=null,
         tooltip_events= [],
+        alt_image=null,
         canvas_style =
         {
             position: 'absolute',
@@ -310,12 +373,12 @@ Based on code originally written by David Lynch
             {
                 subarea_options = options_from_area(map_data, areas[i], override_options);
                 shape = shape_from_area(areas[i]);
-                add_shape_to(specific_canvas, shape[0], shape[1], subarea_options, name);
+                add_shape_to(map_data,specific_canvas, shape[0], shape[1], subarea_options, name);
             }
             // hack to ensure IE finishes rendering. still not sure why this is necessary.
             if (!has_canvas)
             {
-                add_shape_to(specific_canvas, "rect", "0,0,0,0",
+                add_shape_to(map_data,specific_canvas, "rect", "0,0,0,0",
                 {
                     fillOpacity: 0
                 }, name);
@@ -474,7 +537,30 @@ Based on code originally written by David Lynch
             }
             return list_target;
         }
+        // configure options that require doing special things
+        function set_options(map_data,options,callback,args) {
+            var configureAltImage = function(map_data,alt_image,callback,args) {
+                map_data.alt_canvas =  $('<canvas width="' + map_data.image.width + '" height="' + map_data.image.height + '"></canvas>')[0];       
+                map_data.alt_context = map_data.alt_canvas.getContext("2d");
+                map_data.alt_context.drawImage(alt_image,0,0);
+                callback.apply(null,args);
+            };
+            if (has_canvas && options.altImage) {
+                alt_image = new Image();
+                alt_image.src = options.altImage;
 
+            u.whenReady({
+                object: alt_image,
+                property: "complete",
+                value: true,
+                callback: configureAltImage,
+                args: [map_data,alt_image,callback,args],
+                description: "Alternate image '" + options.altImage+"' loaded."
+                 });
+            } else {
+                callback.apply(null,args);
+            }
+        }
         // rebind based on new area options
         function set_area_options(map_data,areas)
         {
@@ -1077,10 +1163,7 @@ Based on code originally written by David Lynch
                 {
                     merge_options(map_data,options);
                     // this will only update new areas that may have been passed
-                    set_area_options(map_data,options.areas ||
-                    {
-                    }
-                    );
+                    set_area_options(map_data,options.areas || {} );
                 }
             });
             return this;
@@ -1106,6 +1189,20 @@ Based on code originally written by David Lynch
         };
         me.bind = function (opts)
         {
+            function complete_bind(map_data)
+            {
+                var i;
+                initialize_map(map_data);
+                if (!map_data.complete) {
+                    map_data.complete = true;
+                    for (i = 0; i < map_data.commands.length; i++)
+                    {
+                        methods[map_data.commands[i].command].apply($(this), map_data.commands[i].args);
+                    }
+                    map_data.commands=[];
+                }
+            }
+
             var style,shapes;
             opts = $.extend({}, $.mapster.defaults, opts);
 
@@ -1169,13 +1266,25 @@ Based on code originally written by David Lynch
                 }
 
                 // If the image isn't fully loaded, this won't work right.  Try again later.                   
+
                 if (!is_image_loaded(this))
                 {
-                    return window.setTimeout(function ()
-                    {
-                        img.mapster(opts);
-                    }, 200);
+                    u.whenReady({
+                        object: this,
+                        property: "complete",
+                        value: true,
+                        callback: img.mapster,
+                        that: img,
+                        args: [opts],
+                        description: "Image loading for '" + img.attr('src') + "' never completed, missing?"
+                    });
+                    return true;
                 }
+//                    return window.setTimeout(function ()
+//                    {
+//                        img.mapster(opts);
+//                    }, 200);
+//                }
 
                 // for backward compatibility with jquery "data" on areas
                 options = $.extend({}, opts, img.data('mapster'));
@@ -1235,21 +1344,57 @@ Based on code originally written by David Lynch
                     overlay_canvas: overlay_canvas,
                     selected_list: []
                 });
-
-                initialize_map(map_data);
+                
+                set_options(map_data,map_data.options,complete_bind,[map_data]);
 
                 // process queued commands
-                if (!map_data.complete)
-                {
-                    map_data.complete = true;
-                    for (i = 0; i < map_data.commands.length; i++)
-                    {
-                        methods[map_data.commands[i].command].apply($(this), map_data.commands[i].args);
-                    }
-                    map_data.commands=[];
-                }
             });
         };
+        function render_shape(context,shape,coords) {
+            var i;
+            switch(shape) {
+                case 'rect':
+                    context.rect(coords[0], coords[1], coords[2] - coords[0], coords[3] - coords[1]);
+                    break;
+                case 'poly':
+                    context.moveTo(coords[0], coords[1]);
+                    for (i = 2; i < coords.length; i += 2)
+                    {
+                        context.lineTo(coords[i], coords[i + 1]);
+                    }
+                    break;
+                case 'circ':
+                    context.arc(coords[0], coords[1], coords[2], 0, Math.PI * 2, false);
+                    break;
+            }
+        }
+        function add_alt_image(map_data,context ,shape,coords,options) {
+            var temp_canvas,temp_context,data,
+            corners = u.coords_corners(coords),
+            width = corners[2]-corners[0],
+            height = corners[3]-corners[1];
+    		  
+            context.save();
+            context.beginPath();
+            render_shape(context,shape,coords);
+            context.clip();
+    
+    		// shape outline is now rendered on image. Overlay the cutout.
+    
+            temp_canvas = $('<canvas width="' + width + '" height="' + height + '"></canvas>');        
+    		temp_context = temp_canvas[0].getContext('2d');
+            
+            data =map_data.alt_context.getImageData(corners[0],corners[1],corners[2],corners[3]);
+            temp_context.putImageData(data,0,0);
+
+            //render the cropped area
+    
+            //context.globalCompositeOperation = "source-in";
+            context.globalAlpha = options.altImageOpacity;
+            context.drawImage(temp_canvas[0],corners[0],corners[1]);
+            context.restore();
+        }
+
         me.init = function ()
         {
             var i,context,
@@ -1328,10 +1473,11 @@ Based on code originally written by David Lynch
                     var c = $('<canvas style="width:' + img.width + 'px;height:' + img.height + 'px;"></canvas>').get(0);
                     c.getContext("2d").clearRect(0, 0, c.width, c.height);
                     return c;
-                }
-                ;
-                add_shape_to = function (canvas, shape, coords, options, name)
+                };
+                add_shape_to = function (map_data,canvas, shape, coords, options, name)
                 {
+                    var fill=options.fill,
+                        stroke = options.stroke;
                     function css3color(color, opacity)
                     {
                         function hex_to_decimal(hex)
@@ -1341,29 +1487,21 @@ Based on code originally written by David Lynch
                         return 'rgba(' + hex_to_decimal(color.substr(0, 2)) + ',' + hex_to_decimal(color.substr(2, 2)) + ',' + hex_to_decimal(color.substr(4, 2)) + ',' + opacity + ')';
                     }
                     context = canvas.getContext('2d');
-                    context.beginPath();
-                    switch(shape) {
-                        case 'rect':
-                            context.rect(coords[0], coords[1], coords[2] - coords[0], coords[3] - coords[1]);
-                            break;
-                        case 'poly':
-                            context.moveTo(coords[0], coords[1]);
-                            for (i = 2; i < coords.length; i += 2)
-                            {
-                                context.lineTo(coords[i], coords[i + 1]);
-                            }
-                            break;
-                        case 'circ':
-                            context.arc(coords[0], coords[1], coords[2], 0, Math.PI * 2, false);
-                            break;
+                    if (map_data.options.altImage) {
+                        add_alt_image(map_data,context,shape,coords,options);
+                        fill=options.altImageFill;
+                        stroke =options.altImageStroke;
+                    } else {
+                        context.beginPath();
+                        render_shape(context,shape,coords);
+                        context.closePath();
                     }
-                    context.closePath();
-                    if (options.fill)
+                    if (fill)
                     {
                         context.fillStyle = css3color(options.fillColor, options.fillOpacity);
                         context.fill();
                     }
-                    if (options.stroke)
+                    if (stroke)
                     {
                         context.strokeStyle = css3color(options.strokeColor, options.strokeOpacity);
                         context.lineWidth = options.strokeWidth;
@@ -1405,7 +1543,7 @@ Based on code originally written by David Lynch
                 {
                     return $('<var style="zoom:1;overflow:hidden;display:block;width:' + img.width + 'px;height:' + img.height + 'px;"></var>').get(0);
                 };
-                add_shape_to = function (canvas, shape, coords, options, name)
+                add_shape_to = function (map_data,canvas, shape, coords, options, name)
                 {
 
                     var fill, stroke, opacity, e;
@@ -1476,8 +1614,7 @@ Based on code originally written by David Lynch
             }
         }
         return false;
-    }
-    ;
+    };
 
     /// Code that gets executed when the plugin is first loaded
     methods =
