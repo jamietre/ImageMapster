@@ -108,19 +108,38 @@ mapster_tests = function (options)
     });
     
 
-    
     var basicTests = function (ut,disableCanvas)
     {       
-        
-        map = $("#usa_image").mapster(map_options);
-        var has_canvas =  map.mapster("test","has_canvas");
+
+
+        map = $('img').mapster();
         // testing with no canvas on a browser that doesn't support it anyway doesn't make sense, regular test will cover it
+
+        var has_canvas =  map.mapster("test","has_canvas");
         if (!has_canvas && disableCanvas) {
             return;
         }
         if (disableCanvas) {
             map.mapster('test','has_canvas=false');    
         }
+
+        // test using only bound images
+
+        ut.assertEq(map.mapster("test","map_cache.length"),1,"Only imagemap bound images were obtained on generic create");
+        map = $('img,div').mapster({mapKey:"state"});
+        ut.assertEq(map.mapster("test","map_cache.length"),1,"Only imagemap bound images were obtained on generic create with other elements");
+        $('area:attrMatches("state","AK,HI,WI")').mapster('set',true);
+        var area_sel = map.mapster('get');
+        ut.assertEq(area_sel,"HI,AK,WI","Set using area works");
+        
+
+        // test command queue
+ 
+        map = $("#usa_image").mapster(map_options);
+        
+        // TO TEST-
+        // set from areas from 
+        // queue options 
         
         // options
 
@@ -208,29 +227,48 @@ mapster_tests = function (options)
         // restore internal canvas setting or these tests won't work
         if (disableCanvas) {
             map.mapster('test','has_canvas=true');    
+        } else {
+    
+            // cleanup tests - skip to play with map afterwards
+            // return;
+    
+            if (has_canvas) {
+                ut.assertEq($('canvas').length,2,'There are 2 canvases.');
+                map.mapster(map_options);
+                ut.assertEq($('canvas').length,2,'There are 2 canvases (recreate was clean)');
+            }
         }
-
-        // cleanup tests - skip to play with map afterwards
-        // return;
-
-        if (has_canvas) {
-            ut.assertEq($('canvas').length,2,'There are 2 canvases.');
-            map.mapster(map_options);
-            ut.assertEq($('canvas').length,2,'There are 2 canvases (recreate was clean)');
-        }
-        
         map.mapster('unbind');
-        ut.assertEq($('canvas').length,0,'No canvases remain after an unbind.');       
+        ut.assertEq($('canvas').length,0,'No canvases remain after an unbind.');
     };
 
      map_test.addTest("Mapster Basic Tests - hasCanvas disabled",function(ut) {
         basicTests(ut,true);
      });    
      
-     
-    
      map_test.addTest("Mapster Basic Tests",basicTests);    
+
+    map_test.addTest("Mapster Command Queue Tests",function(ut) {
+        var complete=false;
+        var map = $("#usa_image");
+        //map.removeProp('complete')
+        map.mapster('test','is_image_loaded=function(return false;);');
+        map.mapster(map_options);
+        //map.mapster('test','map_data=get_map_data(this[0]); map_data.complete=false;');
+        map.mapster('set',true,'KS,KY');
+        
+        ut.assertEq(map.mapster('get'),"","No options present when simulating non-ready image");
+        // simulate the timer callback, should simply run command queue instead of recreating b/c we set complete=false
+        map.mapster('test','is_image_loaded=function(return true;);');
+
+        setTimeout(continueTests(ut,map),
+            500
+        );
+        function continueTests(ut,map) {
+            ut.assertEq(map.mapster('get'),"AK,WA,TX,KS,KY","Only initial options present when simulating non-ready image");
+        }       
+    });
+    
 
     return map_test;
 };
-
