@@ -1,4 +1,4 @@
-/* ImageMapster 1.0.10
+/* ImageMapster 1.0.11
 Copyright 2011 James Treworgy
 
 Project home page http://www.outsharked.com/imagemapster
