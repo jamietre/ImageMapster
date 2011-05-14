@@ -1,19 +1,18 @@
 /* ImageMapster 1.0.10
 Copyright 2011 James Treworgy
-
-Project home page http://www.outsharked.com/imagemapster
+http://www.outsharked.com/imagemapster
+https://github.com/jamietre/ImageMapster
 
 A jQuery plugin to enhance image maps.
 
 version 1.0.11
 -- add altImage options
+-- very untested right now
 
-version 1.0.10
+5/13/2011 version 1.0.10
 -- ignore errors when binding mapster to invalid elements
 -- minor performance improvements
 -- fixed command queue problem (broke in 1.0.9)
-
-version 1.0.9
 -- add 'options' option
 -- add 'rebind' option
 -- add isDeselectable option
@@ -22,18 +21,8 @@ version 1.0.9
 -- add unbind options
 -- clear command queue after processing
 
-5/5/2011 version 1.0.8
--- bug fix: properly handle commands issued after mapster binding if image wasn't ready at bind time
+See complete changelog at github
 
-4/27/2011 version 1.0.7
--- rounded corners & dropshadow on default tooltip
--- added singleSelect option
--- don't show tooltip again when using 'tooltip-click' to close if mousing over the same area (causing flicker when hidden/reshown)
--- add tooltip itself to data passed in onShowTooltip (can be changed by client)
-
-
-Based on code originally written by David Lynch
-(c) 2011 https://github.com/kemayo/maphilight/
 
 /// LICENSE (MIT License)
 ///
@@ -58,6 +47,8 @@ Based on code originally written by David Lynch
 ///
 /// January 19, 2011
 
+Based on code originally written by David Lynch
+(c) 2011 https://github.com/kemayo/maphilight/
 
 */
 
@@ -141,7 +132,6 @@ Based on code originally written by David Lynch
     } ());
     // utility functions
     $.mapster.utils = {
-        // returns the best corner it can find
         area_corner: function (area, left, top) {
             var bestX, bestY, curX, curY, coords, j, len;
             coords = $(area).attr('coords').split(',');
@@ -160,20 +150,6 @@ Based on code originally written by David Lynch
                 }
             }
             return [bestX, bestY];
-        },
-        //returns actual corners
-        coords_corners: function (coords) {
-            var curX, curY, minX = 999999, minY = 999999, maxX = 0, maxY = 0, j, len;
-            len = coords.length;
-            for (j = 0; j < len; j += 2) {
-                curX = parseInt(coords[j], 10);
-                curY = parseInt(coords[j + 1], 10);
-                if (curX < minX) { minX = curX; }
-                if (curY < minY) { minY = curY; }
-                if (curX > maxX) { maxX = curX; }
-                if (curY > maxY) { maxY = curY; }
-            }
-            return [minX, minY, maxX, maxY];
         },
         // sorta like $.extend but limits to updating existing properties on the base object.
         mergeObjects: function (base) {
@@ -202,43 +178,7 @@ Based on code originally written by David Lynch
         },
         isTrueFalse: function (obj) {
             return obj === true || obj === false;
-        },
-        whenReady: (function () {
-            var conditions = [], i, len, item, defaults;
-            var do_timer_ref;
-            var do_timer = function (options, no_reset) {
-                if (!no_reset) {
-                    defaults = {
-                        iterations: 100,
-                        description: "No description",
-                        that: null
-                        //object,property,value,callback
-                    };
-                    conditions.push($.extend(defaults, options));
-                }
-                len = conditions.length;
-                for (i = 0; i < len; i++) {
-                    item = conditions[i];
-                    if (item.object[item.property] === item.value) {
-                        conditions.splice(i, 1);
-                        item.callback.apply(item.that, item.args);
-                    }
-                    else {
-                        if (item.iterations-- > 0) {
-                            setTimeout(function () {
-                                do_timer_ref(options, true);
-                            }, 200);
-                        }
-                        else {
-                            alert("Required condition never met: '" + item.description + "'");
-                        }
-                    }
-                }
-            }
-            ;
-            do_timer_ref = do_timer;
-            return do_timer;
-        })()
+        }
     };
     $.mapster.impl = (function () {
         var me = {},
@@ -248,13 +188,11 @@ Based on code originally written by David Lynch
         has_canvas = null,
         create_canvas_for = null,
         add_shape_to = null,
-        add_alt_shape = null,
         clear_highlight = null,
         clear_selections = null,
         refresh_selections = null,
         is_image_loaded = null,
         tooltip_events = [],
-        alt_image = null,
         canvas_style =
         {
             position: 'absolute',
@@ -266,10 +204,11 @@ Based on code originally written by David Lynch
         me.test = function (obj) {
             return eval(obj);
         };
-        is_image_loaded = function (img) {
-            if (!img.complete) {
+        is_image_loaded = function (map_data) {
+            var img = map_data.image;
+            if (!img.complete ||
+                (map_data.alt_image && !map_data.alt_image.complete)) {
                 return false;
-
             }
             // IE
             if (typeof img.naturalWidth !== "undefined" && img.naturalWidth === 0) {
@@ -325,6 +264,8 @@ Based on code originally written by David Lynch
             var $img = $(img),
             canvas = create_canvas_for(img);
             $(canvas).css(canvas_style);
+            canvas.width = $img.width();
+            canvas.height = $img.height();
             return canvas;
         }
         // initialize the plugin
@@ -417,13 +358,13 @@ Based on code originally written by David Lynch
             }
         }
         function clear_map_data(map_data) {
-            var i, canv = [map_data.base_canvas,
-                map_data.overlay_canvas,
-                map_data.alt_canvas];
-            for (i = 0; i < canv.length; i++) {
-                if (canv[i]) {
-                    $(canv[i]).remove();
-                }
+            var $canvas = $(map_data.base_canvas);
+            if ($canvas.length) {
+                $canvas.remove();
+            }
+            $canvas = $(map_data.overlay_canvas);
+            if ($canvas.length) {
+                $canvas.remove();
             }
             clear_tooltip(map_data);
         }
@@ -470,34 +411,7 @@ Based on code originally written by David Lynch
             }
             return list_target;
         }
-        // configure options that require doing special things
-        function set_options(map_data, options, callback, args) {
-            var configureAltImage = function (map_data, alt_image, callback, args) {
-                var img = map_data.image;
-                //var c = $('<canvas style="width:' + img.width + 'px;height:' + img.height + 'px;"></canvas>').get(0);
 
-                map_data.alt_canvas = create_canvas_for(map_data.image);
-                $(img).before($(map_data.alt_canvas).css({ display: "none" }));
-                map_data.alt_context = map_data.alt_canvas.getContext("2d");
-                map_data.alt_context.drawImage(alt_image, 0, 0);
-                callback.apply(null, args);
-            };
-            if (has_canvas && options.altImage) {
-                alt_image = new Image();
-                alt_image.src = options.altImage;
-
-                u.whenReady({
-                    object: alt_image,
-                    property: "complete",
-                    value: true,
-                    callback: configureAltImage,
-                    args: [map_data, alt_image, callback, args],
-                    description: "Alternate image '" + options.altImage + "' loaded."
-                });
-            } else {
-                callback.apply(null, args);
-            }
-        }
         // rebind based on new area options
         function set_area_options(map_data, areas) {
             var i, area_id, area_options,
@@ -1005,7 +919,10 @@ Based on code originally written by David Lynch
                 if (map_data) {
                     merge_options(map_data, options);
                     // this will only update new areas that may have been passed
-                    set_area_options(map_data, options.areas || {});
+                    set_area_options(map_data, options.areas ||
+                    {
+                    }
+                    );
                 }
             });
             return this;
@@ -1026,18 +943,6 @@ Based on code originally written by David Lynch
             }
         };
         me.bind = function (opts) {
-            function complete_bind(map_data) {
-                var i;
-                initialize_map(map_data);
-                if (!map_data.complete) {
-                    map_data.complete = true;
-                    for (i = 0; i < map_data.commands.length; i++) {
-                        methods[map_data.commands[i].command].apply($(this), map_data.commands[i].args);
-                    }
-                    map_data.commands = [];
-                }
-            }
-
             var style, shapes;
             opts = $.extend({}, $.mapster.defaults, opts);
 
@@ -1093,26 +998,18 @@ Based on code originally written by David Lynch
                     };
                     map_cache.push(map_data);
                 }
+                if (has_canvas && opts.altImage && !map_data.alt_image) {
+                    map_data.alt_image = new Image();
+                    map_data.alt_image.src = opts.altImage;
+                }
 
                 // If the image isn't fully loaded, this won't work right.  Try again later.                   
-
-                if (!is_image_loaded(this)) {
-                    u.whenReady({
-                        object: this,
-                        property: "complete",
-                        value: true,
-                        callback: img.mapster,
-                        that: img,
-                        args: [opts],
-                        description: "Image loading for '" + img.attr('src') + "' never completed, missing?"
-                    });
-                    return true;
+                if (!is_image_loaded(map_data)) {
+                    window.setTimeout(function () {
+                        img.mapster(opts);
+                    }, 200);
+                    return true; // continue
                 }
-                //                    return window.setTimeout(function ()
-                //                    {
-                //                        img.mapster(opts);
-                //                    }, 200);
-                //                }
 
                 // for backward compatibility with jquery "data" on areas
                 options = $.extend({}, opts, img.data('mapster'));
@@ -1143,18 +1040,25 @@ Based on code originally written by David Lynch
                 wrap.append(img);
 
                 canvas = create_canvas(this);
+                img.before(canvas);
 
                 if (!has_canvas) {
                     overlay_canvas = canvas;
                 }
                 else {
                     overlay_canvas = create_canvas(this);
-                }
-
-                img.before(canvas);
-                if (overlay_canvas !== canvas) {
                     img.before(overlay_canvas);
                 }
+                if (has_canvas && opts.altImage) {
+                    map_data.alt_canvas = create_canvas_for(map_data.image);
+                    img.before($(map_data.alt_canvas).css({ display: "none" }));
+                    var ctx = map_data.alt_canvas.getContext("2d");
+                    ctx.drawImage(map_data.alt_image, 0, 0);
+                }
+                //img.before(canvas);
+                //if (overlay_canvas !== canvas) {
+                //    img.before(overlay_canvas);
+                //}
                 // save profile data in an object
                 $.extend(map_data,
                 {
@@ -1166,9 +1070,16 @@ Based on code originally written by David Lynch
                     selected_list: []
                 });
 
-                set_options(map_data, map_data.options, complete_bind, [map_data]);
+                initialize_map(map_data);
 
                 // process queued commands
+                if (!map_data.complete) {
+                    map_data.complete = true;
+                    for (i = 0; i < map_data.commands.length; i++) {
+                        methods[map_data.commands[i].command].apply($(this), map_data.commands[i].args);
+                    }
+                    map_data.commands = [];
+                }
             });
         };
         function render_shape(context, shape, coords) {
@@ -1189,10 +1100,9 @@ Based on code originally written by David Lynch
             }
         }
         function add_alt_image(map_data, context, shape, coords, options) {
-            var temp_canvas, temp_context, data,
-            corners = u.coords_corners(coords),
-            width = corners[2] - corners[0],
-            height = corners[3] - corners[1];
+            //corners = u.coords_corners(coords),
+            //width = corners[2] - corners[0],
+            //height = corners[3] - corners[1];
 
             context.save();
             context.beginPath();
@@ -1204,7 +1114,7 @@ Based on code originally written by David Lynch
             //temp_canvas = create_canvas_for(null, width, height);
             //temp_context = temp_canvas.getContext('2d');
             //try {
-           var alt_context = map_data.alt_canvas.getContext('2d');
+            var alt_context = map_data.alt_canvas.getContext('2d');
             //data = map_data.alt_context.getImageData(corners[0], corners[1], corners[2], corners[3]);
             //temp_context.putImageData(data, 0, 0);
 
@@ -1344,11 +1254,10 @@ Based on code originally written by David Lynch
                     $(map_data.base_canvas).show();
                     $(canvas_temp).remove();
                 };
-            }
-            else {
+            } else {
                 // ie executes this code
                 create_canvas_for = function (img) {
-                    return $('<var style="zoom:1;overflow:hidden;display:block;width:' + img.width + 'px;height:' + img.height + 'px;"></var>')[0];
+                    return $('<var style="zoom:1;overflow:hidden;display:block;width:' + img.width + 'px;height:' + img.height + 'px;"></var>').get(0);
                 };
                 add_shape_to = function (map_data, canvas, shape, coords, options, name) {
 
@@ -1412,7 +1321,8 @@ Based on code originally written by David Lynch
             }
         }
         return false;
-    };
+    }
+    ;
 
     /// Code that gets executed when the plugin is first loaded
     methods =
