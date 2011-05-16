@@ -39,7 +39,11 @@ h2
     }
     $(document).ready(function() {
     	output = $("#test_output");
-		$("#run_test").click(run);
+		$("#run_test").click(function() {
+			for (var i=0;i<$("#iterations").val();i++) {
+				run();
+			}
+		});
 		$("#reset").click(reset);
 	});
 
@@ -47,9 +51,11 @@ h2
 
 <div>
 <h1>ImageMapster Tests</h1>
-Run tests: <input type="button" id="run_test" value="Start">
+Run tests: <input type="button" id="run_test" value="Start"> Iterations: <input type="text" id="iterations" value="1"> &nbsp;&nbsp;
 <input type="button" id="reset" value="Reset">
 </div>
+
+
 <div style="clear:both;"></div>
 <h1>Test Results</h1>
 <div id="test_output">
@@ -58,6 +64,7 @@ Run tests: <input type="button" id="run_test" value="Start">
 
 <hr>
 
+<div id="test_elements">
 <img id="usa_image" src="usa_map_720.png" width="720" height="445" usemap="#usa" >
 
 <img id="usa_image2" src="usa_map_720.png" width="720" height="445" style="display:none;" >
@@ -234,5 +241,5 @@ Run tests: <input type="button" id="run_test" value="Start">
 
     </map>
 
-
+</div>
 <body>

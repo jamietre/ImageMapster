@@ -70,6 +70,15 @@ Test.prototype.assertEq = function (testCase, expected, description) {
     }
     this.endTest(err,description);
 };
+Test.prototype.assertNotEq = function(testcase,expected,description) {
+    var err;
+    this.startTest();
+    if (typeof testCase == typeof expected &&
+        testCase === expected) {
+        err = '"' + testCase + '" == "' + expected + '"';
+    }
+    this.endTest(err,description);
+};
 // test that object properties (shallow) match
 Test.prototype.assertPropsEq = function(testcase,expected,description) {
         var me=this,err;

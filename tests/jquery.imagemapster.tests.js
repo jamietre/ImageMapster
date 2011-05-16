@@ -67,6 +67,8 @@ mapster_tests = function (options)
     };
     
     map_test.addTest("Mapster Utility Function Tests",function(ut) {
+
+    	
         var u = $.mapster.utils;
         var result = u.isTrueFalse(true);
          ut.assertEq(result,true,"isTrueFalse returns true=true");   
@@ -105,12 +107,14 @@ mapster_tests = function (options)
         ut.assertEq(index,-1,"Missing property handled correctly");
         index = u.arrayIndexOfProp(arr,"name","bar");
         ut.assertEq(index,-1,"Missing property value handled correctly");
+        
+
     });
     
 
     var basicTests = function (ut,disableCanvas)
     {       
-
+    	var domCount = $('#test_elements *').length;
 
         map = $('img').mapster();
         // testing with no canvas on a browser that doesn't support it anyway doesn't make sense, regular test will cover it
@@ -240,6 +244,8 @@ mapster_tests = function (options)
         }
         map.mapster('unbind');
         ut.assertEq($('canvas').length,0,'No canvases remain after an unbind.');
+        
+        ut.assertEq($('#test_elements *').length,domCount,"# elements in DOM is the same.");
     };
 
      map_test.addTest("Mapster Basic Tests - hasCanvas disabled",function(ut) {
@@ -248,25 +254,41 @@ mapster_tests = function (options)
      
      map_test.addTest("Mapster Basic Tests",basicTests);    
 
+	
     map_test.addTest("Mapster Command Queue Tests",function(ut) {
-        var complete=false;
-        var map = $("#usa_image");
+    	var map,complete,
+    	    domCount= $('#test_elements *').length;
+	function continueTests() {
+	    var testName="Master Command Queue (async completion)";
+	    var map=$(this);
+	    map_test.addTest(testName,function(ut) {
+	    	var newDomCount;
+	    	ut.assertEq(map.mapster('get'),"AK,KY,WA,TX,KS","Only initial options present when simulating non-ready image");
+	    	newDomCount=$('#test_elements *').length;
+	    	ut.assertNotEq(newDomCount,domCount,"Dom size is unequal before unbinding at test end");
+	    	map.mapster('unbind');
+	    	newDomCount=$('#test_elements *').length;
+	        ut.assertEq(newDomCount,domCount,"Dom size is equal at test end");
+	    });
+	    map_test.run(testName);
+        }
+        
+        complete=false;
+        map = $("#usa_image");
         //map.removeProp('complete')
-        map.mapster('test','is_image_loaded=function(return false;);');
-        map.mapster(map_options);
+        map.mapster('test','is_image_loaded=function(){return false;};');
+        
+        var queue_opts = $.extend({},map_options,{onConfigured: continueTests});
+        
+        map.mapster(queue_opts);
         //map.mapster('test','map_data=get_map_data(this[0]); map_data.complete=false;');
         map.mapster('set',true,'KS,KY');
         
         ut.assertEq(map.mapster('get'),"","No options present when simulating non-ready image");
         // simulate the timer callback, should simply run command queue instead of recreating b/c we set complete=false
-        map.mapster('test','is_image_loaded=function(return true;);');
-
-        setTimeout(continueTests(ut,map),
-            500
-        );
-        function continueTests(ut,map) {
-            ut.assertEq(map.mapster('get'),"AK,WA,TX,KS,KY","Only initial options present when simulating non-ready image");
-        }       
+        map.mapster('test','is_image_loaded=function(){return true;};');
+        
+        
     });
     
 

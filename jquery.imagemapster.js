@@ -7,6 +7,9 @@ A jQuery plugin to enhance image maps.
 
 version 1.0.11
 -- add altImage options
+-- added onConfigured callback
+-- fixed problems with cleanup (not removing wrap)
+-- added failure timeout for configure
 -- very untested right now
 
 5/13/2011 version 1.0.10
@@ -102,6 +105,8 @@ Based on code originally written by David Lynch
         onShowToolTip: null,
         onGetList: null,
         onCreateTooltip: null,
+        onConfigured: null,
+        configTimeout: 10000,
         useAreaData: false,
         altImage: null,
         altImageFill: true,
@@ -356,14 +361,22 @@ Based on code originally written by David Lynch
             }
         }
         function clear_map_data(map_data) {
-            var $canvas = $(map_data.base_canvas);
-            if ($canvas.length) {
-                $canvas.remove();
+            var i,div,
+            	canvases=[map_data.base_canvas,
+                map_data.overlay_canvas,
+                map_data.alt_canvas];
+            for (i=canvases.length-1;i>=0;i--) {
+            	if (canvases[i]) {
+            	    $(canvases[i]).remove();
+            	}
             }
-            $canvas = $(map_data.overlay_canvas);
-            if ($canvas.length) {
-                $canvas.remove();
+            if (!map_data.img_style) {
+            	$(map_data.image).removeAttr('style');
+            } else {
+            	$(map_data.image).attr('style',map_data.img_style);
             }
+            div=$('div#mapster_wrap_'+map_data.id);
+            div.before(div.children()).remove();
             clear_tooltip(map_data);
         }
         function clear_events(map_data) {
@@ -993,9 +1006,12 @@ Based on code originally written by David Lynch
                         commands: [],
                         data: [],
                         selected_list: [],
-                        xref: {}
+                        xref: {},
+                        id:0,
+                        img_style:img.attr('style') || null,
+                        bind_tries: opts.configTimeout/200
                     };
-                    map_cache.push(map_data);
+                    map_data.id = map_cache.push(map_data)-1;
                 }
                 if (has_canvas && opts.altImage && !map_data.alt_image) {
                     map_data.alt_image = new Image();
@@ -1004,10 +1020,16 @@ Based on code originally written by David Lynch
 
                 // If the image isn't fully loaded, this won't work right.  Try again later.                   
                 if (!is_image_loaded(map_data)) {
-                    window.setTimeout(function () {
-                        img.mapster(opts);
-                    }, 200);
-                    return true; // continue
+                    if (--map_data.bind_tries>0) {
+                        window.setTimeout(function () {
+                            img.mapster(opts);
+                        }, 200);
+                    } else {
+                        if (opts.onConfigured && typeof opts.onConfigured=='function') {
+                            opts.onConfigured.call(this,false);
+                        }
+    		    }
+    		    return true;
                 }
 
                 // for backward compatibility with jquery "data" on areas
@@ -1015,7 +1037,7 @@ Based on code originally written by David Lynch
                 area_options = $.extend({}, $.mapster.area_defaults);
                 u.mergeObjects(area_options, options);
 
-                wrap = $('<div></div>').css(
+                wrap = $('<div id="mapster_wrap_'+map_data.id+'"></div>').css(
                 {
                     display: 'block',
                     background: 'url(' + this.src + ')',
@@ -1078,6 +1100,9 @@ Based on code originally written by David Lynch
                         methods[map_data.commands[i].command].apply($(this), map_data.commands[i].args);
                     }
                     map_data.commands = [];
+                }
+                if (opts.onConfigured && typeof opts.onConfigured=='function') {
+		    opts.onConfigured.call(this,true);
                 }
             });
         };
