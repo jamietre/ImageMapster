@@ -264,8 +264,6 @@ Based on code originally written by David Lynch
             var $img = $(img),
             canvas = create_canvas_for(img);
             $(canvas).css(canvas_style);
-            canvas.width = $img.width();
-            canvas.height = $img.height();
             return canvas;
         }
         // initialize the plugin
@@ -686,7 +684,7 @@ Based on code originally written by David Lynch
 
 
             if (opts.onClick && typeof (opts.onClick === 'function')) {
-                opts.onClick.call(area,
+                opts.onClick.call(e,
                 {
                     target: area,
                     listTarget: list_target,
@@ -1033,7 +1031,7 @@ Based on code originally written by David Lynch
                         wrap.addClass(options.wrapClass);
                     }
                 }
-                img.before(wrap).css('opacity', 0).css(canvas_style).remove();
+                img.before(wrap).css('opacity', 0).css(canvas_style);
                 if (!has_canvas) {
                     img.css('filter', 'Alpha(opacity=0)');
                 }
@@ -1191,10 +1189,11 @@ Based on code originally written by David Lynch
 
             if (has_canvas) {
                 create_canvas_for = function (img, width, height) {
-                    var c;
+                    var c,$img;
                     if (img) {
-                        height = img.height;
-                        width = img.width;
+                    	$img=$(img);
+                        height = $img.height();
+                        width = $img.width();
                     }
                     c = $('<canvas></canvas>')[0];
                     c.width = width;
@@ -1257,7 +1256,10 @@ Based on code originally written by David Lynch
             } else {
                 // ie executes this code
                 create_canvas_for = function (img) {
-                    return $('<var style="zoom:1;overflow:hidden;display:block;width:' + img.width + 'px;height:' + img.height + 'px;"></var>').get(0);
+                    var $img = $(img),
+                    	width = $img.width(),
+                    	height=$img.height();
+                    return $('<var width="' + width + '" height="' + height + '" style="zoom:1;overflow:hidden;display:block;width:' + width + 'px;height:' + height + 'px;"></var>').get(0);
                 };
                 add_shape_to = function (map_data, canvas, shape, coords, options, name) {
 

@@ -25,11 +25,11 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 Image Mapster: A Jquery Plugin to make image maps useful. 
 
-Project home page. [[http://www.outsharked.com/imagemapster]]
+Project home page. http://www.outsharked.com/imagemapster
 
-See an online demo. [[http://www.outsharked.com/imagemapster/demo1.aspx]]
+Online demo. http://www.outsharked.com/imagemapster/demo1.aspx
 
-Source repository: [[https://github.com/jamietre/ImageMapster/]]
+Source repository: https://github.com/jamietre/ImageMapster 
 
 ## Details
 
