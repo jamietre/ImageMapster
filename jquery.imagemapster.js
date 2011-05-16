@@ -684,8 +684,9 @@ Based on code originally written by David Lynch
 
 
             if (opts.onClick && typeof (opts.onClick === 'function')) {
-                opts.onClick.call(e,
+                opts.onClick.call(area,
                 {
+                    e: e,
                     target: area,
                     listTarget: list_target,
                     areaTarget: $(area),
