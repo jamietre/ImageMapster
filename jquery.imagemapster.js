@@ -6,6 +6,9 @@ https://github.com/jamietre/ImageMapster
 A jQuery plugin to enhance image maps.
 
 version 1.0.11
+-- fix cleanup in SVG mode
+-- fix IE9 canvas support (fader problem)
+-- fix flickering on fades when moving quickly
 -- add altImage options
 -- added onConfigured callback
 -- fixed problems with cleanup (not removing wrap)
@@ -84,6 +87,7 @@ Based on code originally written by David Lynch
         strokeOpacity: 1,
         strokeWidth: 1,
         fade: true,
+        fadeInterval: 15,
         staticState: null,
         selected: false,
         isSelectable: true,
@@ -183,7 +187,41 @@ Based on code originally written by David Lynch
         },
         isTrueFalse: function (obj) {
             return obj === true || obj === false;
-        }
+        },
+        fader: (function () {
+            var elements = {}, 
+                lastKey = 0,
+                prop,
+                obj;
+            function setOpacity(e, opacity) {
+                $(e).css({opacity: opacity});
+            }
+            var fade_func = function (el, opacity, interval) {
+                if (typeof el == 'number') {
+                    obj = elements[el];
+                    if (!obj) {
+                        return;
+                    }
+                } else {
+                    obj=null;
+                    for (prop in elements) {
+                       if (elements.hasOwnProperty(prop) && elements[prop].element===el) {
+                           delete elements[prop];
+                           break;
+                        }
+                    }
+                    obj={"element": el, "key": ++lastKey };
+                    el = lastKey;
+                    elements[el]=obj;
+                }
+                opacity=(opacity+=0.1) > 0.99 ? 1 : opacity;
+                setOpacity(obj.element,opacity);
+                if (opacity < 1) {
+                    setTimeout("$.mapster.utils.fader("+el+","+opacity+","+(interval || 15)+","+el+")",interval );
+                } 
+            }
+            return fade_func;
+        })()
     };
     $.mapster.impl = (function () {
         var me = {},
@@ -275,21 +313,30 @@ Based on code originally written by David Lynch
         // remember area_options.id === area_id id is just stored as an option
         function add_shape_group(map_data, specific_canvas, area_id, name, override_options) {
             var subarea_options, shape, i,
-            areas = map_data.map.find('area[' + map_data.options.mapKey + '="' + map_data.data[area_id].key + '"]'),
-            areas_length = areas.length;
+                e,fade_elements=[],
+                areas = map_data.map.find('area[' + map_data.options.mapKey + '="' + map_data.data[area_id].key + '"]');
 
-            for (i = areas_length - 1; i >= 0; i--) {
+            for (i = areas.length - 1; i >= 0; i--) {
                 subarea_options = options_from_area(map_data, areas[i], override_options);
                 shape = shape_from_area(areas[i]);
-                add_shape_to(map_data, specific_canvas, shape[0], shape[1], subarea_options, name);
+                e=add_shape_to(map_data, specific_canvas, shape[0], shape[1], subarea_options, name);
+                if (fade_elements.indexOf(e)<=0) {
+                    fade_elements.push(e);
+                }
             }
             // hack to ensure IE finishes rendering. still not sure why this is necessary.
-            if (!has_canvas) {
-                add_shape_to(map_data, specific_canvas, "rect", "0,0,0,0",
-                {
-                    fillOpacity: 0
-                }, name);
-            }
+            //if (!has_canvas) {
+                //add_shape_to(map_data, specific_canvas, "rect", "0,0,0,0",
+                //{
+               //     fillOpacity: 0
+              //  }, name);
+            //} else {
+                if (subarea_options.fade) {
+                    for (i=fade_elements.length-1;i>=0;i--) {
+        	            u.fader(specific_canvas, 0,map_data.options.fadeInterval);
+       	            }
+	        }
+            //}
         }
         // internal function to actually set the area
         function set_area_selected(map_data, area_id) {
@@ -629,9 +676,9 @@ Based on code originally written by David Lynch
             bind_tooltip_close(map_data, 'img-mouseout', 'mouseout', $(map_data.image));
 
             if (has_canvas) {
-                tooltip.css("opacity", "0");
+                tooltip.css({"opacity":0});
                 tooltip.show();
-                fader(tooltip[0], 0);
+                u.fader(tooltip[0], 0,opts.fadeInterval);
             }
             else {
                 tooltip.show();
@@ -714,12 +761,33 @@ Based on code originally written by David Lynch
             //
 
         }
-        function fader(element, opacity, interval) {
-            if (opacity <= 1) {
-                element.style.opacity = opacity;
-                window.setTimeout(fader, 10, element, opacity + 0.1, 10);
-            }
-        }
+
+//    	var fader = (function() {
+//    	    var me = {};
+//    	    me.setOpacity=function(eID, opacityLevel) {
+//    	        var eStyle = document.getElementById(eID).style;
+//    	        eStyle.opacity = opacityLevel / 100;
+//    	        eStyle.filter = 'alpha(opacity='+opacityLevel+')';
+//    	    }
+//    	}        
+//            me.fade(eID, startOpacity,interval) {
+//                var stopOpacity=1;
+//    	    var speed = Math.round(duration / 100);
+//    	    var timer = 0;
+//    	    if (startOpacity < stopOpacity){ // fade in
+//    	        for (var i=startOpacity; i<=stopOpacity; i++) {
+//    	            setTimeout("setOpacity('"+eID+"',"+i+")", timer * speed);
+//    	            timer++;
+//    	        } return;
+//    	    }
+//    	    for (var i=startOpacity; i>=stopOpacity; i--) { // fade out
+//    	        setTimeout("setOpacity('"+eID+"',"+i+")", timer * speed);
+//    	        timer++;
+//    	    }
+//    	}
+        
+
+        
         // PUBLIC FUNCTIONS
 
         // simulate a click event. This is like toggle, but causes events to run also.
@@ -1203,7 +1271,7 @@ Based on code originally written by David Lynch
             // force even IE9 to use VML mode. Although canvases are supported in IE9 the rollovers are not working properly
             // and I can't figure it out right now. VML works fine in all IEs.
 
-            has_canvas = !$.browser.msie && !!document.createElement('canvas').getContext;
+            has_canvas = !!document.createElement('canvas').getContext;
 
             if (!(has_canvas || has_VML)) {
                 $.fn.mapster = function () {
@@ -1255,9 +1323,7 @@ Based on code originally written by David Lynch
                         context.lineWidth = options.strokeWidth;
                         context.stroke();
                     }
-                    if (options.fade) {
-                        fader(canvas, 0);
-                    }
+                    return canvas;
                 };
                 clear_highlight = function (map_data) {
                     map_data.overlay_canvas.getContext('2d').clearRect(0, 0, map_data.overlay_canvas.width, map_data.overlay_canvas.height);
@@ -1307,8 +1373,8 @@ Based on code originally written by David Lynch
                     e[0].innerHTML = fill + opacity;
 
                     $(canvas).append(e);
-                }
-                ;
+                    return e;
+                };
                 clear_highlight = function (map_data) {
                     var toClear = $(map_data.overlay_canvas).find('[name="highlighted"]');
                     toClear.remove();
