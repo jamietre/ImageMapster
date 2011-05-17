@@ -70,29 +70,39 @@ mapster_tests = function (options)
 
     	
         var u = $.mapster.utils;
-        var result = u.isTrueFalse(true);
-         ut.assertEq(result,true,"isTrueFalse returns true=true");   
-         result = u.isTrueFalse(false);
-         ut.assertEq(result,true,"isTrueFalse returns false=true");   
-         result = u.isTrueFalse(null);
-         ut.assertEq(result,false,"isTrueFalse returns null=false");   
-       
+        
+        ut.assertEq(function() {
+            return u.isTrueFalse(true);
+        },
+        true,"isTrueFalse returns true=true");
+
+         ut.assertEq(function() {
+            return u.isTrueFalse(false);
+         },
+         true,"isTrueFalse returns false=true");
+            
+         ut.assertEq(function() { return u.isTrueFalse(null);},
+            false,"isTrueFalse returns null=false");   
+
        var obj = {a: "a", b: "b"};
        var otherObj = {a: "a2", b: "b2", c: "c"};
-       result = u.mergeObjects(obj,otherObj);
-       ut.assertPropsEq(result,{a:"a2",b:"b2"},"Merge with extra properties");
+       
+       var func = function() {
+        return u.mergeObjects(obj,otherObj);
+       };
+       ut.assertPropsEq(func,{a:"a2",b:"b2"},"Merge with extra properties");
        // input object should not be affected
        ut.assertPropsEq(obj,{a:"a2",b:"b2"},"Test input object following merge matches output");
        
        otherObj={a:"a3" };
-       result = u.mergeObjects(result,otherObj);
-       ut.assertPropsEq(result,{a:"a3",b:"b2"},"Merge with missing properties");
+       var result = func();
+       ut.assertPropsEq(function() {return u.mergeObjects(result,otherObj);},{a:"a3",b:"b2"},"Merge with missing properties");
        
        // test several at once
        otherObj= {b:"b4"};
        otherObj2 = {a:"a4"};
-       result = u.mergeObjects(obj,otherObj,otherObj2);
-       ut.assertPropsEq(result,{a:"a4",b:"b4"}, "Merge with mutiple inputs");
+       
+       ut.assertPropsEq(function() {return u.mergeObjects(obj,otherObj,otherObj2);},{a:"a4",b:"b4"}, "Merge with mutiple inputs");
        
        obj={test:"test"};
        var arr = [{name:"test1",value:"value1"},{name:"test2",value:"value2"},{name:"test3",value:obj}];
@@ -121,10 +131,11 @@ mapster_tests = function (options)
 
         var has_canvas =  map.mapster("test","has_canvas");
         if (!has_canvas && disableCanvas) {
+            map.mapster('unbind');
             return;
         }
         if (disableCanvas) {
-            map.mapster('test','has_canvas=false');    
+            map.mapster('test','has_canvas=false');
         }
 
         // test using only bound images
@@ -134,7 +145,7 @@ mapster_tests = function (options)
         ut.assertEq(map.mapster("test","map_cache.length"),1,"Only imagemap bound images were obtained on generic create with other elements");
         $('area:attrMatches("state","AK,HI,WI")').mapster('set',true);
         var area_sel = map.mapster('get');
-        ut.assertEq(area_sel,"HI,AK,WI","Set using area works");
+        ut.assertCsvElementsEq(area_sel,"HI,AK,WI","Set using area works");
         
 
         // test command queue
@@ -164,7 +175,7 @@ mapster_tests = function (options)
 
         // order is not guaranteed - this is the order the areas are created.
         var selected = map.mapster('get');
-        ut.assertEq(selected,"AK,WA,TX","Initially selected items returned with 'get'");
+        ut.assertCsvElementsEq(selected,"AK,WA,TX","Initially selected items returned with 'get'");
         
         selected = map.mapster('get','WA');
         ut.assertEq(selected,true,"Initially selected single item returned true with 'get'");
@@ -177,7 +188,7 @@ mapster_tests = function (options)
         ut.assertEq(selected,true,"Click-selected area returned 'get'");
         
         selected = map.mapster('get');
-        ut.assertEq(selected,"AK,ME,WA,TX","Complete list returned with 'get'");
+        ut.assertCsvElementsEq(selected,"AK,ME,WA,TX","Complete list returned with 'get'");
         
         /// try to click select "staticstate areas
         
@@ -200,7 +211,7 @@ mapster_tests = function (options)
         
         // test rebind
         map.mapster('rebind',{ singleSelect: true });
-        ut.assertEq(map.mapster('get'),'AK,ME,TX,OR',"Rebind with singleSelect preserved selections");
+        ut.assertCsvElementsEq(map.mapster('get'),'AK,ME,TX,OR',"Rebind with singleSelect preserved selections");
 
 
 
@@ -263,7 +274,7 @@ mapster_tests = function (options)
 	    var map=$(this);
 	    map_test.addTest(testName,function(ut) {
 	    	var newDomCount;
-	    	ut.assertEq(map.mapster('get'),"AK,KY,WA,TX,KS","Only initial options present when simulating non-ready image");
+	    	ut.assertCsvElementsEq(map.mapster('get'),"AK,KY,WA,TX,KS","Only initial options present when simulating non-ready image");
 	    	newDomCount=$('#test_elements *').length;
 	    	ut.assertNotEq(newDomCount,domCount,"Dom size is unequal before unbinding at test end");
 	    	map.mapster('unbind');

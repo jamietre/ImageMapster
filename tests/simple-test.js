@@ -15,18 +15,52 @@ function Test(options) {
     }
     this._test_count= 0;
     this._fail_count = 0;
+    this.timerStart=function (){
+        var d = new Date();
+        this.time  = d.getTime();
+    },
+    this.timerEnd=function (){
+        var d = new Date();
+        return (d.getTime()-this.time);
+    }
 }
-Test.prototype.addError = function (err,test) {
-    this.output.append('<span>Failed test ' + this._test_count + ': ' + err + ' in test "' + test + '"</span><br>');
-    this._fail_count++;
+
+Test.prototype.addError = function (err,test,passed) {
+    var msg = passed ? "Passed" : "<b>Failed</b>";
+    this.output.append('<span>' + msg + ' test ' + this._test_count + ': ' + err + ' in test "' + test + '"</span><br>');
+    if (!passed) {
+        this._fail_count++;
+    }
 };
 Test.prototype.startTest = function() {
+    if (this.timer) {
+        this.timerStart();
+    }
     this._test_count++;
 };
-Test.prototype.endTest = function(err,description) {
-    if (err) {
-        this.addError(err,description);
+Test.prototype.runTest = function(test,compare) {
+    var iterations = this.iterations || 1;
+    for (var i=0;i<iterations;i++) {
+        if (typeof test==='function') {
+            test=test();
+        }
+        compare(test);
     }
+};
+Test.prototype.endTest = function(err,description) {
+    var passed=false;
+    if (this.timer) {
+        var time = this.timerEnd();
+        if (!err) {
+           err="success";
+           passed=true;
+        }
+        err = "(" + time + " ms) " + err;
+    }
+    if (err) {
+        this.addError(err,description,passed);   
+    }
+
 };
 Test.prototype.addTest = function (name, test) {
     var testData = {
@@ -58,29 +92,34 @@ Test.prototype._arrayEq = function(arr1,arr2) {
     return err;
 
 };
-Test.prototype.assertEq = function (testCase, expected, description) {
+Test.prototype.assertEq = function (testcase, expected, description) {
     var err ;
     this.startTest();
-    if (typeof testCase != typeof expected) {
-        err = 'Test case type "' + typeof testCase + '" != expected type "' + typeof expected + '"';
-    }
+    this.runTest(testcase,function (testcase) {
+        if (typeof testcase != typeof expected) {
+            err = 'Test case type "' + typeof testcase + '" != expected type "' + typeof expected + '"';
+        }
     
-    if (!err && testCase != expected) {
-        err = '"' + testCase + '" != "' + expected + '"';
-    }
+        if (!err && testcase != expected) {
+            err = '"' + testcase + '" != "' + expected + '"';
+        }
+    });
     this.endTest(err,description);
 };
-Test.prototype.assertNotEq = function(testcase,expected,description) {
+
+Test.prototype.assertNotEq = function(testcase,expected,description,test) {
     var err;
     this.startTest();
-    if (typeof testCase == typeof expected &&
-        testCase === expected) {
-        err = '"' + testCase + '" == "' + expected + '"';
-    }
+    this.runTest(testcase,function (testcase) {
+        if (typeof testcase == typeof expected &&
+            testcase === expected) {
+            err = '"' + testcase + '" == "' + expected + '"';
+         }
+    });
     this.endTest(err,description);
 };
 // test that object properties (shallow) match
-Test.prototype.assertPropsEq = function(testcase,expected,description) {
+Test.prototype.assertPropsEq = function(testcase,expected,description,test) {
         var me=this,err;
         function compare(t1,t2, t1name, t2name) {
         if (t1 && t1!==t2) {
@@ -109,6 +148,7 @@ Test.prototype.assertPropsEq = function(testcase,expected,description) {
     }
     var err;
     this.startTest();
+   this.runTest(testcase,function (testcase) {
     if (typeof testcase != 'object' || typeof expected != 'object') {
         err='Test cases are not both objects';
     }
@@ -118,26 +158,56 @@ Test.prototype.assertPropsEq = function(testcase,expected,description) {
     if (!err) {
         err=compare(expected,testcase,"expected","testcase");
     }
+    });
     this.endTest(err,description);
 };
 
-Test.prototype.assertArrayEq = function(testcase, expected, description) {
-    var err;
+Test.prototype.assertArrayEq = function(testcase, expected, description,test) {
+    var err,me;
+    me=this;
     this.startTest();
+    this.runTest(testcase,function (testcase) {
+        err = me._arrayEq(testcase,expected);
+    });
+    this.endTest(err,description);
 
-    err = this._arrayEq(testcase,expected);
+};
+// sorts first
+Test.prototype.assertArrayElementsEq = function(testcase, expected, description,test) {
+    var err,arr1, arr2;
+    this.startTest();
+    this.runTest(testcase,function (testcase) {
+       arr1=testcase;
+       arr2=expected;
+        arr1.sort();
+        arr2.sort();
+        err = this._arrayEq(arr1,arr2);
+    });
     this.endTest(err,description);
 };
-Test.prototype.assertInstanceOf = function(testcase, expected, description) {
+Test.prototype.assertCsvElementsEq = function(testcase, expected, description,test) {
+    var err,arr1, arr2,me;
+    me=this;
+    this.startTest();
+    this.runTest(testcase,function (testcase) {
+        arr1=testcase.split(',');
+        arr2=expected.split(',');
+        arr1.sort();
+        arr2.sort();
+        err = me._arrayEq(arr1,arr2);
+    });
+    this.endTest(err,description);
+};
+Test.prototype.assertInstanceOf = function(testcase, expected, description,test) {
     var err,
         test = eval("testcase instanceof " + expected);
     this.startTest();
+    this.runTest(testcase,function (testcase) {
     if (!test) {
         err='testcase is not an instance of "' + expected+ '"';
     }
-    if (err)  {
-        this.addError(err,description);
-    }  
+    });
+    this.endTest(err,description);
 };
 
 // run all tests if no name provided
@@ -160,6 +230,9 @@ Test.prototype.run = function (test) {
         }
         this.output.append(result + "<br />");
         this.output.append('==============================<br />');
+    }
+    if (this.timer) {
+        this.iterations=5;
     }
     for (i = 0; i < this.tests.length; i++) {
         if (!test || this.tests[i].name == test) {

@@ -31,7 +31,8 @@ h2
 	var output;
     function run() {
     	//oldForm = $("#jtc-forms-testform").clone();
-        var tests = mapster_tests({ title: "jQuery ImageMapster Tests", output: output });
+    	var opts = { title: "jQuery ImageMapster Tests", output: output, timer: $('#timer').is(':checked') }
+        var tests = mapster_tests(opts);
         tests.run();
     }
     function reset() {
@@ -52,6 +53,8 @@ h2
 <div>
 <h1>ImageMapster Tests</h1>
 Run tests: <input type="button" id="run_test" value="Start"> Iterations: <input type="text" id="iterations" value="1"> &nbsp;&nbsp;
+<input type="checkbox" id="timer"> Timer &nbsp;&nbsp;
+
 <input type="button" id="reset" value="Reset">
 </div>
 
