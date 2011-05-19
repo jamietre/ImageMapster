@@ -68,7 +68,7 @@ mapster_tests = function (options)
     
     map_test.addTest("Mapster Utility Function Tests",function(ut) {
 
-    	
+    	var result;
         var u = $.mapster.utils;
         
         ut.assertEq(function() {
@@ -84,25 +84,61 @@ mapster_tests = function (options)
          ut.assertEq(function() { return u.isTrueFalse(null);},
             false,"isTrueFalse returns null=false");   
 
+        ut.assertEq(u.trueFalseDefault(true),true,"trueFalseDefault(true) returns true");
+        ut.assertEq(u.trueFalseDefault(false),false,"trueFalseDefault(false) returns false");
+        ut.assertEq(u.trueFalseDefault("something"),false,"trueFalseDefault('something') (a truthy value) returns false");
+        ut.assertEq(u.trueFalseDefault(null),false,"trueFalseDefault(null) (a falsy value)  returns false");
+        ut.assertEq(u.trueFalseDefault(true,"foo"),true,"trueFalseDefault(true) with default value returns true");
+        ut.assertEq(u.trueFalseDefault(false,"foo"),false,"trueFalseDefault(false) with default value returns false");
+        ut.assertEq(u.trueFalseDefault("something","foo"),"foo","trueFalseDefault('something') (a falsy value) with default value returns default");        
+        ut.assertEq(u.trueFalseDefault(undefined,"foo"),"foo","trueFalseDefault(undefined) (a falsy value) with default value returns default");                
+        
        var obj = {a: "a", b: "b"};
        var otherObj = {a: "a2", b: "b2", c: "c"};
        
        var func = function() {
-        return u.mergeObjects(obj,otherObj);
+        return u.mergeObjects({add:false,target:obj,source:otherObj});
        };
-       ut.assertPropsEq(func,{a:"a2",b:"b2"},"Merge with extra properties");
-       // input object should not be affected
+       ut.assertPropsEq(func,{a:"a2",b:"b2"},"Merge with extra properties - no add");
+       // input object should be affected
        ut.assertPropsEq(obj,{a:"a2",b:"b2"},"Test input object following merge matches output");
+       
+       result = u.mergeObjects({target:obj,source:otherObj});
+       ut.assertPropsEq(result,{a:"a2",b:"b2",c:"c"},"Merge with extra properties - add");
+       
        
        otherObj={a:"a3" };
        var result = func();
-       ut.assertPropsEq(function() {return u.mergeObjects(result,otherObj);},{a:"a3",b:"b2"},"Merge with missing properties");
+       ut.assertPropsEq(function() {return u.mergeObjects({add:false,target:result,source:otherObj});},{a:"a3",b:"b2",c:"c"},"Merge with missing properties");
        
        // test several at once
        otherObj= {b:"b4"};
        otherObj2 = {a:"a4"};
        
-       ut.assertPropsEq(function() {return u.mergeObjects(obj,otherObj,otherObj2);},{a:"a4",b:"b4"}, "Merge with mutiple inputs");
+       ut.assertPropsEq(u.mergeObjects({add:false,target:obj,source:[otherObj,otherObj2]}),{a:"a4",b:"b4",c:"c"}, "Merge with mutiple inputs");
+
+        var templateObj = {p1: "prop1", p2: "prop2"};
+        otherObj={p1: "newProp1", p3: "prop3", p4: "prop4"};
+        
+        ut.assertPropsEq(u.mergeObjects({template: templateObj, source: otherObj, add: false}),{p1:"newProp1",p2:"prop2"},"Template works.");
+
+        var expectedResult={p1:"newProp1",p2:"prop2", p4: "prop4"};
+        ut.assertPropsEq(u.mergeObjects({template: templateObj, source: otherObj, add: true, ignore: "p3"}),expectedResult,"Ignore works.");
+        
+        templateObj.p3={subp1: "subprop1", subp2: "subprop2"};
+        result={ p3: null };
+        expectedResult.p3 = otherObj.p3;
+        
+        u.mergeObjects({target: result, template: templateObj, source: otherObj, add: true})
+        ut.assertPropsEq(result,expectedResult,"Copying a sub-object - start");
+
+        otherObj._deep="p3";
+        result.p3={existing: "bar"};
+        expectedResult.p3.existing="bar";
+        u.mergeObjects({target: result, template: templateObj, source: otherObj, add: true})
+        ut.assertPropsEq(result,expectedResult,"Deep works");
+
+        // test arrayIndexOfProp
        
        obj={test:"test"};
        var arr = [{name:"test1",value:"value1"},{name:"test2",value:"value2"},{name:"test3",value:obj}];
@@ -125,6 +161,7 @@ mapster_tests = function (options)
     var basicTests = function (ut,disableCanvas)
     {       
     	var domCount = $('#test_elements *').length;
+    	var u = $.mapster.utils;
 
         map = $('img').mapster();
         // testing with no canvas on a browser that doesn't support it anyway doesn't make sense, regular test will cover it
@@ -158,7 +195,7 @@ mapster_tests = function (options)
         
         // options
 
-        var initialOpts = $.extend({},$.mapster.defaults,map_options);
+        var initialOpts = u.mergeObjects({template:$.mapster.defaults,ignore:"_deep"});
         var opts = map.mapster('options');
 
         ut.assertPropsEq(opts,initialOpts,"Options retrieved match initial options");
@@ -298,7 +335,6 @@ mapster_tests = function (options)
         ut.assertEq(map.mapster('get'),"","No options present when simulating non-ready image");
         // simulate the timer callback, should simply run command queue instead of recreating b/c we set complete=false
         map.mapster('test','is_image_loaded=function(){return true;};');
-        
         
     });
     

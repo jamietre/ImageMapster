@@ -37,6 +37,7 @@
 		<a id="single_select" href="#">Enable/disable singleSelect.</a> [<span id="single_select_state">disabled</span>]<br>
 		<a id="is_deselectable" href="#">Enable/disable isDeselectable.</a> [<span id="is_deselectable_state">enabled</span>]<br>
 		<a id="unbind_link" href="#">Unbind the map.</a><br>
+		<a id="rebind_link" href="#">Rebind the map.</a><br>
 		<a id="unbind_link_preserve" href="#">Click here to unbind, preserving state.</a><br>
       	<div style="clear:both;"></div>
         <b>What's been selected?</b>
@@ -54,13 +55,14 @@ $(document).ready(function () {
      var $statelist, $usamap, default_options;
 
 	   function addCheckBoxes(items) {
+	   		$statelist.children().remove();
 		   for (var i = 0; i < items.length; i++) {
 			   var $item = $('<div><input type="checkbox" name="' + items[i].key + '">' + items[i].value + '</div>');
 			   $statelist.append($item);
 		   }
 
 		   // return the list to mapster so it can bind to it
-		   return $statelist.find('input:checkbox').click(function (e) {
+		   return $statelist.find('input:checkbox').unbind('click').click(function (e) {
 			   var selected = $(this).is(':checked');
 			   $usamap.mapster('set', selected, $(this).attr('name'));
 			   styleCheckbox(selected, $(this));
@@ -72,13 +74,22 @@ $(document).ready(function () {
 	   }
 	   $statelist = $('#statelist');
 	   $usamap = $('#usa_image');
+	   function bindlinks() {
+	   $('*').unbind();
 	   $("#unbind_link").bind("click",function(e) {
 	   		e.preventDefault();
 	   		$usamap.mapster("unbind");
+	   		bindlinks();
 	   });
+	   $("#rebind_link").bind("click",function(e) {
+	   		e.preventDefault();
+	   		$usamap.mapster(default_options);
+	   });
+
 	   $("#unbind_link_preserve").bind("click",function(e) {
 			e.preventDefault();
 			$usamap.mapster("unbind",true);
+			bindlinks();
 	   });
 	   $("#tooltip").bind("click",function(e) {
 			e.preventDefault();
@@ -110,10 +121,14 @@ $(document).ready(function () {
 
             if (val>"0") {
                 options={
-                    altImage:'images/usa_map_720_alt_'+val+'.jpg',
-                    altImageStroke: false,
-                    altImageFill: true,
-                    altImageOpacity: 0.7
+                    render:
+                    {
+                    	highlight: {
+                    		altImage:'images/usa_map_720_alt_'+val+'.jpg',
+	                    	stroke: true,
+	                    	altImageOpacity: 0.7
+	                    }
+                    }
                  }
             } else {
                 options = {
@@ -124,8 +139,11 @@ $(document).ready(function () {
             $statelist.children().remove();
             $usamap.mapster(options);
 	       });
+	    }
+	    bindlinks();
         default_options=
         {
+        	fadeInterval:50,
             isSelectable: true,
 			singleSelect:false,
             mapKey: 'state',

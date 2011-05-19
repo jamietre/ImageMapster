@@ -78,7 +78,7 @@ Test.prototype._arrayEq = function(arr1,arr2) {
         err='Expected value has no length property';
     }
     if (!err && arr1.length != arr2.length) {
-        err='Arrays different length (test: ' + arr1.length + ', arr2expected: ' + expected.length;
+        err='Arrays different length (test: ' + arr1.length + ', expected: ' + arr2.length;
     }
     if (!err) {
         for (var e=0;e<arr1.length;e++) {
@@ -126,7 +126,7 @@ Test.prototype.assertPropsEq = function(testcase,expected,description,test) {
             for (var prop in t2) {
                 if (t2.hasOwnProperty(prop)) {
                     if (t1[prop]===undefined) {
-                       err='Property ' + prop + ' in ' + t1name + ' does not exist in ' + t2name;
+                       err='Property ' + prop + ' in ' + t2name + ' does not exist in ' + t1name;
                        break;
                     }
                     if (t1 instanceof Array && t2 instanceof Array) {
