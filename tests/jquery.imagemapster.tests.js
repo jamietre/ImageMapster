@@ -129,13 +129,16 @@ mapster_tests = function (options)
         result={ p3: null };
         expectedResult.p3 = otherObj.p3;
         
-        u.mergeObjects({target: result, template: templateObj, source: otherObj, add: true})
+        u.mergeObjects({target:result,source: [templateObj,otherObj], add: true  })
         ut.assertPropsEq(result,expectedResult,"Copying a sub-object - start");
 
-        otherObj._deep="p3";
+        delete otherObj.p3;
         result.p3={existing: "bar"};
+        
+        expectedResult.p3 = templateObj.p3;
         expectedResult.p3.existing="bar";
-        u.mergeObjects({target: result, template: templateObj, source: otherObj, add: true})
+        
+        u.mergeObjects({target: result, source: [templateObj,otherObj], add: true, deep:"p3"})
         ut.assertPropsEq(result,expectedResult,"Deep works");
 
         // test arrayIndexOfProp

@@ -83,7 +83,7 @@ Test.prototype._arrayEq = function(arr1,arr2) {
     if (!err) {
         for (var e=0;e<arr1.length;e++) {
             if (arr1[e]!==arr2[e]) {
-                err="Arrays not equal starting at element " + count +".";
+                err="Arrays not equal starting at element " + e +".";
                 break;
             }
         }

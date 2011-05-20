@@ -104,44 +104,41 @@ Based on code originally written by David Lynch
         //          source: sorce object or objects
         //          include="xxx,yyy" - csv of properties to include
         //          ignore="xxx,yyy" - csv of props to ignore
-        //          template: an object to use as a template. it will be copied to the target before any other processing.
+        //          template: an object to use as a template. it will be copied under the target before any other processing.
+        //            when a template is provided "add" defaults to false.
         //          add = true | false -- when true, will add properties -- default TRUE
         //          
         // returns - new object.
         mergeObjects: function (options) {
-            var include,ignore,obj, i, prop, deep, source,target,
-                add=this.trueFalseDefault(options.add,true);
-            if (options.ignore) {
-                ignore+=","+options.ignore.split(',');
-            }
-            if (options.include) {
-                include=options.include.split(',');
-            }
-            target=options.target || {};
-            source=[].concat(options.source);
-
+            var obj, i, len, prop, 
+                add=this.trueFalseDefault(options.add,options.template ? false : true),
+                ignore = options.ignore ? options.ignore.split(','):'',
+                include=options.include ? options.include.split(','):'',
+                deep = options.deep ? options.deep.split(','):'',
+                target=options.target || {},
+                source=[].concat(options.source);
             if (options.template) {
-                target = this.mergeObjects({target: target, source: options.template, ignore: options.ignore, include: options.include,add: true});
-            }         
-            for (i=0; i<source.length; i++) {
+                target = this.mergeObjects({ target: {}, source: [options.template,target] });
+            }
+            len = source.length;
+            for (i=0; i<len;i++) {
                 obj = source[i];
                 if (obj) {
-                    deep=obj._deep ? obj._deep.split(',') : '';
                     for (prop in obj) {
-                     if ((!ignore || this.arrayIndexOf(ignore,prop)===-1) 
-                           && (!include || this.arrayIndexOf(include,prop)>=0)
+                        if ((!ignore || this.arrayIndexOf(ignore,prop)===-1) 
+                          && (!include || this.arrayIndexOf(include,prop)>=0)
                           && obj.hasOwnProperty(prop) 
                           && (add || target.hasOwnProperty(prop))) {
         
-                         if (deep && this.arrayIndexOf(deep,prop)>=0) {
-                            if (add) {
-                                target[prop]={};
+                            if (deep && this.arrayIndexOf(deep,prop)>=0 && typeof obj[prop]==='object') {
+                                if (add || typeof[target[prop]]!=='object') {
+                                    target[prop]={};
+                                }
+                                this.mergeObjects({target: target[prop],source:obj[prop],add: add });
+                            } else {
+                                target[prop] = obj[prop];
                             }
-                            this.mergeObjects({target: target[prop],source:obj[prop],add: add });
-                         } else {
-                               target[prop] = obj[prop];
-                         }
-                    }
+                        }
                     }
                 }
             }
@@ -188,12 +185,20 @@ Based on code originally written by David Lynch
             return index;
         },
         // iterate over each property of opj, calling fn on each one
-        eachProp: function(obj,fn) {
-            var prop;
-            for (prop in obj) {
-                if (obj.hasOwnProperty(prop)) {
-                    if (fn.call(obj[prop],prop)===false) {
+        each: function(obj,fn) {
+            var i;
+            if (obj.constructor===Array) {
+                for (i=obj.length-1;i>=0;i--) {
+                    if (fn.call(obj[i],i)===false) {
                         return false;
+                    }
+                }
+            } else {
+                for (i in obj) {
+                    if (obj.hasOwnProperty(i)) {
+                        if (fn.call(obj[i],i)===false) {
+                            return false;
+                        }
                     }
                 }
             }
@@ -201,7 +206,7 @@ Based on code originally written by David Lynch
         },
         objectToArray: function(obj) {
             var arr=[];
-            this.eachProp(obj,function() {
+            this.each(obj,function() {
                 arr.push(obj);
             });
             return arr;
@@ -252,27 +257,24 @@ Based on code originally written by David Lynch
     };
     $.mapster.render_defaults =
     {
-        fade: true,
+        fade: false,
         fadeDuration: 150,
         altImage: null,
         altImageOpacity: 0.7,
         fill: true,        
         fillColor: '000000',
         fillOpacity: 0.3,
-        stroke: true,
+        stroke: false,
         strokeColor: 'ff0000',
         strokeOpacity: 1,
-        strokeWidth: 1
+        strokeWidth: 1,
+        alt_image: null // used internally
     };
 
-    $.mapster.defaults =  $.mapster.utils.mergeObjects({template:
-    {
-        _deep:"render",
-        render: {
-            _deep:"highlight,select",
-            highlight: {stroke:false },
-            select: {fade: false }
-        },
+    $.mapster.defaults =  $.mapster.utils.mergeObjects({source:
+    [{
+        render_highlight: {stroke:true, fade:true, strokeWidth:2 },
+        render_select: {fade: false },
         staticState: null,
         selected: false,
         isSelectable: true,
@@ -297,12 +299,13 @@ Based on code originally written by David Lynch
         onConfigured: null,
         configTimeout: 10000,
         areas: []
-    },source: $.mapster.render_defaults});
+    },$.mapster.render_defaults]});
     $.mapster.area_defaults =
         $.mapster.utils.mergeObjects({
-            source: [$.mapster.defaults,$.mapster.render_defaults],
+            source: $.mapster.defaults,
+            deep: "render_highlight, render_select",
             include:"fade,fadeDuration,fill,fillColor,fillOpacity,stroke,strokeColor,strokeOpacity,strokeWidth,staticState,selected,"
-            +"isSelectable,isDeselectable,render"
+            +"isSelectable,isDeselectable,render_highlight,render_select"
         });
    
     $.mapster.impl = (function () {
@@ -330,7 +333,7 @@ Based on code originally written by David Lynch
             var img,
                 images = u.mergeObjects({source: [{ main: map_data }, map_data.alt_images]});
             var result;
-            return u.eachProp(images,function() {
+            return u.each(images,function() {
                 img = this.image;
                 if (!img.complete || !img.width || !img.height ||
                     (typeof img.naturalWidth !== "undefined" && img.naturalWidth === 0)) {
@@ -352,8 +355,14 @@ Based on code originally written by David Lynch
 
         function options_from_area_id(map_data, area_id, override_options) {
             var opts;
-
-            opts = map_data.data[area_id].area_options;
+            //TODO this isSelectable should cascade already this seems redundant
+            opts = u.mergeObjects({
+                source:[map_data.options,
+                    map_data.data[area_id].area_options,
+                    override_options,
+                    {id:area_id}]
+                });
+                
             if (u.isTrueFalse(map_data.options.staticState)) {
                 opts.selected = map_data.options.staticState;
                 opts.isSelectable = false;
@@ -361,8 +370,6 @@ Based on code originally written by David Lynch
             else if (u.isTrueFalse(opts.staticState)) {
                 opts.isSelectable = false;
             }
-            opts=u.mergeObjects({template: map_data.area_options, source: [opts,override_options], add:false});
-            opts.id=area_id;
             return opts;
             
         }
@@ -412,22 +419,24 @@ Based on code originally written by David Lynch
             // first get area options. Then override fade for selecting, and finally merge in the "select" effect options.
             opts = options_from_area_id(map_data,area_id);
             opts = u.mergeObjects({
-                template: opts,
-                source: [opts.render.select, {fade:false,alt_image: map_data.alt_images["select"]} ]
+                source: [opts, 
+                        opts.render_select, {
+                            fade:false,
+                            alt_image: map_data.alt_images["select"]
+                        }]
             });
-            add_shape_group(map_data, map_data.base_canvas, opts,name);
+            add_shape_group(map_data, map_data.base_canvas, opts, name);
         }
         // Configures selections from a separate list.
         function set_areas_selected(map_data, selected_list) {
-            var i;
-            for (i = selected_list.length-1; i >= 0; i--) {
+            for (var i = selected_list.length-1; i >= 0; i--) {
                 set_area_selected(map_data, selected_list[i]);
             }
         }
 
         /// return current map_data for an image or area
         function get_map_data_index(obj) {
-            var img, id, index = -1;
+            var img, id;
             switch (obj.tagName && obj.tagName.toLowerCase()) {
                 case 'area':
                     id = $(obj).parent().attr('name');
@@ -437,10 +446,8 @@ Based on code originally written by David Lynch
                     img = obj;
                     break;
             }
-            if (img) {
-                index = u.arrayIndexOfProp(map_cache, 'image', img);
-            }
-            return index;
+            return img ?
+                u.arrayIndexOfProp(map_cache, 'image', img) : -1;
         }
         function get_map_data(obj, ignore_errors) {
             var index = get_map_data_index(obj);
@@ -468,44 +475,47 @@ Based on code originally written by David Lynch
         }
         function clear_map_data(map_data) {
             var i,div,
-                canvases=[map_data.base_canvas,
-                    map_data.overlay_canvas,
-                    map_data.alt_canvas];
-            for (i=canvases.length-1;i>=0;i--) {
-                if (canvases[i]) {
-                     $(canvases[i]).remove();
+                canvases=[[map_data,"base_canvas"],
+                    [map_data,"overlay_canvas"],
+                    [map_data.alt_images.select,"canvas"],
+                    [map_data.alt_images.highlight,"canvas"]];
+                    
+            u.each(canvases,function(i) {
+                if (this[0] && this[0][this[1]]) {
+                     $(this[0][this[1]]).remove();
+                     this[0][this[1]]=null;
                 }
-            }
-            map_data.base_canvas=null;
-            map_data.overlay_canvas=null;
-            map_data.alt_canvas=null;
+            });
             // release refs to DOM elements
-            for (i=map_data.data.length-1;i>=0;i--) {
+            u.each(map_data.data,function(i) {
                 map_data.data[i].areas=null;
                 map_data.data[i]=null;
-            }
+            });
             if (!map_data.img_style) {
-                // jquery bug - works inconsistently
-                while ($(map_data.image).attr('style')) { $(map_data.image).removeAttr('style'); }
+                // jquery bug? - attr('style') works inconsistently
+                while ($(map_data.image).attr('style')) { 
+                    $(map_data.image).removeAttr('style'); 
+                }
             } else {
                 $(map_data.image).attr('style',map_data.img_style);
             }
             div=$('div#mapster_wrap_'+map_data.index);
             div.before(div.children()).remove();
             map_data.image=null;
-            u.eachProp(map_data.alt_images,function(prop) {
+            u.each(map_data.alt_images,function(prop) {
                 this.canvas=null;
                 this.image=null;
             });
             clear_tooltip(map_data);
         }
         
-
-        
         function clear_events(map_data) {
             var opts=map_data.options;
 
-            $(map_data.map).find('area').unbind('mouseover.mapster').unbind('mouseout.mapster').unbind('click.mapster');
+            $(map_data.map).find('area')
+                .unbind('mouseover.mapster')
+                .unbind('mouseout.mapster')
+                .unbind('click.mapster');
             
             if (map_data.hooks_index && map_data.hooks_index>=0) {
                 event_hooks[map_data.hooks_index].map_data=null;
@@ -671,15 +681,6 @@ Based on code originally written by David Lynch
                 areas.bind('mouseover.mapster', event_hooks[map_data.hooks_index].mouseover_hook)
                     .bind('mouseout.mapster',event_hooks[map_data.hooks_index].mouseout_hook)
                     .bind('click.mapster',event_hooks[map_data.hooks_index].onclick_hook);
-//                    areas.bind('mouseover.mapster',function() {
-//                         mouseover.call(this, map_data);
-//                    })
-//                    .bind('mouseout.mapster',function() {
-//                         mouseout.call(this, map_data);
-//                    })
-//                     .bind('click.mapster',function(e) {
-//                         click.call(this, map_data,e);
-//                });
         }
 
         function bind_tooltip_close(map_data, option, event, obj) {
@@ -737,14 +738,10 @@ Based on code originally written by David Lynch
             // not working properly- closes too soon sometimes
             bind_tooltip_close(map_data, 'img-mouseout', 'mouseout', $(map_data.image));
 
-//            if (has_canvas) {
-                tooltip.css({"opacity":0});
-                tooltip.show();
-                u.fader(tooltip[0], 0,1,  opts.fadeDuration);
- //           }
- //           else {
- //               tooltip.show();
- //           }
+            tooltip.css({"opacity":0});
+            tooltip.show();
+            u.fader(tooltip[0], 0,1,  opts.fadeDuration);
+
             if (opts.onShowToolTip && typeof opts.onShowToolTip === 'function') {
                 data = map_data.data[area_id];
                 opts.onShowToolTip.call(area,
@@ -756,19 +753,23 @@ Based on code originally written by David Lynch
                     key: data.key,
                     selected: data.selected
                 });
-            }
-        }
+            }        }
         // EVENTS
         function mouseover(map_data) {
             var area, opts;
             area = this;
-
+            //TODO why is this first check reuqired?
             if (u.isTrueFalse(map_data.options.staticState)) {
                 return;
             }
             opts = options_from_area(map_data, area);
-                
-            u.mergeObjects({target: opts, source: [opts.render.highlight,{alt_image: map_data.alt_images["highlight"]}] });
+            opts =u.mergeObjects({
+                source: [
+                    opts,
+                    opts.render_highlight,
+                    { alt_image: map_data.alt_images["highlight"] }
+                ]});
+            
             if (!u.isTrueFalse(opts.staticState)) {
                 add_shape_group(map_data, map_data.overlay_canvas, opts);
             }
@@ -848,11 +849,11 @@ Based on code originally written by David Lynch
                 }
 
                 result = '';
-                for (i = map_data.data.length-1; i >= 0; i--) {
-                    if (map_data.data[i].selected) {
-                        result += (result ? ',' : '') + map_data.data[i].key;
+                u.each(map_data.data,function() {
+                    if (this.selected) {
+                        result += (result ? ',' : '') + this.key;
                     }
-                }
+                });
                 return false; // break
             });
             return result;
@@ -865,14 +866,13 @@ Based on code originally written by David Lynch
             var lastParent, parent, map_data, key_list, area_id, do_set_bound, i;
 
             function setSelection(area_id) {
-                if (selected === true) {
-                    me.add_selection(map_data, area_id);
-                }
-                else if (selected === false) {
-                    me.remove_selection(map_data, area_id);
-                }
-                else {
-                    me.toggle_selection(map_data, area_id);
+                switch(selected) {
+                    case true:
+                        me.add_selection(map_data, area_id); break;
+                    case false:
+                        me.remove_selection(map_data, area_id); break;
+                    default:
+                        me.toggle_selection(map_data, area_id); break;
                 }
             }
             function queue_command(command, args) {
@@ -900,14 +900,14 @@ Based on code originally written by David Lynch
                     else {
                         key_list = key;
                     }
-                    for (i = map_data.data.length-1; i >= 0; i--) {
-                        if ((key_list + ",").indexOf(map_data.data[i].key + ",") >= 0) {
+                    // TODO this looks horribly inefficient
+                    u.each(map_data.data,function(i) {
+                        if ((key_list + ",").indexOf(this.key + ",") >= 0) {
                             area_id = i;
                             setSelection(area_id);
                         }
-                    }
-                }
-                else {
+                    });
+                } else {
                     parent = $(this).parent()[0];
                     // it is possible for areas from different mapsters to be passed, make sure we're on the right one.
                     if (lastParent && parent !== lastParent) {
@@ -953,9 +953,9 @@ Based on code originally written by David Lynch
             var i;
             if (map_data.options.singleSelect) {
                 clear_selections(map_data);
-                for (i=map_data.data.length-1;i>=0;i--) {
-                    map_data.data[i].selected = false;
-                }
+                u.each(map_data.data,function() {
+                    this.selected = false;
+                });
             }
 
             set_area_selected(map_data, area_id);
@@ -1011,12 +1011,19 @@ Based on code originally written by David Lynch
             }
         }
         function merge_options(map_data, options) {
-            u.mergeObjects({ignore: "areas",target: map_data.options, source: options, add:false});
-            u.eachProp(options.render,function(prop) {
-                if (prop!=="_deep") {
-                    u.mergeObjects({add:false,target: this,source: [options.render[prop],this]});
-                }
+            u.mergeObjects({
+                ignore: "areas",
+                target: map_data.options, 
+                source: options, 
+                deep:"render_select,render_highlight"
             });
+//            u.each(["render_highlight","render_select"],function(prop) {
+//                u.mergeObjects({
+//                    template: $.mapster.render_defaults,
+//                    target: map_data.options[prop], 
+//                    source: options[prop]
+//                });
+//            });
             merge_areas(map_data, options.areas);
             // refresh the area_option template
             u.mergeObjects({target: map_data.area_options, source: map_data.options, add: false});
@@ -1037,7 +1044,7 @@ Based on code originally written by David Lynch
         };
         me.options = function (options) {
             var map_data,
-            img = this.filter('img').first().get(0);
+            img = this.filter('img').first()[0];
             map_data = get_map_data(img, true);
             if (!map_data) {
                 return;
@@ -1047,18 +1054,25 @@ Based on code originally written by David Lynch
                 return this;
             }
             else {
-                return u.mergeObjects({source: map_data.options,ignore:"_deep"});
+                return map_data.options;
             }
         };
         me.bind = function (opts) {                   
-            opts = u.mergeObjects({template:$.mapster.defaults, source: opts, add:false});
+            opts = u.mergeObjects({
+                template: $.mapster.defaults, 
+                source: opts, 
+                deep: "render_select,render_highlight"
+            });
             // merge all render options. start with default render options, add in settings from general options (that affect all rendering), finally add specific options
             
-            u.eachProp(opts.render,function(prop) {
-                if (prop!="_deep") {
-                    opts.render[prop] = u.mergeObjects({add:false,target: {},template: $.mapster.render_defaults, source: [opts, this]});
-                }
-            });
+//            u.each(["render_select","render_highlight"],function(prop) {
+//                opts[prop] = u.mergeObjects({
+//                    add:false,
+//                    target: {},
+//                    template: $.mapster.render_defaults,
+//                    source: opts
+//                });
+//            });
 
             if (!opts.mapKey) {
                 opts.mapKey = 'mapster_id';
@@ -1104,17 +1118,18 @@ Based on code originally written by David Lynch
                 
                 if (has_canvas) {
                     last={};
-                    u.eachProp(opts.render,function(prop) {
-                        if (this.altImage) {
-                            if (this.altImage!=last.altImage) {
-                                last=this;
-                                lastProp=prop;
-                                if (!map_data.alt_images[prop]) {
-                                    map_data.alt_images[prop]= {image: new Image()};
-                                    map_data.alt_images[prop].image.src = this.altImage;               
+                    u.each(["highlight","select"],function(i) {
+                        var cur = opts["render_"+this].altImage || opts.altImage;
+                        if (cur) {
+                            if (cur!=last) {
+                                last=cur;
+                                lastProp=this;
+                                if (!map_data.alt_images[this]) {
+                                    map_data.alt_images[this]= {image: new Image()};
+                                    map_data.alt_images[this].image.src = cur;               
                                 }
                             } else {
-                                map_data.alt_images[prop]=map_data.alt_images[lastProp];
+                                map_data.alt_images[this]=map_data.alt_images[lastProp];
                             }
                         }
                     });
@@ -1165,7 +1180,7 @@ Based on code originally written by David Lynch
                     
                 if (has_canvas) {
                     last={};
-                    u.eachProp(map_data.alt_images,function() {
+                    u.each(map_data.alt_images,function() {
                         if (this.image != last.image) {
                             last = this;
                             this.canvas = create_canvas_for(this.image);
@@ -1184,7 +1199,10 @@ Based on code originally written by David Lynch
                 $.extend(map_data,
                 {
                     options: opts,
-                    area_options: u.mergeObjects({template:$.mapster.area_defaults,source:opts,add:false}),
+                    area_options: u.mergeObjects({
+                        template:$.mapster.area_defaults,
+                        source:opts
+                    }),
                     map: map,
                     base_canvas: canvas,
                     overlay_canvas: overlay_canvas
