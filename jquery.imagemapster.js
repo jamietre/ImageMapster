@@ -1,4 +1,4 @@
-/* ImageMapster 1.1 beta
+/* ImageMapster 1.1 
 Copyright 2011 James Treworgy
 http://www.outsharked.com/imagemapster
 https://github.com/jamietre/ImageMapster
@@ -131,7 +131,7 @@ Based on code originally written by David Lynch
                           && (add || target.hasOwnProperty(prop))) {
         
                             if (deep && this.arrayIndexOf(deep,prop)>=0 && typeof obj[prop]==='object') {
-                                if (add || typeof[target[prop]]!=='object') {
+                                if (typeof target[prop] !=='object' && add) {
                                     target[prop]={};
                                 }
                                 this.mergeObjects({target: target[prop],source:obj[prop],add: add });
@@ -273,8 +273,8 @@ Based on code originally written by David Lynch
 
     $.mapster.defaults =  $.mapster.utils.mergeObjects({source:
     [{
-        render_highlight: {stroke:true, fade:true, strokeWidth:2 },
-        render_select: {fade: false },
+        render_highlight: {fade: true },
+        render_select: { },
         staticState: null,
         selected: false,
         isSelectable: true,
@@ -360,7 +360,8 @@ Based on code originally written by David Lynch
                 source:[map_data.options,
                     map_data.data[area_id].area_options,
                     override_options,
-                    {id:area_id}]
+                    {id:area_id}],
+                deep:"render_highlight,render_select"
                 });
                 
             if (u.isTrueFalse(map_data.options.staticState)) {
@@ -402,8 +403,8 @@ Based on code originally written by David Lynch
                 shape = shape_from_area(areas[i]);
                 add_shape_to(map_data, specific_canvas, shape[0], shape[1], area_options, name);
             }
-            if (area_options.fade) {
-	            u.fader(specific_canvas, 0, area_options.fillOpacity,area_options.fadeDuration);
+            if (has_canvas && area_options.fade) {
+	            u.fader(specific_canvas, 0, 1,area_options.fadeDuration);
             }
         }
         // internal function to actually set the area
@@ -422,14 +423,15 @@ Based on code originally written by David Lynch
                 source: [opts, 
                         opts.render_select, {
                             fade:false,
-                            alt_image: map_data.alt_images["select"]
+                            alt_image: map_data.alt_images.select
                         }]
             });
             add_shape_group(map_data, map_data.base_canvas, opts, name);
         }
         // Configures selections from a separate list.
         function set_areas_selected(map_data, selected_list) {
-            for (var i = selected_list.length-1; i >= 0; i--) {
+            var i;
+            for (i = selected_list.length-1; i >= 0; i--) {
                 set_area_selected(map_data, selected_list[i]);
             }
         }
@@ -474,7 +476,7 @@ Based on code originally written by David Lynch
             }
         }
         function clear_map_data(map_data) {
-            var i,div,
+            var div,
                 canvases=[[map_data,"base_canvas"],
                     [map_data,"overlay_canvas"],
                     [map_data.alt_images.select,"canvas"],
@@ -767,7 +769,7 @@ Based on code originally written by David Lynch
                 source: [
                     opts,
                     opts.render_highlight,
-                    { alt_image: map_data.alt_images["highlight"] }
+                    { alt_image: map_data.alt_images.highlight }
                 ]});
             
             if (!u.isTrueFalse(opts.staticState)) {
@@ -1017,13 +1019,7 @@ Based on code originally written by David Lynch
                 source: options, 
                 deep:"render_select,render_highlight"
             });
-//            u.each(["render_highlight","render_select"],function(prop) {
-//                u.mergeObjects({
-//                    template: $.mapster.render_defaults,
-//                    target: map_data.options[prop], 
-//                    source: options[prop]
-//                });
-//            });
+
             merge_areas(map_data, options.areas);
             // refresh the area_option template
             u.mergeObjects({target: map_data.area_options, source: map_data.options, add: false});
@@ -1042,37 +1038,33 @@ Based on code originally written by David Lynch
             });
             return this;
         };
+        // set or get options. pass an object with options to set, nothing or false to get, or "true" to get effective options (versus passed options)
         me.options = function (options) {
-            var map_data,
+            var opts,map_data,
             img = this.filter('img').first()[0];
             map_data = get_map_data(img, true);
             if (!map_data) {
                 return;
             }
-            if (options) {
+            if (u.isTrueFalse(options) || !options) {
+                if (u.trueFalseDefault(options,false)) {
+                    opts = map_data.options;
+                    opts.render_select=u.mergeObjects({template: $.mapster.render_defaults, source:[opts,opts.render_select]});
+                    opts.render_highlight=u.mergeObjects({template: $.mapster.render_defaults, source:[opts,opts.render_highlight]});                    
+                    return opts;
+                } else {
+                    return map_data.options;
+                }
+            } else {
                 merge_options(map_data, options);
                 return this;
-            }
-            else {
-                return map_data.options;
             }
         };
         me.bind = function (opts) {                   
             opts = u.mergeObjects({
-                template: $.mapster.defaults, 
-                source: opts, 
+                source: [$.mapster.defaults,opts],
                 deep: "render_select,render_highlight"
             });
-            // merge all render options. start with default render options, add in settings from general options (that affect all rendering), finally add specific options
-            
-//            u.each(["render_select","render_highlight"],function(prop) {
-//                opts[prop] = u.mergeObjects({
-//                    add:false,
-//                    target: {},
-//                    template: $.mapster.render_defaults,
-//                    source: opts
-//                });
-//            });
 
             if (!opts.mapKey) {
                 opts.mapKey = 'mapster_id';
@@ -1080,7 +1072,7 @@ Based on code originally written by David Lynch
 
             return this.each(function () {
 
-                var last,ren,img, wrap, area_options, map, canvas, context, overlay_canvas, usemap, map_data, i;
+                var last,lastProp,ren,img, wrap, area_options, map, canvas, context, overlay_canvas, usemap, map_data, i;
 
                 // save ref to this image even if we can't access it yet. commands will be queued
                 img = $(this);
@@ -1121,7 +1113,7 @@ Based on code originally written by David Lynch
                     u.each(["highlight","select"],function(i) {
                         var cur = opts["render_"+this].altImage || opts.altImage;
                         if (cur) {
-                            if (cur!=last) {
+                            if (cur!==last) {
                                 last=cur;
                                 lastProp=this;
                                 if (!map_data.alt_images[this]) {
@@ -1181,7 +1173,7 @@ Based on code originally written by David Lynch
                 if (has_canvas) {
                     last={};
                     u.each(map_data.alt_images,function() {
-                        if (this.image != last.image) {
+                        if (this.image !== last.image) {
                             last = this;
                             this.canvas = create_canvas_for(this.image);
                             $(this.canvas).css({ display: "none" }); 
@@ -1256,9 +1248,6 @@ Based on code originally written by David Lynch
                         height = img.height || $img.height();
                         width = img.width || $img.width();
                     }
-                    if (!height || !width) {
-                        debugger;
-                        }
                     c = $('<canvas></canvas>')[0];
                     c.width = width;
                     c.height = height;
@@ -1311,16 +1300,17 @@ Based on code originally written by David Lynch
                         context.beginPath();
                         render_shape(context, shape, coords);
                         context.closePath();
-                    }
-                    if (fill) {
-                        context.fillStyle = css3color(options.fillColor, options.fillOpacity);
-                        context.fill();
+                        if (fill) {
+                            context.fillStyle = css3color(options.fillColor, options.fillOpacity);
+                            context.fill();
+                        }
                     }
                     if (stroke) {
                         context.strokeStyle = css3color(options.strokeColor, options.strokeOpacity);
                         context.lineWidth = options.strokeWidth;
                         context.stroke();
                     }
+                    return canvas;
                 };
                 clear_highlight = function (map_data) {
                     map_data.overlay_canvas.getContext('2d').clearRect(0, 0, map_data.overlay_canvas.width, map_data.overlay_canvas.height);
@@ -1376,9 +1366,9 @@ Based on code originally written by David Lynch
                     e.innerHTML = fill + opacity;
 
                     $(canvas).append(e);
+                    return e;
                 };
                 clear_highlight = function (map_data) {
-                    //toClear.remove();
                     $(map_data.overlay_canvas).children().remove();
                 };
                 clear_selections = function (map_data, area_id) {
@@ -1386,7 +1376,6 @@ Based on code originally written by David Lynch
                         $(map_data.base_canvas).find('[name="static_' + area_id.toString() + '"]').remove();
                     }
                     else {
-                        //$(map_data.base_canvas).find('[name^="static"]').remove();
                         $(map_data.base_canvas).children().remove();
                     }
                 };
