@@ -1,4 +1,4 @@
-/* ImageMapster 1.1.1 beta
+/* ImageMapster 1.1.1 beta 2
 Copyright 2011 James Treworgy
 http://www.outsharked.com/imagemapster
 https://github.com/jamietre/ImageMapster
@@ -6,7 +6,6 @@ https://github.com/jamietre/ImageMapster
 A jQuery plugin to enhance image maps.
 version 1.1.1 beta
 -- added 'highlight' option
-
 version 1.1
 -- added per-action options (highlight, select)
 -- fixed memory leaks
@@ -189,7 +188,7 @@ Based on code originally written by David Lynch
             }
             return index;
         },
-        // iterate over each property of opj, calling fn on each one
+        // iterate over each property of obj or array, calling fn on each one
         each: function(obj,fn) {
             var i;
             if (obj.constructor===Array) {
@@ -208,13 +207,6 @@ Based on code originally written by David Lynch
                 }
             }
             return true;
-        },
-        objectToArray: function(obj) {
-            var arr=[];
-            this.each(obj,function() {
-                arr.push(obj);
-            });
-            return arr;
         },
         fader: (function () {
             var elements = [], 
@@ -776,7 +768,7 @@ Based on code originally written by David Lynch
                 
         // remove highlight if present, raise event
         function ensure_no_highlight(map_data) {
-            if (map_data.highlight_id) {
+            if (map_data.highlight_id>=0) {
                 clear_highlight(map_data);
                 change_state(map_data,map_data.highlight_id,'highlight',false);
             }
