@@ -198,17 +198,21 @@ mapster_tests = function (options)
         
         // options
 
-        var initialOpts = u.mergeObjects({template:$.mapster.defaults,ignore:"_deep"});
-        var opts = map.mapster('options');
-
+        var initialOpts = u.mergeObjects({template:$.mapster.defaults });
+        var opts = map.mapster('get_options');
         ut.assertPropsEq(opts,initialOpts,"Options retrieved match initial options");
+        
+        // todo - test new options options
+        //opts = map.mapster('get_options',null,true);
+        //initialOpts.render_select = u.mergeObjects({template:$.mapster.render_defaults }); 
+        
         var newOpts = {isSelectable: false, areas: [{key:'MT',isDeselectable:false}]};
-        map.mapster('options',newOpts);
-        opts = map.mapster('options');
+        map.mapster('set_options',newOpts);
+        opts = map.mapster('get_options');
         ut.assertPropsEq(opts,$.extend(true,{},initialOpts,newOpts),"Options retrieved match updated value");
         ut.assertEq(opts.areas.length,6,"Area option was added");
         // put them back or nothing will work...
-        opts = map.mapster('options',{isSelectable:true, areas: [{key: 'MT',isDeselectable:true}]});
+        opts = map.mapster('set_options',{isSelectable:true, areas: [{key: 'MT',isDeselectable:true}]});
                 
         ut.assertInstanceOf(map, "jQuery", "Plugin returns jQuery object");
         ut.assertArrayEq(map,$("#usa_image"),"Plugin returns jquery same object as invocation");

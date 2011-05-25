@@ -67,10 +67,13 @@ $(document).ready(function () {
 	   function addCheckBoxes(items) {
 	   		$statelist.children().remove();
 		   for (var i = 0; i < items.length; i++) {
-			   var $item = $('<div><input type="checkbox" name="' + items[i].key + '">' + items[i].value + '</div>');
+			   var $item = $('<div><input type="checkbox" name="' + items[i].key + '"><span class="sel" key="'+items[i].key+'">' + items[i].value + '</span></div>');
 			   $statelist.append($item);
 		   }
-
+			$statelist.find('span.sel').unbind('click').bind('click',function(e) {
+				var key = $(this).attr('key');
+				$usamap.mapster('highlight',true,key);
+			});
 		   // return the list to mapster so it can bind to it
 		   return $statelist.find('input:checkbox').unbind('click').click(function (e) {
 			   var selected = $(this).is(':checked');
@@ -104,9 +107,9 @@ $(document).ready(function () {
 	   });
 	   $("#tooltip").bind("click",function(e) {
 			e.preventDefault();
-			var state = !$usamap.mapster('options').showToolTip;
+			var state = !$usamap.mapster('get_options').showToolTip;
 			$('#tooltip_state').text(state?"enabled":"disabled");
-			$usamap.mapster("options",{showToolTip: state });
+			$usamap.mapster("set_options",{showToolTip: state });
 	   });
 	   $("#show_selected").bind("click",function(e) {
 			e.preventDefault();
@@ -114,21 +117,21 @@ $(document).ready(function () {
 	   });
 	   $("#single_select").bind("click",function(e) {
 			e.preventDefault();
-			var state = !$usamap.mapster('options').singleSelect;
+			var state = !$usamap.mapster('get_options').singleSelect;
 			$('#single_select_state').text(state?"enabled":"disabled");
-			$usamap.mapster("options",{singleSelect: state });
+			$usamap.mapster("set_options",{singleSelect: state });
 	   });
 	   $("#is_deselectable").bind("click",function(e) {
 	   		e.preventDefault();
-	   		var state = !$usamap.mapster('options').isDeselectable;
+	   		var state = !$usamap.mapster('get_options').isDeselectable;
 			$('#is_deselectable_state').text(state?"enabled":"disabled");
-			$usamap.mapster("options",{isDeselectable: state });
+			$usamap.mapster("set_options",{isDeselectable: state });
 	   });
 	   $("#highlight_style").bind("change",function(e) {
 	   		e.preventDefault();
 	   		var val = $("#highlight_style").find("option:selected").val();
 	   		var options,
-                state = !$usamap.mapster('options').highlightAltImage;
+                state = !$usamap.mapster('get_options').highlightAltImage;
 
             if (val>"0") {
                 options={
@@ -162,7 +165,7 @@ $(document).ready(function () {
 				newOpts.render_select.strokeWidth=$('#strokewidth_select').val();
 				newOpts.render_select.fillOpacity=$('#fill_select').val();
 				newOpts.render_select.strokeOpacity=$('#strokeopacity_select').val();
-				$usamap.mapster('options',newOpts);
+				$usamap.mapster('set_options',newOpts);
 
 			});
 
@@ -172,7 +175,7 @@ $(document).ready(function () {
 
 		mapsterConfigured = function() {
 			// set html settings values
-			var opts = $usamap.mapster('options',true);
+			var opts = $usamap.mapster('get_options',null,true);
 
 			$('#stroke_highlight').prop("checked",opts.render_highlight.stroke);
 			$('#strokewidth_highlight').val(opts.render_highlight.strokeWidth);
@@ -188,6 +191,13 @@ $(document).ready(function () {
 
         default_options=
         {
+        	fillOpacity: 0.5,
+        	render_highlight: {
+        		fillColor: '2aff00'
+        	},
+        	render_select: {
+        		fillColor: 'ff000c'
+        	},
         	fadeInterval:50,
             isSelectable: true,
 			singleSelect:false,
