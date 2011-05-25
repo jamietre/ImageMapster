@@ -254,7 +254,7 @@ Based on code originally written by David Lynch
     };
     $.mapster.render_defaults =
     {
-        fade: false,
+        fade: true,
         fadeDuration: 150,
         altImage: null,
         altImageOpacity: 0.7,
@@ -270,8 +270,8 @@ Based on code originally written by David Lynch
 
     $.mapster.defaults =  $.mapster.utils.mergeObjects({source:
     [{
-        render_highlight: {fade: true },
-        render_select: { },
+        render_highlight: { },
+        render_select: {fade:false },
         staticState: null,
         selected: false,
         isSelectable: true,
