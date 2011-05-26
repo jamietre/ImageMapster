@@ -18,13 +18,11 @@ version 1.1
 -- minor performance improvements
 -- cleanup in VML mode
 -- fix IE9 canvas support (fader problem)
--- enable fading in most IEs (all except 8 apparently)
 -- fix flickering on fades when moving quickly
 -- add altImage options
 -- added onConfigured callback
 -- fixed problems with cleanup (not removing wrap)
 -- added failure timeout for configure
--- very untested right now
 
 5/13/2011 version 1.0.10
 -- ignore errors when binding mapster to invalid elements
@@ -808,7 +806,7 @@ Based on code originally written by David Lynch
                 {
                     key: map_data.data[area_id].key,
                     state: state_type,
-                    selected: false
+                    selected: state
                 });
             }
         }
