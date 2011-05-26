@@ -816,6 +816,7 @@ Based on code originally written by David Lynch
             if (map_data.highlight_id>=0) {
                 clear_highlight(map_data);
                 change_state(map_data,map_data.highlight_id,'highlight',false);
+                map_data.highlight_id=0;
             }
         }
         // highlight an area, return area options
@@ -1055,7 +1056,8 @@ Based on code originally written by David Lynch
            data.selected = false;
             clear_selections(map_data, area_id);
             refresh_selections(map_data);
-            ensure_no_highlight(map_data);
+            // do not call ensure_no_highlight- we don't really want to unhilight it, just remove the effect
+            clear_highlight(map_data);
             change_state(map_data,area_id,'select',false);
         };
         me.add_selection = function (map_data, area_id) {
