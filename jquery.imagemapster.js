@@ -804,7 +804,7 @@ Based on code originally written by David Lynch
         
         function change_state(map_data,area_id,state_type,state) {
             if (u.isFunction(map_data.options.onStateChange)) {
-                onStateChange.call(map_data.image,
+                map_data.options.onStateChange.call(map_data.image,
                 {
                     key: map_data.data[area_id].key,
                     state: state_type,
