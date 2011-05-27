@@ -1,4 +1,4 @@
-/* ImageMapster 1.1.1 beta 3
+/* ImageMapster 1.1.1 beta 4
 Copyright 2011 James Treworgy
 http://www.outsharked.com/imagemapster
 https://github.com/jamietre/ImageMapster
@@ -822,21 +822,9 @@ Based on code originally written by David Lynch
         // highlight an area, return area options
         function highlight(map_data,area_id) {
             var opts;
-//            opts = options_from_area_id(map_data, area_id);
-//            opts = u.mergeObjects({
-//                source: [
-//                    opts,
-//                    opts.render_highlight,
-//                    { alt_image: map_data.alt_images.highlight }
-//                ]});
-//                
-//                
-            //if (always || !u.isTrueFalse(opts.staticState)) {
-                add_shape_group(map_data, map_data.overlay_canvas, area_id,"highlight");
-                map_data.highlight_id=area_id;
-                change_state(map_data,area_id,'highlight',true);
-            //}
-            //return opts;
+            add_shape_group(map_data, map_data.overlay_canvas, area_id,"highlight");
+            map_data.highlight_id=area_id;
+            change_state(map_data,area_id,'highlight',true);
         }
 
         function mouseover(map_data,e) {
@@ -855,10 +843,10 @@ Based on code originally written by David Lynch
             }
             
             if (opts.showToolTip && opts.toolTip && map_data.activeToolTipID !== opts.id) {
-                show_tooltip(map_data, area, opts);
+                show_tooltip(map_data, this, opts);
             }
             if (u.isFunction(opts.onMouseover)) {
-                opts.onMouseover.call(area,e,
+                opts.onMouseover.call(this,e,
                 {
                     options: opts,
                     key: key,
