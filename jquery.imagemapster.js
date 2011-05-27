@@ -422,7 +422,6 @@ Based on code originally written by David Lynch
             opts = u.mergeObjects({
                 source: [opts, 
                         opts['render_'+mode], {
-                            fade:false,
                             alt_image: map_data.alt_images[mode]
                         }]
             });
