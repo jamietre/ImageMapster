@@ -394,21 +394,8 @@ Based on code originally written by David Lynch
         function create_canvas(img) {
             return $(create_canvas_for(img)).css(canvas_style)[0];
         }
-        // initialize the plugin
-        // remember area_options.id === area_id id is just stored as an option
-        
-        function add_shape_group(map_data,specific_canvas,area_id,mode) {
-            var list,
-                opts =add_shape_group_impl(map_data,specific_canvas,area_id,mode);
-            if (opts.includeKeys) {
-                list = opts.includeKeys.split(',');
-                u.each(list,function() {
-                    add_shape_group(map_data,specific_canvas,id_from_key(map_data,this),mode);
-                });
-            
-            }
-        }
-        
+        // When "nohref" areas are found, they should be treated as masks if they are part of the mouseover group unless
+        // "renderNoHref" option is set.
         function add_shape_group_impl(map_data, specific_canvas, area_id,mode) {
             var opts,name,shape, i,
                 data,areas;
@@ -416,17 +403,18 @@ Based on code originally written by David Lynch
             if (mode==='static') {
                 name = "static_" + area_id.toString();
             }
-            
+            data=map_data.data[area_id];            
             // first get area options. Then override fade for selecting, and finally merge in the "select" effect options.
             opts = options_from_area_id(map_data,area_id);
             opts = u.mergeObjects({
                 source: [opts, 
+                        {mask: data.mask},
                         opts['render_'+mode], {
                             alt_image: map_data.alt_images[mode]
                         }]
             });
             
-            data=map_data.data[opts.id];
+
             areas=data.areas || map_data.map.find('area[' + map_data.options.mapKey + '="' + data.key + '"]');
             
             // update cache with jQuery selector result for areas (potentially expensive)
@@ -444,6 +432,19 @@ Based on code originally written by David Lynch
             }
             return opts;
         }
+        
+        function add_shape_group(map_data,specific_canvas,area_id,mode) {
+            var list,
+                opts =add_shape_group_impl(map_data,specific_canvas,area_id,mode);
+            if (opts.includeKeys) {
+                list = opts.includeKeys.split(',');
+                u.each(list,function() {
+                    add_shape_group(map_data,specific_canvas,id_from_key(map_data,this),mode);
+                });
+            
+            }
+        }       
+        
         // internal function to actually set the area
         function set_area_selected(map_data, area_id) {
             var name, opts,
@@ -533,7 +534,10 @@ Based on code originally written by David Lynch
                 $(map_data.image).attr('style',map_data.img_style);
             }
             div=$('div#mapster_wrap_'+map_data.index);
-            div.before(div.children()).remove();
+            if (div.length) {
+            	div.before(div.children()).remove();
+            }
+            
             map_data.image=null;
             u.each(map_data.alt_images,function(prop) {
                 this.canvas=null;
@@ -610,7 +614,7 @@ Based on code originally written by David Lynch
         }
         // configure new map with area options
         function initialize_map(map_data) {
-            var $area, area, sel, areas, i, opts, area_options, key, area_id, default_group, group_value, map_key_xref,
+            var $area, area, sel, mask, areas, i, opts, area_options, key, area_id, default_group, group_value, map_key_xref,
                 sort_func, sorted_list, returned_list,
                 group_list = [];
 
@@ -631,12 +635,13 @@ Based on code originally written by David Lynch
                     };
                 return me;
                 })());
-            function add_group(key,value,opts) {
+            function add_group(key,value,mask,opts) {
                 return (map_key_xref[key] = group_list.push({
                     key: key,
                     value: value,
                     area_options: opts,
-                    selected: false
+                    selected: false,
+                    mask: mask
                 })-1);
             }
             opts = map_data.options;
@@ -658,9 +663,10 @@ Based on code originally written by David Lynch
                     if (opts.mapValue) {
                         group_value = $area.attr(opts.mapValue);
                     }
+                    mask = typeof $area.attr('nohref')!=='undefined';
                     if (default_group) {
                         // set an attribute so we can refer to the area by index from the DOM object if no key
-                        area_id = add_group(group_list.length,group_value,{});
+                        area_id = add_group(group_list.length,group_value,mask,{});
                         group_list[area_id].key = key = area_id;
                         $area.attr('data-mapster-id', area_id);
                     }
@@ -673,7 +679,7 @@ Based on code originally written by David Lynch
                             }
                         }
                         else {
-                            area_id = add_group(key,group_value,{});
+                            area_id = add_group(key,group_value,mask,{});
                         }
                     }
                 }
@@ -714,7 +720,7 @@ Based on code originally written by David Lynch
             if (opts.listenToList && opts.boundList) {
                 opts.boundList.bind('click.mapster', event_hooks[map_data.hooks_index].listclick_hook);
             }
-            sel = ':not([nohref],[nohref=""])'
+            sel = ':not([nohref],[nohref=""])';
             if (opts.ignoreKeys) {
                 sel+=':not(:attrMatches("' + opts.mapKey + '","' + opts.ignoreKeys + '"))';
             }
@@ -1246,28 +1252,30 @@ Based on code originally written by David Lynch
                     return true;
                 }
 
-                wrap = $('<div id="mapster_wrap_'+map_data.index+'"></div>').css(
-                {
-                    display: 'block',
-                    background: 'url(' + this.src + ')',
-                    position: 'relative',
-                    padding: 0,
-                    width: this.width,
-                    height: this.height
-                });
-                if (opts.wrapClass) {
+		if (opts.wrapClass) {
+                    wrap = $('<div id="mapster_wrap_'+map_data.index+'"></div>').css(
+		    {
+			    display: 'block',
+			    background: 'url(' + this.src + ')',
+			    position: 'relative',
+			    padding: 0,
+			    width: this.width,
+			    height: this.height
+		    });
+                
                     if (opts.wrapClass === true) {
                         wrap.addClass($(this).attr('class'));
                     }
                     else {
                         wrap.addClass(opts.wrapClass);
                     }
+                
+                    img.before(wrap).css('opacity', 0).css(canvas_style);
+                    if (!has_canvas) {
+                        img.css('filter', 'Alpha(opacity=0)');
+                    }
+                    wrap.append(img);
                 }
-                img.before(wrap).css('opacity', 0).css(canvas_style);
-                if (!has_canvas) {
-                    img.css('filter', 'Alpha(opacity=0)');
-                }
-                wrap.append(img);
 
                 canvas = create_canvas(this);
                 img.before(canvas);
