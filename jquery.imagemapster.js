@@ -535,9 +535,8 @@ Based on code originally written by David Lynch
             }
             div=$('div#mapster_wrap_'+map_data.index);
             if (div.length) {
-            	div.before(div.children()).remove();
-            }
-            
+	        div.before(div.children()).remove();
+	    }
             map_data.image=null;
             u.each(map_data.alt_images,function(prop) {
                 this.canvas=null;
@@ -1252,30 +1251,28 @@ Based on code originally written by David Lynch
                     return true;
                 }
 
-		if (opts.wrapClass) {
-                    wrap = $('<div id="mapster_wrap_'+map_data.index+'"></div>').css(
-		    {
-			    display: 'block',
-			    background: 'url(' + this.src + ')',
-			    position: 'relative',
-			    padding: 0,
-			    width: this.width,
-			    height: this.height
-		    });
-                
+                wrap = $('<div id="mapster_wrap_'+map_data.index+'"></div>').css(
+                {
+                    display: 'block',
+                    background: 'url(' + this.src + ')',
+                    position: 'relative',
+                    padding: 0,
+                    width: this.width,
+                    height: this.height
+                });
+                if (opts.wrapClass) {
                     if (opts.wrapClass === true) {
                         wrap.addClass($(this).attr('class'));
                     }
                     else {
                         wrap.addClass(opts.wrapClass);
                     }
-                
-                    img.before(wrap).css('opacity', 0).css(canvas_style);
-                    if (!has_canvas) {
-                        img.css('filter', 'Alpha(opacity=0)');
-                    }
-                    wrap.append(img);
                 }
+                img.before(wrap).css('opacity', 0).css(canvas_style);
+                if (!has_canvas) {
+                    img.css('filter', 'Alpha(opacity=0)');
+                }
+                wrap.append(img);
 
                 canvas = create_canvas(this);
                 img.before(canvas);
