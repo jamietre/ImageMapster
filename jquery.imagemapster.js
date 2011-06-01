@@ -1,4 +1,4 @@
-/* ImageMapster 1.1.1 beta 4
+/* ImageMapster 1.1.1 beta 5
 Copyright 2011 James Treworgy
 http://www.outsharked.com/imagemapster
 https://github.com/jamietre/ImageMapster
@@ -400,7 +400,7 @@ Based on code originally written by David Lynch
             var opts,name,shape, i,
                 data,areas;
 
-            if (mode==='static') {
+            if (mode==='select') {
                 name = "static_" + area_id.toString();
             }
             data=map_data.data[area_id];            
@@ -999,13 +999,11 @@ Based on code originally written by David Lynch
                     else {
                         key_list = key;
                     }
-                    // TODO this looks horribly inefficient
-                    u.each(map_data.data,function(i) {
-                        if ((key_list + ",").indexOf(this.key + ",") >= 0) {
-                            area_id = i;
-                            setSelection(area_id);
-                        }
+                    
+                    u.each(key_list.split(','),function(i) {
+                        setSelection(map_data.xref[this]);
                     });
+
                 } else {
                     parent = $(this).parent()[0];
                     // it is possible for areas from different mapsters to be passed, make sure we're on the right one.
