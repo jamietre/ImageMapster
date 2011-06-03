@@ -439,7 +439,7 @@ Based on code originally written by David Lynch
             } else {
                 canvas = map_data.overlay_canvas;
             }
-            
+            graphics.init(map_data);            
             graphics.begin(canvas,name);
 
             if (opts.includeKeys) {
@@ -453,7 +453,7 @@ Based on code originally written by David Lynch
             graphics.render();
             
             if (opts.fade) {
-	            u.fader(canvas, 0, has_canvas? 1 : opts.fillOpacity,opts.fadeDuration);
+	            u.fader(canvas, 0, has_canvas ? 1 : opts.fillOpacity,opts.fadeDuration);
             } 
                 
 
@@ -472,6 +472,7 @@ Based on code originally written by David Lynch
         // Configures selections from a separate list.
         function set_areas_selected(map_data, selected_list) {
             var i;
+            graphics.init(map_data);
             for (i = selected_list.length-1; i >= 0; i--) {
                 set_area_selected(map_data, selected_list[i]);
             }
@@ -1362,16 +1363,18 @@ Based on code originally written by David Lynch
                         return 'rgba(' + hex_to_decimal(color.substr(0, 2)) + ',' + hex_to_decimal(color.substr(2, 2)) + ',' + hex_to_decimal(color.substr(4, 2)) + ',' + opacity + ')';
                     }                    
                     function render_shape(shape, coords) {
-                        var i;
+                        var i,len;
                         switch (shape) {
                             case 'rect':
                                 context.rect(coords[0], coords[1], coords[2] - coords[0], coords[3] - coords[1]);
                                 break;
                             case 'poly':
                                 context.moveTo(coords[0], coords[1]);
-                                for (i = 2; i < coords.length; i += 2) {
+                                len=coords.length;
+                                for (i = 2; i < len; i += 2) {
                                     context.lineTo(coords[i], coords[i + 1]);
                                 }
+                                context.lineTo(coords[0],coords[1]);
                                 break;
                             case 'circ':
                                 context.arc(coords[0], coords[1], coords[2], 0, Math.PI * 2, false);
@@ -1409,7 +1412,6 @@ Based on code originally written by David Lynch
                                 context.fill();
     
                             });
-                            
                             context.globalCompositeOperation="source-out";
                         }
 
@@ -1418,20 +1420,22 @@ Based on code originally written by David Lynch
                             if (s.options.alt_image) {
                                 add_alt_image(s.options.alt_image.canvas, s.shape, s.coords, s.options);
                             } else if (s.options.fill) {
-                                //context.save();
+                                context.save();
                                 context.beginPath();                            
                                 render_shape(s.shape, s.coords);
                                 context.closePath();
+                                context.clip();
                                 context.fillStyle = css3color(s.options.fillColor, s.options.fillOpacity);
                                 context.fill();
+                                context.restore();
                             }
-                            //context.restore();
-                            
+
                         });
                         
                         
                         // render strokes at end since masks get stroked too
                         context.restore();
+                        
                         //context.globalCompositeOperation="source-over";
                         u.each(shapes.concat(masks),function() {
                             var s = this;
@@ -1444,7 +1448,7 @@ Based on code originally written by David Lynch
                                 context.stroke();
                             }
                         });
-                        context.restore();
+                        context=null;
                         me.active=false;
                         return canvas;
                     };
@@ -1486,6 +1490,7 @@ Based on code originally written by David Lynch
                         map_data.base_canvas = create_canvas(map_data.image);
                         $(map_data.base_canvas).hide();
                         $(map_data.image).before(map_data.base_canvas);
+
                         set_areas_selected(map_data, list_temp);
     
                         $(map_data.base_canvas).show();
