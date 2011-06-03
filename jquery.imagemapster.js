@@ -218,34 +218,36 @@ Based on code originally written by David Lynch
         },
         fader: (function () {
             var elements = [], 
-                lastKey = 0,
-                obj;
+                lastKey = 0;
             function setOpacity(e, opacity) {
-                e.style.opacity=opacity;
                 e.style.filter="Alpha(opacity="+String(opacity*100)+")";
+                e.style.opacity=opacity;
             }
-            var fade_func = function (el, op, endOp ,duration) {
-                var index,u=$.mapster.utils;
+
+            var fade_func = function (el, op, endOp, duration) {
+                var index,u=$.mapster.utils,obj,key;
                 if (typeof el === 'number') {
                     index = u.arrayIndexOfProp(elements,'key',el);
                     if (index===-1) {
                         return;
                     } else {
-                        obj=elements[index];
+                        obj=elements[index].element;
                     }
                 } else {
-                    obj=null;
                     index = u.arrayIndexOfProp(elements,'element',el);
                     if (index>=0) {
                         elements[index]=null;
                     }
-                    obj={"element": el, "key": (el = ++lastKey) };
-                    u.arrayReuse(elements,obj);
+                    obj = el;
+                    el = ++lastKey;
+                    u.arrayReuse(elements,{"element": obj, "key": el });
                 }
                 endOp = endOp || 1;
 
-                op = (op+(endOp/10) > endOp-0.01)? endOp: op+(endOp/10);
-                setOpacity(obj.element,op);
+                op = (op+(endOp/10) > endOp-0.01) ? endOp: op+(endOp/10);
+                //alert(op < endOp);
+
+                setOpacity(obj,op);
                 if (op < endOp) {
                     setTimeout(function() {
                         fade_func(el,op,endOp,duration);
