@@ -1,10 +1,11 @@
-/* ImageMapster 1.1.1 beta 8
+/* ImageMapster 1.1.1 beta 9
 Copyright 2011 James Treworgy
 http://www.outsharked.com/imagemapster
 https://github.com/jamietre/ImageMapster
 
 A jQuery plugin to enhance image maps.
 version 1.1.1 beta 8
+-- IE fading (everything except 8) fixed again
 -- fixed IE prob with masks
 -- add "isMask" option
 -- add multiple 'mapKey's per area
@@ -68,6 +69,8 @@ Based on code originally written by David Lynch
 (c) 2011 https://github.com/kemayo/maphilight/
 
 */
+
+/*jslint evil: true, forin: true, type: true, windows: true */
 
 (function ($) {
     var methods;
@@ -169,7 +172,7 @@ Based on code originally written by David Lynch
             return obj === true || obj === false;
         },
         isFunction: function(obj) {
-            return obj && typeof obj === 'function'
+            return obj && typeof obj === 'function';
         },
         arrayIndexOf: function(arr,el) {
             if (arr.indexOf) {
@@ -220,7 +223,7 @@ Based on code originally written by David Lynch
                 obj;
             function setOpacity(e, opacity) {
                 e.style.opacity=opacity;
-                e.style.filter="Alpha(opacity="+opacity*100+")";
+                e.style.filter="Alpha(opacity="+String(opacity*100)+")";
             }
             var fade_func = function (el, op, endOp ,duration) {
                 var index,u=$.mapster.utils;
@@ -251,7 +254,7 @@ Based on code originally written by David Lynch
                 } 
             };
             return fade_func;
-        })()
+        }())
     };
     $.mapster.default_tooltip_container = function () {
         return '<div style="border: 2px solid black; background: #EEEEEE; position:absolute; width:160px; padding:4px; margin: 4px; -moz-box-shadow: 3px 3px 5px #535353; ' +
@@ -338,7 +341,7 @@ Based on code originally written by David Lynch
         is_image_loaded = function (map_data) {
             var img,
                 images = u.mergeObjects({source: [{ main: map_data }, map_data.alt_images]});
-            var result;
+
             return u.each(images,function() {
                 img = this.image;
                 if (!img.complete || !img.width || !img.height ||
@@ -351,7 +354,17 @@ Based on code originally written by David Lynch
             return eval(obj);
         };
         // end utility functions
-
+        function change_state(map_data,area_id,state_type,state) {
+            if (u.isFunction(map_data.options.onStateChange)) {
+                map_data.options.onStateChange.call(map_data.image,
+                {
+                    key: map_data.data[area_id].key,
+                    state: state_type,
+                    selected: state
+                });
+            }
+        }
+                
         function id_from_key(map_data, key) {
             return key && map_data.xref && map_data.xref.hasOwnProperty(key) ?
                 map_data.xref[key]:-1;
@@ -395,12 +408,8 @@ Based on code originally written by David Lynch
         function create_canvas(img) {
             return $(graphics.create_canvas_for(img)).css(canvas_style)[0];
         }
-        // When "nohref" areas are found, they should be treated as masks if they are part of the mouseover group unless
-        // "renderNoHref" option is set.
-        function add_shape_group_impl(map_data, canvas,area_id,mode) {
-            var canvas,opts,name,shape, i,
-                data,areas;
-
+        function add_shape_group_impl(map_data, area_id,mode) {
+            var opts,shape, i,data;
 
             data=map_data.data[area_id];            
             // first get area options. Then override fade for selecting, and finally merge in the "select" effect options.
@@ -437,15 +446,15 @@ Based on code originally written by David Lynch
             if (opts.includeKeys) {
                 list = opts.includeKeys.split(',');
                 u.each(list,function() {
-                    add_shape_group_impl(map_data,canvas,id_from_key(map_data,this),mode);
+                    add_shape_group_impl(map_data,id_from_key(map_data,this),mode);
                 });
             }
             
-            opts=add_shape_group_impl(map_data,canvas,area_id,mode);
+            opts=add_shape_group_impl(map_data,area_id,mode);
             graphics.render();
             
-            if (has_canvas && opts.fade) {
-	            u.fader(canvas, 0, 1,opts.fadeDuration);
+            if (opts.fade) {
+	            u.fader(canvas, 0, has_canvas? 1 : opts.fillOpacity,opts.fadeDuration);
             } 
                 
 
@@ -453,8 +462,7 @@ Based on code originally written by David Lynch
         
         // internal function to actually set the area
         function set_area_selected(map_data, area_id) {
-            var name, opts,
-                data = map_data.data[area_id];
+            var data = map_data.data[area_id];
             if (data.selected) {
                 return;
             }
@@ -509,7 +517,7 @@ Based on code originally written by David Lynch
                     [map_data.alt_images.select,"canvas"],
                     [map_data.alt_images.highlight,"canvas"]];
                     
-            u.each(canvases,function(i) {
+            u.each(canvases,function() {
                 if (this[0] && this[0][this[1]]) {
                      $(this[0][this[1]]).remove();
                      this[0][this[1]]=null;
@@ -533,7 +541,7 @@ Based on code originally written by David Lynch
 	        div.before(div.children()).remove();
 	    }
             map_data.image=null;
-            u.each(map_data.alt_images,function(prop) {
+            u.each(map_data.alt_images,function() {
                 this.canvas=null;
                 this.image=null;
             });
@@ -608,7 +616,7 @@ Based on code originally written by David Lynch
         }
         // configure new map with area options
         function initialize_map(map_data) {
-            var $area, area, sel, areas, i, opts, area_options, keys, key, area_id, default_group, group_value, map_key_xref,
+            var $area, area, sel, areas, i, j,opts, keys, key, area_id, default_group, group_value, map_key_xref,
                 sort_func, sorted_list, returned_list,
                 data = [], dataItem;
 
@@ -628,7 +636,7 @@ Based on code originally written by David Lynch
                         list_click.call(this, me.map_data,e);
                     };
                 return me;
-                })());
+                }()));
             function add_group(key,value,opts) {
                 return (map_key_xref[key] = data.push({
                     key: key,
@@ -679,8 +687,8 @@ Based on code originally written by David Lynch
                     }
                     dataItem.areas.push(area);
                 }
-                var hasHref=!area.getAttribute("nohref") || area.getAttribute("href");
-                if (hasHref) {
+                // only bind to areas that don't have nohref. ie 6&7 cannot detect the presence of nohref, so we have to also not bind if href is missing.
+                if (!area.getAttribute("nohref") && area.getAttribute("href")) {
                  $area.bind('mouseover.mapster', event_hooks[map_data.hooks_index].mouseover_hook)
                     .bind('mouseout.mapster',event_hooks[map_data.hooks_index].mouseout_hook)
                     .bind('click.mapster',event_hooks[map_data.hooks_index].onclick_hook);
@@ -724,12 +732,6 @@ Based on code originally written by David Lynch
             if (opts.listenToList && opts.boundList) {
                 opts.boundList.bind('click.mapster', event_hooks[map_data.hooks_index].listclick_hook);
             }
-            //sel = ':not([nohref],[nohref=""])';
-            //if (opts.ignoreKeys) {
-            //    sel+=':not(:attrMatches("' + opts.mapKey + '","' + opts.ignoreKeys + '"))';
-            //}
-            areas = areas.filter(sel);
-           
         }
 
         function bind_tooltip_close(map_data, option, event, obj) {
@@ -807,17 +809,7 @@ Based on code originally written by David Lynch
         
         // EVENTS
         
-        function change_state(map_data,area_id,state_type,state) {
-            if (u.isFunction(map_data.options.onStateChange)) {
-                map_data.options.onStateChange.call(map_data.image,
-                {
-                    key: map_data.data[area_id].key,
-                    state: state_type,
-                    selected: state
-                });
-            }
-        }
-                
+
         // remove highlight if present, raise event
         function ensure_no_highlight(map_data) {
             if (map_data.highlight_id>=0) {
@@ -829,21 +821,19 @@ Based on code originally written by David Lynch
         }
         // highlight an area, return area options
         function highlight(map_data,area_id) {
-            var opts;
             add_shape_group(map_data, area_id,"highlight");
             map_data.highlight_id=area_id;
             change_state(map_data,area_id,'highlight',true);
         }
 
         function mouseover(map_data,e) {
-            var area_id,opts;
+            var opts;
 
             //TODO why is this first check reuqired?
             if (u.isTrueFalse(map_data.options.staticState)) {
                 return;
             }
             
-            //area_id = id_from_area(map_data,this);
             opts = options_from_area(map_data,this);
             
             if (!u.isTrueFalse(opts.staticState)) {
@@ -879,7 +869,7 @@ Based on code originally written by David Lynch
                     key: key,
                     selected: data ? data.selected : null
                 });
-             };
+             }
         }
         function click(map_data, e) {
             var  key, selected, list_target, opts, area_id, area_options,
@@ -930,7 +920,7 @@ Based on code originally written by David Lynch
         };
 
         me.get = function (key) {
-            var i, map_data, result, area_id;
+            var map_data, result, area_id;
             this.each(function () {
                 map_data = get_map_data(this);
                 if (!map_data) {
@@ -966,7 +956,7 @@ Based on code originally written by David Lynch
         };
 
         me.set = function (selected, key, set_bound) {
-            var lastParent, parent, map_data, key_list, area_id, do_set_bound, i;
+            var lastParent, parent, map_data, key_list, area_id, do_set_bound;
 
             function setSelection(area_id) {
                 switch(selected) {
@@ -981,7 +971,8 @@ Based on code originally written by David Lynch
             function queue_command(command, args) {
                 map_data.commands.push(
                 {
-                    command: 'set', args: args
+                    command: command, 
+                    args: args
                 });
             }
 
@@ -1004,7 +995,7 @@ Based on code originally written by David Lynch
                         key_list = key;
                     }
                     
-                    u.each(key_list.split(','),function(i) {
+                    u.each(key_list.split(','),function() {
                         setSelection(map_data.xref[this]);
                     });
 
@@ -1057,10 +1048,9 @@ Based on code originally written by David Lynch
         };
         me.add_selection = function (map_data, area_id) {
             // need to add the new one first so that the double-opacity effect leaves the current one highlighted for singleSelect
-            var i;
             graphics.init(map_data);
             if (map_data.options.singleSelect) {
-                clear_selections();
+                graphics.clear_selections();
                 u.each(map_data.data,function() {
                     this.selected = false;
                 });
@@ -1069,7 +1059,7 @@ Based on code originally written by David Lynch
             set_area_selected(map_data, area_id);
 
             if (map_data.options.singleSelect) {
-                refresh_selections(map_data);
+                graphics.refresh_selections(map_data);
             }
         };
         me.toggle_selection = function (map_data, area_id) {
@@ -1088,7 +1078,7 @@ Based on code originally written by David Lynch
 
         me.unbind = function (preserveState) {
             var map_data;
-            return this.each(function (e) {
+            return this.each(function () {
                 map_data = get_map_data(this);
                 if (map_data) {
                     clear_events(map_data);
@@ -1172,8 +1162,9 @@ Based on code originally written by David Lynch
 
         // set options - pass an object with options to set, 
         me.set_options = function(options) {
-            var img = this.filter('img').first()[0];
-            if (map_data = get_map_data(img)) {
+            var img = this.filter('img')[0],
+                map_data= get_map_data(img);
+            if (map_data) {
                 merge_options(map_data, options);
             }
             return this;
@@ -1185,8 +1176,7 @@ Based on code originally written by David Lynch
             });
 
             return this.each(function () {
-
-                var last,lastProp,ren,img, wrap, area_options, map, canvas, context, overlay_canvas, usemap, map_data, i;
+                var last,lastProp,img, wrap, map, canvas, context, overlay_canvas, usemap, map_data, i;
 
                 // save ref to this image even if we can't access it yet. commands will be queued
                 img = $(this);
@@ -1224,7 +1214,7 @@ Based on code originally written by David Lynch
                 
                 if (has_canvas) {
                     last={};
-                    u.each(["highlight","select"],function(i) {
+                    u.each(["highlight","select"],function() {
                         var cur = opts["render_"+this].altImage || opts.altImage;
                         if (cur) {
                             if (cur!==last) {
@@ -1332,7 +1322,7 @@ Based on code originally written by David Lynch
 
 
         me.init = function () {
-            var context,style,shapes;
+            var style,shapes;
 
             has_canvas = $('<canvas></canvas>')[0].getContext;
 
@@ -1354,10 +1344,19 @@ Based on code originally written by David Lynch
             }
             
             $(window).unload($.mapster.unload);
+            // create graphics functions for canvas and vml browsers. usage: 
+            // 1) init with map_data, 2) call begin with canvas to be used (these are separate b/c may not require canvas to be specified
+            // 3) call add_shape_to for each shape or mask, 4) call render() to finish
             if (has_canvas) {
                 graphics = (function() {
                     var map_data,canvas,context,masks,shapes,me = {};
                     me.active=false;
+                    function css3color(color, opacity) {
+                        function hex_to_decimal(hex) {
+                            return Math.max(0, Math.min(parseInt(hex, 16), 255));
+                        }
+                        return 'rgba(' + hex_to_decimal(color.substr(0, 2)) + ',' + hex_to_decimal(color.substr(2, 2)) + ',' + hex_to_decimal(color.substr(4, 2)) + ',' + opacity + ')';
+                    }                    
                     function render_shape(shape, coords) {
                         var i;
                         switch (shape) {
@@ -1384,14 +1383,7 @@ Based on code originally written by David Lynch
             
                         context.globalAlpha = options.altImageOpacity;
                         context.drawImage(src_canvas, 0, 0);
-            
                         context.restore();
-                    }
-                    function css3color(color, opacity) {
-                        function hex_to_decimal(hex) {
-                            return Math.max(0, Math.min(parseInt(hex, 16), 255));
-                        }
-                        return 'rgba(' + hex_to_decimal(color.substr(0, 2)) + ',' + hex_to_decimal(color.substr(2, 2)) + ',' + hex_to_decimal(color.substr(4, 2)) + ',' + opacity + ')';
                     }
                     me.init = function(_map_data) {
                         map_data=_map_data;
@@ -1416,7 +1408,7 @@ Based on code originally written by David Lynch
                             
                             context.globalCompositeOperation="source-out";
                         }
-                        //context.restore();
+
                         u.each(shapes,function() {
                             var s = this;
                             if (s.options.alt_image) {
@@ -1432,12 +1424,14 @@ Based on code originally written by David Lynch
                             //context.restore();
                             
                         });
+                        
+                        
                         // render strokes at end since masks get stroked too
-                        //context.restore();
+                        context.restore();
                         //context.globalCompositeOperation="source-over";
                         u.each(shapes.concat(masks),function() {
                             var s = this;
-                           if (s.options.stroke) {
+                            if (s.options.stroke) {
                                 context.beginPath();
                                 render_shape(s.shape, s.coords);
                                 context.closePath();
@@ -1494,7 +1488,7 @@ Based on code originally written by David Lynch
                         $(canvas_temp).remove();
                     };                    
                     return me;
-                })();
+                }());
 
             } else {
                 // ie executes this code
@@ -1576,7 +1570,7 @@ Based on code originally written by David Lynch
                         return null;
                     };
                     return me;
-                })();                
+                }());
 
             }
         };
@@ -1640,4 +1634,4 @@ Based on code originally written by David Lynch
         test: $.mapster.impl.test
     };
     $.mapster.impl.init();
-})(jQuery);
+}(jQuery));
