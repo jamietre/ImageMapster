@@ -1,10 +1,11 @@
-/* ImageMapster 1.1.1 beta 9
+/* ImageMapster 1.1.1
 Copyright 2011 James Treworgy
 http://www.outsharked.com/imagemapster
 https://github.com/jamietre/ImageMapster
 
 A jQuery plugin to enhance image maps.
-version 1.1.1 beta 8
+version 1.1.1
+-- Fixed Opera fading
 -- IE fading (everything except 8) fixed again
 -- fixed IE prob with masks
 -- add "isMask" option
