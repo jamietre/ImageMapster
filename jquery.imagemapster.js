@@ -10,7 +10,6 @@ version 1.1.1 beta 8
 -- add "isMask" option
 -- add multiple 'mapKey's per area
 -- added "includeKeys" option (area-specific)
--- added "ignoreKeys" options
 -- bugfix: ignore areas with no mapkey when it is provided
 -- bugfix: not binding properly when no mapkey provided
 -- added 'highlight' option
@@ -276,7 +275,6 @@ Based on code originally written by David Lynch
         strokeOpacity: 1,
         strokeWidth: 1,
         includeKeys: '',
-        isMask: null,
         alt_image: null // used internally
     };
 
@@ -293,8 +291,8 @@ Based on code originally written by David Lynch
         boundList: null,
         sortList: false,
         listenToList: false,
-        mapKey: null,
-        ignoreKeys: '',
+        mapKey: '',
+        isMask: false,
         mapValue: '',
         listKey: 'value',
         listSelectedAttribute: 'selected',
@@ -311,6 +309,7 @@ Based on code originally written by David Lynch
         onCreateTooltip: null,
         onConfigured: null,
         configTimeout: 10000,
+        noHrefIsMask: true,
         areas: []
     },$.mapster.render_defaults]});
     $.mapster.area_defaults =
@@ -318,7 +317,7 @@ Based on code originally written by David Lynch
             source: $.mapster.defaults,
             deep: "render_highlight, render_select",
             include:"fade,fadeDuration,fill,fillColor,fillOpacity,stroke,strokeColor,strokeOpacity,strokeWidth,staticState,selected,"
-            +"isSelectable,isDeselectable,render_highlight,render_select"
+            +"isSelectable,isDeselectable,render_highlight,render_select,isMask"
         });
    
     $.mapster.impl = (function () {
@@ -423,7 +422,7 @@ Based on code originally written by David Lynch
 
             for (i = data.areas.length - 1; i >= 0; i--) {
                 shape = shape_from_area(data.areas[i]);
-                graphics.add_shape_to(shape[0], shape[1], opts);
+                graphics.add_shape_to(shape[0], shape[1], opts, $(data.areas[i]).data('mapster_is_mask') || opts.isMask);
             }
             
             return opts;
@@ -604,10 +603,11 @@ Based on code originally written by David Lynch
                     u.mergeObjects({target:data.area_options,source:area_options});
 
                     // if a static state, use it, otherwise use selected.
-                    if ((u.isTrueFalse(area_options.staticState)) ?
+                    if ((u.isTrueFalse(data.area_options.staticState)) ?
                         area_options.staticState : area_options.selected) {
                         selected_list.push(area_id);
                     }
+                    
                     // TODO: will not deselect areas that were previously selected, so this only works for an initial bind.
                 }
             }
@@ -617,7 +617,7 @@ Based on code originally written by David Lynch
         // configure new map with area options
         function initialize_map(map_data) {
             var $area, area, sel, areas, i, j,opts, keys, key, area_id, default_group, group_value, map_key_xref,
-                sort_func, sorted_list, returned_list,
+                sort_func, sorted_list, returned_list,is_mask,
                 data = [], dataItem;
 
             map_data.hooks_index=u.arrayReuse(event_hooks,(function() {
@@ -687,20 +687,24 @@ Based on code originally written by David Lynch
                     }
                     dataItem.areas.push(area);
                 }
+                is_mask=opts.isMask;
                 // only bind to areas that don't have nohref. ie 6&7 cannot detect the presence of nohref, so we have to also not bind if href is missing.
                 if (!area.getAttribute("nohref") && area.getAttribute("href")) {
                  $area.bind('mouseover.mapster', event_hooks[map_data.hooks_index].mouseover_hook)
                     .bind('mouseout.mapster',event_hooks[map_data.hooks_index].mouseout_hook)
                     .bind('click.mapster',event_hooks[map_data.hooks_index].onclick_hook);
                 
+                } else {
+                    is_mask = is_mask || opts.noHrefIsMask;
+                    $area.data('mapster_is_mask',is_mask);
                 }
-
             }
 
             map_data.data = data;
             map_data.xref = map_key_xref;
             
             set_area_options(map_data, opts.areas);
+            
 
             if (opts.isSelectable && opts.onGetList) {
                 sorted_list = data.slice(0);
@@ -1457,8 +1461,8 @@ Based on code originally written by David Lynch
                         c.getContext("2d").clearRect(0, 0, width, height);
                         return c;
                     };
-                    me.add_shape_to = function (shape, coords, options) {
-                        var addto = options.isMask ? masks: shapes;
+                    me.add_shape_to = function (shape, coords, options,is_mask) {
+                        var addto = is_mask ? masks: shapes;
                         addto.push({shape:shape,coords:coords,options:options});
                     };
                     me.clear_highlight = function () {
@@ -1533,8 +1537,8 @@ Based on code originally written by David Lynch
                             height=$img.height();
                         return $('<var width="' + width + '" height="' + height + '" style="zoom:1;overflow:hidden;display:block;width:' + width + 'px;height:' + height + 'px;"></var>')[0];
                     };
-                    me.add_shape_to = function (shape, coords, options) {
-                        var addto = options.isMask ? masks: shapes;
+                    me.add_shape_to = function (shape, coords, options,is_mask) {
+                        var addto = is_mask ? masks: shapes;
                         addto.push({shape:shape,coords:coords,options:options});
                     };
 
