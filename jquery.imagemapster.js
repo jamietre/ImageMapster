@@ -1,11 +1,12 @@
-/* ImageMapster 1.1.1 beta 5
+/* ImageMapster 1.1.1 beta 6
 Copyright 2011 James Treworgy
 http://www.outsharked.com/imagemapster
 https://github.com/jamietre/ImageMapster
 
 A jQuery plugin to enhance image maps.
-version 1.1.1 beta
--- automatically ignore areas with "nohref" attribute
+version 1.1.1 beta 6
+-- add "isMask" option
+-- add multiple 'mapKey's per area
 -- added "includeKeys" option (area-specific)
 -- added "ignoreKeys" options
 -- bugfix: ignore areas with no mapkey when it is provided
@@ -264,12 +265,14 @@ Based on code originally written by David Lynch
         altImageOpacity: 0.7,
         fill: true,        
         fillColor: '000000',
+        fillColorMask: 'FFFFFF',
         fillOpacity: 0.3,
         stroke: false,
         strokeColor: 'ff0000',
         strokeOpacity: 1,
         strokeWidth: 1,
         includeKeys: '',
+        isMask: null,
         alt_image: null // used internally
     };
 
@@ -286,7 +289,7 @@ Based on code originally written by David Lynch
         boundList: null,
         sortList: false,
         listenToList: false,
-        mapKey: 'data-mapster-id',
+        mapKey: null,
         ignoreKeys: '',
         mapValue: '',
         listKey: 'value',
@@ -320,11 +323,7 @@ Based on code originally written by David Lynch
         map_cache = [],
         ie_config_complete = false,
         has_canvas = null,
-        create_canvas_for = null,
-        add_shape_to = null,
-        clear_highlight = null,
-        clear_selections = null,
-        refresh_selections = null,
+        graphics = null,
         tooltip_events = [],
         event_hooks=[],
         canvas_style =
@@ -357,7 +356,8 @@ Based on code originally written by David Lynch
                 map_data.xref[key]:-1;
         }
         function id_from_area(map_data, area) {
-            return id_from_key(map_data, $(area).attr(map_data.options.mapKey));
+            var key = $(area).data('mapster_key');
+            return id_from_key(map_data,key);
         }
 
         function options_from_area_id(map_data, area_id, override_options) {
@@ -392,57 +392,62 @@ Based on code originally written by David Lynch
             return [area.getAttribute('shape').toLowerCase().substr(0, 4), coords];
         }
         function create_canvas(img) {
-            return $(create_canvas_for(img)).css(canvas_style)[0];
+            return $(graphics.create_canvas_for(img)).css(canvas_style)[0];
         }
         // When "nohref" areas are found, they should be treated as masks if they are part of the mouseover group unless
         // "renderNoHref" option is set.
-        function add_shape_group_impl(map_data, specific_canvas, area_id,mode) {
-            var opts,name,shape, i,
+        function add_shape_group_impl(map_data, canvas,area_id,mode) {
+            var canvas,opts,name,shape, i,
                 data,areas;
 
-            if (mode==='select') {
-                name = "static_" + area_id.toString();
-            }
+
             data=map_data.data[area_id];            
             // first get area options. Then override fade for selecting, and finally merge in the "select" effect options.
             opts = options_from_area_id(map_data,area_id);
             opts = u.mergeObjects({
                 source: [opts, 
-                        {mask: data.mask},
                         opts['render_'+mode], {
                             alt_image: map_data.alt_images[mode]
                         }]
             });
-            
 
-            areas=data.areas || map_data.map.find('area[' + map_data.options.mapKey + '="' + data.key + '"]');
-            
-            // update cache with jQuery selector result for areas (potentially expensive)
-            if (!data.areas) {
-               data.areas = areas;
+            for (i = data.areas.length - 1; i >= 0; i--) {
+                shape = shape_from_area(data.areas[i]);
+                graphics.add_shape_to(shape[0], shape[1], opts);
             }
-
-            for (i = areas.length - 1; i >= 0; i--) {
-                shape = shape_from_area(areas[i]);
-                add_shape_to(map_data, specific_canvas, shape[0], shape[1], opts, name);
-            }          
             
-            if (has_canvas && opts.fade) {
-	            u.fader(specific_canvas, 0, 1,opts.fadeDuration);
-            }
             return opts;
         }
         
-        function add_shape_group(map_data,specific_canvas,area_id,mode) {
-            var list,
-                opts =add_shape_group_impl(map_data,specific_canvas,area_id,mode);
+        function add_shape_group(map_data,area_id,mode) {
+            var list,canvas,
+                opts = options_from_area_id(map_data,area_id);
+            // render includeKeys first - because they could be masks
+
+            if (mode==='select') {
+                name = "static_" + area_id.toString();
+                canvas=map_data.base_canvas;
+            } else {
+                canvas = map_data.overlay_canvas;
+            }
+            
+            graphics.begin(canvas,name);
+
             if (opts.includeKeys) {
                 list = opts.includeKeys.split(',');
                 u.each(list,function() {
-                    add_shape_group(map_data,specific_canvas,id_from_key(map_data,this),mode);
+                    add_shape_group_impl(map_data,canvas,id_from_key(map_data,this),mode);
                 });
-            
             }
+            
+            opts=add_shape_group_impl(map_data,canvas,area_id,mode);
+            graphics.render();
+            
+            if (has_canvas && opts.fade) {
+	            u.fader(canvas, 0, 1,opts.fadeDuration);
+            } 
+                
+
         }       
         
         // internal function to actually set the area
@@ -464,7 +469,7 @@ Based on code originally written by David Lynch
 //                            alt_image: map_data.alt_images.select
 //                        }]
 //            });
-            add_shape_group(map_data, map_data.base_canvas, area_id, "select");
+            add_shape_group(map_data, area_id, "select");
             change_state(map_data,area_id,'select',true);
         }
         // Configures selections from a separate list.
@@ -613,9 +618,9 @@ Based on code originally written by David Lynch
         }
         // configure new map with area options
         function initialize_map(map_data) {
-            var $area, area, sel, mask, areas, i, opts, area_options, key, area_id, default_group, group_value, map_key_xref,
+            var $area, area, sel, mask, areas, i, opts, area_options, keys, key, area_id, default_group, group_value, map_key_xref,
                 sort_func, sorted_list, returned_list,
-                group_list = [];
+                data = [], dataItem;
 
             map_data.hooks_index=u.arrayReuse(event_hooks,(function() {
                 var me={};
@@ -634,63 +639,66 @@ Based on code originally written by David Lynch
                     };
                 return me;
                 })());
-            function add_group(key,value,mask,opts) {
-                return (map_key_xref[key] = group_list.push({
+            function add_group(key,value,opts) {
+                return (map_key_xref[key] = data.push({
                     key: key,
                     value: value,
                     area_options: opts,
                     selected: false,
-                    mask: mask
+                    areas: []
                 })-1);
             }
             opts = map_data.options;
             map_key_xref = {};
-            default_group = opts.mapKey === "data-mapster-id";
-            
-            sel = (default_group ? 'area[coords]':'area['+opts.mapKey+']');
+            default_group = !opts.mapKey;            
+            sel = default_group ? 'area[coords]' : 'area['+opts.mapKey+']';
             areas = $(map_data.map).find(sel);
-
 
             for (i = areas.length-1; i >=0; i--) {
                 area_id = 0;
                 area = areas[i];
                 $area = $(area);
-
-                key = $area.attr(opts.mapKey);
-
-                if (key || default_group) {
+                
+                keys = default_group ?  [''] : $area.attr(opts.mapKey).split(',');
+                $area.data('mapster_key',keys[0]);
+                for (j=keys.length-1;j>=0;j--) {
+                    key = keys[j];
                     if (opts.mapValue) {
                         group_value = $area.attr(opts.mapValue);
                     }
-                    mask = typeof $area.attr('nohref')!=='undefined';
+                    //mask = typeof $area.attr('nohref')!=='undefined';
                     if (default_group) {
                         // set an attribute so we can refer to the area by index from the DOM object if no key
-                        area_id = add_group(group_list.length,group_value,mask,{});
-                        group_list[area_id].key = key = area_id;
-                        $area.attr('data-mapster-id', area_id);
+                        area_id = add_group(data.length,group_value,{});
+                        dataItem=data[area_id];
+                        dataItem.key = key = area_id;
+                        //$area.attr('data-mapster-id', area_id);
                     }
                     else {
-                        //group_data_index = u.arrayIndexOfProp(group_list, 'key', group);
+                        //group_data_index = u.arrayIndexOfProp(data, 'key', group);
                         
                         if ((area_id = map_key_xref[key]) >= 0) {
-                            if (group_value && !group_list[area_id].value) {
-                                group_list[area_id].value = group_value;
+                            if (group_value && !data[area_id].value) {
+                                dataItem = data[area_id];
+                                dataItem.value = group_value;
                             }
                         }
                         else {
-                            area_id = add_group(key,group_value,mask,{});
+                            area_id = add_group(key,group_value,{});
+                            dataItem = data[area_id];
                         }
                     }
+                    dataItem.areas.push(area);
                 }
             }
 
-            map_data.data = group_list;
+            map_data.data = data;
             map_data.xref = map_key_xref;
             
             set_area_options(map_data, opts.areas);
 
             if (opts.isSelectable && opts.onGetList) {
-                sorted_list = group_list.slice(0);
+                sorted_list = data.slice(0);
                 if (opts.sortList) {
                     if (opts.sortList === "desc") {
                         sort_func = function (a, b) {
@@ -818,7 +826,8 @@ Based on code originally written by David Lynch
         // remove highlight if present, raise event
         function ensure_no_highlight(map_data) {
             if (map_data.highlight_id>=0) {
-                clear_highlight(map_data);
+                graphics.init(map_data);
+                graphics.clear_highlight();
                 change_state(map_data,map_data.highlight_id,'highlight',false);
                 map_data.highlight_id=0;
             }
@@ -826,7 +835,7 @@ Based on code originally written by David Lynch
         // highlight an area, return area options
         function highlight(map_data,area_id) {
             var opts;
-            add_shape_group(map_data, map_data.overlay_canvas, area_id,"highlight");
+            add_shape_group(map_data, area_id,"highlight");
             map_data.highlight_id=area_id;
             change_state(map_data,area_id,'highlight',true);
         }
@@ -1039,20 +1048,22 @@ Based on code originally written by David Lynch
             clear_tooltip();
         };
         me.remove_selection = function (map_data, area_id) {
+            graphics.init(map_data);
             var data = map_data.data[area_id];
             if (!data.selected) {
                 return;
             }
            data.selected = false;
-            clear_selections(map_data, area_id);
-            refresh_selections(map_data);
+            graphics.clear_selections(map_data, area_id);
+            graphics.refresh_selections(map_data);
             // do not call ensure_no_highlight- we don't really want to unhilight it, just remove the effect
-            clear_highlight(map_data);
+            graphics.clear_highlight(map_data);
             change_state(map_data,area_id,'select',false);
         };
         me.add_selection = function (map_data, area_id) {
             // need to add the new one first so that the double-opacity effect leaves the current one highlighted for singleSelect
             var i;
+            graphics.init(map_data);
             if (map_data.options.singleSelect) {
                 clear_selections(map_data);
                 u.each(map_data.data,function() {
@@ -1283,7 +1294,7 @@ Based on code originally written by David Lynch
                     u.each(map_data.alt_images,function() {
                         if (this.image !== last.image) {
                             last = this;
-                            this.canvas = create_canvas_for(this.image);
+                            this.canvas = graphics.create_canvas_for(this.image);
                             $(this.canvas).css({ display: "none" }); 
                           // do not need to add this one to the DOM 
                             context = this.canvas.getContext("2d");
@@ -1349,21 +1360,10 @@ Based on code originally written by David Lynch
             
             $(window).unload($.mapster.unload);
             if (has_canvas) {
-                create_canvas_for = function (img, width, height) {
-                    var c,$img;
-                    if (img) {
-                        $img=$(img);
-                        height = img.height || $img.height();
-                        width = img.width || $img.width();
-                    }
-                    c = $('<canvas></canvas>')[0];
-                    c.width = width;
-                    c.height = height;
-                    c.getContext("2d").clearRect(0, 0, width, height);
-                    return c;
-                };
-                add_shape_to = function (map_data, canvas, shape, coords, options) {
-                    function render_shape(context, shape, coords) {
+                graphics = (function() {
+                    var map_data,canvas,context,masks,shapes,me = {};
+                    me.active=false;
+                    function render_shape(shape, coords) {
                         var i;
                         switch (shape) {
                             case 'rect':
@@ -1380,14 +1380,15 @@ Based on code originally written by David Lynch
                                 break;
                         }
                     }
-                    function add_alt_image(canvas, context, shape, coords, options) {
+                    function add_alt_image(src_canvas, shape, coords, options) {
                         context.save();
                         context.beginPath();
-                        render_shape(context, shape, coords);
+                        render_shape(shape, coords);
+                        context.closePath();
                         context.clip();
             
                         context.globalAlpha = options.altImageOpacity;
-                        context.drawImage(canvas, 0, 0);
+                        context.drawImage(src_canvas, 0, 0);
             
                         context.restore();
                     }
@@ -1397,99 +1398,192 @@ Based on code originally written by David Lynch
                         }
                         return 'rgba(' + hex_to_decimal(color.substr(0, 2)) + ',' + hex_to_decimal(color.substr(2, 2)) + ',' + hex_to_decimal(color.substr(4, 2)) + ',' + opacity + ')';
                     }
-                    
-                    var fill = options.fill,
-                        stroke = options.stroke;
-
-                    context = canvas.getContext('2d');
-                    if (options.alt_image) {
-                        add_alt_image(options.alt_image.canvas, context, shape, coords, options);
-                    } else {
-                        context.beginPath();
-                        render_shape(context, shape, coords);
-                        context.closePath();
-                        if (fill) {
-                            context.fillStyle = css3color(options.fillColor, options.fillOpacity);
-                            context.fill();
+                    me.init = function(_map_data) {
+                        map_data=_map_data;
+                    };
+                    me.begin=function(_canvas) {
+                        canvas=_canvas;
+                        context = canvas.getContext('2d');
+                        shapes=[];
+                        masks=[];
+                        me.active=true;
+                    };
+                    me.render = function() {
+                        context.save();
+                        if (masks.length) {
+                            u.each(masks,function() {
+                                context.beginPath();                        
+                                render_shape(this.shape,this.coords);
+                                context.closePath();
+                                context.fill();
+    
+                            });
+                            
+                            context.globalCompositeOperation="source-out";
                         }
-                    }
-                    if (stroke) {
-                        context.strokeStyle = css3color(options.strokeColor, options.strokeOpacity);
-                        context.lineWidth = options.strokeWidth;
-                        context.stroke();
-                    }
-                    return canvas;
-                };
-                clear_highlight = function (map_data) {
-                    map_data.overlay_canvas.getContext('2d').clearRect(0, 0, map_data.overlay_canvas.width, map_data.overlay_canvas.height);
-                };
-                clear_selections = function () {
-                    return null;
-                };
-                // Draw all items from selected_list to a new canvas, then swap with the old one. This is used to delete items when using canvases. 
-                refresh_selections = function (map_data) {
-                    var i,list_temp=[], canvas_temp,data;
-                    // draw new base canvas, then swap with the old one to avoid flickering
-                    canvas_temp = map_data.base_canvas;
-                    for (i=map_data.data.length-1;i>=0;i--) {
-                        data = map_data.data[i];
-                        if (data.selected) {
-                            data.selected=false;
-                            list_temp.push(i);
+                        //context.restore();
+                        u.each(shapes,function() {
+                            var s = this;
+                            if (s.options.alt_image) {
+                                add_alt_image(s.options.alt_image.canvas, s.shape, s.coords, s.options);
+                            } else if (s.options.fill) {
+                                //context.save();
+                                context.beginPath();                            
+                                render_shape(s.shape, s.coords);
+                                context.closePath();
+                                context.fillStyle = css3color(s.options.fillColor, s.options.fillOpacity);
+                                context.fill();
+                            }
+                            //context.restore();
+                            
+                        });
+                        // render strokes at end since masks get stroked too
+                        //context.restore();
+                        //context.globalCompositeOperation="source-over";
+                        u.each(shapes.concat(masks),function() {
+                            var s = this;
+                           if (s.options.stroke) {
+                                context.beginPath();
+                                render_shape(s.shape, s.coords);
+                                context.closePath();
+                                context.strokeStyle = css3color(s.options.strokeColor, s.options.strokeOpacity);
+                                context.lineWidth = s.options.strokeWidth;
+                                context.stroke();
+                            }
+                        });
+                        context.restore();
+                        me.active=false;
+                        return canvas;
+                    };
+                    me.create_canvas_for = function (img, width, height) {
+                        var c,$img;
+                        if (img) {
+                            $img=$(img);
+                            height = img.height || $img.height();
+                            width = img.width || $img.width();
                         }
-                    }
-                    map_data.base_canvas = create_canvas(map_data.image);
-                    $(map_data.base_canvas).hide();
-                    $(map_data.image).before(map_data.base_canvas);
-                    set_areas_selected(map_data, list_temp);
+                        c = $('<canvas></canvas>')[0];
+                        c.width = width;
+                        c.height = height;
+                        c.getContext("2d").clearRect(0, 0, width, height);
+                        return c;
+                    };
+                    me.add_shape_to = function (shape, coords, options) {
+                        var addto = options.isMask ? masks: shapes;
+                        addto.push({shape:shape,coords:coords,options:options});
+                    };
+                    me.clear_highlight = function () {
+                        map_data.overlay_canvas.getContext('2d').clearRect(0, 0, map_data.overlay_canvas.width, map_data.overlay_canvas.height);
+                    };
+                    me.clear_selections = function () {
+                        return null;
+                    };
+                    // Draw all items from selected_list to a new canvas, then swap with the old one. This is used to delete items when using canvases. 
+                    me.refresh_selections = function () {
+                        var i,list_temp=[], canvas_temp,data;
+                        // draw new base canvas, then swap with the old one to avoid flickering
+                        canvas_temp = map_data.base_canvas;
+                        for (i=map_data.data.length-1;i>=0;i--) {
+                            data = map_data.data[i];
+                            if (data.selected) {
+                                data.selected=false;
+                                list_temp.push(i);
+                            }
+                        }
+                        map_data.base_canvas = create_canvas(map_data.image);
+                        $(map_data.base_canvas).hide();
+                        $(map_data.image).before(map_data.base_canvas);
+                        set_areas_selected(map_data, list_temp);
+    
+                        $(map_data.base_canvas).show();
+                        $(canvas_temp).remove();
+                    };                    
+                    return me;
+                })();
 
-                    $(map_data.base_canvas).show();
-                    $(canvas_temp).remove();
-                };
             } else {
                 // ie executes this code
-                create_canvas_for = function (img) {
-                    var $img = $(img),
-                        width = $img.width(),
-                        height=$img.height();
-                    return $('<var width="' + width + '" height="' + height + '" style="zoom:1;overflow:hidden;display:block;width:' + width + 'px;height:' + height + 'px;"></var>')[0];
-                };
-                add_shape_to = function (map_data, canvas, shape, coords, options, name) {
-                    var fill, stroke, opacity, e;
-                    name = name ? 'name="'+name+'" ' : '';
-                    fill = '<v:fill color="#' + options.fillColor + '" opacity="' + (options.fill ? options.fillOpacity : 0) + '" />';
-                    stroke = (options.stroke ? 'strokeweight="' + options.strokeWidth + '" stroked="t" strokecolor="#' + options.strokeColor + '"' : 'stroked="f"');
-                    opacity = '<v:stroke opacity="' + options.strokeOpacity + '"/>';
-                    switch (shape) {
-                        case 'rect':
-                            e = $('<v:rect ' + name + ' filled="t" ' + stroke + ' style="zoom:1;margin:0;padding:0;display:block;position:absolute;left:' + coords[0] + 'px;top:' + coords[1] + 'px;width:' + (coords[2] - coords[0]) + 'px;height:' + (coords[3] - coords[1]) + 'px;"></v:rect>')[0];
-                            break;
-                        case 'poly':
-                            e = $('<v:shape ' + name + ' filled="t" ' + stroke + ' coordorigin="0,0" coordsize="' + canvas.width + ',' + canvas.height + '" path="m ' + coords[0] + ',' + coords[1] + ' l ' + coords.slice(2).join(',') + ' x e" style="zoom:1;margin:0;padding:0;display:block;position:absolute;top:0px;left:0px;width:' + canvas.width + 'px;height:' + canvas.height + 'px;"></v:shape>')[0];
-                            break;
-                        case 'circ':
-                            e = $('<v:oval ' + name + ' filled="t" ' + stroke + ' style="zoom:1;margin:0;padding:0;display:block;position:absolute;left:' + (coords[0] - coords[2]) + 'px;top:' + (coords[1] - coords[2]) + 'px;width:' + (coords[2] * 2) + 'px;height:' + (coords[2] * 2) + 'px;"></v:oval>')[0];
-                            break;
-                    }
-                    e.innerHTML = fill + opacity;
+                graphics = (function() {
+                    var map_data,canvas,name,masks,shapes,me = {};
+                    me.active=false;
+                    function render_shape(shape, coords, options) {
+                        var fill, stroke, opacity, e;
+                        name = name ? 'name="'+name+'" ' : '';
+                        fill = '<v:fill color="#' + options.fillColor + '" opacity="' + (options.fill ? options.fillOpacity : 0) + '" />';
+                        stroke = (options.stroke ? 'strokeweight="' + options.strokeWidth + '" stroked="t" strokecolor="#' + options.strokeColor + '"' : 'stroked="f"');
+                        opacity = '<v:stroke opacity="' + options.strokeOpacity + '"/>';
+                        switch (shape) {
+                            case 'rect':
+                                e = $('<v:rect ' + name + ' filled="t" ' + stroke + ' style="zoom:1;margin:0;padding:0;display:block;position:absolute;left:' + coords[0] + 'px;top:' + coords[1] + 'px;width:' + (coords[2] - coords[0]) + 'px;height:' + (coords[3] - coords[1]) + 'px;"></v:rect>')[0];
+                                break;
+                            case 'poly':
+                                e = $('<v:shape ' + name + ' filled="t" ' + stroke + ' coordorigin="0,0" coordsize="' + canvas.width + ',' + canvas.height + '" path="m ' + coords[0] + ',' + coords[1] + ' l ' + coords.slice(2).join(',') + ' x e" style="zoom:1;margin:0;padding:0;display:block;position:absolute;top:0px;left:0px;width:' + canvas.width + 'px;height:' + canvas.height + 'px;"></v:shape>')[0];
+                                break;
+                            case 'circ':
+                                e = $('<v:oval ' + name + ' filled="t" ' + stroke + ' style="zoom:1;margin:0;padding:0;display:block;position:absolute;left:' + (coords[0] - coords[2]) + 'px;top:' + (coords[1] - coords[2]) + 'px;width:' + (coords[2] * 2) + 'px;height:' + (coords[2] * 2) + 'px;"></v:oval>')[0];
+                                break;
+                        }
+                        e.innerHTML = fill + opacity;
+    
+                        $(canvas).append(e);
+                        return e;
+                    }                    
+                    me.init = function(_map_data,_name) {
+                        map_data=_map_data;
+                        name=_name;
+                    };
+                    me.begin=function(_canvas,_name) {
+                        canvas=_canvas;
+                        name=_name;
+                        shapes=[];
+                        masks=[];
+                        me.active=true;
+                    };
+                    me.create_canvas_for = function (img) {
+                        var $img = $(img),
+                            width = $img.width(),
+                            height=$img.height();
+                        return $('<var width="' + width + '" height="' + height + '" style="zoom:1;overflow:hidden;display:block;width:' + width + 'px;height:' + height + 'px;"></var>')[0];
+                    };
+                    me.add_shape_to = function (shape, coords, options) {
+                        var addto = options.isMask ? masks: shapes;
+                        addto.push({shape:shape,coords:coords,options:options});
+                    };
 
-                    $(canvas).append(e);
-                    return e;
-                };
-                clear_highlight = function (map_data) {
-                    $(map_data.overlay_canvas).children().remove();
-                };
-                clear_selections = function (map_data, area_id) {
-                    if (area_id) {
-                        $(map_data.base_canvas).find('[name="static_' + area_id.toString() + '"]').remove();
-                    }
-                    else {
-                        $(map_data.base_canvas).children().remove();
-                    }
-                };
-                refresh_selections = function () {
-                    return null;
-                };
+
+                    me.render = function() {
+                        var opts;
+                        u.each(shapes,function() {
+                            render_shape(this.shape,this.coords,this.options);
+                        });
+                                                
+                        if (masks.length) {
+                            u.each(masks,function() {           
+                                opts = u.mergeObjects({source: [this.options,{fillColor: this.options.fillColorMask}]});
+                                render_shape(this.shape,this.coords, opts);
+                            });
+                        }
+
+                        me.active=false;
+                        return canvas;
+                    };
+                    me.clear_highlight = function () {
+                        $(map_data.overlay_canvas).children().remove();
+                    };
+                    me.clear_selections = function (area_id) {
+                        if (area_id) {
+                            $(map_data.base_canvas).find('[name="static_' + area_id.toString() + '"]').remove();
+                        }
+                        else {
+                            $(map_data.base_canvas).children().remove();
+                        }
+                    };
+                    me.refresh_selections = function () {
+                        return null;
+                    };
+                    return me;
+                })();                
+
             }
         };
         me.unload = function() {
