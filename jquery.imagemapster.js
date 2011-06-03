@@ -1,10 +1,11 @@
-/* ImageMapster 1.1.1 beta 6
+/* ImageMapster 1.1.1 beta 8
 Copyright 2011 James Treworgy
 http://www.outsharked.com/imagemapster
 https://github.com/jamietre/ImageMapster
 
 A jQuery plugin to enhance image maps.
-version 1.1.1 beta 6
+version 1.1.1 beta 8
+-- fixed IE prob with masks
 -- add "isMask" option
 -- add multiple 'mapKey's per area
 -- added "includeKeys" option (area-specific)
@@ -420,7 +421,7 @@ Based on code originally written by David Lynch
         }
         
         function add_shape_group(map_data,area_id,mode) {
-            var list,canvas,
+            var list,canvas,name,
                 opts = options_from_area_id(map_data,area_id);
             // render includeKeys first - because they could be masks
 
@@ -458,17 +459,6 @@ Based on code originally written by David Lynch
                 return;
             }
             data.selected = true;
-
-//            name = "static_" + area_id.toString();
-//            // first get area options. Then override fade for selecting, and finally merge in the "select" effect options.
-//            opts = options_from_area_id(map_data,area_id);
-//            opts = u.mergeObjects({
-//                source: [opts, 
-//                        opts.render_select, {
-//                            fade:false,
-//                            alt_image: map_data.alt_images.select
-//                        }]
-//            });
             add_shape_group(map_data, area_id, "select");
             change_state(map_data,area_id,'select',true);
         }
@@ -618,7 +608,7 @@ Based on code originally written by David Lynch
         }
         // configure new map with area options
         function initialize_map(map_data) {
-            var $area, area, sel, mask, areas, i, opts, area_options, keys, key, area_id, default_group, group_value, map_key_xref,
+            var $area, area, sel, areas, i, opts, area_options, keys, key, area_id, default_group, group_value, map_key_xref,
                 sort_func, sorted_list, returned_list,
                 data = [], dataItem;
 
@@ -665,8 +655,7 @@ Based on code originally written by David Lynch
                     key = keys[j];
                     if (opts.mapValue) {
                         group_value = $area.attr(opts.mapValue);
-                    }
-                    //mask = typeof $area.attr('nohref')!=='undefined';
+                    }                   
                     if (default_group) {
                         // set an attribute so we can refer to the area by index from the DOM object if no key
                         area_id = add_group(data.length,group_value,{});
@@ -690,6 +679,14 @@ Based on code originally written by David Lynch
                     }
                     dataItem.areas.push(area);
                 }
+                var hasHref=!area.getAttribute("nohref") || area.getAttribute("href");
+                if (hasHref) {
+                 $area.bind('mouseover.mapster', event_hooks[map_data.hooks_index].mouseover_hook)
+                    .bind('mouseout.mapster',event_hooks[map_data.hooks_index].mouseout_hook)
+                    .bind('click.mapster',event_hooks[map_data.hooks_index].onclick_hook);
+                
+                }
+
             }
 
             map_data.data = data;
@@ -727,14 +724,12 @@ Based on code originally written by David Lynch
             if (opts.listenToList && opts.boundList) {
                 opts.boundList.bind('click.mapster', event_hooks[map_data.hooks_index].listclick_hook);
             }
-            sel = ':not([nohref],[nohref=""])';
-            if (opts.ignoreKeys) {
-                sel+=':not(:attrMatches("' + opts.mapKey + '","' + opts.ignoreKeys + '"))';
-            }
+            //sel = ':not([nohref],[nohref=""])';
+            //if (opts.ignoreKeys) {
+            //    sel+=':not(:attrMatches("' + opts.mapKey + '","' + opts.ignoreKeys + '"))';
+            //}
             areas = areas.filter(sel);
-            areas.bind('mouseover.mapster', event_hooks[map_data.hooks_index].mouseover_hook)
-                    .bind('mouseout.mapster',event_hooks[map_data.hooks_index].mouseout_hook)
-                    .bind('click.mapster',event_hooks[map_data.hooks_index].onclick_hook);
+           
         }
 
         function bind_tooltip_close(map_data, option, event, obj) {
@@ -1054,10 +1049,10 @@ Based on code originally written by David Lynch
                 return;
             }
            data.selected = false;
-            graphics.clear_selections(map_data, area_id);
-            graphics.refresh_selections(map_data);
+            graphics.clear_selections(area_id);
+            graphics.refresh_selections();
             // do not call ensure_no_highlight- we don't really want to unhilight it, just remove the effect
-            graphics.clear_highlight(map_data);
+            graphics.clear_highlight();
             change_state(map_data,area_id,'select',false);
         };
         me.add_selection = function (map_data, area_id) {
@@ -1065,7 +1060,7 @@ Based on code originally written by David Lynch
             var i;
             graphics.init(map_data);
             if (map_data.options.singleSelect) {
-                clear_selections(map_data);
+                clear_selections();
                 u.each(map_data.data,function() {
                     this.selected = false;
                 });
@@ -1507,20 +1502,20 @@ Based on code originally written by David Lynch
                     var map_data,canvas,name,masks,shapes,me = {};
                     me.active=false;
                     function render_shape(shape, coords, options) {
-                        var fill, stroke, opacity, e;
-                        name = name ? 'name="'+name+'" ' : '';
+                        var fill, stroke, opacity, e, el_name;
+                        el_name = name ? 'name="'+name+'" ' : '';
                         fill = '<v:fill color="#' + options.fillColor + '" opacity="' + (options.fill ? options.fillOpacity : 0) + '" />';
                         stroke = (options.stroke ? 'strokeweight="' + options.strokeWidth + '" stroked="t" strokecolor="#' + options.strokeColor + '"' : 'stroked="f"');
                         opacity = '<v:stroke opacity="' + options.strokeOpacity + '"/>';
                         switch (shape) {
                             case 'rect':
-                                e = $('<v:rect ' + name + ' filled="t" ' + stroke + ' style="zoom:1;margin:0;padding:0;display:block;position:absolute;left:' + coords[0] + 'px;top:' + coords[1] + 'px;width:' + (coords[2] - coords[0]) + 'px;height:' + (coords[3] - coords[1]) + 'px;"></v:rect>')[0];
+                                e = $('<v:rect ' + el_name + ' filled="t" ' + stroke + ' style="zoom:1;margin:0;padding:0;display:block;position:absolute;left:' + coords[0] + 'px;top:' + coords[1] + 'px;width:' + (coords[2] - coords[0]) + 'px;height:' + (coords[3] - coords[1]) + 'px;"></v:rect>')[0];
                                 break;
                             case 'poly':
-                                e = $('<v:shape ' + name + ' filled="t" ' + stroke + ' coordorigin="0,0" coordsize="' + canvas.width + ',' + canvas.height + '" path="m ' + coords[0] + ',' + coords[1] + ' l ' + coords.slice(2).join(',') + ' x e" style="zoom:1;margin:0;padding:0;display:block;position:absolute;top:0px;left:0px;width:' + canvas.width + 'px;height:' + canvas.height + 'px;"></v:shape>')[0];
+                                e = $('<v:shape ' + el_name + ' filled="t" ' + stroke + ' coordorigin="0,0" coordsize="' + canvas.width + ',' + canvas.height + '" path="m ' + coords[0] + ',' + coords[1] + ' l ' + coords.slice(2).join(',') + ' x e" style="zoom:1;margin:0;padding:0;display:block;position:absolute;top:0px;left:0px;width:' + canvas.width + 'px;height:' + canvas.height + 'px;"></v:shape>')[0];
                                 break;
                             case 'circ':
-                                e = $('<v:oval ' + name + ' filled="t" ' + stroke + ' style="zoom:1;margin:0;padding:0;display:block;position:absolute;left:' + (coords[0] - coords[2]) + 'px;top:' + (coords[1] - coords[2]) + 'px;width:' + (coords[2] * 2) + 'px;height:' + (coords[2] * 2) + 'px;"></v:oval>')[0];
+                                e = $('<v:oval ' + el_name + ' filled="t" ' + stroke + ' style="zoom:1;margin:0;padding:0;display:block;position:absolute;left:' + (coords[0] - coords[2]) + 'px;top:' + (coords[1] - coords[2]) + 'px;width:' + (coords[2] * 2) + 'px;height:' + (coords[2] * 2) + 'px;"></v:oval>')[0];
                                 break;
                         }
                         e.innerHTML = fill + opacity;
@@ -1528,9 +1523,8 @@ Based on code originally written by David Lynch
                         $(canvas).append(e);
                         return e;
                     }                    
-                    me.init = function(_map_data,_name) {
+                    me.init = function(_map_data) {
                         map_data=_map_data;
-                        name=_name;
                     };
                     me.begin=function(_canvas,_name) {
                         canvas=_canvas;
@@ -1559,7 +1553,7 @@ Based on code originally written by David Lynch
                                                 
                         if (masks.length) {
                             u.each(masks,function() {           
-                                opts = u.mergeObjects({source: [this.options,{fillColor: this.options.fillColorMask}]});
+                                opts = u.mergeObjects({source: [this.options,{fillOpacity: 1, fillColor: this.options.fillColorMask}]});
                                 render_shape(this.shape,this.coords, opts);
                             });
                         }
