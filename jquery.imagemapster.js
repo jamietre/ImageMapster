@@ -6,9 +6,10 @@ https://github.com/jamietre/ImageMapster
 A jQuery plugin to enhance image maps.
 
 version 1.1.2 beta
+-- add "snapshot" option
 -- check for existing wrappper, skip if it already exists
 -- remove map data when unbinding+preserveState -- it should act as if not there
--- IE substantial performance improvement (use regex replace in vml construction)
+-- IE performance improvements (optimizing rendering code a little bit)
 version 1.1.1
 -- Fixed Opera fading
 -- IE fading (everything except 8) fixed again
