@@ -72,26 +72,26 @@ mapster_tests = function (options)
         var u = $.mapster.utils;
         
         ut.assertEq(function() {
-            return u.isTrueFalse(true);
+            return u.isBool(true);
         },
         true,"isTrueFalse returns true=true");
 
          ut.assertEq(function() {
-            return u.isTrueFalse(false);
+            return u.isBool(false);
          },
-         true,"isTrueFalse returns false=true");
+         true,"isBool returns false=true");
             
-         ut.assertEq(function() { return u.isTrueFalse(null);},
-            false,"isTrueFalse returns null=false");   
+         ut.assertEq(function() { return u.isBool(null);},
+            false,"isBool returns null=false");   
 
-        ut.assertEq(u.trueFalseDefault(true),true,"trueFalseDefault(true) returns true");
-        ut.assertEq(u.trueFalseDefault(false),false,"trueFalseDefault(false) returns false");
-        ut.assertEq(u.trueFalseDefault("something"),false,"trueFalseDefault('something') (a truthy value) returns false");
-        ut.assertEq(u.trueFalseDefault(null),false,"trueFalseDefault(null) (a falsy value)  returns false");
-        ut.assertEq(u.trueFalseDefault(true,"foo"),true,"trueFalseDefault(true) with default value returns true");
-        ut.assertEq(u.trueFalseDefault(false,"foo"),false,"trueFalseDefault(false) with default value returns false");
-        ut.assertEq(u.trueFalseDefault("something","foo"),"foo","trueFalseDefault('something') (a falsy value) with default value returns default");        
-        ut.assertEq(u.trueFalseDefault(undefined,"foo"),"foo","trueFalseDefault(undefined) (a falsy value) with default value returns default");                
+        ut.assertEq(u.boolOrDefault(true),true,"boolOrDefault(true) returns true");
+        ut.assertEq(u.boolOrDefault(false),false,"boolOrDefault(false) returns false");
+        ut.assertEq(u.boolOrDefault("something"),false,"boolOrDefault('something') (a truthy value) returns false");
+        ut.assertEq(u.boolOrDefault(null),false,"boolOrDefault(null) (a falsy value)  returns false");
+        ut.assertEq(u.boolOrDefault(true,"foo"),true,"boolOrDefault(true) with default value returns true");
+        ut.assertEq(u.boolOrDefault(false,"foo"),false,"boolOrDefault(false) with default value returns false");
+        ut.assertEq(u.boolOrDefault("something","foo"),"foo","boolOrDefault('something') (a falsy value) with default value returns default");        
+        ut.assertEq(u.boolOrDefault(undefined,"foo"),"foo","boolOrDefault(undefined) (a falsy value) with default value returns default");                
         
        var obj = {a: "a", b: "b"};
        var otherObj = {a: "a2", b: "b2", c: "c"};

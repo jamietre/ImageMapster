@@ -1,15 +1,23 @@
-/* ImageMapster 1.1.1
+/* ImageMapster 1.1.2 beta 2
 Copyright 2011 James Treworgy
 http://www.outsharked.com/imagemapster
 https://github.com/jamietre/ImageMapster
 
 A jQuery plugin to enhance image maps.
 
+Before release todo:
+-- finish refactor
+-- 
+
 version 1.1.2 beta
+-- refactor into mostly OO design - functional design was getting unwieldy. Still a bit more to do.
+-- change onClick handler to BEFORE action, permit canceling of action by returning false
+-- fix bugs related to cascading of "staticState" options
 -- add "snapshot" option
--- check for existing wrappper, skip if it already exists
+-- check for existing wrapper, skip if it already exists
 -- remove map data when unbinding+preserveState -- it should act as if not there
 -- IE performance improvements (optimizing rendering code a little bit)
+
 version 1.1.1
 -- Fixed Opera fading
 -- IE fading (everything except 8) fixed again
@@ -33,17 +41,6 @@ version 1.1
 -- fixed problems with cleanup (not removing wrap)
 -- added failure timeout for configure
 
-5/13/2011 version 1.0.10
--- ignore errors when binding mapster to invalid elements
--- minor performance improvements
--- fixed command queue problem (broke in 1.0.9)
--- add 'options' option
--- add 'rebind' option
--- add isDeselectable option
--- handle exceptions better (when acting on unbound images)
--- add 'get' method to retrieve selections
--- add unbind options
--- clear command queue after processing
 
 See complete changelog at github
 
@@ -76,7 +73,7 @@ Based on code originally written by David Lynch
 
 */
 
-/*jslint evil: true, forin: true, type: true, windows: true */
+/*jslint sloppy:true, nomen: true, plusplus: true, evil: true, forin: true, type: true, windows: true */
 
 (function ($) {
     var methods;
@@ -127,7 +124,7 @@ Based on code originally written by David Lynch
         // returns - new object.
         mergeObjects: function (options) {
             var obj, i, len, prop, 
-                add=this.trueFalseDefault(options.add,options.template ? false : true),
+                add=this.boolOrDefault(options.add,options.template ? false : true),
                 ignore = options.ignore ? options.ignore.split(','):'',
                 include=options.include ? options.include.split(','):'',
                 deep = options.deep ? options.deep.split(','):'',
@@ -170,12 +167,12 @@ Based on code originally written by David Lynch
             return -1;
         },
         // returns "obj" if true or false, or "def" if not true/false
-        trueFalseDefault: function (obj,def) {
-            return this.isTrueFalse(obj) ?
+        boolOrDefault: function (obj,def) {
+            return this.isBool(obj) ?
                 obj : def || false;
         },
-        isTrueFalse: function(obj) {
-            return obj === true || obj === false;
+        isBool: function(obj) {
+            return typeof obj === "boolean";
         },
         isFunction: function(obj) {
             return obj && typeof obj === 'function';
@@ -205,9 +202,10 @@ Based on code originally written by David Lynch
         },
         // iterate over each property of obj or array, calling fn on each one
         each: function(obj,fn) {
-            var i;
+            var i,l;
             if (obj.constructor===Array) {
-                for (i=obj.length-1;i>=0;i--) {
+                l=obj.length;
+                for (i=0;i<l;i++) {
                     if (fn.call(obj[i],i)===false) {
                         return false;
                     }
@@ -224,14 +222,14 @@ Based on code originally written by David Lynch
             return true;
         },
         fader: (function () {
-            var elements = [], 
-                lastKey = 0;
             function setOpacity(e, opacity) {
                 e.style.filter="Alpha(opacity="+String(opacity*100)+")";
                 e.style.opacity=opacity;
             }
 
-            var fade_func = function (el, op, endOp, duration) {
+            var elements = [], 
+                lastKey = 0,
+                fade_func = function (el, op, endOp, duration) {
                 var index,u=$.mapster.utils,obj,key;
                 if (typeof el === 'number') {
                     index = u.arrayIndexOfProp(elements,'key',el);
@@ -298,7 +296,7 @@ Based on code originally written by David Lynch
         isDeselectable: true,
         singleSelect: false,
         wrapClass: false,
-        boundList: null,
+        nitG: null,
         sortList: false,
         listenToList: false,
         mapKey: '',
@@ -332,13 +330,13 @@ Based on code originally written by David Lynch
    
     $.mapster.impl = (function () {
         var me = {},
+        p,
+        AreaData,MapData,
         u = $.mapster.utils,
         map_cache = [],
         ie_config_complete = false,
         has_canvas = null,
         graphics = null,
-        tooltip_events = [],
-        event_hooks=[],
         canvas_style =
         {
             position: 'absolute',
@@ -362,50 +360,34 @@ Based on code originally written by David Lynch
         me.test = function (obj) {
             return eval(obj);
         };
+        
         // end utility functions
-        function change_state(map_data,area_id,state_type,state) {
-            if (u.isFunction(map_data.options.onStateChange)) {
-                map_data.options.onStateChange.call(map_data.image,
-                {
-                    key: map_data.data[area_id].key,
-                    state: state_type,
-                    selected: state
-                });
-            }
-        }
-                
-        function id_from_key(map_data, key) {
-            return key && map_data.xref && map_data.xref.hasOwnProperty(key) ?
-                map_data.xref[key]:-1;
-        }
-        function id_from_area(map_data, area) {
-            var key = $(area).data('mapster_key');
-            return id_from_key(map_data,key);
-        }
+
+
 
         function options_from_area_id(map_data, area_id, override_options) {
             var opts;
             //TODO this isSelectable should cascade already this seems redundant
             opts = u.mergeObjects({
                 source:[map_data.options,
-                    map_data.data[area_id].area_options,
+                    map_data.data[area_id].options,
                     override_options,
                     {id:area_id}],
                 deep:"render_highlight,render_select"
                 });
                 
-            if (u.isTrueFalse(map_data.options.staticState)) {
-                opts.selected = map_data.options.staticState;
-                opts.isSelectable = false;
-            }
-            else if (u.isTrueFalse(opts.staticState)) {
+            if (u.isBool(opts.staticState)) {
+                opts.selected = opts.staticState;
                 opts.isSelectable = false;
             }
             return opts;
-            
         }
+        
+
+        
         function options_from_area(map_data, area, override_options) {
-            return options_from_area_id(map_data, id_from_area(map_data, area), override_options);
+            var ar = map_data.getDataForArea(area);
+            return options_from_area_id(map_data, ar.areaId, override_options);
         }
         function shape_from_area(area) {
             var i, coords = area.getAttribute('coords').split(',');
@@ -417,49 +399,48 @@ Based on code originally written by David Lynch
         function create_canvas(img) {
             return $(graphics.create_canvas_for(img)).css(canvas_style)[0];
         }
-        function add_shape_group_impl(map_data, area_id,mode) {
-            var opts,shape, i,data;
-
-            data=map_data.data[area_id];            
+        function add_shape_group_impl(areaData,mode) {
+            var opts,shape, i;
             // first get area options. Then override fade for selecting, and finally merge in the "select" effect options.
-            opts = options_from_area_id(map_data,area_id);
+            //opts = options_from_area_id(map_data,area_id);
+            opts = areaData.effectiveOptions();
             opts = u.mergeObjects({
                 source: [opts, 
                         opts['render_'+mode], {
-                            alt_image: map_data.alt_images[mode]
+                            alt_image: areaData.owner.alt_images[mode]
                         }]
             });
-
-            for (i = data.areas.length - 1; i >= 0; i--) {
-                shape = shape_from_area(data.areas[i]);
-                graphics.add_shape_to(shape[0], shape[1], opts, $(data.areas[i]).data('mapster_is_mask') || opts.isMask);
-            }
+            u.each(areaData.areas,function() {
+                shape = shape_from_area(this);
+                graphics.add_shape_to(shape[0], shape[1], opts, $(this).data('mapster_is_mask') || opts.isMask);
+            });
             
             return opts;
         }
         
-        function add_shape_group(map_data,area_id,mode) {
+        function add_shape_group(areaData,mode) {
             var list,canvas,name,
-                opts = options_from_area_id(map_data,area_id);
+                map_data=areaData.owner,
+                opts = areaData.effectiveOptions();
             // render includeKeys first - because they could be masks
 
             if (mode==='select') {
-                name = "static_" + area_id.toString();
+                name = "static_" + areaData.areaId.toString();
                 canvas=map_data.base_canvas;
             } else {
                 canvas = map_data.overlay_canvas;
             }
-            graphics.init(map_data);            
+            graphics.init(areaData.owner);            
             graphics.begin(canvas,name);
 
             if (opts.includeKeys) {
                 list = opts.includeKeys.split(',');
                 u.each(list,function() {
-                    add_shape_group_impl(map_data,id_from_key(map_data,this),mode);
+                    add_shape_group_impl(map_data.getDataForKey(this),mode);
                 });
             }
             
-            opts=add_shape_group_impl(map_data,area_id,mode);
+            opts=add_shape_group_impl(areaData,mode);
             graphics.render();
             
             if (opts.fade) {
@@ -470,23 +451,9 @@ Based on code originally written by David Lynch
         }       
         
         // internal function to actually set the area
-        function set_area_selected(map_data, area_id) {
-            var data = map_data.data[area_id];
-            if (data.selected) {
-                return;
-            }
-            data.selected = true;
-            add_shape_group(map_data, area_id, "select");
-            change_state(map_data,area_id,'select',true);
-        }
+
         // Configures selections from a separate list.
-        function set_areas_selected(map_data, selected_list) {
-            var i;
-            graphics.init(map_data);
-            for (i = selected_list.length-1; i >= 0; i--) {
-                set_area_selected(map_data, selected_list[i]);
-            }
-        }
+
 
         /// return current map_data for an image or area
         function get_map_data_index(obj) {
@@ -509,91 +476,20 @@ Based on code originally written by David Lynch
                 return index>=0 ? map_cache[index] : null;
             }
         }
-        function clear_tooltip(map_data) {
-            var i;
-            if (map_data.activeToolTip) {
-                map_data.activeToolTip.remove();
-                map_data.activeToolTip = null;
-                map_data.activeToolTipID = -1;
-            }
-            for (i = tooltip_events.length-1; i >=0; i--) {
-                tooltip_events[i].object.unbind(tooltip_events[i].event);
-            }
-        }
-        function clear_canvases(map_data, preserveState) {
-            var canvases=[[map_data,"overlay_canvas"],
-                    [map_data.alt_images.select,"canvas"],
-                    [map_data.alt_images.highlight,"canvas"]];
-            if (!preserveState) {
-                canvases.push([map_data,"base_canvas"]);
-            }
 
-            u.each(canvases,function() {
-                if (this[0] && this[0][this[1]]) {
-                     $(this[0][this[1]]).remove();
-                     this[0][this[1]]=null;
-                }
-            });
-        }
-        function clear_map_data(map_data, preserveState) {
-            var div;
-            clear_canvases(map_data,preserveState);
 
-            // release refs to DOM elements
-            u.each(map_data.data,function(i) {
-                map_data.data[i].areas=null;
-                map_data.data[i]=null;
-            });
-            if (!preserveState) {
-                div=$('div#mapster_wrap_'+map_data.index);
-                if (div.length) {
-    	           div.before(div.children()).remove();
-    	        }
-                if (!map_data.img_style) {
-                    // jquery bug? - attr('style') works inconsistently
-                    while ($(map_data.image).attr('style')) { 
-                        $(map_data.image).removeAttr('style'); 
-                    }
-                } else {
-                    $(map_data.image).attr('style',map_data.img_style);
-                }
-            }
-            map_data.image=null;
-            u.each(map_data.alt_images,function() {
-                this.canvas=null;
-                this.image=null;
-            });
-            clear_tooltip(map_data);            
-        }
+
         
-        function clear_events(map_data) {
-            var opts=map_data.options;
 
-            $(map_data.map).find('area')
-                .unbind('mouseover.mapster')
-                .unbind('mouseout.mapster')
-                .unbind('click.mapster');
-            
-            if (map_data.hooks_index && map_data.hooks_index>=0) {
-                event_hooks[map_data.hooks_index].map_data=null;
-                event_hooks[map_data.hooks_index]=null;
-                map_data.hooks_index=null;
-            }
-            
-            if (opts && opts.listenToList && opts.boundList) {
-                opts.boundList.unbind('click.mapster');
-            }
-            
-        }
 
         // Causes changes to the bound list based on the user action (select or deselect)
         // area: the jQuery area object
         // returns the matching elements from the bound list for the first area passed (normally only one should be passed, but
         // a list can be passed
-        function setBoundListProperties(map_data, key_list, selected) {
+        function setnitGProperties(map_data, key_list, selected) {
             var opts, target;
             opts = map_data.options;
-            target = opts.boundList.filter(':attrMatches("' + opts.listKey + '","' + key_list + '")')
+            target = opts.nitG.filter(':attrMatches("' + opts.listKey + '","' + key_list + '")')
                 .each(function () {
                     if (opts.listSelectedClass) {
                         if (selected) {
@@ -609,178 +505,23 @@ Based on code originally written by David Lynch
             return target;
         }
 
-        // rebind based on new area options. This copies info from array "areas" into the data[area_id].area_options property.
-        function set_area_options(map_data, areas) {
-            var i, area_id, area_options,data, selected_list=[];
-            // refer by: map_data.options[map_data.data[x].area_option_id]
-            for (i = areas.length-1; i >=0 ; i--) {
-                area_options = areas[i];
-                area_id = id_from_key(map_data, area_options.key);
-                if (area_id >= 0) {
-                    data = map_data.data[area_id];
-                    
-                    u.mergeObjects({target:data.area_options,source:area_options});
 
-                    // if a static state, use it, otherwise use selected.
-                    if ((u.isTrueFalse(data.area_options.staticState)) ?
-                        data.area_options.staticState : data.area_options.selected) {
-                        selected_list.push(area_id);
-                    }
-                    
-                    // TODO: will not deselect areas that were previously selected, so this only works for an initial bind.
-                }
-            }
-            return selected_list;
-        }
         // configure new map with area options
-        function initialize_map(map_data) {
-            var $area, area, sel, areas, i, j,opts, keys, key, area_id, default_group, group_value, map_key_xref,
-                sort_func, sorted_list, returned_list,is_mask,selected_list=[],
-                data = [], dataItem;
+        
+        
 
-            map_data.hooks_index=u.arrayReuse(event_hooks,(function() {
-                var me={};
-                me.map_data=map_data;
-                me.mouseover_hook= function(e) {
-                        mouseover.call(this, me.map_data,e);
-                    };
-                me.mouseout_hook=function(e) {
-                        mouseout.call(this, me.map_data,e);
-                    };
-                me.onclick_hook=function(e) {
-                        click.call(this, me.map_data, e);
-                    };
-                me.listclick_hook=function(e) {
-                        list_click.call(this, me.map_data,e);
-                    };
-                return me;
-                }()));
-            function add_group(key,value) {
-                var selected = map_data.options.selected || map_data.options.staticState;
-                var index = map_key_xref[key] = data.push({
-                      key: key,
-                      value: value,
-                      area_options: {},
-                      selected: false,
-                      areas: []
-                  })-1;
-                if (selected) {
-                    selected_list.push(index);
-                }
-                return index;
-            }
-            opts = map_data.options;
-            map_key_xref = {};
-            default_group = !opts.mapKey;            
-            sel = default_group ? 'area[coords]' : 'area['+opts.mapKey+']';
-            areas = $(map_data.map).find(sel);
 
-            for (i = areas.length-1; i >=0; i--) {
-                area_id = 0;
-                area = areas[i];
-                $area = $(area);
-                
-                keys = default_group ?  [''] : $area.attr(opts.mapKey).split(',');
-                $area.data('mapster_key',keys[0]);
-                for (j=keys.length-1;j>=0;j--) {
-                    key = keys[j];
-                    if (opts.mapValue) {
-                        group_value = $area.attr(opts.mapValue);
-                    }                   
-                    if (default_group) {
-                        // set an attribute so we can refer to the area by index from the DOM object if no key
-                        area_id = add_group(data.length,group_value);
-                        dataItem=data[area_id];
-                        dataItem.key = key = area_id;
-                        //$area.attr('data-mapster-id', area_id);
-                    }
-                    else {
-                        //group_data_index = u.arrayIndexOfProp(data, 'key', group);
-                        
-                        if ((area_id = map_key_xref[key]) >= 0) {
-                            if (group_value && !data[area_id].value) {
-                                dataItem = data[area_id];
-                                dataItem.value = group_value;
-                            }
-                        }
-                        else {
-                            area_id = add_group(key,group_value);
-                            dataItem = data[area_id];
-                        }
-                    }
-                    dataItem.areas.push(area);
-                }
-                is_mask=opts.isMask;
-                // only bind to areas that don't have nohref. ie 6&7 cannot detect the presence of nohref, so we have to also not bind if href is missing.
-                if (!area.getAttribute("nohref") && area.getAttribute("href")) {
-                 $area.bind('mouseover.mapster', event_hooks[map_data.hooks_index].mouseover_hook)
-                    .bind('mouseout.mapster',event_hooks[map_data.hooks_index].mouseout_hook)
-                    .bind('click.mapster',event_hooks[map_data.hooks_index].onclick_hook);
-                
-                } else {
-                    is_mask = is_mask || opts.noHrefIsMask;
-                    $area.data('mapster_is_mask',is_mask);
-                }
-            }
 
-            map_data.data = data;
-            map_data.xref = map_key_xref;
-            
-            selected_list=selected_list.concat(set_area_options(map_data, opts.areas));
-
-            if (opts.isSelectable && opts.onGetList) {
-                sorted_list = data.slice(0);
-                if (opts.sortList) {
-                    if (opts.sortList === "desc") {
-                        sort_func = function (a, b) {
-                            return a === b ? 0 : (a > b ? -1 : 1);
-                        };
-                    }
-                    else {
-                        sort_func = function (a, b) {
-                            return a === b ? 0 : (a < b ? -1 : 1);
-                        };
-                    }
-
-                    sorted_list.sort(function (a, b) {
-                        a = a.value;
-                        b = b.value;
-                        return sort_func(a, b);
-                    });
-                }
-                returned_list = opts.onGetList.call(map_data.image, sorted_list);
-                // allow assigning a returned list anyway and just not returning anything
-                if (returned_list) {
-                    opts.boundList = returned_list;
-                }
-            }
-
-            if (opts.listenToList && opts.boundList) {
-                opts.boundList.bind('click.mapster', event_hooks[map_data.hooks_index].listclick_hook);
-            }
-            set_areas_selected(map_data, selected_list);
-        }
-
-        function bind_tooltip_close(map_data, option, event, obj) {
-            var event_name = event + '.mapster-tooltip';
-            if (u.arrayIndexOf(map_data.options.toolTipClose,option) >= 0) {
-                obj.unbind(event_name).bind(event_name, function () {
-                    clear_tooltip(map_data);
-                });
-                tooltip_events.push(
-                {
-                    object: obj, event: event_name
-                });
-            }
-        }
-        function show_tooltip(map_data, area, area_options) {
+        function show_tooltip(areaData,area) {
             var tooltip, left, top, tooltipCss, coords, data,
-            opts = map_data.options,
             area_id = area_options.id,
             alignLeft = true,
             alignTop = true,
+            opts = areaData.effectiveOptions(),
+            map_data=areaData.owner,
             container = $(map_data.options.toolTipContainer);
-            tooltip = container.html(area_options.toolTip);
+
+            tooltip = container.html(opts.toolTip);
             
             coords = u.area_corner(area, alignLeft, alignTop);
 
@@ -837,100 +578,10 @@ Based on code originally written by David Lynch
         // EVENTS
         
 
-        // remove highlight if present, raise event
-        function ensure_no_highlight(map_data) {
-            if (map_data.highlight_id>=0) {
-                graphics.init(map_data);
-                graphics.clear_highlight();
-                change_state(map_data,map_data.highlight_id,'highlight',false);
-                map_data.highlight_id=0;
-            }
-        }
-        // highlight an area, return area options
-        function highlight(map_data,area_id) {
-            add_shape_group(map_data, area_id,"highlight");
-            map_data.highlight_id=area_id;
-            change_state(map_data,area_id,'highlight',true);
-        }
-
-        function mouseover(map_data,e) {
-            var opts;
-
-            //TODO why is this first check reuqired?
-            if (u.isTrueFalse(map_data.options.staticState)) {
-                return;
-            }
-            
-            opts = options_from_area(map_data,this);
-            
-            if (!u.isTrueFalse(opts.staticState)) {
-                highlight(map_data,opts.id);
-            }
-            
-            if (opts.showToolTip && opts.toolTip && map_data.activeToolTipID !== opts.id) {
-                show_tooltip(map_data, this, opts);
-            }
-            if (u.isFunction(opts.onMouseover)) {
-                opts.onMouseover.call(this,e,
-                {
-                    options: opts,
-                    key: key,
-                    selected: data.selected
-                });
-            }            
-        }
-        
-        function mouseout(map_data,e) {
-            var key, data,
-                opts = map_data.options;
-            if (opts.toolTipClose && u.arrayIndexOf(opts.toolTipClose,'area-mouseout') >= 0) {
-                clear_tooltip(map_data);
-            }
-            data = map_data.highlight_id ? map_data.data[map_data.highlight_id]:null;
-            key = data ? data.key : '';
-            ensure_no_highlight(map_data);
-            if (u.isFunction(opts.onMouseout)) {
-                opts.onMouseout.call(this,
-                {
-                    e: e,
-                    key: key,
-                    selected: data ? data.selected : null
-                });
-             }
-        }
-        function click(map_data, e) {
-            var  key, selected, list_target, opts, area_id, area_options,
-                data;
-
-            e.preventDefault();
-            opts = map_data.options;
-            area_options = options_from_area(map_data, this);
-
-            area_id = id_from_area(map_data, this);
-            data = map_data.data[area_id];
-            key = data.key;
-            selected = data.selected;
-
-            if (area_options.isSelectable &&
-            (area_options.isDeselectable || !selected)) {
-                selected = me.toggle_selection(map_data, area_id);
-            }
-
-            if (opts.boundList && opts.boundList.length > 0) {
-                list_target = setBoundListProperties(map_data, key, selected);
-            }
+ 
 
 
-            if (u.isFunction(opts.onClick)) {
-                opts.onClick.call(this,
-                {
-                    e: e,
-                    listTarget: list_target,
-                    key: key,
-                    selected: data.selected
-                });
-            }
-        }
+    
         function queue_command(map_data,command, args) {
             if (!map_data.complete) {
                 map_data.commands.push(
@@ -958,21 +609,20 @@ Based on code originally written by David Lynch
         };
 
         me.get = function (key) {
-            var map_data, result, area_id;
+            var map_data, result, ar;
             this.each(function () {
                 map_data = get_map_data(this);
                 if (!map_data) {
                     return true; // continue
                 }
                 if (key) {
-                    area_id = id_from_key(map_data, key);
-                    result = map_data.data[area_id].selected;
+                    result = map_data.getDataForKey(key).isSelected();
                     return false; // break
                 }
 
                 result = '';
                 u.each(map_data.data,function() {
-                    if (this.selected) {
+                    if (this.isSelected()) {
                         result += (result ? ',' : '') + this.key;
                     }
                 });
@@ -980,15 +630,449 @@ Based on code originally written by David Lynch
             });
             return result;
         };
+        // Config for object prototypes
+        
+        MapData = function(image,options) {
+            var me = this;
+            // elements own index in parent array - so we have an ID to use for wraper div
+            this.index=-1;
+            this.image=image;
+            this.map=null;
+            this.options=options;
+            this.area_options=u.mergeObjects({
+                template:$.mapster.area_defaults,
+                source: options
+            });
+            this.base_canvas=null;
+            this.overlay_canvas=null;
+            this.alt_images= {};
+            this.complete=false,
+            this.commands=[];
+            this.data=[];
+            this.img_style=image.getAttribute('style') || null;
+            this.bind_tries=options.configTimeout/200;
+            // private members
+            this._xref={};
+            this._highlightId=-1;
+            this._tooltip_events=[];
+            this.mouseover=function(e) {
+                var opts,ar=me.getDataForArea(this);
+                opts = ar.effectiveOptions();
+                           
+                if (!u.isBool(opts.staticState)) {
+                    ar.highlight();
+                }
+                
+                if (opts.showToolTip && opts.toolTip && map_data.activeToolTipID !== ar.areaId) {
+                    show_tooltip(ar,this);
+                }
+                if (u.isFunction(opts.onMouseover)) {
+                    opts.onMouseover.call(this,e,
+                    {
+                        options: opts,
+                        key: ar.key,
+                        selected: ar.selected
+                    });
+                }            
+            };
+            this.mouseout=function(e) {
+                var key, data,
+                    opts = me.options;
+                if (opts.toolTipClose && u.arrayIndexOf(opts.toolTipClose,'area-mouseout') >= 0) {
+                    me.clearTooltip();
+                }
+                data = me.highlightId ? me.data[me.highlightId] : null;
+                key = data ? data.key : '';
+                me.ensureNoHighlight();
+                if (u.isFunction(opts.onMouseout)) {
+                    opts.onMouseout.call(this,
+                    {
+                        e: e,
+                        key: key,
+                        selected: data ? data.selected : null
+                    });
+                 }
+            };
+            this.click=function(e) {
+                var  key, selected, list_target, area_id,data,
+                    ar=me.getDataForArea(this),
+                    opts=me.options;
+    
+                e.preventDefault();
+                
+                opts = me.options;
+    
+                if (opts.nitG && opts.nitG.length > 0) {
+                    list_target = setnitGProperties(me,ar.key,ar.isSelected());
+                }
+    
+                if (u.isFunction(opts.onClick)) {
+                    if (false===opts.onClick.call(this,
+                    {
+                        e: e,
+                        listTarget: list_target,
+                        key: ar.key,
+                        selected: ar.isSelected()
+                    })) {
+                        return;
+                    }
+                }
+    
+                if (ar.isSelectable() &&
+                    (ar.isDeselectable() || !ar.selected)) {
+                        selected = ar.toggleSelection();
+                } 
+            };
+            
+        };
+        p=MapData.prototype;
+        p._idFromKey=function(key) {
+           return typeof key==="string" && this._xref.hasOwnProperty(key) ?
+                this._xref[key]:-1;
+        };
+        p.getDataForArea=function(area) {
+            var key = $(area).data('mapster_key');
+            return this.data[this._idFromKey(key)];
+        };
+        p.getDataForKey=function(key) {
+            return this.data[this._idFromKey(key)];
+        };
+        // remove highlight if present, raise event
+        p.ensureNoHighlight=function() {
+            var ar;
+            if (this._highlightId>=0) {
+                graphics.init(this);
+                graphics.clear_highlight();
+                ar = this.data[this._highlightId];
+                ar.changeState('highlight',false);
+                this._highlightId=0;
+            }
+        };
+        p.setHighlight=function(id) {
+            this._highlightId=id;
+        };
+        p.initGraphics=function() {
+            graphics.init(this);
+        };
+        // rebind based on new area options. This copies info from array "areas" into the data[area_id].area_options property.
+        p.setAreaOptions=function(area_list) {
+            var i, area_id, area_options,data,ar,
+            	selected_list=[], 
+                areas = area_list || {};
+            // refer by: map_data.options[map_data.data[x].area_option_id]
+            for (i = areas.length-1; i >=0 ; i--) {
+                area_options = areas[i];
+                ar=this.getDataForKey(area_options.key);
+                if (ar) {
+                    u.mergeObjects({target:ar.options,source:area_options});
+                    // TODO: will not deselect areas that were previously selected, so this only works for an initial bind.
+                    if (u.isBool(area_options.selected)) {
+                        ar.selected = area_options.selected;
+                    }
+                }
+            }
+            u.each(this.data,function(i) {
+                if (this.isSelected()) {
+                    selected_list.push(i);
+                }
+            });
+            return selected_list;
+        };
+
+        p.setAreasSelected=function(selected_list) {
+            var i;
+            this.initGraphics();
+            for (i = selected_list.length-1; i >= 0; i--) {
+                this.data[selected_list[i]].setAreaSelected();
+            }
+        };
+        p.initialize=function() {
+            var $area, area, sel, areas, i, j,keys, key, area_id, default_group, group_value, 
+                sort_func, sorted_list, returned_list,is_mask,dataItem,
+                me=this,
+                selected_list=[],
+                data = [], 
+                opts=this.options;
+
+            function add_group(key,value) {
+                var dataItem = new AreaData(me,key,value,opts);
+                dataItem.areaId = me._xref[key] = me.data.push(dataItem)-1;
+                return dataItem.areaId;
+            }
+            this._xref={};
+            this.data=[];
+            
+            default_group = !opts.mapKey;            
+            sel = ($.browser.msie && $.browser.version<=7) ? 'area' : 
+                (default_group ? 'area[coords]' : 'area['+opts.mapKey+']');
+            areas = $(this.map).find(sel);
+
+            for (i=areas.length-1;i>=0;i--) {
+                area_id = 0;
+                area = areas[i];
+                $area = $(area);
+                key = area.getAttribute(opts.mapKey);
+                keys = (default_group || typeof key !== 'string') ?  [''] : key.split(',');
+                $area.data('mapster_key',keys[0]);
+                for (j=keys.length-1;j>=0;j--) {
+                    key = keys[j];
+                    if (opts.mapValue) {
+                        group_value = $area.attr(opts.mapValue);
+                    }                   
+                    if (default_group) {
+                        // set an attribute so we can refer to the area by index from the DOM object if no key
+                        area_id = add_group(this.data.length,group_value);
+                        dataItem=this.data[area_id];
+                        dataItem.key = key = area_id;
+                        //$area.attr('data-mapster-id', area_id);
+                    }
+                    else {
+                        area_id = this._xref[key];
+                        if (area_id >= 0) {
+                            dataItem = this.data[area_id];
+                            if (group_value && !this.data[area_id].value) {
+                                dataItem.value = group_value;
+                            }
+                        }
+                        else {
+                            area_id = add_group(key,group_value);
+                            dataItem = this.data[area_id];
+                        }
+                    }
+                    dataItem.areas.push(area);
+                }
+                is_mask=opts.isMask;
+                // only bind to areas that don't have nohref. ie 6&7 cannot detect the presence of nohref, so we have to also not bind if href is missing.
+                if (!area.getAttribute("nohref") && area.getAttribute("href")) {
+                 $area.bind('mouseover.mapster', this.mouseover)
+                    .bind('mouseout.mapster',this.mouseout)
+                    .bind('click.mapster',this.click);
+                
+                } else {
+                    is_mask = is_mask || opts.noHrefIsMask;
+                    $area.data('mapster_is_mask',is_mask);
+                }
+            }
+            
+            selected_list=this.setAreaOptions(opts.areas);
+
+            if (opts.isSelectable && opts.onGetList) {
+                sorted_list = this.data.slice(0);
+                if (opts.sortList) {
+                    if (opts.sortList === "desc") {
+                        sort_func = function (a, b) {
+                            return a === b ? 0 : (a > b ? -1 : 1);
+                        };
+                    }
+                    else {
+                        sort_func = function (a, b) {
+                            return a === b ? 0 : (a < b ? -1 : 1);
+                        };
+                    }
+
+                    sorted_list.sort(function (a, b) {
+                        a = a.value;
+                        b = b.value;
+                        return sort_func(a, b);
+                    });
+                }
+                 this.options.nitG = opts.onGetList.call(this.image, sorted_list);
+            }
+
+//            if (opts.listenToList && opts.nitG) {
+//                opts.nitG.bind('click.mapster', event_hooks[map_data.hooks_index].listclick_hook);
+//            }
+            this.setAreasSelected(selected_list);
+        };
+        p.clearEvents=function() {
+            var opts=this.options;
+
+            $(this.map).find('area')
+                .unbind('mouseover.mapster')
+                .unbind('mouseout.mapster')
+                .unbind('click.mapster');
+        };
+        p._clearCanvases=function(preserveState) {
+            var canvases=[[this,"overlay_canvas"],
+                    [this.alt_images.select,"canvas"],
+                    [this.alt_images.highlight,"canvas"]];
+            if (!preserveState) {
+                canvases.push([this,"base_canvas"]);
+            }
+
+            u.each(canvases,function() {
+                if (this[0] && this[0][this[1]]) {
+                     $(this[0][this[1]]).remove();
+                     this[0][this[1]]=null;
+                }
+            });
+        };
+        p.clearTooltip=function() {
+            var i;
+            if (this.activeToolTip) {
+                this.activeToolTip.remove();
+                this.activeToolTip = null;
+                this.activeToolTipID = -1;
+            }
+            u.each(this._tooltip_events,function() {
+                this.object.unbind(this.event);
+            });
+        };
+        p.clearMapData=function(preserveState) {
+            var div;
+            this._clearCanvases(preserveState);
+
+            // release refs to DOM elements
+            u.each(this.data,function() {
+                this.areas=null;
+            });
+            this.data=null;
+            if (!preserveState) {
+                div=$('div#mapster_wrap_'+this.index);
+                if (div.length) {
+                    div.before(div.children()).remove();
+                }
+                if (!this.img_style) {
+                    // jquery bug? - attr('style') works inconsistently
+                    while ($(this.image).attr('style')) { 
+                        $(this.image).removeAttr('style'); 
+                    }
+                } else {
+                    $(this.image).attr('style',this.img_style);
+                }
+            }
+            this.image=null;
+            u.each(this.alt_images,function() {
+                this.canvas=null;
+                this.image=null;
+            });
+            this.clearTooltip(); 
+        };
+        p.bindTooltipClose=function(option, event, obj) {
+            var event_name = event + '.mapster-tooltip';
+            if (u.arrayIndexOf(this.options.toolTipClose,option) >= 0) {
+                obj.unbind(event_name).bind(event_name, function () {
+                    this.clearTooltip();
+                });
+                this._tooltip_events.push(
+                {
+                    object: obj, event: event_name
+                });
+            }
+        };
+        // END MAPDATA
+        AreaData = function(owner,key,value) {
+            this.owner=owner;
+            this.key=key?key:'';
+            this.areaId=-1;
+            this.value=value?value:'';
+            this.options={};
+            this.selected=null;
+            this.areas=[];
+            this._effectiveOptions=null;
+        };
+        p=AreaData.prototype;
+        p.isSelected = function() {
+            var o = this.effectiveOptions();
+            return u.isBool(this.selected) ? this.selected : 
+                (u.isBool(o.staticState) ? o.staticState :
+                (u.isBool(this.owner.options.staticState) ? this.owner.options.staticState: false));
+        };
+        p.isSelectable = function() {
+            return u.isBool(this.effectiveOptions().staticState) ? false : 
+                (u.isBool(this.owner.options.staticState) ? false : this.effectiveOptions().isSelectable);
+        };
+        p.isDeselectable = function() {
+            return u.isBool(this.effectiveOptions().staticState) ? false : 
+                (u.isBool(this.owner.options.staticState) ? false : this.effectiveOptions().isDeselectable);
+        };       
+        p.effectiveOptions = function(override_options) {
+            if (!this._effectiveOptions) {
+                //TODO this isSelectable should cascade already this seems redundant
+                this._effectiveOptions = u.mergeObjects({
+                    source:[this.owner.area_options,
+                        this.options,
+                        override_options || {},
+                        {id:this.areaId}],
+                    deep:"render_highlight,render_select"
+                    });
+            }
+            return this._effectiveOptions;
+        };
+        p.changeState=function(state_type,state) {
+            if (u.isFunction(this.owner.options.onStateChange)) {
+                this.owner.options.onStateChange.call(this.owner.image,
+                {
+                    key: this.key,
+                    state: state_type,
+                    selected: state
+                });
+            }
+        };
+        // highlight an area
+        p.highlight=function() {
+            add_shape_group(this,"highlight");
+            this.owner.setHighlight(this.areaId);
+            this.changeState('highlight',true);
+        };
+
+        p.setAreaSelected=function() {
+            add_shape_group(this, "select");
+            this.changeState('select',true);
+        };
+
+        p.addSelection = function() {
+            // need to add the new one first so that the double-opacity effect leaves the current one highlighted for singleSelect
+            var o=this.owner;
+            o.initGraphics();
+            if (o.options.singleSelect) {
+                graphics.clear_selections();
+                u.each(o.data,function() {
+                    this.selected = false;
+                });
+            }
+            
+            if (!this.selected) {
+                this.setAreaSelected();
+                this.selected=true;
+            }
+
+            if (o.options.singleSelect) {
+                graphics.refresh_selections();
+            }
+        };
+        p.removeSelection = function () {
+            var o=this.owner;
+            o.initGraphics();
+            if (this.selected===false) {
+                return;
+            }
+            this.selected = false;
+            graphics.clear_selections(this.areaId);
+            graphics.refresh_selections();
+            // do not call ensure_no_highlight- we don't really want to unhilight it, just remove the effect
+            graphics.clear_highlight();
+            this.changeState('select',false);
+        };
+        p.toggleSelection=function() {
+            if (!this.isSelected()) {
+                this.addSelection();
+            }
+            else {
+                this.removeSelection();
+            }
+            return this.isSelected();
+        };
+
         // Select or unselect areas identified by key -- a string, a csv string, or array of strings.
         // if set_bound is true, the bound list will also be updated. Default is true. If neither true nor false,
         // it will be toggled.
         me.highlight = function(selected,key) {
-            var map_data,id;
+            var map_data,ar;
             if (map_data = get_map_data(this[0])) {
-                ensure_no_highlight(map_data);
-                if (selected && (id=id_from_key(map_data,key))>=0) {
-                    highlight(map_data,id);
+                map_data.ensureNoHighlight();
+                if (selected && (ar=map_data.getDataForKey(key))>=0) {
+                    ar.highlight();
                 } 
             }
         };
@@ -996,19 +1080,21 @@ Based on code originally written by David Lynch
         me.set = function (selected, key, set_bound) {
             var lastParent, parent, map_data, key_list, area_id, do_set_bound;
 
-            function setSelection(area_id) {
+
+            function setSelection(ar) {
                 switch(selected) {
                     case true:
-                        me.add_selection(map_data, area_id); break;
+                        ar.addSelection(); break;
                     case false:
-                        me.remove_selection(map_data, area_id); break;
+                        ar.removeSelection(); break;
                     default:
-                        me.toggle_selection(map_data, area_id); break;
+                        ar.toggleSelection(); break;
                 }
             }
 
-            do_set_bound = u.isTrueFalse(set_bound) ? set_bound : true;
+            do_set_bound = u.isBool(set_bound) ? set_bound : true;
             this.each(function () {
+                var ar;
                 map_data = get_map_data(this);
                 if (!map_data) {
                     return true; // continue
@@ -1026,7 +1112,7 @@ Based on code originally written by David Lynch
                     }
                     
                     u.each(key_list.split(','),function() {
-                        setSelection(map_data.xref[this]);
+                        setSelection(map_data.getDataForKey(this.toString()));
                     });
 
                 } else {
@@ -1040,21 +1126,20 @@ Based on code originally written by David Lynch
                         lastParent = parent;
                     }
                     lastParent = parent;
-                    area_id = id_from_area(map_data, this);
-                    key = map_data.data[area_id].key;
+                    ar = map_data.getDataForArea(this);
 
-                    if (queue_command(map_data,'set', [selected, key, do_set_bound])) {
+                    if (queue_command(map_data,'set', [selected, ar.key, do_set_bound])) {
                         return true;
                     }
-                    if ((key_list + ",").indexOf(key) < 0) {
-                        key_list += (key_list === '' ? '' : ',') + key;
+                    if ((key_list + ",").indexOf(ar.key) < 0) {
+                        key_list += (key_list === '' ? '' : ',') + ar.key;
                     }
 
-                    setSelection(area_id);
+                    setSelection(ar);
 
                 }
-                if (do_set_bound && map_data.options.boundList) {
-                    setBoundListProperties(map_data, key_list, selected);
+                if (do_set_bound && map_data.options.nitG) {
+                    setnitGProperties(map_data, key_list, selected);
                 }
             });
             return this;
@@ -1062,48 +1147,7 @@ Based on code originally written by David Lynch
         me.close_tooltip = function () {
             clear_tooltip();
         };
-        me.remove_selection = function (map_data, area_id) {
-            graphics.init(map_data);
-            var data = map_data.data[area_id];
-            if (!data.selected) {
-                return;
-            }
-           data.selected = false;
-            graphics.clear_selections(area_id);
-            graphics.refresh_selections();
-            // do not call ensure_no_highlight- we don't really want to unhilight it, just remove the effect
-            graphics.clear_highlight();
-            change_state(map_data,area_id,'select',false);
-        };
-        me.add_selection = function (map_data, area_id) {
-            // need to add the new one first so that the double-opacity effect leaves the current one highlighted for singleSelect
-            graphics.init(map_data);
-            if (map_data.options.singleSelect) {
-                graphics.clear_selections();
-                u.each(map_data.data,function() {
-                    this.selected = false;
-                });
-            }
-
-            set_area_selected(map_data, area_id);
-
-            if (map_data.options.singleSelect) {
-                graphics.refresh_selections(map_data);
-            }
-        };
-        me.toggle_selection = function (map_data, area_id) {
-            var selected;
-
-            if (!map_data.data[area_id].selected) {
-                me.add_selection(map_data, area_id);
-                selected = true;
-            }
-            else {
-                me.remove_selection(map_data, area_id);
-                selected = false;
-            }
-            return selected;
-        };
+       
 
         me.unbind = function (preserveState) {
             var map_data;
@@ -1114,26 +1158,30 @@ Based on code originally written by David Lynch
                         return true;
                     } 
 
-                    clear_events(map_data);
-                    clear_map_data(map_data,preserveState);
+                    map_data.clearEvents();
+                    map_data.clearMapData(preserveState);
                     map_cache[map_data.index]=null;
                 }
             });
         };
         // merge new area data into existing area options. used for rebinding.
         function merge_areas(map_data, areas) {
-            var i, index,
+            var ar,
                 map_areas = map_data.options.areas;
             if (areas) {
-                for (i = areas.length-1; i >=0; i--) {
-                    index = u.arrayIndexOfProp(map_areas, "key", areas[i].key);
+                u.each(areas,function() {
+                    index = u.arrayIndexOfProp(map_areas, "key", this.key);
                     if (index >= 0) {
-                        $.extend(map_areas[index], areas[i]);
+                        $.extend(map_areas[index], this);
                     }
                     else {
-                        map_areas.push(areas[i]);
+                       map_areas.push(this);
                     }
-                }
+                    ar=map_data.getDataForKey(this.key);
+                    if (ar) {
+                        $.extend(ar.options,this);
+                    }
+                });
             }
         }
         function merge_options(map_data, options) {
@@ -1147,32 +1195,42 @@ Based on code originally written by David Lynch
             merge_areas(map_data, options.areas);
             // refresh the area_option template
             u.mergeObjects({target: map_data.area_options, source: map_data.options, add: false});
+            
+            u.each(map_data.data,function() {
+                this._effectiveOptions=null;
+            });
         }
-
+        function set_items_selected(map_data,selected_list) {
+            u.each(selected_list,function() {
+                map_data.data[this].selected=true;
+            });
+        }
         // refresh options.
         me.rebind = function (options) {
             var map_data, selected_list;
             this.filter('img').each(function () {
                 map_data = get_map_data(this);
                 if (map_data) {
+                    if (queue_command(map_data,'rebind',[options])) {
+                        return true;
+                    }            
+                
                     merge_options(map_data, options);
                     // this will only update new areas that may have been passed
-                    selected_list=set_area_options(map_data, options.areas || {} );
-                    set_areas_selected(map_data, selected_list);
-
-
+                    selected_list=map_data.setAreaOptions(options.areas || {} );
+                    map_data.setAreasSelected(selected_list);
                 }
             });
             return this;
         };
         // get options. nothing or false to get, or "true" to get effective options (versus passed options)
         me.get_options = function (key,effective) {
-            var opts,area_id,map_data,
+            var opts,ar,map_data,
                 img = this.filter('img').first()[0];
             if (map_data = get_map_data(img)) {
                 if (key) {
-                    if (area_id=id_from_key(map_data,key)) {
-                        opts = options_from_area_id(map_data,area_id);
+                    if (ar=map_data.getDataForKey(key)) {
+                        opts = options_from_area_id(map_data,ar.areaId);
                     } 
                 } else {
                     opts = map_data.options;
@@ -1231,19 +1289,9 @@ Based on code originally written by David Lynch
                 }
 
                 if (!map_data) {
-                    map_data = {
-                        image: this,
-                        alt_images: {},
-                        complete: false,
-                        commands: [],
-                        data: [],
-                        xref: {},
-                        img_style:img.attr('style') || null,
-                        bind_tries: opts.configTimeout/200
-                    };
+                    map_data = new MapData(this,opts);
                     map_data.index = u.arrayReuse(map_cache,map_data);
                 }
-                
                 
                 if (has_canvas) {
                     last={};
@@ -1307,6 +1355,7 @@ Based on code originally written by David Lynch
                     }
                     wrap.append(img);
                 }
+                
                 canvas = create_canvas(this);
                 img.before(canvas);
 
@@ -1329,28 +1378,17 @@ Based on code originally written by David Lynch
                     });
                 }
 
-
+                map_data.map=map;
+                map_data.base_canvas=canvas;
+                map_data.overlay_canvas=overlay_canvas;
+                map_data.initialize();
                 
-                $.extend(map_data,
-                {
-                    options: opts,
-                    area_options: u.mergeObjects({
-                        template:$.mapster.area_defaults,
-                        source:opts
-                    }),
-                    map: map,
-                    base_canvas: canvas,
-                    overlay_canvas: overlay_canvas
-                });
-                
-
-                initialize_map(map_data);
                 // process queued commands
                 if (!map_data.complete) {
                     map_data.complete = true;
-                    for (i =  map_data.commands.length-1; i>=0; i--) {
-                        methods[map_data.commands[i].command].apply($(this), map_data.commands[i].args);
-                    }
+                    u.each(map_data.commands,function() {
+                        methods[this.command].apply(img, this.args);
+                    });
                     map_data.commands = [];
                 }
                 if (opts.onConfigured && typeof opts.onConfigured==='function') {
@@ -1515,18 +1553,17 @@ Based on code originally written by David Lynch
                         var i,list_temp=[], canvas_temp,data;
                         // draw new base canvas, then swap with the old one to avoid flickering
                         canvas_temp = map_data.base_canvas;
-                        for (i=map_data.data.length-1;i>=0;i--) {
-                            data = map_data.data[i];
-                            if (data.selected) {
-                                data.selected=false;
+                        u.each(map_data.data,function(i) {
+                            if (this.isSelected()) {
                                 list_temp.push(i);
                             }
-                        }
+                        });
+
                         map_data.base_canvas = create_canvas(map_data.image);
                         $(map_data.base_canvas).hide();
                         $(map_data.image).before(map_data.base_canvas);
 
-                        set_areas_selected(map_data, list_temp);
+                        map_data.setAreasSelected(list_temp);
     
                         $(map_data.base_canvas).show();
                         $(canvas_temp).remove();
@@ -1538,18 +1575,11 @@ Based on code originally written by David Lynch
             
                 // ie executes this code
                 graphics = (function() {
-                    var map_data,canvas,name,masks,shapes,me = {};
+                    var t_fill,map_data,canvas,name,masks,shapes,me = {};
                         
                     me.active=false;
                     function render_shape(shape, coords, options) {
                         var stroke, opacity,e, el_name,template,t_replace,i_match;
-                        function re_replace() {
-                            return t_replace[i_match++];
-                       }
-                        function re_config(re) {
-                            i_match=0;
-                            t_replace=re;
-                        }
                         el_name = name ? 'name="'+name+'" ' : '';
                         
                         // fill
@@ -1574,7 +1604,7 @@ Based on code originally written by David Lynch
                             case 'circ':
                                 template='<v:oval '+el_name+' filled="t" '+stroke
                                     +' style="zoom:1;margin:0;padding:0;display:block;position:absolute;left:'+(coords[0] - coords[2])+'px;top:'+(coords[1] - coords[2])
-                                    +'px;width:'+(coords[2] * 2)+'px;height:'+(coords[2] * 2)+'px;">'+t_fill+'</v:oval>'
+                                    +'px;width:'+(coords[2] * 2)+'px;height:'+(coords[2] * 2)+'px;">'+t_fill+'</v:oval>';
                                 break;
                         }
                         //alert(template);
@@ -1646,10 +1676,11 @@ Based on code originally written by David Lynch
                 if (map_cache[i]) {
                     me.unbind.call($(map_cache[i].image));
                 }
-            }    
+            }
+            graphics=null;
         };
         me.snapshot = function() {
-            var d, selected_list;
+            var d;
             return this.filter('img').each(function () {
                 d = get_map_data(this);
                 if (d) {
@@ -1672,8 +1703,7 @@ Based on code originally written by David Lynch
 
     // make sure closures are cleaned up
     $.mapster.unload = function() {
-        $('*').unbind('mapster.click').unbinf
-        graphics=null;
+        $('*').unbind();
         $.mapster.impl.unload();
         $.mapster.utils.fader=null;
         $.mapster.utils=null;

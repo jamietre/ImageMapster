@@ -70,11 +70,12 @@ $(document).ready(function () {
                 	newToolTip = "OK. I know I have come down on the dip before, but let's be real. Raw asparagus without any of that " +
                 			"delicious ranch and onion dressing slathered all over it is not so good.";
                 }
-                image.mapster('options',{areas: [{
+                image.mapster('set_options',{areas: [{
                 	key: "dip",
                 	toolTip: newToolTip
                 	}]
                 });
+                alert(newToolTip);
 
             },
             showToolTip: true,
