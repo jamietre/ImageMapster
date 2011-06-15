@@ -273,7 +273,7 @@ Based on code originally written by David Lynch
         fill: true,        
         fillColor: '000000',
         fillColorMask: 'FFFFFF',
-        fillOpacity: 0.3,
+        fillOpacity: 0.5,
         stroke: false,
         strokeColor: 'ff0000',
         strokeOpacity: 1,
@@ -292,7 +292,7 @@ Based on code originally written by David Lynch
         isDeselectable: true,
         singleSelect: false,
         wrapClass: false,
-        nitG: null,
+        onGetList: null,
         sortList: false,
         listenToList: false,
         mapKey: '',
@@ -456,11 +456,8 @@ Based on code originally written by David Lynch
         // area: the jQuery area object
         // returns the matching elements from the bound list for the first area passed (normally only one should be passed, but
         // a list can be passed
-        function setnitGProperties(map_data, key_list, selected) {
-            var opts, target;
-            opts = map_data.options;
-            target = opts.nitG.filter(':attrMatches("' + opts.listKey + '","' + key_list + '")')
-                .each(function () {
+        function setBoundListProperties(opts, target, selected) {
+            target.each(function () {
                     if (opts.listSelectedClass) {
                         if (selected) {
                             $(this).addClass(opts.listSelectedClass);
@@ -472,8 +469,11 @@ Based on code originally written by David Lynch
                         $(this).attr(opts.listSelectedAttribute, selected);
                     }
                 });
-            return target;
+        };
+        function getBoundList(opts,key_list) {
+            return opts.boundList.filter(':attrMatches("' + opts.listKey + '","' + key_list + '")')
         }
+        
 
 
         // configure new map with area options
@@ -604,6 +604,7 @@ Based on code originally written by David Lynch
             };
             this.click=function(e) {
                 var  selected, list_target,
+                    wasSelected,
                     ar=me.getDataForArea(this),
                     opts=me.options;
     
@@ -611,10 +612,13 @@ Based on code originally written by David Lynch
                 
                 opts = me.options;
     
-                if (opts.nitG && opts.nitG.length > 0) {
-                    list_target = setnitGProperties(me,ar.key,ar.isSelected());
-                }
+                wasSelected = ar.selected;
+                if (ar.isSelectable() &&
+                    (ar.isDeselectable() || !ar.selected)) {
+                        selected = ar.toggleSelection();
+                } 
     
+                list_target=getBoundList(opts,ar.key);
                 if (u.isFunction(opts.onClick)) {
                     if (false===opts.onClick.call(this,
                     {
@@ -623,14 +627,13 @@ Based on code originally written by David Lynch
                         key: ar.key,
                         selected: ar.isSelected()
                     })) {
+                        ar.selected = wasSelected;
                         return;
                     }
                 }
-    
-                if (ar.isSelectable() &&
-                    (ar.isDeselectable() || !ar.selected)) {
-                        selected = ar.toggleSelection();
-                } 
+                if (opts.boundList && opts.boundList.length > 0) {
+                    setBoundListProperties(opts,list_target,ar.isSelected());
+                }
             };
             
         };
@@ -784,7 +787,7 @@ Based on code originally written by David Lynch
                         return sort_func(a, b);
                     });
                 }
-                 this.options.nitG = opts.onGetList.call(this.image, sorted_list);
+                 this.options.boundList = opts.onGetList.call(this.image, sorted_list);
             }
 
 //            if (opts.listenToList && opts.nitG) {
@@ -1102,8 +1105,8 @@ Based on code originally written by David Lynch
                     setSelection(ar);
 
                 }
-                if (do_set_bound && map_data.options.nitG) {
-                    setnitGProperties(map_data, key_list, selected);
+                if (do_set_bound && map_data.options.boundList) {
+                    setBoundListProperties(map_data.options, getBoundList(map_data.options,key_list), selected);
                 }
             });
             return this;
