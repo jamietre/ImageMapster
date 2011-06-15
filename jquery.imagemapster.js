@@ -375,6 +375,7 @@ Based on code originally written by David Lynch
             opts = areaData.effectiveOptions();
             opts = u.mergeObjects({
                 source: [opts, 
+                        $.mapster.render_defaults,                
                         opts['render_'+mode], {
                             alt_image: areaData.owner.alt_images[mode]
                         }]
