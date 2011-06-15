@@ -405,7 +405,7 @@ Based on code originally written by David Lynch
             if (opts.includeKeys) {
                 list = opts.includeKeys.split(',');
                 u.each(list,function() {
-                    add_shape_group_impl(map_data.getDataForKey(this),mode);
+                    add_shape_group_impl(map_data.getDataForKey(this.toString()),mode);
                 });
             }
             
