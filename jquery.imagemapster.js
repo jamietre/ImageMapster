@@ -1,16 +1,12 @@
-/* ImageMapster 1.1.2 beta 2
+/* ImageMapster 1.1.2
 Copyright 2011 James Treworgy
 http://www.outsharked.com/imagemapster
 https://github.com/jamietre/ImageMapster
 
 A jQuery plugin to enhance image maps.
 
-Before release todo:
--- finish refactor
--- 
-
-version 1.1.2 beta
--- refactor into mostly OO design - functional design was getting unwieldy. Still a bit more to do.
+version 1.1.2 
+-- refactor into mostly OO design - functional design was getting unwieldy.
 -- change onClick handler to BEFORE action, permit canceling of action by returning false
 -- fix bugs related to cascading of "staticState" options
 -- add "snapshot" option
@@ -230,7 +226,7 @@ Based on code originally written by David Lynch
             var elements = [], 
                 lastKey = 0,
                 fade_func = function (el, op, endOp, duration) {
-                var index,u=$.mapster.utils,obj,key;
+                var index,u=$.mapster.utils,obj;
                 if (typeof el === 'number') {
                     index = u.arrayIndexOfProp(elements,'key',el);
                     if (index===-1) {
@@ -322,10 +318,10 @@ Based on code originally written by David Lynch
     },$.mapster.render_defaults]});
     $.mapster.area_defaults =
         $.mapster.utils.mergeObjects({
-            source: $.mapster.defaults,
+            source: [$.mapster.defaults,{toolTip: '' }],
             deep: "render_highlight, render_select",
             include:"fade,fadeDuration,fill,fillColor,fillOpacity,stroke,strokeColor,strokeOpacity,strokeWidth,staticState,selected,"
-            +"isSelectable,isDeselectable,render_highlight,render_select,isMask"
+            +"isSelectable,isDeselectable,render_highlight,render_select,isMask, toolTip"
         });
    
     $.mapster.impl = (function () {
@@ -363,32 +359,6 @@ Based on code originally written by David Lynch
         
         // end utility functions
 
-
-
-        function options_from_area_id(map_data, area_id, override_options) {
-            var opts;
-            //TODO this isSelectable should cascade already this seems redundant
-            opts = u.mergeObjects({
-                source:[map_data.options,
-                    map_data.data[area_id].options,
-                    override_options,
-                    {id:area_id}],
-                deep:"render_highlight,render_select"
-                });
-                
-            if (u.isBool(opts.staticState)) {
-                opts.selected = opts.staticState;
-                opts.isSelectable = false;
-            }
-            return opts;
-        }
-        
-
-        
-        function options_from_area(map_data, area, override_options) {
-            var ar = map_data.getDataForArea(area);
-            return options_from_area_id(map_data, ar.areaId, override_options);
-        }
         function shape_from_area(area) {
             var i, coords = area.getAttribute('coords').split(',');
             for (i = coords.length-1; i >=0 ; i--) {
@@ -400,9 +370,8 @@ Based on code originally written by David Lynch
             return $(graphics.create_canvas_for(img)).css(canvas_style)[0];
         }
         function add_shape_group_impl(areaData,mode) {
-            var opts,shape, i;
+            var opts,shape;
             // first get area options. Then override fade for selecting, and finally merge in the "select" effect options.
-            //opts = options_from_area_id(map_data,area_id);
             opts = areaData.effectiveOptions();
             opts = u.mergeObjects({
                 source: [opts, 
@@ -512,68 +481,7 @@ Based on code originally written by David Lynch
 
 
 
-        function show_tooltip(areaData,area) {
-            var tooltip, left, top, tooltipCss, coords, data,
-            area_id = area_options.id,
-            alignLeft = true,
-            alignTop = true,
-            opts = areaData.effectiveOptions(),
-            map_data=areaData.owner,
-            container = $(map_data.options.toolTipContainer);
 
-            tooltip = container.html(opts.toolTip);
-            
-            coords = u.area_corner(area, alignLeft, alignTop);
-
-            clear_tooltip(map_data);
-            tooltip.hide();
-
-            $(map_data.image).after(tooltip);
-            map_data.activeToolTip = tooltip;
-            map_data.activeToolTipID = area_id;
-
-            // Try to upper-left align it first, if that doesn't work, change the parameters
-            left = coords[0] - tooltip.outerWidth(true);
-            top = coords[1] - tooltip.outerHeight(true);
-            if (left < 0) {
-                alignLeft = false;
-            }
-            if (top < 0) {
-                alignTop = false;
-            }
-            coords = u.area_corner(area, alignLeft, alignTop);
-            left = coords[0] - (alignLeft ? tooltip.outerWidth(true) : 0);
-            top = coords[1] - (alignTop ? tooltip.outerHeight(true) : 0);
-
-            tooltipCss = { "left": left + "px", "top": top + "px" };
-
-            if (!tooltip.css("z-index") || tooltip.css("z-index") === "auto") {
-                tooltipCss["z-index"] = "2000";
-            }
-            tooltip.css(tooltipCss).addClass('mapster_tooltip');
-
-            bind_tooltip_close(map_data, 'area-click', 'click', $(map_data.map));
-            bind_tooltip_close(map_data, 'tooltip-click', 'click', tooltip);
-            // not working properly- closes too soon sometimes
-            bind_tooltip_close(map_data, 'img-mouseout', 'mouseout', $(map_data.image));
-
-            tooltip.css({"opacity":0});
-            tooltip.show();
-            u.fader(tooltip[0], 0,1,  opts.fadeDuration);
-
-            if (opts.onShowToolTip && typeof opts.onShowToolTip === 'function') {
-                data = map_data.data[area_id];
-                opts.onShowToolTip.call(area,
-                {
-                    target: area,
-                    tooltip: tooltip,
-                    areaTarget: $(area),
-                    areaOptions: area_options,
-                    key: data.key,
-                    selected: data.selected
-                });
-            }        
-        }
         
         // EVENTS
         
@@ -595,11 +503,11 @@ Based on code originally written by David Lynch
         }
 
         // NOT IMPLEMENTED
-        function list_click(map_data) {
-            //
+//        function list_click(map_data) {
+//            //
 
-        }
-        
+//        }
+//        
         // PUBLIC FUNCTIONS
 
         // simulate a click event. This is like toggle, but causes events to run also.
@@ -609,7 +517,7 @@ Based on code originally written by David Lynch
         };
 
         me.get = function (key) {
-            var map_data, result, ar;
+            var map_data, result;
             this.each(function () {
                 map_data = get_map_data(this);
                 if (!map_data) {
@@ -646,7 +554,7 @@ Based on code originally written by David Lynch
             this.base_canvas=null;
             this.overlay_canvas=null;
             this.alt_images= {};
-            this.complete=false,
+            this.complete=false;
             this.commands=[];
             this.data=[];
             this.img_style=image.getAttribute('style') || null;
@@ -663,8 +571,8 @@ Based on code originally written by David Lynch
                     ar.highlight();
                 }
                 
-                if (opts.showToolTip && opts.toolTip && map_data.activeToolTipID !== ar.areaId) {
-                    show_tooltip(ar,this);
+                if (me.options.showToolTip && opts.toolTip && me.activeToolTipID !== ar.areaId) {
+                    ar.showTooltip(this);
                 }
                 if (u.isFunction(opts.onMouseover)) {
                     opts.onMouseover.call(this,e,
@@ -694,7 +602,7 @@ Based on code originally written by David Lynch
                  }
             };
             this.click=function(e) {
-                var  key, selected, list_target, area_id,data,
+                var  selected, list_target,
                     ar=me.getDataForArea(this),
                     opts=me.options;
     
@@ -756,8 +664,8 @@ Based on code originally written by David Lynch
         };
         // rebind based on new area options. This copies info from array "areas" into the data[area_id].area_options property.
         p.setAreaOptions=function(area_list) {
-            var i, area_id, area_options,data,ar,
-            	selected_list=[], 
+            var i, area_options,ar,
+                selected_list=[], 
                 areas = area_list || {};
             // refer by: map_data.options[map_data.data[x].area_option_id]
             for (i = areas.length-1; i >=0 ; i--) {
@@ -788,10 +696,9 @@ Based on code originally written by David Lynch
         };
         p.initialize=function() {
             var $area, area, sel, areas, i, j,keys, key, area_id, default_group, group_value, 
-                sort_func, sorted_list, returned_list,is_mask,dataItem,
+                sort_func, sorted_list, is_mask,dataItem,
                 me=this,
                 selected_list=[],
-                data = [], 
                 opts=this.options;
 
             function add_group(key,value) {
@@ -813,7 +720,6 @@ Based on code originally written by David Lynch
                 $area = $(area);
                 key = area.getAttribute(opts.mapKey);
                 keys = (default_group || typeof key !== 'string') ?  [''] : key.split(',');
-                $area.data('mapster_key',keys[0]);
                 for (j=keys.length-1;j>=0;j--) {
                     key = keys[j];
                     if (opts.mapValue) {
@@ -823,7 +729,7 @@ Based on code originally written by David Lynch
                         // set an attribute so we can refer to the area by index from the DOM object if no key
                         area_id = add_group(this.data.length,group_value);
                         dataItem=this.data[area_id];
-                        dataItem.key = key = area_id;
+                        dataItem.key = key = area_id.toString();
                         //$area.attr('data-mapster-id', area_id);
                     }
                     else {
@@ -841,6 +747,7 @@ Based on code originally written by David Lynch
                     }
                     dataItem.areas.push(area);
                 }
+                $area.data('mapster_key',key);
                 is_mask=opts.isMask;
                 // only bind to areas that don't have nohref. ie 6&7 cannot detect the presence of nohref, so we have to also not bind if href is missing.
                 if (!area.getAttribute("nohref") && area.getAttribute("href")) {
@@ -885,8 +792,6 @@ Based on code originally written by David Lynch
             this.setAreasSelected(selected_list);
         };
         p.clearEvents=function() {
-            var opts=this.options;
-
             $(this.map).find('area')
                 .unbind('mouseover.mapster')
                 .unbind('mouseout.mapster')
@@ -908,7 +813,6 @@ Based on code originally written by David Lynch
             });
         };
         p.clearTooltip=function() {
-            var i;
             if (this.activeToolTip) {
                 this.activeToolTip.remove();
                 this.activeToolTip = null;
@@ -949,10 +853,10 @@ Based on code originally written by David Lynch
             this.clearTooltip(); 
         };
         p.bindTooltipClose=function(option, event, obj) {
-            var event_name = event + '.mapster-tooltip';
+            var event_name = event + '.mapster-tooltip', me=this;
             if (u.arrayIndexOf(this.options.toolTipClose,option) >= 0) {
                 obj.unbind(event_name).bind(event_name, function () {
-                    this.clearTooltip();
+                    me.clearTooltip();
                 });
                 this._tooltip_events.push(
                 {
@@ -963,9 +867,9 @@ Based on code originally written by David Lynch
         // END MAPDATA
         AreaData = function(owner,key,value) {
             this.owner=owner;
-            this.key=key?key:'';
+            this.key=key || '';
             this.areaId=-1;
-            this.value=value?value:'';
+            this.value=value || '';
             this.options={};
             this.selected=null;
             this.areas=[];
@@ -1063,7 +967,66 @@ Based on code originally written by David Lynch
             }
             return this.isSelected();
         };
+        p.showTooltip=function(area) {
+            var tooltip, left, top, tooltipCss, coords,
+            alignLeft = true,
+            alignTop = true,
+            opts = this.effectiveOptions(),
+            map_data=this.owner,
+            container = $(map_data.options.toolTipContainer);
 
+            tooltip = container.html(opts.toolTip);
+            
+            coords = u.area_corner(area, alignLeft, alignTop);
+
+            map_data.clearTooltip();
+            tooltip.hide();
+
+            $(map_data.image).after(tooltip);
+            map_data.activeToolTip = tooltip;
+            map_data.activeToolTipID = this.areaId;
+
+            // Try to upper-left align it first, if that doesn't work, change the parameters
+            left = coords[0] - tooltip.outerWidth(true);
+            top = coords[1] - tooltip.outerHeight(true);
+            if (left < 0) {
+                alignLeft = false;
+            }
+            if (top < 0) {
+                alignTop = false;
+            }
+            coords = u.area_corner(area, alignLeft, alignTop);
+            left = coords[0] - (alignLeft ? tooltip.outerWidth(true) : 0);
+            top = coords[1] - (alignTop ? tooltip.outerHeight(true) : 0);
+
+            tooltipCss = { "left": left + "px", "top": top + "px" };
+
+            if (!tooltip.css("z-index") || tooltip.css("z-index") === "auto") {
+                tooltipCss["z-index"] = "2000";
+            }
+            tooltip.css(tooltipCss).addClass('mapster_tooltip');
+
+            map_data.bindTooltipClose('area-click', 'click', $(map_data.map));
+            map_data.bindTooltipClose('tooltip-click', 'click', tooltip);
+            // not working properly- closes too soon sometimes
+            //map_data.bindTooltipClose('img-mouseout', 'mouseout', $(map_data.image));
+
+            tooltip.css({"opacity":0});
+            tooltip.show();
+            u.fader(tooltip[0], 0,1,  opts.fadeDuration);
+
+            if (opts.onShowToolTip && typeof opts.onShowToolTip === 'function') {
+                opts.onShowToolTip.call(area,
+                {
+                    target: area,
+                    tooltip: tooltip,
+                    areaTarget: $(area),
+                    areaOptions: opts,
+                    key: this.key,
+                    selected: this.selected
+                });
+            }        
+        };
         // Select or unselect areas identified by key -- a string, a csv string, or array of strings.
         // if set_bound is true, the bound list will also be updated. Default is true. If neither true nor false,
         // it will be toggled.
@@ -1078,7 +1041,7 @@ Based on code originally written by David Lynch
         };
 
         me.set = function (selected, key, set_bound) {
-            var lastParent, parent, map_data, key_list, area_id, do_set_bound;
+            var lastParent, parent, map_data, key_list, do_set_bound;
 
 
             function setSelection(ar) {
@@ -1144,10 +1107,6 @@ Based on code originally written by David Lynch
             });
             return this;
         };
-        me.close_tooltip = function () {
-            clear_tooltip();
-        };
-       
 
         me.unbind = function (preserveState) {
             var map_data;
@@ -1166,7 +1125,7 @@ Based on code originally written by David Lynch
         };
         // merge new area data into existing area options. used for rebinding.
         function merge_areas(map_data, areas) {
-            var ar,
+            var ar, index,
                 map_areas = map_data.options.areas;
             if (areas) {
                 u.each(areas,function() {
@@ -1200,11 +1159,7 @@ Based on code originally written by David Lynch
                 this._effectiveOptions=null;
             });
         }
-        function set_items_selected(map_data,selected_list) {
-            u.each(selected_list,function() {
-                map_data.data[this].selected=true;
-            });
-        }
+
         // refresh options.
         me.rebind = function (options) {
             var map_data, selected_list;
@@ -1230,7 +1185,7 @@ Based on code originally written by David Lynch
             if (map_data = get_map_data(img)) {
                 if (key) {
                     if (ar=map_data.getDataForKey(key)) {
-                        opts = options_from_area_id(map_data,ar.areaId);
+                        opts = ar.effectiveOptions();
                     } 
                 } else {
                     opts = map_data.options;
@@ -1268,7 +1223,7 @@ Based on code originally written by David Lynch
             });
 
             return this.each(function () {
-                var last,lastProp,img, wrap, map, canvas, context, overlay_canvas, usemap, map_data, i,parent_id, wrap_id;
+                var last,lastProp,img, wrap, map, canvas, context, overlay_canvas, usemap, map_data, parent_id, wrap_id;
 
                 // save ref to this image even if we can't access it yet. commands will be queued
                 img = $(this);
@@ -1550,7 +1505,7 @@ Based on code originally written by David Lynch
                     };
                     // Draw all items from selected_list to a new canvas, then swap with the old one. This is used to delete items when using canvases. 
                     me.refresh_selections = function () {
-                        var i,list_temp=[], canvas_temp,data;
+                        var list_temp=[], canvas_temp;
                         // draw new base canvas, then swap with the old one to avoid flickering
                         canvas_temp = map_data.base_canvas;
                         u.each(map_data.data,function(i) {
@@ -1579,7 +1534,7 @@ Based on code originally written by David Lynch
                         
                     me.active=false;
                     function render_shape(shape, coords, options) {
-                        var stroke, opacity,e, el_name,template,t_replace,i_match;
+                        var stroke, e, el_name,template;
                         el_name = name ? 'name="'+name+'" ' : '';
                         
                         // fill
