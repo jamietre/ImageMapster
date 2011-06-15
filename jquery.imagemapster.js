@@ -309,7 +309,7 @@ Based on code originally written by David Lynch
         onMouseout: null,
         onStateChange: null,
         onShowToolTip: null,
-        onGetList: null,
+        boundList: null,
         onCreateTooltip: null,
         onConfigured: null,
         configTimeout: 10000,
@@ -471,7 +471,7 @@ Based on code originally written by David Lynch
                 });
         };
         function getBoundList(opts,key_list) {
-            return opts.boundList.filter(':attrMatches("' + opts.listKey + '","' + key_list + '")')
+            return opts.boundList ? opts.boundList.filter(':attrMatches("' + opts.listKey + '","' + key_list + '")') : null;
         }
         
 
