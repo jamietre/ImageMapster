@@ -1,13 +1,15 @@
-/* ImageMapster 1.1.2
+/* ImageMapster 1.1.3 beta 1
 Copyright 2011 James Treworgy
 http://www.outsharked.com/imagemapster
 https://github.com/jamietre/ImageMapster
 
 A jQuery plugin to enhance image maps.
 
-version 1.1.2 
--- refactor into mostly OO design - functional design was getting unwieldy.
+version 1.1.3
+
+-- Bug fix- stroke sometimes rendered improperly when using render-specific options
 -- change onClick handler to BEFORE action, permit canceling of action by returning false
+-- refactor into mostly OO design - functional design was getting unwieldy.
 -- fix bugs related to cascading of "staticState" options
 -- add "snapshot" option
 -- check for existing wrapper, skip if it already exists
@@ -69,18 +71,17 @@ Based on code originally written by David Lynch
 
 */
 
-/*jslint sloppy:true, nomen: true, plusplus: true, evil: true, forin: true, type: true, windows: true */
+/*jslint browser: true, white: true, sloppy:true, nomen: true, plusplus: true, evil: true, forin: true, type: true, windows: true */
+/*global jQuery: true */
 
 (function ($) {
     var methods;
     $.fn.mapster = function (method) {
         if (methods[method]) {
             return methods[method].apply(this, Array.prototype.slice.call(arguments, 1));
-        }
-        else if (typeof method === 'object' || !method) {
+        } else if (typeof method === 'object' || !method) {
             return methods.bind.apply(this, arguments);
-        }
-        else {
+        } else {
             $.error('Method ' + method + ' does not exist on jQuery.mapster');
         }
     };
@@ -374,8 +375,8 @@ Based on code originally written by David Lynch
             // first get area options. Then override fade for selecting, and finally merge in the "select" effect options.
             opts = areaData.effectiveOptions();
             opts = u.mergeObjects({
-                source: [opts, 
-                        $.mapster.render_defaults,                
+                source: [$.mapster.render_defaults,                
+                        opts, 
                         opts['render_'+mode], {
                             alt_image: areaData.owner.alt_images[mode]
                         }]
@@ -447,11 +448,6 @@ Based on code originally written by David Lynch
             }
         }
 
-
-
-        
-
-
         // Causes changes to the bound list based on the user action (select or deselect)
         // area: the jQuery area object
         // returns the matching elements from the bound list for the first area passed (normally only one should be passed, but
@@ -469,27 +465,12 @@ Based on code originally written by David Lynch
                         $(this).attr(opts.listSelectedAttribute, selected);
                     }
                 });
-        };
+        }
         function getBoundList(opts,key_list) {
             return opts.boundList ? opts.boundList.filter(':attrMatches("' + opts.listKey + '","' + key_list + '")') : null;
         }
-        
 
-
-        // configure new map with area options
-        
-        
-
-
-
-
-        
         // EVENTS
-        
-
- 
-
-
     
         function queue_command(map_data,command, args) {
             if (!map_data.complete) {
@@ -512,7 +493,7 @@ Based on code originally written by David Lynch
         // PUBLIC FUNCTIONS
 
         // simulate a click event. This is like toggle, but causes events to run also.
-        // NOT IMPLEMENTED
+        // NOT TESTED
         me.click = function (key) {
             me.set(null, key, true);
         };
@@ -603,39 +584,43 @@ Based on code originally written by David Lynch
                  }
             };
             this.click=function(e) {
-                var  selected, list_target,
-                    wasSelected,
-                    ar=me.getDataForArea(this),
-                    opts=me.options;
-    
+                var selected, list_target, newSelectionState, canChangeState,
+                    ar = me.getDataForArea(this),
+                    opts = me.options;
+
                 e.preventDefault();
-                
+
                 opts = me.options;
-    
-                wasSelected = ar.selected;
-                if (ar.isSelectable() &&
-                    (ar.isDeselectable() || !ar.selected)) {
-                        selected = ar.toggleSelection();
-                } 
-    
-                list_target=getBoundList(opts,ar.key);
+
+                canChangeState = (ar.isSelectable() &&
+                    (ar.isDeselectable() || !ar.selected));
+                if (canChangeState) {
+                    newSelectionState = !ar.selected;
+                } else {
+                    newSelectionState = ar.selected;
+                }
+
+                list_target = getBoundList(opts, ar.key);
                 if (u.isFunction(opts.onClick)) {
-                    if (false===opts.onClick.call(this,
+                    if (false === opts.onClick.call(this,
                     {
                         e: e,
                         listTarget: list_target,
                         key: ar.key,
-                        selected: ar.isSelected()
+                        selected: newSelectionState
                     })) {
-                        ar.selected = wasSelected;
                         return;
                     }
                 }
+
+                if (canChangeState) {
+                    selected = ar.toggleSelection();
+                }
+
                 if (opts.boundList && opts.boundList.length > 0) {
-                    setBoundListProperties(opts,list_target,ar.isSelected());
+                    setBoundListProperties(opts, list_target, ar.isSelected());
                 }
             };
-            
         };
         p=MapData.prototype;
         p._idFromKey=function(key) {

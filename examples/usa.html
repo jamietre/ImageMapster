@@ -31,6 +31,7 @@
    	           <option value="2">Alternate Image 2</option>
    	           <option value="3">Alternate Image 3</option>
                <option value="4">Alternate Image 4</option>
+               <option value="5">Alternate Image 5</option>
         </select> NOTE: Alternate Image *may* not work unless this is run on a web server because of canvas restrictions.
 	<div style="clear:both;"></div>
 		Stroke (highlight): <input id="stroke_highlight" type="checkbox"><br>
@@ -200,6 +201,9 @@ $(document).ready(function () {
         		fillColor: 'ff000c',
         		stroke:false
         	},
+        	render_zoom: {
+        	    altImage: 'images/usa_map_huge.jpg'
+        	},
         	fadeInterval:50,
             isSelectable: true,
 			singleSelect:false,
@@ -213,6 +217,10 @@ $(document).ready(function () {
                 styleCheckbox(e.selected, e.listTarget);
                 if (!utils.isScrolledIntoView(e.listTarget, false, $statelist)) {
                     utils.centerOn($statelist, e.listTarget);
+                }
+                if (e.key==='OH') {
+                    $usamap.mapster('zoom','OH');
+                    return false;
                 }
             },
             onConfigured: mapsterConfigured,
