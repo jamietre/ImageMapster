@@ -1,4 +1,4 @@
-/* ImageMapster 1.1.3 beta 1
+/* ImageMapster 1.1.3 beta 2
 Copyright 2011 James Treworgy
 http://www.outsharked.com/imagemapster
 https://github.com/jamietre/ImageMapster
@@ -7,7 +7,7 @@ A jQuery plugin to enhance image maps.
 
 version 1.1.3
 
--- Bug fix- stroke sometimes rendered improperly when using render-specific options
+-- Bug fix - stroke sometimes rendered improperly when using render-specific options
 -- change onClick handler to BEFORE action, permit canceling of action by returning false
 -- refactor into mostly OO design - functional design was getting unwieldy.
 -- fix bugs related to cascading of "staticState" options
@@ -86,7 +86,7 @@ Based on code originally written by David Lynch
         }
     };
     $.mapster = {};
-     // utility functions
+    // utility functions
     $.mapster.utils = {
         area_corner: function (area, left, top) {
             var bestX, bestY, curX, curY, coords, j;
@@ -94,7 +94,7 @@ Based on code originally written by David Lynch
             bestX = left ? 999999 : -1;
             bestY = top ? 999999 : -1;
 
-            for (j = coords.length-2; j >=0; j -= 2) {
+            for (j = coords.length - 2; j >= 0; j -= 2) {
                 curX = parseInt(coords[j], 10);
                 curY = parseInt(coords[j + 1], 10);
 
@@ -120,31 +120,31 @@ Based on code originally written by David Lynch
         //          
         // returns - new object.
         mergeObjects: function (options) {
-            var obj, i, len, prop, 
-                add=this.boolOrDefault(options.add,options.template ? false : true),
-                ignore = options.ignore ? options.ignore.split(','):'',
-                include=options.include ? options.include.split(','):'',
-                deep = options.deep ? options.deep.split(','):'',
-                target=options.target || {},
-                source=[].concat(options.source);
+            var obj, i, len, prop,
+                add = this.boolOrDefault(options.add, options.template ? false : true),
+                ignore = options.ignore ? options.ignore.split(',') : '',
+                include = options.include ? options.include.split(',') : '',
+                deep = options.deep ? options.deep.split(',') : '',
+                target = options.target || {},
+                source = [].concat(options.source);
             if (options.template) {
-                target = this.mergeObjects({ target: {}, source: [options.template,target] });
+                target = this.mergeObjects({ target: {}, source: [options.template, target] });
             }
             len = source.length;
-            for (i=0; i<len;i++) {
+            for (i = 0; i < len; i++) {
                 obj = source[i];
                 if (obj) {
                     for (prop in obj) {
-                        if ((!ignore || this.arrayIndexOf(ignore,prop)===-1) 
-                          && (!include || this.arrayIndexOf(include,prop)>=0)
-                          && obj.hasOwnProperty(prop) 
+                        if ((!ignore || this.arrayIndexOf(ignore, prop) === -1)
+                          && (!include || this.arrayIndexOf(include, prop) >= 0)
+                          && obj.hasOwnProperty(prop)
                           && (add || target.hasOwnProperty(prop))) {
-        
-                            if (deep && this.arrayIndexOf(deep,prop)>=0 && typeof obj[prop]==='object') {
-                                if (typeof target[prop] !=='object' && add) {
-                                    target[prop]={};
+
+                            if (deep && this.arrayIndexOf(deep, prop) >= 0 && typeof obj[prop] === 'object') {
+                                if (typeof target[prop] !== 'object' && add) {
+                                    target[prop] = {};
                                 }
-                                this.mergeObjects({target: target[prop],source:obj[prop],add: add });
+                                this.mergeObjects({ target: target[prop], source: obj[prop], add: add });
                             } else {
                                 target[prop] = obj[prop];
                             }
@@ -164,23 +164,23 @@ Based on code originally written by David Lynch
             return -1;
         },
         // returns "obj" if true or false, or "def" if not true/false
-        boolOrDefault: function (obj,def) {
+        boolOrDefault: function (obj, def) {
             return this.isBool(obj) ?
                 obj : def || false;
         },
-        isBool: function(obj) {
+        isBool: function (obj) {
             return typeof obj === "boolean";
         },
-        isFunction: function(obj) {
+        isFunction: function (obj) {
             return obj && typeof obj === 'function';
         },
-        arrayIndexOf: function(arr,el) {
+        arrayIndexOf: function (arr, el) {
             if (arr.indexOf) {
                 return arr.indexOf(el);
             } else {
                 var i;
-                for (i=arr.length-1;i>=0;i--) {
-                    if (arr[i]===el) {
+                for (i = arr.length - 1; i >= 0; i--) {
+                    if (arr[i] === el) {
                         return i;
                     }
                 }
@@ -188,29 +188,29 @@ Based on code originally written by David Lynch
             }
         },
         // recycle empty array elements
-        arrayReuse:function(arr,obj) {
-            var index = this.arrayIndexOf(arr,null);
-            if (index===-1) {
-                index = arr.push(obj)-1;
+        arrayReuse: function (arr, obj) {
+            var index = this.arrayIndexOf(arr, null);
+            if (index === -1) {
+                index = arr.push(obj) - 1;
             } else {
-                arr[index]=obj;
+                arr[index] = obj;
             }
             return index;
         },
         // iterate over each property of obj or array, calling fn on each one
-        each: function(obj,fn) {
-            var i,l;
-            if (obj.constructor===Array) {
-                l=obj.length;
-                for (i=0;i<l;i++) {
-                    if (fn.call(obj[i],i)===false) {
+        each: function (obj, fn) {
+            var i, l;
+            if (obj.constructor === Array) {
+                l = obj.length;
+                for (i = 0; i < l; i++) {
+                    if (fn.call(obj[i], i) === false) {
                         return false;
                     }
                 }
             } else {
                 for (i in obj) {
                     if (obj.hasOwnProperty(i)) {
-                        if (fn.call(obj[i],i)===false) {
+                        if (fn.call(obj[i], i) === false) {
                             return false;
                         }
                     }
@@ -220,45 +220,45 @@ Based on code originally written by David Lynch
         },
         fader: (function () {
             function setOpacity(e, opacity) {
-                e.style.filter="Alpha(opacity="+String(opacity*100)+")";
-                e.style.opacity=opacity;
+                e.style.filter = "Alpha(opacity=" + String(opacity * 100) + ")";
+                e.style.opacity = opacity;
             }
 
-            var elements = [], 
+            var elements = [],
                 lastKey = 0,
                 fade_func = function (el, op, endOp, duration) {
-                var index,u=$.mapster.utils,obj;
-                if (typeof el === 'number') {
-                    index = u.arrayIndexOfProp(elements,'key',el);
-                    if (index===-1) {
-                        return;
+                    var index, u = $.mapster.utils, obj;
+                    if (typeof el === 'number') {
+                        index = u.arrayIndexOfProp(elements, 'key', el);
+                        if (index === -1) {
+                            return;
+                        } else {
+                            obj = elements[index].element;
+                        }
                     } else {
-                        obj=elements[index].element;
+                        index = u.arrayIndexOfProp(elements, 'element', el);
+                        if (index >= 0) {
+                            elements[index] = null;
+                        }
+                        obj = el;
+                        el = ++lastKey;
+                        u.arrayReuse(elements, { "element": obj, "key": el });
                     }
-                } else {
-                    index = u.arrayIndexOfProp(elements,'element',el);
-                    if (index>=0) {
-                        elements[index]=null;
+                    endOp = endOp || 1;
+
+                    op = (op + (endOp / 10) > endOp - 0.01) ? endOp : op + (endOp / 10);
+                    //alert(op < endOp);
+
+                    setOpacity(obj, op);
+                    if (op < endOp) {
+                        setTimeout(function () {
+                            fade_func(el, op, endOp, duration);
+                        }, duration ? duration / 10 : 15);
                     }
-                    obj = el;
-                    el = ++lastKey;
-                    u.arrayReuse(elements,{"element": obj, "key": el });
-                }
-                endOp = endOp || 1;
-
-                op = (op+(endOp/10) > endOp-0.01) ? endOp: op+(endOp/10);
-                //alert(op < endOp);
-
-                setOpacity(obj,op);
-                if (op < endOp) {
-                    setTimeout(function() {
-                        fade_func(el,op,endOp,duration);
-                    }, duration ? duration/10 : 15);
-                } 
-            };
+                };
             return fade_func;
 
-        }())
+        } ())
     };
     $.mapster.default_tooltip_container = function () {
         return '<div style="border: 2px solid black; background: #EEEEEE; position:absolute; width:160px; padding:4px; margin: 4px; -moz-box-shadow: 3px 3px 5px #535353; ' +
@@ -271,7 +271,7 @@ Based on code originally written by David Lynch
         fadeDuration: 150,
         altImage: null,
         altImageOpacity: 0.7,
-        fill: true,        
+        fill: true,
         fillColor: '000000',
         fillColorMask: 'FFFFFF',
         fillOpacity: 0.5,
@@ -283,10 +283,10 @@ Based on code originally written by David Lynch
         alt_image: null // used internally
     };
 
-    $.mapster.defaults =  $.mapster.utils.mergeObjects({source:
+    $.mapster.defaults = $.mapster.utils.mergeObjects({ source:
     [{
-        render_highlight: { },
-        render_select: {fade:false },
+        render_highlight: {},
+        render_select: { fade: false },
         staticState: null,
         selected: false,
         isSelectable: true,
@@ -316,19 +316,20 @@ Based on code originally written by David Lynch
         configTimeout: 10000,
         noHrefIsMask: true,
         areas: []
-    },$.mapster.render_defaults]});
+    }, $.mapster.render_defaults]
+    });
     $.mapster.area_defaults =
         $.mapster.utils.mergeObjects({
-            source: [$.mapster.defaults,{toolTip: '' }],
+            source: [$.mapster.defaults, { toolTip: ''}],
             deep: "render_highlight, render_select",
-            include:"fade,fadeDuration,fill,fillColor,fillOpacity,stroke,strokeColor,strokeOpacity,strokeWidth,staticState,selected,"
-            +"isSelectable,isDeselectable,render_highlight,render_select,isMask, toolTip"
+            include: "fade,fadeDuration,fill,fillColor,fillOpacity,stroke,strokeColor,strokeOpacity,strokeWidth,staticState,selected,"
+            + "isSelectable,isDeselectable,render_highlight,render_select,isMask, toolTip"
         });
-   
+
     $.mapster.impl = (function () {
         var me = {},
         p,
-        AreaData,MapData,
+        AreaData, MapData,
         u = $.mapster.utils,
         map_cache = [],
         ie_config_complete = false,
@@ -344,25 +345,26 @@ Based on code originally written by David Lynch
         },
         is_image_loaded = function (map_data) {
             var img,
-                images = u.mergeObjects({source: [{ main: map_data }, map_data.alt_images]});
+                images = u.mergeObjects({ source: [{ main: map_data }, map_data.alt_images] });
 
-            return u.each(images,function() {
+            return u.each(images, function () {
                 img = this.image;
-                if (!img.complete || !img.width || !img.height ||
-                    (typeof img.naturalWidth !== "undefined" && img.naturalWidth === 0)) {
-                    return false;
-                }
+                var complete = img.complete || (img.width && img.height) ||
+                    (typeof img.naturalWidth !== "undefined" && img.naturalWidth !== 0);
+                    
+                    return complete;
+                
             });
         };
         me.test = function (obj) {
             return eval(obj);
         };
-        
+
         // end utility functions
 
         function shape_from_area(area) {
             var i, coords = area.getAttribute('coords').split(',');
-            for (i = coords.length-1; i >=0 ; i--) {
+            for (i = coords.length - 1; i >= 0; i--) {
                 coords[i] = parseInt(coords[i], 10);
             }
             return [area.getAttribute('shape').toLowerCase().substr(0, 4), coords];
@@ -370,57 +372,57 @@ Based on code originally written by David Lynch
         function create_canvas(img) {
             return $(graphics.create_canvas_for(img)).css(canvas_style)[0];
         }
-        function add_shape_group_impl(areaData,mode) {
-            var opts,shape;
+        function add_shape_group_impl(areaData, mode) {
+            var opts, shape;
             // first get area options. Then override fade for selecting, and finally merge in the "select" effect options.
             opts = areaData.effectiveOptions();
             opts = u.mergeObjects({
-                source: [$.mapster.render_defaults,                
-                        opts, 
-                        opts['render_'+mode], {
+                source: [$.mapster.render_defaults,
+                        opts,
+                        opts['render_' + mode], {
                             alt_image: areaData.owner.alt_images[mode]
                         }]
             });
-            u.each(areaData.areas,function() {
+            u.each(areaData.areas, function () {
                 shape = shape_from_area(this);
                 graphics.add_shape_to(shape[0], shape[1], opts, $(this).data('mapster_is_mask') || opts.isMask);
             });
-            
+
             return opts;
         }
-        
-        function add_shape_group(areaData,mode) {
-            var list,canvas,name,
-                map_data=areaData.owner,
+
+        function add_shape_group(areaData, mode) {
+            var list, canvas, name,
+                map_data = areaData.owner,
                 opts = areaData.effectiveOptions();
             // render includeKeys first - because they could be masks
 
-            if (mode==='select') {
+            if (mode === 'select') {
                 name = "static_" + areaData.areaId.toString();
-                canvas=map_data.base_canvas;
+                canvas = map_data.base_canvas;
             } else {
                 canvas = map_data.overlay_canvas;
             }
-            graphics.init(areaData.owner);            
-            graphics.begin(canvas,name);
+            graphics.init(areaData.owner);
+            graphics.begin(canvas, name);
 
             if (opts.includeKeys) {
                 list = opts.includeKeys.split(',');
-                u.each(list,function() {
-                    add_shape_group_impl(map_data.getDataForKey(this.toString()),mode);
+                u.each(list, function () {
+                    add_shape_group_impl(map_data.getDataForKey(this.toString()), mode);
                 });
             }
-            
-            opts=add_shape_group_impl(areaData,mode);
-            graphics.render();
-            
-            if (opts.fade) {
-	            u.fader(canvas, 0, opts.fillOpacity,opts.fadeDuration);
-            } 
-                
 
-        }       
-        
+            opts = add_shape_group_impl(areaData, mode);
+            graphics.render();
+
+            if (opts.fade) {
+                u.fader(canvas, 0, opts.fillOpacity, opts.fadeDuration);
+            }
+
+
+        }
+
         // internal function to actually set the area
 
         // Configures selections from a separate list.
@@ -443,8 +445,8 @@ Based on code originally written by David Lynch
         }
         function get_map_data(obj) {
             var index = get_map_data_index(obj);
-            if (index>=0) {
-                return index>=0 ? map_cache[index] : null;
+            if (index >= 0) {
+                return index >= 0 ? map_cache[index] : null;
             }
         }
 
@@ -454,29 +456,29 @@ Based on code originally written by David Lynch
         // a list can be passed
         function setBoundListProperties(opts, target, selected) {
             target.each(function () {
-                    if (opts.listSelectedClass) {
-                        if (selected) {
-                            $(this).addClass(opts.listSelectedClass);
-                        } else {
-                            $(this).removeClass(opts.listSelectedClass);
-                        }
+                if (opts.listSelectedClass) {
+                    if (selected) {
+                        $(this).addClass(opts.listSelectedClass);
+                    } else {
+                        $(this).removeClass(opts.listSelectedClass);
                     }
-                    if (opts.listSelectedAttribute) {
-                        $(this).attr(opts.listSelectedAttribute, selected);
-                    }
-                });
+                }
+                if (opts.listSelectedAttribute) {
+                    $(this).attr(opts.listSelectedAttribute, selected);
+                }
+            });
         }
-        function getBoundList(opts,key_list) {
+        function getBoundList(opts, key_list) {
             return opts.boundList ? opts.boundList.filter(':attrMatches("' + opts.listKey + '","' + key_list + '")') : null;
         }
 
         // EVENTS
-    
-        function queue_command(map_data,command, args) {
+
+        function queue_command(map_data, command, args) {
             if (!map_data.complete) {
                 map_data.commands.push(
                 {
-                    command: command, 
+                    command: command,
                     args: args
                 });
                 return true;
@@ -485,11 +487,11 @@ Based on code originally written by David Lynch
         }
 
         // NOT IMPLEMENTED
-//        function list_click(map_data) {
-//            //
+        //        function list_click(map_data) {
+        //            //
 
-//        }
-//        
+        //        }
+        //        
         // PUBLIC FUNCTIONS
 
         // simulate a click event. This is like toggle, but causes events to run also.
@@ -511,7 +513,7 @@ Based on code originally written by David Lynch
                 }
 
                 result = '';
-                u.each(map_data.data,function() {
+                u.each(map_data.data, function () {
                     if (this.isSelected()) {
                         result += (result ? ',' : '') + this.key;
                     }
@@ -521,54 +523,54 @@ Based on code originally written by David Lynch
             return result;
         };
         // Config for object prototypes
-        
-        MapData = function(image,options) {
+
+        MapData = function (image, options) {
             var me = this;
             // elements own index in parent array - so we have an ID to use for wraper div
-            this.index=-1;
-            this.image=image;
-            this.map=null;
-            this.options=options;
-            this.area_options=u.mergeObjects({
-                template:$.mapster.area_defaults,
+            this.index = -1;
+            this.image = image;
+            this.map = null;
+            this.options = options;
+            this.area_options = u.mergeObjects({
+                template: $.mapster.area_defaults,
                 source: options
             });
-            this.base_canvas=null;
-            this.overlay_canvas=null;
-            this.alt_images= {};
-            this.complete=false;
-            this.commands=[];
-            this.data=[];
-            this.img_style=image.getAttribute('style') || null;
-            this.bind_tries=options.configTimeout/200;
+            this.base_canvas = null;
+            this.overlay_canvas = null;
+            this.alt_images = {};
+            this.complete = false;
+            this.commands = [];
+            this.data = [];
+            this.img_style = image.getAttribute('style') || null;
+            this.bind_tries = options.configTimeout / 200;
             // private members
-            this._xref={};
-            this._highlightId=-1;
-            this._tooltip_events=[];
-            this.mouseover=function(e) {
-                var opts,ar=me.getDataForArea(this);
+            this._xref = {};
+            this._highlightId = -1;
+            this._tooltip_events = [];
+            this.mouseover = function (e) {
+                var opts, ar = me.getDataForArea(this);
                 opts = ar.effectiveOptions();
-                           
+
                 if (!u.isBool(opts.staticState)) {
                     ar.highlight();
                 }
-                
+
                 if (me.options.showToolTip && opts.toolTip && me.activeToolTipID !== ar.areaId) {
                     ar.showTooltip(this);
                 }
                 if (u.isFunction(opts.onMouseover)) {
-                    opts.onMouseover.call(this,e,
+                    opts.onMouseover.call(this, e,
                     {
                         options: opts,
                         key: ar.key,
                         selected: ar.selected
                     });
-                }            
+                }
             };
-            this.mouseout=function(e) {
+            this.mouseout = function (e) {
                 var key, data,
                     opts = me.options;
-                if (opts.toolTipClose && u.arrayIndexOf(opts.toolTipClose,'area-mouseout') >= 0) {
+                if (opts.toolTipClose && u.arrayIndexOf(opts.toolTipClose, 'area-mouseout') >= 0) {
                     me.clearTooltip();
                 }
                 data = me.highlightId ? me.data[me.highlightId] : null;
@@ -581,9 +583,9 @@ Based on code originally written by David Lynch
                         key: key,
                         selected: data ? data.selected : null
                     });
-                 }
+                }
             };
-            this.click=function(e) {
+            this.click = function (e) {
                 var selected, list_target, newSelectionState, canChangeState,
                     ar = me.getDataForArea(this),
                     opts = me.options;
@@ -622,53 +624,53 @@ Based on code originally written by David Lynch
                 }
             };
         };
-        p=MapData.prototype;
-        p._idFromKey=function(key) {
-           return typeof key==="string" && this._xref.hasOwnProperty(key) ?
-                this._xref[key]:-1;
+        p = MapData.prototype;
+        p._idFromKey = function (key) {
+            return typeof key === "string" && this._xref.hasOwnProperty(key) ?
+                this._xref[key] : -1;
         };
-        p.getDataForArea=function(area) {
+        p.getDataForArea = function (area) {
             var key = $(area).data('mapster_key');
             return this.data[this._idFromKey(key)];
         };
-        p.getDataForKey=function(key) {
+        p.getDataForKey = function (key) {
             return this.data[this._idFromKey(key)];
         };
         // remove highlight if present, raise event
-        p.ensureNoHighlight=function() {
+        p.ensureNoHighlight = function () {
             var ar;
-            if (this._highlightId>=0) {
+            if (this._highlightId >= 0) {
                 graphics.init(this);
                 graphics.clear_highlight();
                 ar = this.data[this._highlightId];
-                ar.changeState('highlight',false);
-                this._highlightId=0;
+                ar.changeState('highlight', false);
+                this._highlightId = 0;
             }
         };
-        p.setHighlight=function(id) {
-            this._highlightId=id;
+        p.setHighlight = function (id) {
+            this._highlightId = id;
         };
-        p.initGraphics=function() {
+        p.initGraphics = function () {
             graphics.init(this);
         };
         // rebind based on new area options. This copies info from array "areas" into the data[area_id].area_options property.
-        p.setAreaOptions=function(area_list) {
-            var i, area_options,ar,
-                selected_list=[], 
+        p.setAreaOptions = function (area_list) {
+            var i, area_options, ar,
+                selected_list = [],
                 areas = area_list || {};
             // refer by: map_data.options[map_data.data[x].area_option_id]
-            for (i = areas.length-1; i >=0 ; i--) {
+            for (i = areas.length - 1; i >= 0; i--) {
                 area_options = areas[i];
-                ar=this.getDataForKey(area_options.key);
+                ar = this.getDataForKey(area_options.key);
                 if (ar) {
-                    u.mergeObjects({target:ar.options,source:area_options});
+                    u.mergeObjects({ target: ar.options, source: area_options });
                     // TODO: will not deselect areas that were previously selected, so this only works for an initial bind.
                     if (u.isBool(area_options.selected)) {
                         ar.selected = area_options.selected;
                     }
                 }
             }
-            u.each(this.data,function(i) {
+            u.each(this.data, function (i) {
                 if (this.isSelected()) {
                     selected_list.push(i);
                 }
@@ -676,48 +678,48 @@ Based on code originally written by David Lynch
             return selected_list;
         };
 
-        p.setAreasSelected=function(selected_list) {
+        p.setAreasSelected = function (selected_list) {
             var i;
             this.initGraphics();
-            for (i = selected_list.length-1; i >= 0; i--) {
+            for (i = selected_list.length - 1; i >= 0; i--) {
                 this.data[selected_list[i]].setAreaSelected();
             }
         };
-        p.initialize=function() {
-            var $area, area, sel, areas, i, j,keys, key, area_id, default_group, group_value, 
-                sort_func, sorted_list, is_mask,dataItem,
-                me=this,
-                selected_list=[],
-                opts=this.options;
+        p.initialize = function () {
+            var $area, area, sel, areas, i, j, keys, key, area_id, default_group, group_value,
+                sort_func, sorted_list, is_mask, dataItem,
+                me = this,
+                selected_list = [],
+                opts = this.options;
 
-            function add_group(key,value) {
-                var dataItem = new AreaData(me,key,value,opts);
-                dataItem.areaId = me._xref[key] = me.data.push(dataItem)-1;
+            function add_group(key, value) {
+                var dataItem = new AreaData(me, key, value, opts);
+                dataItem.areaId = me._xref[key] = me.data.push(dataItem) - 1;
                 return dataItem.areaId;
             }
-            this._xref={};
-            this.data=[];
-            
-            default_group = !opts.mapKey;            
-            sel = ($.browser.msie && $.browser.version<=7) ? 'area' : 
-                (default_group ? 'area[coords]' : 'area['+opts.mapKey+']');
+            this._xref = {};
+            this.data = [];
+
+            default_group = !opts.mapKey;
+            sel = ($.browser.msie && $.browser.version <= 7) ? 'area' :
+                (default_group ? 'area[coords]' : 'area[' + opts.mapKey + ']');
             areas = $(this.map).find(sel);
 
-            for (i=areas.length-1;i>=0;i--) {
+            for (i = areas.length - 1; i >= 0; i--) {
                 area_id = 0;
                 area = areas[i];
                 $area = $(area);
                 key = area.getAttribute(opts.mapKey);
-                keys = (default_group || typeof key !== 'string') ?  [''] : key.split(',');
-                for (j=keys.length-1;j>=0;j--) {
+                keys = (default_group || typeof key !== 'string') ? [''] : key.split(',');
+                for (j = keys.length - 1; j >= 0; j--) {
                     key = keys[j];
                     if (opts.mapValue) {
                         group_value = $area.attr(opts.mapValue);
-                    }                   
+                    }
                     if (default_group) {
                         // set an attribute so we can refer to the area by index from the DOM object if no key
-                        area_id = add_group(this.data.length,group_value);
-                        dataItem=this.data[area_id];
+                        area_id = add_group(this.data.length, group_value);
+                        dataItem = this.data[area_id];
                         dataItem.key = key = area_id.toString();
                         //$area.attr('data-mapster-id', area_id);
                     }
@@ -730,27 +732,27 @@ Based on code originally written by David Lynch
                             }
                         }
                         else {
-                            area_id = add_group(key,group_value);
+                            area_id = add_group(key, group_value);
                             dataItem = this.data[area_id];
                         }
                     }
                     dataItem.areas.push(area);
                 }
-                $area.data('mapster_key',key);
-                is_mask=opts.isMask;
+                $area.data('mapster_key', key);
+                is_mask = opts.isMask;
                 // only bind to areas that don't have nohref. ie 6&7 cannot detect the presence of nohref, so we have to also not bind if href is missing.
                 if (!area.getAttribute("nohref") && area.getAttribute("href")) {
-                 $area.bind('mouseover.mapster', this.mouseover)
-                    .bind('mouseout.mapster',this.mouseout)
-                    .bind('click.mapster',this.click);
-                
+                    $area.bind('mouseover.mapster', this.mouseover)
+                    .bind('mouseout.mapster', this.mouseout)
+                    .bind('click.mapster', this.click);
+
                 } else {
                     is_mask = is_mask || opts.noHrefIsMask;
-                    $area.data('mapster_is_mask',is_mask);
+                    $area.data('mapster_is_mask', is_mask);
                 }
             }
-            
-            selected_list=this.setAreaOptions(opts.areas);
+
+            selected_list = this.setAreaOptions(opts.areas);
 
             if (opts.isSelectable && opts.onGetList) {
                 sorted_list = this.data.slice(0);
@@ -772,78 +774,78 @@ Based on code originally written by David Lynch
                         return sort_func(a, b);
                     });
                 }
-                 this.options.boundList = opts.onGetList.call(this.image, sorted_list);
+                this.options.boundList = opts.onGetList.call(this.image, sorted_list);
             }
 
-//            if (opts.listenToList && opts.nitG) {
-//                opts.nitG.bind('click.mapster', event_hooks[map_data.hooks_index].listclick_hook);
-//            }
+            //            if (opts.listenToList && opts.nitG) {
+            //                opts.nitG.bind('click.mapster', event_hooks[map_data.hooks_index].listclick_hook);
+            //            }
             this.setAreasSelected(selected_list);
         };
-        p.clearEvents=function() {
+        p.clearEvents = function () {
             $(this.map).find('area')
                 .unbind('mouseover.mapster')
                 .unbind('mouseout.mapster')
                 .unbind('click.mapster');
         };
-        p._clearCanvases=function(preserveState) {
-            var canvases=[[this,"overlay_canvas"],
-                    [this.alt_images.select,"canvas"],
-                    [this.alt_images.highlight,"canvas"]];
+        p._clearCanvases = function (preserveState) {
+            var canvases = [[this, "overlay_canvas"],
+                    [this.alt_images.select, "canvas"],
+                    [this.alt_images.highlight, "canvas"]];
             if (!preserveState) {
-                canvases.push([this,"base_canvas"]);
+                canvases.push([this, "base_canvas"]);
             }
 
-            u.each(canvases,function() {
+            u.each(canvases, function () {
                 if (this[0] && this[0][this[1]]) {
-                     $(this[0][this[1]]).remove();
-                     this[0][this[1]]=null;
+                    $(this[0][this[1]]).remove();
+                    this[0][this[1]] = null;
                 }
             });
         };
-        p.clearTooltip=function() {
+        p.clearTooltip = function () {
             if (this.activeToolTip) {
                 this.activeToolTip.remove();
                 this.activeToolTip = null;
                 this.activeToolTipID = -1;
             }
-            u.each(this._tooltip_events,function() {
+            u.each(this._tooltip_events, function () {
                 this.object.unbind(this.event);
             });
         };
-        p.clearMapData=function(preserveState) {
+        p.clearMapData = function (preserveState) {
             var div;
             this._clearCanvases(preserveState);
 
             // release refs to DOM elements
-            u.each(this.data,function() {
-                this.areas=null;
+            u.each(this.data, function () {
+                this.areas = null;
             });
-            this.data=null;
+            this.data = null;
             if (!preserveState) {
-                div=$('div#mapster_wrap_'+this.index);
+                div = $('div#mapster_wrap_' + this.index);
                 if (div.length) {
                     div.before(div.children()).remove();
                 }
                 if (!this.img_style) {
                     // jquery bug? - attr('style') works inconsistently
-                    while ($(this.image).attr('style')) { 
-                        $(this.image).removeAttr('style'); 
+                    while ($(this.image).attr('style')) {
+                        $(this.image).removeAttr('style');
                     }
                 } else {
-                    $(this.image).attr('style',this.img_style);
+                    $(this.image).attr('style', this.img_style);
                 }
             }
-            this.image=null;
-            u.each(this.alt_images,function() {
-                this.canvas=null;
-                this.image=null;
+            this.image = null;
+            u.each(this.alt_images, function () {
+                this.canvas = null;
+                this.image = null;
             });
-            this.clearTooltip(); 
+            this.clearTooltip();
         };
-        p.bindTooltipClose=function(option, event, obj) {
-            var event_name = event + '.mapster-tooltip', me=this;
-            if (u.arrayIndexOf(this.options.toolTipClose,option) >= 0) {
+        p.bindTooltipClose = function (option, event, obj) {
+            var event_name = event + '.mapster-tooltip', me = this;
+            if (u.arrayIndexOf(this.options.toolTipClose, option) >= 0) {
                 obj.unbind(event_name).bind(event_name, function () {
                     me.clearTooltip();
                 });
@@ -854,45 +856,45 @@ Based on code originally written by David Lynch
             }
         };
         // END MAPDATA
-        AreaData = function(owner,key,value) {
-            this.owner=owner;
-            this.key=key || '';
-            this.areaId=-1;
-            this.value=value || '';
-            this.options={};
-            this.selected=null;
-            this.areas=[];
-            this._effectiveOptions=null;
+        AreaData = function (owner, key, value) {
+            this.owner = owner;
+            this.key = key || '';
+            this.areaId = -1;
+            this.value = value || '';
+            this.options = {};
+            this.selected = null;
+            this.areas = [];
+            this._effectiveOptions = null;
         };
-        p=AreaData.prototype;
-        p.isSelected = function() {
+        p = AreaData.prototype;
+        p.isSelected = function () {
             var o = this.effectiveOptions();
-            return u.isBool(this.selected) ? this.selected : 
+            return u.isBool(this.selected) ? this.selected :
                 (u.isBool(o.staticState) ? o.staticState :
-                (u.isBool(this.owner.options.staticState) ? this.owner.options.staticState: false));
+                (u.isBool(this.owner.options.staticState) ? this.owner.options.staticState : false));
         };
-        p.isSelectable = function() {
-            return u.isBool(this.effectiveOptions().staticState) ? false : 
+        p.isSelectable = function () {
+            return u.isBool(this.effectiveOptions().staticState) ? false :
                 (u.isBool(this.owner.options.staticState) ? false : this.effectiveOptions().isSelectable);
         };
-        p.isDeselectable = function() {
-            return u.isBool(this.effectiveOptions().staticState) ? false : 
+        p.isDeselectable = function () {
+            return u.isBool(this.effectiveOptions().staticState) ? false :
                 (u.isBool(this.owner.options.staticState) ? false : this.effectiveOptions().isDeselectable);
-        };       
-        p.effectiveOptions = function(override_options) {
+        };
+        p.effectiveOptions = function (override_options) {
             if (!this._effectiveOptions) {
                 //TODO this isSelectable should cascade already this seems redundant
                 this._effectiveOptions = u.mergeObjects({
-                    source:[this.owner.area_options,
+                    source: [this.owner.area_options,
                         this.options,
                         override_options || {},
-                        {id:this.areaId}],
-                    deep:"render_highlight,render_select"
-                    });
+                        { id: this.areaId}],
+                    deep: "render_highlight,render_select"
+                });
             }
             return this._effectiveOptions;
         };
-        p.changeState=function(state_type,state) {
+        p.changeState = function (state_type, state) {
             if (u.isFunction(this.owner.options.onStateChange)) {
                 this.owner.options.onStateChange.call(this.owner.image,
                 {
@@ -903,31 +905,31 @@ Based on code originally written by David Lynch
             }
         };
         // highlight an area
-        p.highlight=function() {
-            add_shape_group(this,"highlight");
+        p.highlight = function () {
+            add_shape_group(this, "highlight");
             this.owner.setHighlight(this.areaId);
-            this.changeState('highlight',true);
+            this.changeState('highlight', true);
         };
 
-        p.setAreaSelected=function() {
+        p.setAreaSelected = function () {
             add_shape_group(this, "select");
-            this.changeState('select',true);
+            this.changeState('select', true);
         };
 
-        p.addSelection = function() {
+        p.addSelection = function () {
             // need to add the new one first so that the double-opacity effect leaves the current one highlighted for singleSelect
-            var o=this.owner;
+            var o = this.owner;
             o.initGraphics();
             if (o.options.singleSelect) {
                 graphics.clear_selections();
-                u.each(o.data,function() {
+                u.each(o.data, function () {
                     this.selected = false;
                 });
             }
-            
+
             if (!this.selected) {
                 this.setAreaSelected();
-                this.selected=true;
+                this.selected = true;
             }
 
             if (o.options.singleSelect) {
@@ -935,9 +937,9 @@ Based on code originally written by David Lynch
             }
         };
         p.removeSelection = function () {
-            var o=this.owner;
+            var o = this.owner;
             o.initGraphics();
-            if (this.selected===false) {
+            if (this.selected === false) {
                 return;
             }
             this.selected = false;
@@ -945,9 +947,9 @@ Based on code originally written by David Lynch
             graphics.refresh_selections();
             // do not call ensure_no_highlight- we don't really want to unhilight it, just remove the effect
             graphics.clear_highlight();
-            this.changeState('select',false);
+            this.changeState('select', false);
         };
-        p.toggleSelection=function() {
+        p.toggleSelection = function () {
             if (!this.isSelected()) {
                 this.addSelection();
             }
@@ -956,16 +958,16 @@ Based on code originally written by David Lynch
             }
             return this.isSelected();
         };
-        p.showTooltip=function(area) {
+        p.showTooltip = function (area) {
             var tooltip, left, top, tooltipCss, coords,
             alignLeft = true,
             alignTop = true,
             opts = this.effectiveOptions(),
-            map_data=this.owner,
+            map_data = this.owner,
             container = $(map_data.options.toolTipContainer);
 
             tooltip = container.html(opts.toolTip);
-            
+
             coords = u.area_corner(area, alignLeft, alignTop);
 
             map_data.clearTooltip();
@@ -1000,9 +1002,9 @@ Based on code originally written by David Lynch
             // not working properly- closes too soon sometimes
             //map_data.bindTooltipClose('img-mouseout', 'mouseout', $(map_data.image));
 
-            tooltip.css({"opacity":0});
+            tooltip.css({ "opacity": 0 });
             tooltip.show();
-            u.fader(tooltip[0], 0,1,  opts.fadeDuration);
+            u.fader(tooltip[0], 0, 1, opts.fadeDuration);
 
             if (opts.onShowToolTip && typeof opts.onShowToolTip === 'function') {
                 opts.onShowToolTip.call(area,
@@ -1014,18 +1016,18 @@ Based on code originally written by David Lynch
                     key: this.key,
                     selected: this.selected
                 });
-            }        
+            }
         };
         // Select or unselect areas identified by key -- a string, a csv string, or array of strings.
         // if set_bound is true, the bound list will also be updated. Default is true. If neither true nor false,
         // it will be toggled.
-        me.highlight = function(selected,key) {
-            var map_data,ar;
+        me.highlight = function (selected, key) {
+            var map_data, ar;
             if (map_data = get_map_data(this[0])) {
                 map_data.ensureNoHighlight();
-                if (selected && (ar=map_data.getDataForKey(key))>=0) {
+                if (selected && (ar = map_data.getDataForKey(key)) >= 0) {
                     ar.highlight();
-                } 
+                }
             }
         };
 
@@ -1034,7 +1036,7 @@ Based on code originally written by David Lynch
 
 
             function setSelection(ar) {
-                switch(selected) {
+                switch (selected) {
                     case true:
                         ar.addSelection(); break;
                     case false:
@@ -1053,7 +1055,7 @@ Based on code originally written by David Lynch
                 }
                 key_list = '';
                 if ($(this).is('img')) {
-                    if (queue_command(map_data,'set', [selected, key, set_bound])) {
+                    if (queue_command(map_data, 'set', [selected, key, set_bound])) {
                         return true;
                     }
                     if (key instanceof Array) {
@@ -1062,8 +1064,8 @@ Based on code originally written by David Lynch
                     else {
                         key_list = key;
                     }
-                    
-                    u.each(key_list.split(','),function() {
+
+                    u.each(key_list.split(','), function () {
                         setSelection(map_data.getDataForKey(this.toString()));
                     });
 
@@ -1080,7 +1082,7 @@ Based on code originally written by David Lynch
                     lastParent = parent;
                     ar = map_data.getDataForArea(this);
 
-                    if (queue_command(map_data,'set', [selected, ar.key, do_set_bound])) {
+                    if (queue_command(map_data, 'set', [selected, ar.key, do_set_bound])) {
                         return true;
                     }
                     if ((key_list + ",").indexOf(ar.key) < 0) {
@@ -1091,7 +1093,7 @@ Based on code originally written by David Lynch
 
                 }
                 if (do_set_bound && map_data.options.boundList) {
-                    setBoundListProperties(map_data.options, getBoundList(map_data.options,key_list), selected);
+                    setBoundListProperties(map_data.options, getBoundList(map_data.options, key_list), selected);
                 }
             });
             return this;
@@ -1102,13 +1104,13 @@ Based on code originally written by David Lynch
             return this.each(function () {
                 map_data = get_map_data(this);
                 if (map_data) {
-                    if (queue_command(map_data,'unbind')) {
+                    if (queue_command(map_data, 'unbind')) {
                         return true;
-                    } 
+                    }
 
                     map_data.clearEvents();
                     map_data.clearMapData(preserveState);
-                    map_cache[map_data.index]=null;
+                    map_cache[map_data.index] = null;
                 }
             });
         };
@@ -1117,17 +1119,17 @@ Based on code originally written by David Lynch
             var ar, index,
                 map_areas = map_data.options.areas;
             if (areas) {
-                u.each(areas,function() {
+                u.each(areas, function () {
                     index = u.arrayIndexOfProp(map_areas, "key", this.key);
                     if (index >= 0) {
                         $.extend(map_areas[index], this);
                     }
                     else {
-                       map_areas.push(this);
+                        map_areas.push(this);
                     }
-                    ar=map_data.getDataForKey(this.key);
+                    ar = map_data.getDataForKey(this.key);
                     if (ar) {
-                        $.extend(ar.options,this);
+                        $.extend(ar.options, this);
                     }
                 });
             }
@@ -1135,17 +1137,17 @@ Based on code originally written by David Lynch
         function merge_options(map_data, options) {
             u.mergeObjects({
                 ignore: "areas",
-                target: map_data.options, 
-                source: options, 
-                deep:"render_select,render_highlight"
+                target: map_data.options,
+                source: options,
+                deep: "render_select,render_highlight"
             });
 
             merge_areas(map_data, options.areas);
             // refresh the area_option template
-            u.mergeObjects({target: map_data.area_options, source: map_data.options, add: false});
-            
-            u.each(map_data.data,function() {
-                this._effectiveOptions=null;
+            u.mergeObjects({ target: map_data.area_options, source: map_data.options, add: false });
+
+            u.each(map_data.data, function () {
+                this._effectiveOptions = null;
             });
         }
 
@@ -1155,35 +1157,35 @@ Based on code originally written by David Lynch
             this.filter('img').each(function () {
                 map_data = get_map_data(this);
                 if (map_data) {
-                    if (queue_command(map_data,'rebind',[options])) {
+                    if (queue_command(map_data, 'rebind', [options])) {
                         return true;
-                    }            
-                
+                    }
+
                     merge_options(map_data, options);
                     // this will only update new areas that may have been passed
-                    selected_list=map_data.setAreaOptions(options.areas || {} );
+                    selected_list = map_data.setAreaOptions(options.areas || {});
                     map_data.setAreasSelected(selected_list);
                 }
             });
             return this;
         };
         // get options. nothing or false to get, or "true" to get effective options (versus passed options)
-        me.get_options = function (key,effective) {
-            var opts,ar,map_data,
+        me.get_options = function (key, effective) {
+            var opts, ar, map_data,
                 img = this.filter('img').first()[0];
             if (map_data = get_map_data(img)) {
                 if (key) {
-                    if (ar=map_data.getDataForKey(key)) {
+                    if (ar = map_data.getDataForKey(key)) {
                         opts = ar.effectiveOptions();
-                    } 
+                    }
                 } else {
                     opts = map_data.options;
                 }
                 if (opts) {
                     if (effective) {
                         opts = map_data.options;
-                        opts.render_select=u.mergeObjects({template: $.mapster.render_defaults, source:[opts,opts.render_select]});
-                        opts.render_highlight=u.mergeObjects({template: $.mapster.render_defaults, source:[opts,opts.render_highlight]});                    
+                        opts.render_select = u.mergeObjects({ template: $.mapster.render_defaults, source: [opts, opts.render_select] });
+                        opts.render_highlight = u.mergeObjects({ template: $.mapster.render_defaults, source: [opts, opts.render_highlight] });
                         return opts;
                     } else {
                         return map_data.options;
@@ -1194,25 +1196,25 @@ Based on code originally written by David Lynch
         };
 
         // set options - pass an object with options to set, 
-        me.set_options = function(options) {
+        me.set_options = function (options) {
             var img = this.filter('img')[0],
-                map_data= get_map_data(img);
+                map_data = get_map_data(img);
             if (map_data) {
-                if (queue_command(map_data,'set_options',[options])) {
+                if (queue_command(map_data, 'set_options', [options])) {
                     return true;
-                }            
+                }
                 merge_options(map_data, options);
             }
             return this;
         };
-        me.bind = function (opts) {                   
+        me.bind = function (opts) {
             opts = u.mergeObjects({
-                source: [$.mapster.defaults,opts],
+                source: [$.mapster.defaults, opts],
                 deep: "render_select,render_highlight"
             });
 
             return this.each(function () {
-                var last,lastProp,img, wrap, map, canvas, context, overlay_canvas, usemap, map_data, parent_id, wrap_id;
+                var last, lastProp, img, wrap, map, canvas, context, overlay_canvas, usemap, map_data, parent_id, wrap_id;
 
                 // save ref to this image even if we can't access it yet. commands will be queued
                 img = $(this);
@@ -1220,7 +1222,7 @@ Based on code originally written by David Lynch
                 map_data = get_map_data(this);
                 if (map_data && map_data.complete) {
                     me.unbind.call(img);
-                    map_data=null;
+                    map_data = null;
                 }
 
                 // ensure it's a valid image
@@ -1233,24 +1235,24 @@ Based on code originally written by David Lynch
                 }
 
                 if (!map_data) {
-                    map_data = new MapData(this,opts);
-                    map_data.index = u.arrayReuse(map_cache,map_data);
+                    map_data = new MapData(this, opts);
+                    map_data.index = u.arrayReuse(map_cache, map_data);
                 }
-                
+
                 if (has_canvas) {
-                    last={};
-                    u.each(["highlight","select"],function() {
-                        var cur = opts["render_"+this].altImage || opts.altImage;
+                    last = {};
+                    u.each(["highlight", "select"], function () {
+                        var cur = opts["render_" + this].altImage || opts.altImage;
                         if (cur) {
-                            if (cur!==last) {
-                                last=cur;
-                                lastProp=this;
+                            if (cur !== last) {
+                                last = cur;
+                                lastProp = this;
                                 if (!map_data.alt_images[this]) {
-                                    map_data.alt_images[this]= {image: new Image()};
-                                    map_data.alt_images[this].image.src = cur;               
+                                    map_data.alt_images[this] = { image: new Image() };
+                                    map_data.alt_images[this].image.src = cur;
                                 }
                             } else {
-                                map_data.alt_images[this]=map_data.alt_images[lastProp];
+                                map_data.alt_images[this] = map_data.alt_images[lastProp];
                             }
                         }
                     });
@@ -1258,25 +1260,25 @@ Based on code originally written by David Lynch
 
                 // If the image isn't fully loaded, this won't work right.  Try again later.                   
                 if (!is_image_loaded(map_data)) {
-                    if (--map_data.bind_tries>0) {
+                    if (--map_data.bind_tries > 0) {
                         setTimeout(function () {
                             img.mapster(opts);
                         }, 200);
                     } else {
-                        if (opts.onConfigured && typeof opts.onConfigured==='function') {
-                            opts.onConfigured.call(this,false);
+                        if (opts.onConfigured && typeof opts.onConfigured === 'function') {
+                            opts.onConfigured.call(this, false);
                         }
                     }
                     return true;
                 }
-                
-                parent_id=img.parent().attr('id');
-                wrap_id='mapster_wrap_'+map_data.index;
+
+                parent_id = img.parent().attr('id');
+                wrap_id = 'mapster_wrap_' + map_data.index;
                 // wrap only if there's not already a wrapper, otherwise, own it
-                if (parent_id && parent_id.length>=12 && parent_id.substring(0,12)==="mapster_wrap") {
-                    img.parent().attr('id',wrap_id);
+                if (parent_id && parent_id.length >= 12 && parent_id.substring(0, 12) === "mapster_wrap") {
+                    img.parent().attr('id', wrap_id);
                 } else {
-                    wrap = $('<div id="'+wrap_id+'"></div>').css(
+                    wrap = $('<div id="' + wrap_id + '"></div>').css(
                     {
                         display: 'block',
                         background: 'url(' + this.src + ')',
@@ -1299,21 +1301,21 @@ Based on code originally written by David Lynch
                     }
                     wrap.append(img);
                 }
-                
+
                 canvas = create_canvas(this);
                 img.before(canvas);
 
-                overlay_canvas=create_canvas(this);
+                overlay_canvas = create_canvas(this);
                 img.before(overlay_canvas);
-                    
+
                 if (has_canvas) {
-                    last={};
-                    u.each(map_data.alt_images,function() {
+                    last = {};
+                    u.each(map_data.alt_images, function () {
                         if (this.image !== last.image) {
                             last = this;
                             this.canvas = graphics.create_canvas_for(this.image);
-                            $(this.canvas).css({ display: "none" }); 
-                          // do not need to add this one to the DOM 
+                            $(this.canvas).css({ display: "none" });
+                            // do not need to add this one to the DOM 
                             context = this.canvas.getContext("2d");
                             context.drawImage(this.image, 0, 0);
                         } else {
@@ -1322,30 +1324,30 @@ Based on code originally written by David Lynch
                     });
                 }
 
-                map_data.map=map;
-                map_data.base_canvas=canvas;
-                map_data.overlay_canvas=overlay_canvas;
+                map_data.map = map;
+                map_data.base_canvas = canvas;
+                map_data.overlay_canvas = overlay_canvas;
                 map_data.initialize();
-                
+
                 // process queued commands
                 if (!map_data.complete) {
                     map_data.complete = true;
-                    u.each(map_data.commands,function() {
+                    u.each(map_data.commands, function () {
                         methods[this.command].apply(img, this.args);
                     });
                     map_data.commands = [];
                 }
-                if (opts.onConfigured && typeof opts.onConfigured==='function') {
-                    opts.onConfigured.call(this,true);
+                if (opts.onConfigured && typeof opts.onConfigured === 'function') {
+                    opts.onConfigured.call(this, true);
                 }
             });
         };
 
 
         me.init = function () {
-            var style,shapes;
+            var style, shapes;
 
-            has_canvas = $('<canvas></canvas>')[0].getContext;
+            has_canvas = $('<canvas></canvas>')[0].getContext ? true : false;
 
             if (!(has_canvas || document.namespaces)) {
                 $.fn.mapster = function () {
@@ -1363,35 +1365,35 @@ Based on code originally written by David Lynch
                 });
                 ie_config_complete = true;
             }
-            
+
             $(window).unload($.mapster.unload);
             // create graphics functions for canvas and vml browsers. usage: 
             // 1) init with map_data, 2) call begin with canvas to be used (these are separate b/c may not require canvas to be specified
             // 3) call add_shape_to for each shape or mask, 4) call render() to finish
 
             if (has_canvas) {
-                graphics = (function() {
-                    var map_data,canvas,context,masks,shapes,me = {};
-                    me.active=false;
+                graphics = (function () {
+                    var map_data, canvas, context, masks, shapes, me = {};
+                    me.active = false;
                     function css3color(color, opacity) {
                         function hex_to_decimal(hex) {
                             return Math.max(0, Math.min(parseInt(hex, 16), 255));
                         }
                         return 'rgba(' + hex_to_decimal(color.substr(0, 2)) + ',' + hex_to_decimal(color.substr(2, 2)) + ',' + hex_to_decimal(color.substr(4, 2)) + ',' + opacity + ')';
-                    }                    
+                    }
                     function render_shape(shape, coords) {
-                        var i,len;
+                        var i, len;
                         switch (shape) {
                             case 'rect':
                                 context.rect(coords[0], coords[1], coords[2] - coords[0], coords[3] - coords[1]);
                                 break;
                             case 'poly':
                                 context.moveTo(coords[0], coords[1]);
-                                len=coords.length;
+                                len = coords.length;
                                 for (i = 2; i < len; i += 2) {
                                     context.lineTo(coords[i], coords[i + 1]);
                                 }
-                                context.lineTo(coords[0],coords[1]);
+                                context.lineTo(coords[0], coords[1]);
                                 break;
                             case 'circ':
                                 context.arc(coords[0], coords[1], coords[2], 0, Math.PI * 2, false);
@@ -1404,41 +1406,41 @@ Based on code originally written by David Lynch
                         render_shape(shape, coords);
                         context.closePath();
                         context.clip();
-            
+
                         context.globalAlpha = options.altImageOpacity;
                         context.drawImage(src_canvas, 0, 0);
                         context.restore();
                     }
-                    me.init = function(_map_data) {
-                        map_data=_map_data;
+                    me.init = function (_map_data) {
+                        map_data = _map_data;
                     };
-                    me.begin=function(_canvas) {
-                        canvas=_canvas;
+                    me.begin = function (_canvas) {
+                        canvas = _canvas;
                         context = canvas.getContext('2d');
-                        shapes=[];
-                        masks=[];
-                        me.active=true;
+                        shapes = [];
+                        masks = [];
+                        me.active = true;
                     };
-                    me.render = function() {
+                    me.render = function () {
                         context.save();
                         if (masks.length) {
-                            u.each(masks,function() {
-                                context.beginPath();                        
-                                render_shape(this.shape,this.coords);
+                            u.each(masks, function () {
+                                context.beginPath();
+                                render_shape(this.shape, this.coords);
                                 context.closePath();
                                 context.fill();
-    
+
                             });
-                            context.globalCompositeOperation="source-out";
+                            context.globalCompositeOperation = "source-out";
                         }
 
-                        u.each(shapes,function() {
+                        u.each(shapes, function () {
                             var s = this;
                             if (s.options.alt_image) {
                                 add_alt_image(s.options.alt_image.canvas, s.shape, s.coords, s.options);
                             } else if (s.options.fill) {
                                 context.save();
-                                context.beginPath();                            
+                                context.beginPath();
                                 render_shape(s.shape, s.coords);
                                 context.closePath();
                                 context.clip();
@@ -1448,13 +1450,13 @@ Based on code originally written by David Lynch
                             }
 
                         });
-                        
-                        
+
+
                         // render strokes at end since masks get stroked too
                         context.restore();
-                        
+
                         //context.globalCompositeOperation="source-over";
-                        u.each(shapes.concat(masks),function() {
+                        u.each(shapes.concat(masks), function () {
                             var s = this;
                             if (s.options.stroke) {
                                 context.beginPath();
@@ -1465,14 +1467,14 @@ Based on code originally written by David Lynch
                                 context.stroke();
                             }
                         });
-                        context=null;
-                        me.active=false;
+                        context = null;
+                        me.active = false;
                         return canvas;
                     };
                     me.create_canvas_for = function (img, width, height) {
-                        var c,$img;
+                        var c, $img;
                         if (img) {
-                            $img=$(img);
+                            $img = $(img);
                             height = img.height || $img.height();
                             width = img.width || $img.width();
                         }
@@ -1482,9 +1484,9 @@ Based on code originally written by David Lynch
                         c.getContext("2d").clearRect(0, 0, width, height);
                         return c;
                     };
-                    me.add_shape_to = function (shape, coords, options,is_mask) {
-                        var addto = is_mask ? masks: shapes;
-                        addto.push({shape:shape,coords:coords,options:options});
+                    me.add_shape_to = function (shape, coords, options, is_mask) {
+                        var addto = is_mask ? masks : shapes;
+                        addto.push({ shape: shape, coords: coords, options: options });
                     };
                     me.clear_highlight = function () {
                         map_data.overlay_canvas.getContext('2d').clearRect(0, 0, map_data.overlay_canvas.width, map_data.overlay_canvas.height);
@@ -1494,10 +1496,10 @@ Based on code originally written by David Lynch
                     };
                     // Draw all items from selected_list to a new canvas, then swap with the old one. This is used to delete items when using canvases. 
                     me.refresh_selections = function () {
-                        var list_temp=[], canvas_temp;
+                        var list_temp = [], canvas_temp;
                         // draw new base canvas, then swap with the old one to avoid flickering
                         canvas_temp = map_data.base_canvas;
-                        u.each(map_data.data,function(i) {
+                        u.each(map_data.data, function (i) {
                             if (this.isSelected()) {
                                 list_temp.push(i);
                             }
@@ -1508,91 +1510,91 @@ Based on code originally written by David Lynch
                         $(map_data.image).before(map_data.base_canvas);
 
                         map_data.setAreasSelected(list_temp);
-    
+
                         $(map_data.base_canvas).show();
                         $(canvas_temp).remove();
-                    };                    
+                    };
                     return me;
-                }());
+                } ());
 
             } else {
-            
+
                 // ie executes this code
-                graphics = (function() {
-                    var t_fill,map_data,canvas,name,masks,shapes,me = {};
-                        
-                    me.active=false;
+                graphics = (function () {
+                    var t_fill, map_data, canvas, name, masks, shapes, me = {};
+
+                    me.active = false;
                     function render_shape(shape, coords, options) {
-                        var stroke, e, el_name,template;
-                        el_name = name ? 'name="'+name+'" ' : '';
-                        
+                        var stroke, e, el_name, template;
+                        el_name = name ? 'name="' + name + '" ' : '';
+
                         // fill
-                        t_fill='<v:fill color="#'+options.fillColor+'" opacity="'+ (options.fill ? options.fillOpacity:0)+'" /><v:stroke opacity="'+options.strokeOpacity+'"/>';
+                        t_fill = '<v:fill color="#' + options.fillColor + '" opacity="' + (options.fill ? options.fillOpacity : 0) + '" /><v:stroke opacity="' + options.strokeOpacity + '"/>';
                         // stroke
                         if (options.stroke) {
-                            stroke='strokeweight='+options.strokeWidth+' stroked="t" strokecolor="#'+options.strokeColor+'"';
+                            stroke = 'strokeweight=' + options.strokeWidth + ' stroked="t" strokecolor="#' + options.strokeColor + '"';
                         } else {
-                            stroke ='stroked="f"';
-                        }                       
-                        
+                            stroke = 'stroked="f"';
+                        }
+
                         switch (shape) {
                             case 'rect':
-                                template='<v:rect '+el_name+' filled="t" '+stroke+' style="zoom:1;margin:0;padding:0;display:block;position:absolute;left:'+coords[0]+'px;top:'+coords[1]
-                                    +'px;width:'+(coords[2]-coords[0])+'px;height:'+(coords[3]-coords[1])+'px;">'+t_fill+'</v:rect>';
+                                template = '<v:rect ' + el_name + ' filled="t" ' + stroke + ' style="zoom:1;margin:0;padding:0;display:block;position:absolute;left:' + coords[0] + 'px;top:' + coords[1]
+                                    + 'px;width:' + (coords[2] - coords[0]) + 'px;height:' + (coords[3] - coords[1]) + 'px;">' + t_fill + '</v:rect>';
                                 break;
                             case 'poly':
-                                template='<v:shape '+el_name+' filled="t" '+stroke+' coordorigin="0,0" coordsize="'+canvas.width+','+canvas.height
-                                    +'" path="m '+coords[0]+','+coords[1]+' l '+coords.slice(2).join(',')
-                                    +' x e" style="zoom:1;margin:0;padding:0;display:block;position:absolute;top:0px;left:0px;width:'+canvas.width+'px;height:'+canvas.height+'px;">'+t_fill+'</v:shape>';
+                                template = '<v:shape ' + el_name + ' filled="t" ' + stroke + ' coordorigin="0,0" coordsize="' + canvas.width + ',' + canvas.height
+                                    + '" path="m ' + coords[0] + ',' + coords[1] + ' l ' + coords.slice(2).join(',')
+                                    + ' x e" style="zoom:1;margin:0;padding:0;display:block;position:absolute;top:0px;left:0px;width:' + canvas.width + 'px;height:' + canvas.height + 'px;">' + t_fill + '</v:shape>';
                                 break;
                             case 'circ':
-                                template='<v:oval '+el_name+' filled="t" '+stroke
-                                    +' style="zoom:1;margin:0;padding:0;display:block;position:absolute;left:'+(coords[0] - coords[2])+'px;top:'+(coords[1] - coords[2])
-                                    +'px;width:'+(coords[2] * 2)+'px;height:'+(coords[2] * 2)+'px;">'+t_fill+'</v:oval>';
+                                template = '<v:oval ' + el_name + ' filled="t" ' + stroke
+                                    + ' style="zoom:1;margin:0;padding:0;display:block;position:absolute;left:' + (coords[0] - coords[2]) + 'px;top:' + (coords[1] - coords[2])
+                                    + 'px;width:' + (coords[2] * 2) + 'px;height:' + (coords[2] * 2) + 'px;">' + t_fill + '</v:oval>';
                                 break;
                         }
                         //alert(template);
-                        e=$(template);
+                        e = $(template);
                         $(canvas).append(e);
 
                         return e;
-                    }                    
-                    me.init = function(_map_data) {
-                        map_data=_map_data;
+                    }
+                    me.init = function (_map_data) {
+                        map_data = _map_data;
                     };
-                    me.begin=function(_canvas,_name) {
-                        canvas=_canvas;
-                        name=_name;
-                        shapes=[];
-                        masks=[];
-                        me.active=true;
+                    me.begin = function (_canvas, _name) {
+                        canvas = _canvas;
+                        name = _name;
+                        shapes = [];
+                        masks = [];
+                        me.active = true;
                     };
                     me.create_canvas_for = function (img) {
                         var $img = $(img),
                             width = $img.width(),
-                            height=$img.height();
+                            height = $img.height();
                         return $('<var width="' + width + '" height="' + height + '" style="zoom:1;overflow:hidden;display:block;width:' + width + 'px;height:' + height + 'px;"></var>')[0];
                     };
-                    me.add_shape_to = function (shape, coords, options,is_mask) {
-                        var addto = is_mask ? masks: shapes;
-                        addto.push({shape:shape,coords:coords,options:options});
+                    me.add_shape_to = function (shape, coords, options, is_mask) {
+                        var addto = is_mask ? masks : shapes;
+                        addto.push({ shape: shape, coords: coords, options: options });
                     };
 
 
-                    me.render = function() {
+                    me.render = function () {
                         var opts;
-                        u.each(shapes,function() {
-                            render_shape(this.shape,this.coords,this.options);
+                        u.each(shapes, function () {
+                            render_shape(this.shape, this.coords, this.options);
                         });
-                                                
+
                         if (masks.length) {
-                            u.each(masks,function() {           
-                                opts = u.mergeObjects({source: [this.options,{fillOpacity: 1, fillColor: this.options.fillColorMask}]});
-                                render_shape(this.shape,this.coords, opts);
+                            u.each(masks, function () {
+                                opts = u.mergeObjects({ source: [this.options, { fillOpacity: 1, fillColor: this.options.fillColorMask}] });
+                                render_shape(this.shape, this.coords, opts);
                             });
                         }
 
-                        me.active=false;
+                        me.active = false;
                         return canvas;
                     };
                     me.clear_highlight = function () {
@@ -1610,29 +1612,29 @@ Based on code originally written by David Lynch
                         return null;
                     };
                     return me;
-                }());
+                } ());
 
             }
         };
-        me.unload = function() {
+        me.unload = function () {
             var i;
-            for (i=map_cache.length-1;i>=0;i--) {
+            for (i = map_cache.length - 1; i >= 0; i--) {
                 if (map_cache[i]) {
                     me.unbind.call($(map_cache[i].image));
                 }
             }
-            graphics=null;
+            graphics = null;
         };
-        me.snapshot = function() {
+        me.snapshot = function () {
             var d;
             return this.filter('img').each(function () {
                 d = get_map_data(this);
                 if (d) {
-                    if (queue_command(d,'snapshot')) {
+                    if (queue_command(d, 'snapshot')) {
                         return true;
                     }
-                    u.each(d.data,function() {
-                        this.selected=false;
+                    u.each(d.data, function () {
+                        this.selected = false;
                     });
 
                     d.base_canvas = create_canvas(d.image);
@@ -1646,14 +1648,14 @@ Based on code originally written by David Lynch
     ());
 
     // make sure closures are cleaned up
-    $.mapster.unload = function() {
+    $.mapster.unload = function () {
         $('*').unbind();
         $.mapster.impl.unload();
-        $.mapster.utils.fader=null;
-        $.mapster.utils=null;
-        $.mapster.impl=null;
-        $.fn.mapster=null;
-        $.mapster=null;
+        $.mapster.utils.fader = null;
+        $.mapster.utils = null;
+        $.mapster.impl = null;
+        $.fn.mapster = null;
+        $.mapster = null;
     };
     // A plugin selector to return nodes where an attribute matches any item from a comma-separated list. The list should not be quoted.
     // Will be more efficient (and easier) than selecting each one individually
@@ -1697,4 +1699,4 @@ Based on code originally written by David Lynch
         test: $.mapster.impl.test
     };
     $.mapster.impl.init();
-}(jQuery));
+} (jQuery));
