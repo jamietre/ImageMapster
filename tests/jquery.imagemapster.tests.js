@@ -162,30 +162,41 @@ mapster_tests = function (options)
     
 
     var basicTests = function (ut,disableCanvas)
-    {       
-    	var domCount = $('#test_elements *').length;
+    {   
     	var u = $.mapster.utils;
+    	
+	// Save current state to see if we cleaned up properly later
+    	var domCount = $('#test_elements *').length;
+
 
         map = $('img').mapster();
+        
         // testing with no canvas on a browser that doesn't support it anyway doesn't make sense, regular test will cover it
-
-        var has_canvas =  map.mapster("test","has_canvas");
-        if (!has_canvas && disableCanvas) {
-            map.mapster('unbind');
-            return;
+	var has_canvas =  map.mapster("test","has_canvas");
+            if (!has_canvas && disableCanvas) {
+                map.mapster('unbind');
+                return;
         }
         if (disableCanvas) {
-            map.mapster('test','has_canvas=false');
+       	    map.mapster('unbind');
+            $.mapster.impl.init(false);
+        } else {
+            map.mapster('unbind');
+            $.mapster.impl.init(true);
         }
+        map = $('img').mapster();
+
+
+        
 
         // test using only bound images
 
         ut.assertEq(map.mapster("test","map_cache.length"),1,"Only imagemap bound images were obtained on generic create");
         map = $('img,div').mapster({mapKey:"state"});
         ut.assertEq(map.mapster("test","map_cache.length"),1,"Only imagemap bound images were obtained on generic create with other elements");
-        $('area:attrMatches("state","AK,HI,WI")').mapster('set',true);
+        $('area:attrMatches("state","AK,HI,LA")').mapster('set',true);
         var area_sel = map.mapster('get');
-        ut.assertCsvElementsEq(area_sel,"HI,AK,WI","Set using area works");
+        ut.assertCsvElementsEq(area_sel,"HI,AK,LA","Set using area works");
         
 
         // test command queue

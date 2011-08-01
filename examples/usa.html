@@ -66,10 +66,13 @@ $(document).ready(function () {
      var $statelist, $usamap, default_options, mapsterConfigured;
 
 	   function addCheckBoxes(items) {
-	   		$statelist.children().remove();
+	       var item,selected;
+	   	   $statelist.children().remove();
 		   for (var i = 0; i < items.length; i++) {
-			   var $item = $('<div><input type="checkbox" name="' + items[i].key + '"><span class="sel" key="'+items[i].key+'">' + items[i].value + '</span></div>');
-			   $statelist.append($item);
+			   selected = items[i].isSelected();
+			   item = $('<div><input type="checkbox" name="' + items[i].key + '"' + (selected ? "checked" : "") + '><span class="sel" key="'+items[i].key+'">' + items[i].value + '</span></div>');
+
+			   $statelist.append(item);
 		   }
 			$statelist.find('span.sel').unbind('click').bind('click',function(e) {
 				var key = $(this).attr('key');
@@ -201,9 +204,9 @@ $(document).ready(function () {
         		fillColor: 'ff000c',
         		stroke:false
         	},
-        	render_zoom: {
-        	    altImage: 'images/usa_map_huge.jpg'
-        	},
+        	//render_zoom: {
+        	//    altImage: 'images/usa_map_huge.jpg'
+        	//},
         	fadeInterval:50,
             isSelectable: true,
 			singleSelect:false,
@@ -218,10 +221,10 @@ $(document).ready(function () {
                 if (!utils.isScrolledIntoView(e.listTarget, false, $statelist)) {
                     utils.centerOn($statelist, e.listTarget);
                 }
-                if (e.key==='OH') {
-                    $usamap.mapster('zoom','OH');
-                    return false;
-                }
+                //if (e.key==='OH') {
+                //    $usamap.mapster('zoom','OH');
+                //     return false;
+                //}
             },
             onConfigured: mapsterConfigured,
             showToolTip: false,
@@ -232,7 +235,9 @@ $(document).ready(function () {
 
                 },
                 { key: "ME",
-                    toolTip: $('<div style="margin:auto; width:100px;"><img src="images/lobster-small.gif"/></div><div style="clear:both;"></div><p>Trees, ocean, lobsters, it\'s all here.</p>')
+                    toolTip: $('<div style="margin:auto; width:100px;"><img src="images/lobster-small.gif"/></div><div style="clear:both;"></div><p>Trees, ocean, lobsters, it\'s all here.</p>'),
+                    selected: true
+
                 },
                 { key: "AK",
                     toolTip: "Alaska.. wild, and cold. And, you cannot select this area, but you can see the tooltip.",
@@ -247,9 +252,8 @@ $(document).ready(function () {
                 ]
         };
 
-
+		$.mapster.impl.init();
         $usamap.mapster(default_options);
-
 
 
 
