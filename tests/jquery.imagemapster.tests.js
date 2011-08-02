@@ -5,12 +5,20 @@ mapster_tests = function (options)
     var map_test = new Test(options);
     var map;
 
-    var clickCalledBack=false;
-    var onClickCallbackThis=null;
-    var onClickCallback = function(e) {
-        clickCalledBack=true;
-        onClickCallbackThis=this;
+    var onClickCalledBack=false;
+    var onClickCalledBackThis=null;
+    var onClickCallback = function(data) {
+        onClickCalledBack=data
+        onClickCalledBackThis=this;
     };
+    
+    var toolTipShowEventCalledBack=null;
+    var toolTipShowEventThis=null;
+    var toolTipShowEvent=function(data) {
+     	toolTipShowEventCalledBack=data;
+     	toolTipShowEventThis=this;
+    }
+    
     var onGetStateArgs;
     var onGetStateThis;
     var onGetStateCallback = function() {
@@ -23,6 +31,8 @@ mapster_tests = function (options)
         }
     };
     
+    
+    
     var map_options = {
         isSelectable : true,
         singleSelect : false,
@@ -34,22 +44,16 @@ mapster_tests = function (options)
         onGetList : onGetStateCallback,
         onClick : onClickCallback,
         showToolTip : true,
+        onShowToolTip: toolTipShowEvent,
         toolTipClose : ["tooltip-click", "area-click"],
         areas : [
         {
             key : "TX",
-            toolTip : $('<div>Don\'t mess with Texas. Why ? <a href = "http://dontmesswithtexas.org/" target="_blank" > Click here </a> for more info. </div> '),
             selected: true
         }
         ,
         {
-            key : "ME",
-            toolTip : $('<div style="clear:both;"></div><p>Trees, ocean, lobsters, it\'s all here. </p > ')
-        }
-        ,
-        {
             key : "AK",
-            toolTip : "Alaska.. wild, and cold. And, you cannot select this area, but you can see the tooltip.",
             isSelectable : false,
             selected: true
         }
@@ -62,7 +66,12 @@ mapster_tests = function (options)
         {
             key : "OR",
             staticState : false
+        },
+        {  
+            key: "LA",
+            toolTip : $('<div>Don\'t mess with Louisiana. Why ? <a href = "http://dontmesswithtexas.org/" target="_blank" > Click here </a> for more info. </div> ')
         }
+
         ]
     };
     
@@ -177,14 +186,12 @@ mapster_tests = function (options)
                 map.mapster('unbind');
                 return;
         }
+        map.mapster('unbind');
+        
         if (disableCanvas) {
-       	    map.mapster('unbind');
             $.mapster.impl.init(false);
-        } else {
-            map.mapster('unbind');
-            $.mapster.impl.init(true);
-        }
-        map = $('img').mapster();
+        } 
+        map = $('img').mapster(map_options);
 
 
         
@@ -209,7 +216,7 @@ mapster_tests = function (options)
         
         // options
 
-        var initialOpts = u.mergeObjects({template:$.mapster.defaults });
+        var initialOpts = u.mergeObjects({template:$.mapster.defaults, source: [map_options], deep: "areas" });
         var opts = map.mapster('get_options');
         ut.assertPropsEq(opts,initialOpts,"Options retrieved match initial options");
         
@@ -220,8 +227,10 @@ mapster_tests = function (options)
         var newOpts = {isSelectable: false, areas: [{key:'MT',isDeselectable:false}]};
         map.mapster('set_options',newOpts);
         opts = map.mapster('get_options');
+        
         ut.assertPropsEq(opts,$.extend(true,{},initialOpts,newOpts),"Options retrieved match updated value");
         ut.assertEq(opts.areas.length,6,"Area option was added");
+        
         // put them back or nothing will work...
         opts = map.mapster('set_options',{isSelectable:true, areas: [{key: 'MT',isDeselectable:true}]});
                 
@@ -230,9 +239,12 @@ mapster_tests = function (options)
 
         // order is not guaranteed - this is the order the areas are created.
         var selected = map.mapster('get');
-        ut.assertCsvElementsEq(selected,"AK,WA,TX","Initially selected items returned with 'get'");
         
-        selected = map.mapster('get','WA');
+        // This test should NOT show "WA" because StaticState items are not considered "selected"
+        
+        ut.assertCsvElementsEq(selected,"AK,TX","Initially selected items returned with 'get'");
+        
+        selected = map.mapster('get','TX');
         ut.assertEq(selected,true,"Initially selected single item returned true with 'get'");
         selected = map.mapster('get','ME');
         ut.assertEq(selected,false,"Initially deselected single item returned false with 'get'");
@@ -243,7 +255,7 @@ mapster_tests = function (options)
         ut.assertEq(selected,true,"Click-selected area returned 'get'");
         
         selected = map.mapster('get');
-        ut.assertCsvElementsEq(selected,"AK,ME,WA,TX","Complete list returned with 'get'");
+        ut.assertCsvElementsEq(selected,"AK,ME,TX","Complete list returned with 'get'");
         
         /// try to click select "staticstate areas
         
@@ -251,9 +263,19 @@ mapster_tests = function (options)
         selected = map.mapster('get','OR');
         ut.assertEq(selected,false,"Cannot select 'staticState=false' area with click");
         
+        selected = map.mapster('get','WA');
+        ut.assertEq(selected,false,"staticState=true area is considered not selected");
+        
+        opts = map.mapster('get_options','WA');
+        ut.assertEq(opts.staticState,true,"get effective options returned correct static state for WA");
+
+        opts = map.mapster('get_options','OR');
+        ut.assertEq(opts.staticState,false,"get effective options returned correct static state for OR");
+
+        
         $('area[state="WA"]').first().click();
         selected = map.mapster('get','WA');
-        ut.assertEq(selected,true,"Cannot deselect 'staticState=true' area with click");
+        ut.assertEq(selected,false,"Cannot change selection state of 'staticState=true' area with click");
         
         // do it programatically
         
@@ -312,24 +334,73 @@ mapster_tests = function (options)
         ut.assertEq($('canvas').length,0,'No canvases remain after an unbind.');
         
         ut.assertEq($('#test_elements *').length,domCount,"# elements in DOM is the same.");
+        
+        if (disableCanvas) {
+	    $.mapster.impl.init();
+        }
     };
 
-     map_test.addTest("Mapster Basic Tests - hasCanvas disabled",function(ut) {
-        basicTests(ut,true);
-     });    
+     if (!($.browser.msie && $.browser.version<9)) {
+         map_test.addTest("Mapster Basic Tests - hasCanvas disabled",function(ut) {
+            basicTests(ut,true);
+         });    
+     }
      
      map_test.addTest("Mapster Basic Tests",basicTests);    
 
+
+    map_test.addTest("Event Tests",function(ut) {
+    	var map = $('img').mapster(map_options);
+    	onClickCalledBack= null;
+    	onClickCalledBackThis=null;
+    	$('area[state="GA"]').first().click();
+    	ut.assertIsTruthy(onClickCalledBack,"Click callback fired for Georgia");
+    	if (onClickCalledBack) {
+    	    ut.assertEq(onClickCalledBack.key,"GA","Click callback fired for Georgia, and key was correct");
+    	    ut.assertEq(onClickCalledBack.selected,true,"Click callback fired for Georgia, and selected was correct");
+    	    ut.assertEq(onClickCalledBackThis,$('area[state="GA"]')[0],"Click callback fired for Georgia, and this was correct");
+    	}
+    	// try clicking staticState=false
+    	onClickCalledBack=null;
+    	$('area[state="OR"]').first().click();
+    	if (onClickCalledBack) {
+    	    ut.assertEq(onClickCalledBack.key,"OR","Click callback fired for Oregon, and key was correct");
+    	    ut.assertEq(onClickCalledBack.selected,false,"Click callback fired for Oregon, and selected was correct");
+    	}
+    	
+    	// Now try tooltips
+    	
+    	var opts = map.mapster('get_options',true);
+    	
+    	ut.assertEq($(opts.toolTipContainer).is(":visible"),false,"No tooltip showing");
+    	
+    	toolTipShowEventCalledBack=null;
+    	$('area[state="LA"]').first().mouseover();
+    	ut.assertEq($(opts.toolTipContainer).is(":visible"),false,"Tooltip was shown");
+    	ut.assertIsTruthy(toolTipShowEventCalledBack,"Click callback fired for LA tooltip");
+    	if (toolTipShowEventCalledBack) {
+	    ut.assertEq(toolTipShowEventCalledBack.key,"LA","Tooltip show callback fired for Louisiana, and key was correct");
+	    ut.assertEq(toolTipShowEventCalledBack.selected,false,"Tooltip show callback fired for Louisiana, and selected was correct");
+    	    ut.assertEq(toolTipShowEventThis,$('area[state="LA"]')[0],"Tooltip show callback fired for Lousisiana, and this was correct");
+    	}
+    	$('area[state="LA"]').first().mouseout();
+    	ut.assertEq($(opts.toolTipContainer).is(":visible"),false,"No tooltip showing after mouseout");
+    	
+    	$('img').mapster('unbind');
+    	
+    });
+
 	
-    map_test.addTest("Mapster Command Queue Tests",function(ut) {
+     map_test.addTest("Mapster Command Queue Tests",function(ut) {
     	var map,complete,
     	    domCount= $('#test_elements *').length;
+	
 	function continueTests() {
 	    var testName="Master Command Queue (async completion)";
 	    var map=$(this);
 	    map_test.addTest(testName,function(ut) {
 	    	var newDomCount;
-	    	ut.assertCsvElementsEq(map.mapster('get'),"AK,KY,WA,TX,KS","Only initial options present when simulating non-ready image");
+	    	ut.assertCsvElementsEq(map.mapster('get'),"AK,KY,TX,KS","Only initial selections present when simulating non-ready image");
 	    	newDomCount=$('#test_elements *').length;
 	    	ut.assertNotEq(newDomCount,domCount,"Dom size is unequal before unbinding at test end");
 	    	map.mapster('unbind');

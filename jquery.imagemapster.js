@@ -1,16 +1,17 @@
-/* ImageMapster 1.1.3 beta 3
+/* ImageMapster 1.1.3 beta 4
 
 TODO:
-
-staticIsSelected: true/false
-new web site - add docs to a database
-AgentWorm's problem
 
 Copyright 2011 James Treworgy
 http://www.outsharked.com/imagemapster
 https://github.com/jamietre/ImageMapster
 
 A jQuery plugin to enhance image maps.
+
+version 1.1.4
+
+-- Bug fix for get_options, showToolTip (related)
+-- Added tests for event handling
 
 version 1.1.3
 
@@ -128,40 +129,61 @@ Based on code originally written by David Lynch
         //          add = true | false -- when true, will add properties -- default TRUE
         //          
         // returns - new object.
-        mergeObjects: function (options) {
-            var obj, i, len, prop,
-                add = this.boolOrDefault(options.add, options.template ? false : true),
-                ignore = options.ignore ? options.ignore.split(',') : '',
-                include = options.include ? options.include.split(',') : '',
-                deep = options.deep ? options.deep.split(',') : '',
-                target = options.target || {},
-                source = [].concat(options.source);
-            if (options.template) {
-                target = this.mergeObjects({ target: {}, source: [options.template, target] });
+	mergeObjects: function (options) {
+	    var obj, i, len, prop,
+	                add = this.boolOrDefault(options.add, options.template ? false : true),
+	                ignore = options.ignore ? options.ignore.split(',') : '',
+	                include = options.include ? options.include.split(',') : '',
+	                deep = options.deep ? options.deep.split(',') : '',
+	                target = options.target || {},
+	                source = [].concat(options.source);
+	            if (options.template) {
+	                target = this.mergeObjects({ target: {}, source: [options.template, target] });
+	            }
+	            len = source.length;
+	            for (i = 0; i < len; i++) {
+	                obj = source[i];
+	                if (obj) {
+	                    for (prop in obj) {
+	                        if ((!ignore || this.arrayIndexOf(ignore, prop) === -1)
+	                          && (!include || this.arrayIndexOf(include, prop) >= 0)
+	                          && obj.hasOwnProperty(prop)
+	                          && (add || target.hasOwnProperty(prop))) {
+	
+	                            if (deep && this.arrayIndexOf(deep, prop) >= 0 && typeof obj[prop] === 'object') {
+	                                if (typeof target[prop] !== 'object' && add) {
+	                                    target[prop] = {};
+	                                }
+	                                this.mergeObjects({ target: target[prop], source: obj[prop], add: add });
+	                            } else {
+	                                target[prop] = this.clone(obj[prop]);
+	                            }
+	                        }
+	                    }
+	                }
             }
-            len = source.length;
-            for (i = 0; i < len; i++) {
-                obj = source[i];
-                if (obj) {
-                    for (prop in obj) {
-                        if ((!ignore || this.arrayIndexOf(ignore, prop) === -1)
-                          && (!include || this.arrayIndexOf(include, prop) >= 0)
-                          && obj.hasOwnProperty(prop)
-                          && (add || target.hasOwnProperty(prop))) {
-
-                            if (deep && this.arrayIndexOf(deep, prop) >= 0 && typeof obj[prop] === 'object') {
-                                if (typeof target[prop] !== 'object' && add) {
-                                    target[prop] = {};
-                                }
-                                this.mergeObjects({ target: target[prop], source: obj[prop], add: add });
-                            } else {
-                                target[prop] = obj[prop];
-                            }
-                        }
+	    return target;
+	},
+	// simple clone (non-deep) - ensures that arrays and objects are not passed by ref
+        clone: function(obj) {
+            var prop,i,target,len;
+            if ($.isArray(obj)) {
+                target = [];
+                len = obj.length;
+                for (i=0;i<len;i++) {
+                    target.push(obj[i]);
+                }
+             } else if (typeof obj ==='object' && obj) {
+                target ={};
+                for (prop in obj) {
+                    if (obj.hasOwnProperty(prop)) {
+                        target[prop]=obj[prop];
                     }
                 }
-            }
-            return target;
+             } else {
+                 target = obj;
+             }
+             return target;
         },
         arrayIndexOfProp: function (arr, prop, obj) {
             var i = arr.length;
@@ -182,6 +204,13 @@ Based on code originally written by David Lynch
         },
         isFunction: function (obj) {
             return obj && typeof obj === 'function';
+        },
+        // evaluates "obj", if function, calls it with args
+        // (todo - update this to handle variable lenght/more than one arg)
+        ifFunction: function(obj,that,args) {
+            if (this.isFunction(obj)) {
+                obj.call(that,args);
+            }
         },
         arrayIndexOf: function (arr, el) {
             if (arr.indexOf) {
@@ -519,13 +548,13 @@ Based on code originally written by David Lynch
                 
                 if (key) {
                     // getting data for specific key --- return true or false
-                    result = map_data.getDataForKey(key).selected;
+                    result = map_data.getDataForKey(key).isSelected();
                     return false; // break
                 }
                 // getting all selected keys - return comma-separated string
                 result = '';
                 u.each(map_data.data, function () {
-                    if (this.selected) {
+                    if (this.isSelected()) {
                         result += (result ? ',' : '') + this.key;
                     }
                 });
@@ -574,7 +603,7 @@ Based on code originally written by David Lynch
                     {
                         options: opts,
                         key: ar.key,
-                        selected: ar.selected
+                        selected: ar.isSelected()
                     });
                 }
             };
@@ -592,7 +621,7 @@ Based on code originally written by David Lynch
                     {
                         e: e,
                         key: key,
-                        selected: data ? data.selected : null
+                        selected: data ? data.isSelected(): null
                     });
                 }
             };
@@ -606,11 +635,11 @@ Based on code originally written by David Lynch
                 opts = me.options;
 
                 canChangeState = (ar.isSelectable() &&
-                    (ar.isDeselectable() || !ar.selected));
+                    (ar.isDeselectable() || !ar.isSelected()));
                 if (canChangeState) {
-                    newSelectionState = !ar.selected;
+                    newSelectionState = !ar.isSelected();
                 } else {
-                    newSelectionState = ar.selected;
+                    newSelectionState = ar.isSelected();
                 }
 
                 list_target = getBoundList(opts, ar.key);
@@ -683,7 +712,7 @@ Based on code originally written by David Lynch
                 }
             }
             u.each(this.data, function (i) {
-                if (this.isSelected()) {
+                if (this.isSelectedOrStatic()) {
                     selected_list.push(i);
                 }
             });
@@ -881,11 +910,14 @@ Based on code originally written by David Lynch
         };
         p = AreaData.prototype;
         // Return the effective selected state of an area, incorporating staticState
-        p.isSelected = function () {
+        p.isSelectedOrStatic = function () {
             var o = this.effectiveOptions();
             return u.isBool(this.selected) ? this.selected :
                 (u.isBool(o.staticState) ? o.staticState :
                 (u.isBool(this.owner.options.staticState) ? this.owner.options.staticState : false));
+        };
+        p.isSelected = function() {
+            return this.selected || false;
         };
         p.isSelectable = function () {
             return u.isBool(this.effectiveOptions().staticState) ? false :
@@ -941,7 +973,7 @@ Based on code originally written by David Lynch
                 });
             }
 
-            if (!this.selected) {
+            if (!this.isSelected()) {
                 this.setAreaSelected();
                 this.selected = true;
             }
@@ -974,11 +1006,12 @@ Based on code originally written by David Lynch
         };
         p.showTooltip = function (area) {
             var tooltip, left, top, tooltipCss, coords,
-            alignLeft = true,
-            alignTop = true,
-            opts = this.effectiveOptions(),
-            map_data = this.owner,
-            container = $(map_data.options.toolTipContainer);
+                alignLeft = true,
+	        alignTop = true,
+	        opts = this.effectiveOptions(),           
+                map_data = this.owner,
+                baseOpts = map_data.options,
+                container = $(map_data.options.toolTipContainer);
 
             tooltip = container.html(opts.toolTip);
 
@@ -1020,17 +1053,14 @@ Based on code originally written by David Lynch
             tooltip.show();
             u.fader(tooltip[0], 0, 1, opts.fadeDuration);
 
-            if (opts.onShowToolTip && typeof opts.onShowToolTip === 'function') {
-                opts.onShowToolTip.call(area,
-                {
-                    target: area,
-                    tooltip: tooltip,
-                    areaTarget: $(area),
+            u.ifFunction(baseOpts.onShowToolTip, area, 
+            {
+                    toolTip: tooltip,
                     areaOptions: opts,
                     key: this.key,
-                    selected: this.selected
-                });
-            }
+                    selected: this.isSelected()
+            });
+            
         };
         // Select or unselect areas identified by key -- a string, a csv string, or array of strings.
         // if set_bound is true, the bound list will also be updated. Default is true. If neither true nor false,
@@ -1187,24 +1217,20 @@ Based on code originally written by David Lynch
         me.get_options = function (key, effective) {
             var opts, ar, map_data,
                 img = this.filter('img').first()[0];
+            effective = u.isBool(key) ? key : effective; // allow 2nd parm as "effective" when no keys
             if (map_data = get_map_data(img)) {
-                if (key) {
+                if (typeof key==='string') {
                     if (ar = map_data.getDataForKey(key)) {
-                        opts = ar.effectiveOptions();
+                       opts = effective ? ar.effectiveOptions() : ar.options;
                     }
                 } else {
                     opts = map_data.options;
-                }
-                if (opts) {
                     if (effective) {
-                        opts = map_data.options;
                         opts.render_select = u.mergeObjects({ template: $.mapster.render_defaults, source: [opts, opts.render_select] });
                         opts.render_highlight = u.mergeObjects({ template: $.mapster.render_defaults, source: [opts, opts.render_highlight] });
-                        return opts;
-                    } else {
-                        return map_data.options;
                     }
                 }
+                return opts;
             }
             return null;
         };
@@ -1221,9 +1247,9 @@ Based on code originally written by David Lynch
             }
             return this;
         };
-        me.bind = function (opts) {
-            opts = u.mergeObjects({
-                source: [$.mapster.defaults, opts],
+        me.bind = function (options) {
+            var opts = u.mergeObjects({
+                source: [$.mapster.defaults, options],
                 deep: "render_select,render_highlight"
             });
 
@@ -1279,9 +1305,7 @@ Based on code originally written by David Lynch
                             img.mapster(opts);
                         }, 200);
                     } else {
-                        if (opts.onConfigured && typeof opts.onConfigured === 'function') {
-                            opts.onConfigured.call(this, false);
-                        }
+                        u.ifFunction(opts.onConfigured,this,false);
                     }
                     return true;
                 }
@@ -1519,7 +1543,7 @@ Based on code originally written by David Lynch
                         // draw new base canvas, then swap with the old one to avoid flickering
                         canvas_temp = map_data.base_canvas;
                         u.each(map_data.data, function (i) {
-                            if (this.isSelected()) {
+                            if (this.isSelectedOrStatic()) {
                                 list_temp.push(i);
                             }
                         });
@@ -1667,13 +1691,13 @@ Based on code originally written by David Lynch
 
     // make sure closures are cleaned up
     $.mapster.unload = function () {
-        //this.impl.unload();
-        //$.mapster.utils.fader = null;
-        //$.mapster.utils = null;
-        //$.mapster.impl = null;
-        //$.fn.mapster = null;
-        //$.mapster = null;
-        //$('*').unbind();
+        this.impl.unload();
+        $.mapster.utils.fader = null;
+        $.mapster.utils = null;
+        $.mapster.impl = null;
+        $.fn.mapster = null;
+        $.mapster = null;
+        $('*').unbind();
     };
     // A plugin selector to return nodes where an attribute matches any item from a comma-separated list. The list should not be quoted.
     // Will be more efficient (and easier) than selecting each one individually

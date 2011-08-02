@@ -1,7 +1,8 @@
 /*
 A dead simple javascript testing framework
 
-V1.0 James Treworgy
+1.0.1 added assertIsTruthy
+V1.0James Treworgy
 
 This code is in the public domain
 */
@@ -117,6 +118,17 @@ Test.prototype.assertNotEq = function(testcase,expected,description,test) {
          }
     });
     this.endTest(err,description);
+};
+Test.prototype.assertIsTruthy = function(testcase,description,test) {
+    var err;
+    this.startTest();
+    this.runTest(testcase,function(testcase) {
+        if (!testcase) {
+            err = 'Test case object of type "' + typeof testcase + '" is not truthy.';
+        }
+    });
+    this.endTest(err,description);
+
 };
 // test that object properties (shallow) match
 Test.prototype.assertPropsEq = function(testcase,expected,description,test) {
