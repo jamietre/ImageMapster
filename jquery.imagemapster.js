@@ -10,6 +10,7 @@ A jQuery plugin to enhance image maps.
 
 version 1.1.4
 
+-- added .mapster('tooltip',key,area);
 -- Bug fix for get_options, showToolTip (related)
 -- Added tests for event handling
 
@@ -298,7 +299,7 @@ Based on code originally written by David Lynch
         } ())
     };
     $.mapster.default_tooltip_container = function () {
-        return '<div style="border: 2px solid black; background: #EEEEEE; position:absolute; width:160px; padding:4px; margin: 4px; -moz-box-shadow: 3px 3px 5px #535353; ' +
+        return '<div class="mapster-tooltip" style="border: 2px solid black; background: #EEEEEE; position:absolute; width:160px; padding:4px; margin: 4px; -moz-box-shadow: 3px 3px 5px #535353; ' +
         '-webkit-box-shadow: 3px 3px 5px #535353; box-shadow: 3px 3px 5px #535353; -moz-border-radius: 6px 6px 6px 6px; -webkit-border-radius: 6px; ' +
         'border-radius: 6px 6px 6px 6px;"></div>';
     };
@@ -561,6 +562,28 @@ Based on code originally written by David Lynch
                 return false; // break
             });
             return result;
+        };
+        // area key, or falsy value to close current tooltip. "area" is the actual area, it can be omitted if there's only one
+        // or you don't care which is used.
+        me.tooltip=function(key,area) {
+            var ar,map_data;
+            this.each(function () {
+	        map_data = get_map_data(this);
+	        if (!map_data) {
+	            return true; 
+	        }
+	                    
+	        if (key) {
+	            ar=map_data.getDataForKey(key);
+	            if (ar.effectiveOptions().toolTip) {
+	                ar.showTooltip(area);
+	            }
+	            return false; // break
+	        } else {
+	             map_data.clearTooltip();
+	        }
+            });
+        
         };
         // Config for object prototypes
 
@@ -1004,21 +1027,28 @@ Based on code originally written by David Lynch
             }
             return this.isSelected();
         };
-        p.showTooltip = function (area) {
-            var tooltip, left, top, tooltipCss, coords,
+        // Show tooltip adjacent to DOM element "area"
+        p.showTooltip = function (forArea) {
+            var tooltip, left, top, tooltipCss, coords, container,
                 alignLeft = true,
 	        alignTop = true,
 	        opts = this.effectiveOptions(),           
                 map_data = this.owner,
                 baseOpts = map_data.options,
-                container = $(map_data.options.toolTipContainer);
+                template= map_data.options.toolTipContainer,
+                area = forArea || this.areas[0];
 
+	    if (typeof template==='string') {
+	        container=$(template);
+	    } else {
+	        container=$(template).clone();
+	    }
+	    
             tooltip = container.html(opts.toolTip);
 
             coords = u.area_corner(area, alignLeft, alignTop);
 
             map_data.clearTooltip();
-            tooltip.hide();
 
             $(map_data.image).after(tooltip);
             map_data.activeToolTip = tooltip;
@@ -1738,6 +1768,7 @@ Based on code originally written by David Lynch
         get_options: $.mapster.impl.get_options,
         set_options: $.mapster.impl.set_options,
         snapshot: $.mapster.impl.snapshot,
+        tooltip: $.mapster.impl.tooltip,
         test: $.mapster.impl.test
     };
     $.mapster.impl.init();

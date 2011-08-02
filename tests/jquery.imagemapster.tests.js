@@ -45,7 +45,7 @@ mapster_tests = function (options)
         onClick : onClickCallback,
         showToolTip : true,
         onShowToolTip: toolTipShowEvent,
-        toolTipClose : ["tooltip-click", "area-click"],
+        toolTipClose : ["area-mouseout"],
         areas : [
         {
             key : "TX",
@@ -68,7 +68,7 @@ mapster_tests = function (options)
             staticState : false
         },
         {  
-            key: "LA",
+            key: "CA",
             toolTip : $('<div>Don\'t mess with Louisiana. Why ? <a href = "http://dontmesswithtexas.org/" target="_blank" > Click here </a> for more info. </div> ')
         }
 
@@ -349,7 +349,7 @@ mapster_tests = function (options)
      map_test.addTest("Mapster Basic Tests",basicTests);    
 
 
-    map_test.addTest("Event Tests",function(ut) {
+    map_test.addTest("Event/Tooltip Tests",function(ut) {
     	var map = $('img').mapster(map_options);
     	onClickCalledBack= null;
     	onClickCalledBackThis=null;
@@ -372,24 +372,55 @@ mapster_tests = function (options)
     	
     	var opts = map.mapster('get_options',true);
     	
-    	ut.assertEq($(opts.toolTipContainer).is(":visible"),false,"No tooltip showing");
+    	ut.assertEq($(".mapster-tooltip").length,0,"No tooltip showing");
     	
     	toolTipShowEventCalledBack=null;
-    	$('area[state="LA"]').first().mouseover();
-    	ut.assertEq($(opts.toolTipContainer).is(":visible"),false,"Tooltip was shown");
+    	$('area[state="CA"]').first().mouseover();
+    	ut.assertEq($(".mapster-tooltip").length,1,"Tooltip was shown");
     	ut.assertIsTruthy(toolTipShowEventCalledBack,"Click callback fired for LA tooltip");
     	if (toolTipShowEventCalledBack) {
-	    ut.assertEq(toolTipShowEventCalledBack.key,"LA","Tooltip show callback fired for Louisiana, and key was correct");
+	    ut.assertEq(toolTipShowEventCalledBack.key,"CA","Tooltip show callback fired for CA, and key was correct");
 	    ut.assertEq(toolTipShowEventCalledBack.selected,false,"Tooltip show callback fired for Louisiana, and selected was correct");
-    	    ut.assertEq(toolTipShowEventThis,$('area[state="LA"]')[0],"Tooltip show callback fired for Lousisiana, and this was correct");
+    	    ut.assertEq(toolTipShowEventThis,$('area[state="CA"]')[0],"Tooltip show callback fired for Lousisiana, and this was correct");
     	}
-    	$('area[state="LA"]').first().mouseout();
-    	ut.assertEq($(opts.toolTipContainer).is(":visible"),false,"No tooltip showing after mouseout");
+    	$('area[state="CA"]').first().mouseout();
+    	ut.assertEq($(".mapster-tooltip").length,0,"No tooltip showing after mouseout");
+
+        // Try tooltips manually
+        
+        map.mapster('tooltip',"CA");
+        ut.assertEq($(".mapster-tooltip").length,1,"Tooltip appeared when activated manually");
+        
+        var first = $(".mapster-tooltip").position();
+        if ($.browser.chrome) {
+           ut.assertPropsEq(first,{left: 50, top: 199},"Tooltip for CA when no area was specified used first area");
+        }
+        //ut.assertPropsEq($(".mapster-tooltip").position(),{left: 50, top: 198},"Sanity check -0- should fail");
+        
+        map.mapster('tooltip',"CA",$("area[state='CA']:eq(2)"));
+        
+        ut.assertEq($(".mapster-tooltip").length,1,"Tooltip appeared when activated manually with specific area");
+        
+        var second =$(".mapster-tooltip").position();
+        
+        if ($.browser.chrome) {
+            ut.assertPropsEq(second,{left: 38, top: 178},"Tooltip for CA when 2nd area was specified was different");
+        }
+
+        ut.assertPropsNotEq(first,second,"Tooltip locations should be different when called with and without an area.");
+        
+	map.mapster('tooltip',"VT");
+	ut.assertEq($(".mapster-tooltip").length,1,"Nothing happened when calling tooltip on an area with no tooltips");
+	
+        map.mapster('tooltip',false);
+        ut.assertEq($(".mapster-tooltip").length,0,"Tooltip closed appeared when deactivated manually");
+    	
     	
     	$('img').mapster('unbind');
     	
+    	
     });
-
+    
 	
      map_test.addTest("Mapster Command Queue Tests",function(ut) {
     	var map,complete,

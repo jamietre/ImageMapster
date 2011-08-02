@@ -1,7 +1,7 @@
 /*
 A dead simple javascript testing framework
 
-1.0.1 added assertIsTruthy
+1.0.1 added assertIsTruthy, propsNotEqual
 V1.0James Treworgy
 
 This code is in the public domain
@@ -130,8 +130,8 @@ Test.prototype.assertIsTruthy = function(testcase,description,test) {
     this.endTest(err,description);
 
 };
-// test that object properties (shallow) match
-Test.prototype.assertPropsEq = function(testcase,expected,description,test) {
+// test that object properties (shallow) match. The last parameter is used by the overload.
+Test.prototype.assertPropsEq = function(testcase,expected,description,test, notEqual) {
         var me=this,err;
         function compare(t1,t2, t1name, t2name) {
         if (t1 && t1!==t2) {
@@ -156,6 +156,13 @@ Test.prototype.assertPropsEq = function(testcase,expected,description,test) {
                 }
             } 
         }
+        if (notEqual) {
+            if (!err) {
+            	err="The two objects had the same properties.";
+            } else {
+                err=null;
+            }
+        }
         return err;
     }
     var err;
@@ -173,7 +180,10 @@ Test.prototype.assertPropsEq = function(testcase,expected,description,test) {
     });
     this.endTest(err,description);
 };
+Test.prototype.assertPropsNotEq = function(testcase,expected,description,test) {
+    this.assertPropsEq(testcase,expected,description,test,true);
 
+};
 Test.prototype.assertArrayEq = function(testcase, expected, description,test) {
     var err,me;
     me=this;
