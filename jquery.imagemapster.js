@@ -1137,7 +1137,7 @@ Based on code originally written by David Lynch
                 },
                 { key: key }
             )).go();
-        }
+        };
         // key is one of: (string) area key: target the area -- will use the largest
         //                (DOM el/jq) area: target specific area
         //                 any falsy value: close the tooltip
