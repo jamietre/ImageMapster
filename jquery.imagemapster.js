@@ -1,4 +1,4 @@
-/* ImageMapster 1.1.3 beta 4
+/* ImageMapster 1.1.3 beta 6
 
 TODO:
 
@@ -8,14 +8,14 @@ https://github.com/jamietre/ImageMapster
 
 A jQuery plugin to enhance image maps.
 
-version 1.1.4
-
--- added .mapster('tooltip',key,area);
--- Bug fix for get_options, showToolTip (related)
--- Added tests for event handling
 
 version 1.1.3
-
+-- revised "highlight" method and added tests
+-- added a generic prototype for parsing method data
+-- added (area).mapster('tooltip')
+-- added .mapster('tooltip',key);
+-- Bug fix for get_options, showToolTip (related)
+-- Added tests for event handling
 -- Bug fix - area id 0 on VML rendereding deselection causes all selections to disappear (introduced in beta 2)
 -- Changed "get" to return true "selected" state and not "isSelected()" which includes staticState items in selected.
 -- Bug fix - stroke sometimes rendered improperly when using render-specific options
@@ -101,7 +101,11 @@ Based on code originally written by David Lynch
     $.mapster.utils = {
         area_corner: function (area, left, top) {
             var bestX, bestY, curX, curY, coords, j;
-            coords = $(area).attr('coords').split(',');
+            coords = [];
+            $(area).each(function () {
+                coords = coords.concat(this.coords.split(','));
+            });
+
             bestX = left ? 999999 : -1;
             bestY = top ? 999999 : -1;
 
@@ -130,61 +134,65 @@ Based on code originally written by David Lynch
         //          add = true | false -- when true, will add properties -- default TRUE
         //          
         // returns - new object.
-	mergeObjects: function (options) {
-	    var obj, i, len, prop,
+        mergeObjects: function (options) {
+            var obj, i, len, prop,
 	                add = this.boolOrDefault(options.add, options.template ? false : true),
 	                ignore = options.ignore ? options.ignore.split(',') : '',
 	                include = options.include ? options.include.split(',') : '',
 	                deep = options.deep ? options.deep.split(',') : '',
 	                target = options.target || {},
 	                source = [].concat(options.source);
-	            if (options.template) {
-	                target = this.mergeObjects({ target: {}, source: [options.template, target] });
-	            }
-	            len = source.length;
-	            for (i = 0; i < len; i++) {
-	                obj = source[i];
-	                if (obj) {
-	                    for (prop in obj) {
-	                        if ((!ignore || this.arrayIndexOf(ignore, prop) === -1)
+            if (options.template) {
+                target = this.mergeObjects({ target: {}, source: [options.template, target] });
+            }
+            len = source.length;
+            for (i = 0; i < len; i++) {
+                obj = source[i];
+                if (obj) {
+                    for (prop in obj) {
+                        if ((!ignore || this.arrayIndexOf(ignore, prop) === -1)
 	                          && (!include || this.arrayIndexOf(include, prop) >= 0)
 	                          && obj.hasOwnProperty(prop)
 	                          && (add || target.hasOwnProperty(prop))) {
-	
-	                            if (deep && this.arrayIndexOf(deep, prop) >= 0 && typeof obj[prop] === 'object') {
-	                                if (typeof target[prop] !== 'object' && add) {
-	                                    target[prop] = {};
-	                                }
-	                                this.mergeObjects({ target: target[prop], source: obj[prop], add: add });
-	                            } else {
-	                                target[prop] = this.clone(obj[prop]);
-	                            }
-	                        }
-	                    }
-	                }
+
+                            if (deep && this.arrayIndexOf(deep, prop) >= 0 && typeof obj[prop] === 'object') {
+                                if (typeof target[prop] !== 'object' && add) {
+                                    target[prop] = {};
+                                }
+                                this.mergeObjects({ target: target[prop], source: obj[prop], add: add });
+                            } else {
+                                target[prop] = this.clone(obj[prop]);
+                            }
+                        }
+                    }
+                }
             }
-	    return target;
-	},
-	// simple clone (non-deep) - ensures that arrays and objects are not passed by ref
-        clone: function(obj) {
-            var prop,i,target,len;
+            return target;
+        },
+        // simple clone (non-deep) - ensures that arrays and objects are not passed by ref
+        clone: function (obj) {
+            var prop, i, target, len;
             if ($.isArray(obj)) {
                 target = [];
                 len = obj.length;
-                for (i=0;i<len;i++) {
+                for (i = 0; i < len; i++) {
                     target.push(obj[i]);
                 }
-             } else if (typeof obj ==='object' && obj) {
-                target ={};
+            } else if (typeof obj === 'object' && obj) {
+                target = {};
                 for (prop in obj) {
                     if (obj.hasOwnProperty(prop)) {
-                        target[prop]=obj[prop];
+                        target[prop] = obj[prop];
                     }
                 }
-             } else {
-                 target = obj;
-             }
-             return target;
+            } else {
+                target = obj;
+            }
+            return target;
+        },
+        isElement: function (o) {
+            return (typeof HTMLElement === "object" ? o instanceof HTMLElement :
+                typeof o === "object" && o.nodeType === 1 && typeof o.nodeName === "string");
         },
         arrayIndexOfProp: function (arr, prop, obj) {
             var i = arr.length;
@@ -208,9 +216,9 @@ Based on code originally written by David Lynch
         },
         // evaluates "obj", if function, calls it with args
         // (todo - update this to handle variable lenght/more than one arg)
-        ifFunction: function(obj,that,args) {
+        ifFunction: function (obj, that, args) {
             if (this.isFunction(obj)) {
-                obj.call(that,args);
+                obj.call(that, args);
             }
         },
         arrayIndexOf: function (arr, el) {
@@ -341,6 +349,7 @@ Based on code originally written by David Lynch
         listSelectedAttribute: 'selected',
         listSelectedClass: null,
         showToolTip: false,
+        toolTipFade: true,
         toolTipClose: ['area-mouseout'],
         toolTipContainer: $.mapster.default_tooltip_container(),
         onClick: null,
@@ -367,7 +376,7 @@ Based on code originally written by David Lynch
     $.mapster.impl = (function () {
         var me = {},
         p,
-        AreaData, MapData,
+        AreaData, MapData, Method,
         u = $.mapster.utils,
         map_cache = [],
         ie_config_complete = false,
@@ -389,9 +398,9 @@ Based on code originally written by David Lynch
                 img = this.image;
                 var complete = img.complete || (img.width && img.height) ||
                     (typeof img.naturalWidth !== "undefined" && img.naturalWidth !== 0);
-                    
-                    return complete;
-                
+
+                return complete;
+
             });
         };
         me.test = function (obj) {
@@ -530,62 +539,45 @@ Based on code originally written by David Lynch
 
         //        }
         //        
-        // PUBLIC FUNCTIONS
 
-        // simulate a click event. This is like toggle, but causes events to run also.
-        // NOT TESTED
-        me.click = function (key) {
-            me.set(null, key, true);
-        };
-
-        // Returns a comma-separated list of user-selected areas. "staticState" areas are not considered selected for the purposes of this method.
-        me.get = function (key) {
-            var map_data, result;
-            this.each(function () {
-                map_data = get_map_data(this);
-                if (!map_data) {
-                    return true; // continue -- no data associated with this image
-                }
-                
-                if (key) {
-                    // getting data for specific key --- return true or false
-                    result = map_data.getDataForKey(key).isSelected();
-                    return false; // break
-                }
-                // getting all selected keys - return comma-separated string
-                result = '';
-                u.each(map_data.data, function () {
-                    if (this.isSelected()) {
-                        result += (result ? ',' : '') + this.key;
-                    }
-                });
-                return false; // break
-            });
-            return result;
-        };
-        // area key, or falsy value to close current tooltip. "area" is the actual area, it can be omitted if there's only one
-        // or you don't care which is used.
-        me.tooltip=function(key,area) {
-            var ar,map_data;
-            this.each(function () {
-	        map_data = get_map_data(this);
-	        if (!map_data) {
-	            return true; 
-	        }
-	                    
-	        if (key) {
-	            ar=map_data.getDataForKey(key);
-	            if (ar.effectiveOptions().toolTip) {
-	                ar.showTooltip(area);
-	            }
-	            return false; // break
-	        } else {
-	             map_data.clearTooltip();
-	        }
-            });
-        
-        };
         // Config for object prototypes
+        // first: use only first object
+        /// calls back one of two fuinctions, depending on whether an area was obtained.
+
+        Method = function (that, args, func_map, func_area, opts) {
+            var me = this;
+            me.output = that;
+            me.input = that;
+            me.first = false;
+            me.args = Array.prototype.slice.call(args, 0);
+            me.key = '';
+            me.func_map = func_map;
+            me.func_area = func_area;
+            $.extend(me, opts);
+        };
+        Method.prototype.go = function () {
+            var i, data, ar, len, result, src = this.input;
+            len = src.length;
+            for (i = 0; i < len; i++) {
+                data = get_map_data(src[i]);
+                if (data) {
+                    ar = data.getData(src[i].nodeName === 'AREA' ? src[i] : this.key);
+                    if (ar) {
+                        result = this.func_area.apply(ar, this.args);
+                    } else {
+                        result = this.func_map.apply(data, this.args);
+                    }
+                    if (this.first) {
+                        break;
+                    }
+                }
+            }
+            if (typeof result !== 'undefined') {
+                return result;
+            } else {
+                return me.output;
+            }
+        };
 
         MapData = function (image, options) {
             var me = this;
@@ -644,7 +636,7 @@ Based on code originally written by David Lynch
                     {
                         e: e,
                         key: key,
-                        selected: data ? data.isSelected(): null
+                        selected: data ? data.isSelected() : null
                     });
                 }
             };
@@ -693,11 +685,24 @@ Based on code originally written by David Lynch
                 this._xref[key] : -1;
         };
         p.getDataForArea = function (area) {
-            var key = $(area).data('mapster_key');
-            return this.data[this._idFromKey(key)];
+            var ar, key = $(area).data('mapster_key');
+            ar = this.data[this._idFromKey(key)];
+            if (ar) {
+                ar.area = area;
+            }
+            return ar;
         };
         p.getDataForKey = function (key) {
             return this.data[this._idFromKey(key)];
+        };
+        p.getData = function (obj) {
+            if (typeof obj === 'string') {
+                return this.getDataForKey(obj);
+            } else if (obj instanceof jQuery || u.isElement(obj)) {
+                return this.getDataForArea(obj);
+            } else {
+                return null;
+            }
         };
         // remove highlight if present, raise event
         p.ensureNoHighlight = function () {
@@ -707,7 +712,7 @@ Based on code originally written by David Lynch
                 graphics.clear_highlight();
                 ar = this.data[this._highlightId];
                 ar.changeState('highlight', false);
-                this._highlightId = 0;
+                this._highlightId = -1;
             }
         };
         p.setHighlight = function (id) {
@@ -929,6 +934,7 @@ Based on code originally written by David Lynch
             this.options = {};
             this.selected = null;
             this.areas = [];
+            this.area = null;
             this._effectiveOptions = null;
         };
         p = AreaData.prototype;
@@ -939,7 +945,7 @@ Based on code originally written by David Lynch
                 (u.isBool(o.staticState) ? o.staticState :
                 (u.isBool(this.owner.options.staticState) ? this.owner.options.staticState : false));
         };
-        p.isSelected = function() {
+        p.isSelected = function () {
             return this.selected || false;
         };
         p.isSelectable = function () {
@@ -1032,19 +1038,19 @@ Based on code originally written by David Lynch
             var tooltip, left, top, tooltipCss, coords, container,
                 alignLeft = true,
 	        alignTop = true,
-	        opts = this.effectiveOptions(),           
+	        opts = this.effectiveOptions(),
                 map_data = this.owner,
                 baseOpts = map_data.options,
-                template= map_data.options.toolTipContainer,
-                area = forArea || this.areas[0];
+                template = map_data.options.toolTipContainer,
+                area = forArea || this.areas;
 
-	    if (typeof template==='string') {
-	        container=$(template);
-	    } else {
-	        container=$(template).clone();
-	    }
-	    
-            tooltip = container.html(opts.toolTip);
+            if (typeof template === 'string') {
+                container = $(template);
+            } else {
+                container = $(template).clone();
+            }
+
+            tooltip = container.html(opts.toolTip).hide();
 
             coords = u.area_corner(area, alignLeft, alignTop);
 
@@ -1079,32 +1085,104 @@ Based on code originally written by David Lynch
             // not working properly- closes too soon sometimes
             //map_data.bindTooltipClose('img-mouseout', 'mouseout', $(map_data.image));
 
-            tooltip.css({ "opacity": 0 });
-            tooltip.show();
-            u.fader(tooltip[0], 0, 1, opts.fadeDuration);
 
-            u.ifFunction(baseOpts.onShowToolTip, area, 
+            tooltip.show();
+            if (opts.toolTipFade) {
+                tooltip.css({ "opacity": 0 });
+                u.fader(tooltip[0], 0, 1, opts.fadeDuration);
+            }
+
+            u.ifFunction(baseOpts.onShowToolTip, area,
             {
-                    toolTip: tooltip,
-                    areaOptions: opts,
-                    key: this.key,
-                    selected: this.isSelected()
+                toolTip: tooltip,
+                areaOptions: opts,
+                key: this.key,
+                selected: this.isSelected()
             });
-            
+
         };
+
+        // PUBLIC FUNCTIONS
+
+        // Returns a comma-separated list of user-selected areas. "staticState" areas are not considered selected for the purposes of this method.
+        me.get = function (key) {
+            var map_data, result;
+            this.each(function () {
+                map_data = get_map_data(this);
+                if (!map_data) {
+                    return true; // continue -- no data associated with this image
+                }
+
+                if (key) {
+                    // getting data for specific key --- return true or false
+                    result = map_data.getDataForKey(key).isSelected();
+                    return false; // break
+                }
+                // getting all selected keys - return comma-separated string
+                result = '';
+                u.each(map_data.data, function () {
+                    if (this.isSelected()) {
+                        result += (result ? ',' : '') + this.key;
+                    }
+                });
+                return false; // break
+            });
+            return result;
+        };
+        me.data = function (key) {
+            return (new Method(this, arguments,
+                null,
+                function () {
+                    return this;
+                },
+                { key: key }
+            )).go();
+        }
+        // key is one of: (string) area key: target the area -- will use the largest
+        //                (DOM el/jq) area: target specific area
+        //                 any falsy value: close the tooltip
+
+        // or you don't care which is used.
+        me.tooltip = function (key) {
+            return (new Method(this, arguments,
+                function () {
+                    this.clearTooltip();
+                },
+                function () {
+                    if (this.effectiveOptions().toolTip) {
+                        this.showTooltip(this.area);
+                    }
+                },
+                { key: key }
+            )).go();
+        };
+
+        // Set or return highlight state. 
+        //  $(img).mapster('highlight') -- return highlighted area key, or null if none
+        //  $(area).mapster('highlight') -- highlight an area
+        //  $(img).mapster('highlight','area_key') -- highlight an area
+        //  $(img).mapster('highlight',false) -- remove highlight
+        me.highlight = function (key) {
+            return (new Method(this, arguments,
+                function (selected) {
+                    var id;
+                    if (key === false) {
+                        this.ensureNoHighlight();
+                    } else {
+                        id = this._highlightId;
+                        return id >= 0 ? this.data[id].key : null;
+                    }
+                },
+                function () {
+                    this.highlight();
+                },
+                { key: key }
+            )).go();
+        };
+
         // Select or unselect areas identified by key -- a string, a csv string, or array of strings.
         // if set_bound is true, the bound list will also be updated. Default is true. If neither true nor false,
         // it will be toggled.
-        me.highlight = function (selected, key) {
-            var map_data, ar;
-            if (map_data = get_map_data(this[0])) {
-                map_data.ensureNoHighlight();
-                if (selected && (ar = map_data.getDataForKey(key)) >= 0) {
-                    ar.highlight();
-                }
-            }
-        };
-
         me.set = function (selected, key, set_bound) {
             var lastParent, parent, map_data, key_list, do_set_bound;
 
@@ -1249,9 +1327,9 @@ Based on code originally written by David Lynch
                 img = this.filter('img').first()[0];
             effective = u.isBool(key) ? key : effective; // allow 2nd parm as "effective" when no keys
             if (map_data = get_map_data(img)) {
-                if (typeof key==='string') {
+                if (typeof key === 'string') {
                     if (ar = map_data.getDataForKey(key)) {
-                       opts = effective ? ar.effectiveOptions() : ar.options;
+                        opts = effective ? ar.effectiveOptions() : ar.options;
                     }
                 } else {
                     opts = map_data.options;
@@ -1335,7 +1413,7 @@ Based on code originally written by David Lynch
                             img.mapster(opts);
                         }, 200);
                     } else {
-                        u.ifFunction(opts.onConfigured,this,false);
+                        u.ifFunction(opts.onConfigured, this, false);
                     }
                     return true;
                 }
@@ -1425,8 +1503,8 @@ Based on code originally written by David Lynch
                 return;
             }
             // for testing/debugging, use of canvas can be forced by initializing manually with "true" or "false"            
-            if ($.mapster.utils.isBool(useCanvas)) {
-                has_canvas= useCanvas;
+            if (u.isBool(useCanvas)) {
+                has_canvas = useCanvas;
             }
             if ($.browser.msie && !has_canvas && !ie_config_complete) {
                 document.namespaces.add("v", "urn:schemas-microsoft-com:vml");
@@ -1673,7 +1751,7 @@ Based on code originally written by David Lynch
                         $(map_data.overlay_canvas).children().remove();
                     };
                     me.clear_selections = function (area_id) {
-                        if (area_id>=0) {
+                        if (area_id >= 0) {
                             $(map_data.base_canvas).find('[name="static_' + area_id.toString() + '"]').remove();
                         }
                         else {
@@ -1758,6 +1836,7 @@ Based on code originally written by David Lynch
         unbind: $.mapster.impl.unbind,
         set: $.mapster.impl.set,
         get: $.mapster.impl.get,
+        data: $.mapster.impl.data,
         highlight: $.mapster.impl.highlight,
         select: function () {
             $.mapster.impl.set.call(this, true);
