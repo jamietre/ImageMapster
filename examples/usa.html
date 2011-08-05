@@ -1,4 +1,4 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+﻿<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
@@ -17,7 +17,7 @@
 
 <div id="map_demo" style="width:920px; height:1000px;">
 	<div style="width:720px; overflow: hidden; float:left;">
-		<img id="usa_image" src="images/usa_map_720.png" width="720" height="445" usemap="#usa" >
+		<img style="display:block;" id="usa_image" src="images/usa_map_720.png" width="500" usemap="#usa" >
 	</div>
     <div  id="statelist" style="float:left; padding-left: 10px; width:180px; height: 445px; overflow-y: scroll;"></div>
 
@@ -63,7 +63,66 @@
 <script type="text/javascript">
 
 $(document).ready(function () {
-     var $statelist, $usamap, default_options, mapsterConfigured;
+     var $statelist, $usamap, mapsterConfigured,
+     default_options =
+        {
+            fillOpacity: 0.5,
+            render_highlight: {
+                fillColor: '2aff00',
+                stroke: true
+            },
+            render_select: {
+                fillColor: 'ff000c',
+                stroke: false
+            },
+            //render_zoom: {
+            //    altImage: 'images/usa_map_huge.jpg'
+            //},
+            fadeInterval: 50,
+            isSelectable: true,
+            singleSelect: false,
+            mapKey: 'state',
+            mapValue: 'full',
+            listKey: 'name',
+            listSelectedAttribute: 'checked',
+            sortList: "asc",
+            onGetList: addCheckBoxes,
+            onClick: function (e) {
+                styleCheckbox(e.selected, e.listTarget);
+                if (!utils.isScrolledIntoView(e.listTarget, false, $statelist)) {
+                    utils.centerOn($statelist, e.listTarget);
+                }
+                //if (e.key==='OH') {
+                //    $usamap.mapster('zoom','OH');
+                //     return false;
+                //}
+            },
+            onConfigured: mapsterConfigured,
+            showToolTip: false,
+            toolTipClose: ["area-mouseout"],
+            areas: [
+                { key: "TX",
+                    toolTip: $('<div>Don\'t mess with Texas. Why? <a href="http://dontmesswithtexas.org/" target="_blank">Click here</a> for more info.</div>')
+
+                },
+                { key: "ME",
+                    toolTip: $('<div style="margin:auto; width:100px;"><img src="images/lobster-small.gif"/></div><div style="clear:both;"></div><p>Trees, ocean, lobsters, it\'s all here.</p>'),
+                    selected: true
+
+                },
+                { key: "AK",
+                    toolTip: "Alaska.. wild, and cold. And, you cannot select this area, but you can see the tooltip.",
+                    isSelectable: false
+                },
+                { key: "WA",
+                    staticState: true
+                },
+                { key: "OR",
+                    staticState: false
+                }
+                ]
+        };
+
 
 	   function addCheckBoxes(items) {
 	       var item,selected;
@@ -148,13 +207,16 @@ $(document).ready(function () {
             } else {
                 options = {
                 	render_select: {
-                    	altImage: null
+                    	altImage: null,
+                    	stroke: false,
+                        altImageOpacity: null
                     }
                 }
             }
-            options = $.extend({},default_options,options);
+            options = $.extend(true,{},default_options,options);
             $statelist.children().remove();
             $usamap.mapster(options);
+
 	       });
 			$("#update").click(function(e) {
 				e.preventDefault();
@@ -192,65 +254,6 @@ $(document).ready(function () {
 		};
 
 
-
-        default_options=
-        {
-        	fillOpacity: 0.5,
-        	render_highlight: {
-        		fillColor: '2aff00',
-        		stroke: true
-        	},
-        	render_select: {
-        		fillColor: 'ff000c',
-        		stroke:false
-        	},
-        	//render_zoom: {
-        	//    altImage: 'images/usa_map_huge.jpg'
-        	//},
-        	fadeInterval:50,
-            isSelectable: true,
-			singleSelect:false,
-            mapKey: 'state',
-            mapValue: 'full',
-            listKey: 'name',
-            listSelectedAttribute: 'checked',
-            sortList: "asc",
-            onGetList: addCheckBoxes,
-            onClick: function (e) {
-                styleCheckbox(e.selected, e.listTarget);
-                if (!utils.isScrolledIntoView(e.listTarget, false, $statelist)) {
-                    utils.centerOn($statelist, e.listTarget);
-                }
-                //if (e.key==='OH') {
-                //    $usamap.mapster('zoom','OH');
-                //     return false;
-                //}
-            },
-            onConfigured: mapsterConfigured,
-            showToolTip: false,
-            toolTipClose: ["area-mouseout"],
-            areas: [
-                { key: "TX",
-                    toolTip: $('<div>Don\'t mess with Texas. Why? <a href="http://dontmesswithtexas.org/" target="_blank">Click here</a> for more info.</div>')
-
-                },
-                { key: "ME",
-                    toolTip: $('<div style="margin:auto; width:100px;"><img src="images/lobster-small.gif"/></div><div style="clear:both;"></div><p>Trees, ocean, lobsters, it\'s all here.</p>'),
-                    selected: true
-
-                },
-                { key: "AK",
-                    toolTip: "Alaska.. wild, and cold. And, you cannot select this area, but you can see the tooltip.",
-                    isSelectable: false
-                },
-                { key: "WA",
-                    staticState: true
-                },
-                { key: "OR",
-                    staticState: false
-                }
-                ]
-        };
 
 		$.mapster.impl.init();
         $usamap.mapster(default_options);
