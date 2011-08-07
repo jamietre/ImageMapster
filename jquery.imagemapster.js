@@ -926,9 +926,7 @@ See complete changelog at github
                 $(this.wrapper).before(this.image).remove();
             }
             this.image = null;
-            u.each(this.alt_images, function () {
-                this = null;
-            });
+            this.alt_images = null;
             this.clearTooltip();
         };
         MapData.prototype.bindTooltipClose = function (option, event, obj) {
