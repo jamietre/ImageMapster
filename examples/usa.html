@@ -9,6 +9,40 @@
 
 <STYLE TYPE="text/css">
 
+body 
+{
+    font-family: Arial, Helvetica;
+    font-size: 12px;
+}
+h1 
+{
+    padding-top: 4px; padding-bottom:4px;
+    font-size: 13px;
+    font-weight: bold;
+}
+input[type="text"]
+{
+    width:30px;
+}
+td 
+{
+   padding: 6px; 
+   border: 1px solid black;
+}
+div.label 
+{
+    clear:both;
+    float:left;
+    width:100px;
+    height:24px;
+    margin-top: 5px;
+}
+div.input
+{
+    float:left;
+    height:24px;
+    margin-top: 5px;
+}
 </STYLE>
 </head>
 
@@ -17,32 +51,66 @@
 
 <div id="map_demo" style="width:920px; height:1000px;">
 	<div style="width:720px; overflow: hidden; float:left;">
-		<img style="display:block;" id="usa_image" src="images/usa_map_720.png" width="500" usemap="#usa" >
+		<img style="width:720px;" id="usa_image" src="images/usa_map_720.png" usemap="#usa" >
 	</div>
     <div  id="statelist" style="float:left; padding-left: 10px; width:180px; height: 445px; overflow-y: scroll;"></div>
 
     <div style="clear:both; height:8px;"></div>
 	<div>
-	<b>Options:</b>
+	
 	<div style="clear:both;"></div>
-	   Highlight stlyes: <select id="highlight_style">
+       <p>Choose the style in which highlights will be rendered. For fill, "normal" uses solid color fills. The other options use an alternate image as the source of the fill.
+       "Alternate image" requires HTML5 canvas support. In browsers that do not support it, typically Internet Explorer < 9, "normal" will be used instead.</p>
+	   
+        Make changes to the options below and click here to update the map: <input id="update" type="submit" value="Update">
+       
+
+       <table>
+        <tr><th colspan="3">        
+            <h1>Image Size</h1>
+            </th></tr>
+         <tr><td colspan="3">
+            <b>You can change the size</b> of an image just by changing the width or height attributes. Size (enter width only, max. 720): <input id="img_width" type="text"><br>
+        </td></tr>
+
+       <tr><th>
+       <h1>Highlight Types</h1>
+       </th>
+       <th><h1>Selection Styles</h1></th>
+       <th><h1>Options</h1></th>
+       </tr>
+       <tr><td width="33%" valign="top">
+       <i>Choose the style in which highlights will be rendered.</i><br /><br />
+       <div class="label">Highlight fill:</div><select id="highlight_style">
 	           <option value="0">Normal</option>
    	           <option value="1">Alternate Image 1</option>
    	           <option value="2">Alternate Image 2</option>
    	           <option value="3">Alternate Image 3</option>
                <option value="4">Alternate Image 4</option>
                <option value="5">Alternate Image 5</option>
-        </select> NOTE: Alternate Image *may* not work unless this is run on a web server because of canvas restrictions.
-	<div style="clear:both;"></div>
-		Stroke (highlight): <input id="stroke_highlight" type="checkbox"><br>
-		Stroke width (highlight): <input id="strokewidth_highlight" type="text"><br>
-		Stroke opacity (highlight): <input id="strokeopacity_highlight" type="text"><br>
-		Fill opacity (highlight): <input id="fill_highlight" type="text"><br>
-		Stroke (select): <input id="stroke_select" type="checkbox"><br>
-		Stroke width (select): <input id="strokewidth_select" type="text"><br>
-		Stroke opacity (select): <input id="strokeopacity_select" type="text"><br>
-		Fill opacity (select): <input id="fill_select" type="text"><br>
-		<input id="update" type="submit" value="Update"><br>
+        </select><br />
+		<div class="label">Stroke (border):</div> <div class="input"><input id="stroke_highlight" type="checkbox"></div>
+		<div class="label">Stroke width:</div><div class="input"> <input id="strokewidth_highlight" type="text" ></div>
+		<div class="label">Stroke opacity:</div> <div class="input"><input id="strokeopacity_highlight" type="text"></div>
+		<div class="label">Fill opacity:</div><div class="input"><input id="fill_highlight" type="text"></div>
+        </td>
+        <td width="33%" valign="top">
+        <i>Choose the style in which selections will be rendered.</i><br /><br />
+        <div class="label">Selection fill:</div> <select id="select_style">
+	           <option value="0">Normal</option>
+   	           <option value="1">Alternate Image 1</option>
+   	           <option value="2">Alternate Image 2</option>
+   	           <option value="3">Alternate Image 3</option>
+               <option value="4">Alternate Image 4</option>
+               <option value="5">Alternate Image 5</option>
+        </select><br />
+		<div class="label">Stroke:</div><div class="input"> <input id="stroke_select" type="checkbox" /></div>
+		<div class="label">Stroke width:</div> <div class="input"><input id="strokewidth_select" type="text"></div>
+		<div class="label">Stroke opacity:</div><div class="input"> <input id="strokeopacity_select" type="text"></div>
+		<div class="label">Fill opacity:</div> <div class="input"><input id="fill_select" type="text"></div>
+        </td>
+        <td width="33%" valign="top">
+                <br />
 		<a id="tooltip" href="#">Enable/disable toolTips.</a> [<span id="tooltip_state">disabled</span>]<br>
 		<a id="single_select" href="#">Enable/disable singleSelect.</a> [<span id="single_select_state">disabled</span>]<br>
 		<a id="is_deselectable" href="#">Enable/disable isDeselectable.</a> [<span id="is_deselectable_state">enabled</span>]<br>
@@ -50,21 +118,42 @@
 		<a id="unbind_link" href="#">Unbind the map.</a><br>
 		<a id="rebind_link" href="#">Rebind the map.</a><br>
 		<a id="unbind_link_preserve" href="#">Click here to unbind, preserving state.</a><br>
-      	<div style="clear:both;"></div>
-        <b>What's been selected?</b>
-      	<div style="clear:both;"></div>
+        </td>
+        
+        </tr>
+        <tr><th colspan="3"><h1>Get Data Out</h1></th></tr>
+        <tr><td colspan="3">
+        <a id="show_selected" href="#">Click here to show selected items:</a>
+            <span id="selections"></div>
+        </td></tr>
+        </table>
 
 
-    	<a id="show_selected" href="#">Show selected items.</a><br>
+
+    	
 	</div>
-    <div style="clear:both;" id="selections"></div>
+    
 </div>
 
 <script type="text/javascript">
 
-$(document).ready(function () {
-     var $statelist, $usamap, mapsterConfigured,
-     default_options =
+    $(document).ready(function () {
+        var $statelist, $usamap,
+        mapsterConfigured = function () {
+            // set html settings values
+            var opts = $usamap.mapster('get_options', null, true);
+
+            $('#stroke_highlight').prop("checked", opts.render_highlight.stroke);
+            $('#strokewidth_highlight').val(opts.render_highlight.strokeWidth);
+            $('#fill_highlight').val(opts.render_highlight.fillOpacity);
+            $('#strokeopacity_highlight').val(opts.render_highlight.strokeOpacity);
+            $('#stroke_select').prop("checked", opts.render_select.stroke);
+            $('#strokewidth_select').val(opts.render_select.strokeWidth);
+            $('#fill_select').val(opts.render_select.fillOpacity);
+            $('#strokeopacity_select').val(opts.render_select.strokeOpacity);
+            $('#img_width').val($usamap.width());
+        },
+        default_options =
         {
             fillOpacity: 0.5,
             render_highlight: {
@@ -124,143 +213,148 @@ $(document).ready(function () {
         };
 
 
-	   function addCheckBoxes(items) {
-	       var item,selected;
-	   	   $statelist.children().remove();
-		   for (var i = 0; i < items.length; i++) {
-			   selected = items[i].isSelected();
-			   item = $('<div><input type="checkbox" name="' + items[i].key + '"' + (selected ? "checked" : "") + '><span class="sel" key="'+items[i].key+'">' + items[i].value + '</span></div>');
+        function addCheckBoxes(items) {
+            var item, selected;
+            $statelist.children().remove();
+            for (var i = 0; i < items.length; i++) {
+                selected = items[i].isSelected();
+                item = $('<div><input type="checkbox" name="' + items[i].key + '"' + (selected ? "checked" : "") + '><span class="sel" key="' + items[i].key + '">' + items[i].value + '</span></div>');
 
-			   $statelist.append(item);
-		   }
-			$statelist.find('span.sel').unbind('click').bind('click',function(e) {
-				var key = $(this).attr('key');
-				$usamap.mapster('highlight',true,key);
-			});
-		   // return the list to mapster so it can bind to it
-		   return $statelist.find('input:checkbox').unbind('click').click(function (e) {
-			   var selected = $(this).is(':checked');
-			   $usamap.mapster('set', selected, $(this).attr('name'));
-			   styleCheckbox(selected, $(this));
-		   });
-	   }
-	   function styleCheckbox(selected, $checkbox) {
-		   nowWeight = selected ? "bold" : "normal";
-		   $checkbox.closest('div').css("font-weight", nowWeight);
-	   }
+                $statelist.append(item);
+            }
+            $statelist.find('span.sel').unbind('click').bind('click', function (e) {
+                var key = $(this).attr('key');
+                $usamap.mapster('highlight', true, key);
+            });
+            // return the list to mapster so it can bind to it
+            return $statelist.find('input:checkbox').unbind('click').click(function (e) {
+                var selected = $(this).is(':checked');
+                $usamap.mapster('set', selected, $(this).attr('name'));
+                styleCheckbox(selected, $(this));
+            });
+        }
+        function styleCheckbox(selected, $checkbox) {
+            nowWeight = selected ? "bold" : "normal";
+            $checkbox.closest('div').css("font-weight", nowWeight);
+        }
 
-	   $statelist = $('#statelist');
-	   $usamap = $('#usa_image');
-	   function bindlinks() {
-	   $('*').unbind();
-	   $("#unbind_link").bind("click",function(e) {
-	   		e.preventDefault();
-	   		$usamap.mapster("unbind");
-	   		bindlinks();
-	   });
-	   $("#rebind_link").bind("click",function(e) {
-	   		e.preventDefault();
-	   		$usamap.mapster(default_options);
-	   });
+        $statelist = $('#statelist');
+        $usamap = $('#usa_image');
+        function bindlinks() {
+            $('*').unbind();
+            $("#unbind_link").bind("click", function (e) {
+                e.preventDefault();
+                $usamap.mapster("unbind");
+                bindlinks();
+            });
+            $("#rebind_link").bind("click", function (e) {
+                e.preventDefault();
+                $usamap.mapster(default_options);
+            });
 
-	   $("#unbind_link_preserve").bind("click",function(e) {
-			e.preventDefault();
-			$usamap.mapster("unbind",true);
-			bindlinks();
-	   });
-	   $("#tooltip").bind("click",function(e) {
-			e.preventDefault();
-			var state = !$usamap.mapster('get_options').showToolTip;
-			$('#tooltip_state').text(state?"enabled":"disabled");
-			$usamap.mapster("set_options",{showToolTip: state });
-	   });
-	   $("#show_selected").bind("click",function(e) {
-			e.preventDefault();
-			$('#selections').text($("#usa_image").mapster("get"));
-	   });
-	   $("#single_select").bind("click",function(e) {
-			e.preventDefault();
-			var state = !$usamap.mapster('get_options').singleSelect;
-			$('#single_select_state').text(state?"enabled":"disabled");
-			$usamap.mapster("set_options",{singleSelect: state });
-	   });
-	   $("#is_deselectable").bind("click",function(e) {
-	   		e.preventDefault();
-	   		var state = !$usamap.mapster('get_options').isDeselectable;
-			$('#is_deselectable_state').text(state?"enabled":"disabled");
-			$usamap.mapster("set_options",{isDeselectable: state });
-	   });
-	   $("#highlight_style").bind("change",function(e) {
-	   		e.preventDefault();
-	   		var val = $("#highlight_style").find("option:selected").val();
-	   		var options,
+            $("#unbind_link_preserve").bind("click", function (e) {
+                e.preventDefault();
+                $usamap.mapster("unbind", true);
+                bindlinks();
+            });
+            $("#tooltip").bind("click", function (e) {
+                e.preventDefault();
+                var state = !$usamap.mapster('get_options').showToolTip;
+                $('#tooltip_state').text(state ? "enabled" : "disabled");
+                $usamap.mapster("set_options", { showToolTip: state });
+            });
+            $("#show_selected").bind("click", function (e) {
+                e.preventDefault();
+                $('#selections').text($("#usa_image").mapster("get"));
+            });
+            $("#single_select").bind("click", function (e) {
+                e.preventDefault();
+                var state = !$usamap.mapster('get_options').singleSelect;
+                $('#single_select_state').text(state ? "enabled" : "disabled");
+                $usamap.mapster("set_options", { singleSelect: state });
+            });
+            $("#is_deselectable").bind("click", function (e) {
+                e.preventDefault();
+                var state = !$usamap.mapster('get_options').isDeselectable;
+                $('#is_deselectable_state').text(state ? "enabled" : "disabled");
+                $usamap.mapster("set_options", { isDeselectable: state });
+            });
+            $("#highlight_style").bind("change", function (e) {
+                e.preventDefault();
+                var val = $("#highlight_style").find("option:selected").val();
+                var options,
                 state = !$usamap.mapster('get_options').highlightAltImage;
 
-            if (val>"0") {
-                options={
-                    render_select: {
-                   		altImage:'images/usa_map_720_alt_'+val+'.jpg',
-                    	stroke: true,
-                    	altImageOpacity: 0.5
+                if (val > "0") {
+                    options = {
+                        render_select: {
+                            altImage: 'images/usa_map_720_alt_' + val + '.jpg',
+                            stroke: true,
+                            altImageOpacity: 0.5
+                        }
                     }
-                 }
-            } else {
-                options = {
-                	render_select: {
-                    	altImage: null,
-                    	stroke: false,
-                        altImageOpacity: null
+                } else {
+                    options = {
+                        render_select: {
+                            altImage: null,
+                            stroke: false,
+                            altImageOpacity: null
+                        }
                     }
                 }
-            }
-            options = $.extend(true,{},default_options,options);
-            $statelist.children().remove();
-            $usamap.mapster(options);
+                options = $.extend(true, {}, default_options, options);
+                $statelist.children().remove();
+                $usamap.mapster(options);
 
-	       });
-			$("#update").click(function(e) {
-				e.preventDefault();
-				var newOpts = {};
-				newOpts.render_highlight={};
-				newOpts.render_highlight.stroke = $('#stroke_highlight').prop("checked");
-				newOpts.render_highlight.strokeWidth=$('#strokewidth_highlight').val();
-				newOpts.render_highlight.fillOpacity=$('#fill_highlight').val();
-				newOpts.render_highlight.strokeOpacity=$('#strokeopacity_highlight').val();
-				newOpts.render_select={};
-				newOpts.render_select.stroke = $('#stroke_select').prop("checked");
-				newOpts.render_select.strokeWidth=$('#strokewidth_select').val();
-				newOpts.render_select.fillOpacity=$('#fill_select').val();
-				newOpts.render_select.strokeOpacity=$('#strokeopacity_select').val();
-				$usamap.mapster('set_options',newOpts);
+            });
+            $("#update").click(function (e) {
+                var newOpts = {};
+                function setOption(base, opt, value) {
+                    if (value) {
+                        newOpts[opt] = value;
+                    }
+                }
+                e.preventDefault();
 
-			});
+                newOpts.render_highlight = {};
+                setOption(newOpts.render_highlight, "stroke", $('#stroke_highlight').prop("checked"));
 
-	    };
-	    bindlinks();
+                setOption(newOpts.render_highlight, "strokeWidth", $('#strokewidth_highlight').val());
+                setOption(newOpts.render_highlight, "fillOpacity", $('#fill_highlight').val());
+                setOption(newOpts.render_highlight, "strokeOpacity", $('#strokeopacity_highlight').val());
+
+                newOpts.render_select = {};
+                setOption(newOpts.render_select, "stroke", $('#stroke_select').prop("checked"));
+                setOption(newOpts.render_select, "strokeWidth", $('#strokewidth_select').val());
+                setOption(newOpts.render_select, "fillOpacity", $('#fill_select').val());
+                setOption(newOpts.render_select, "strokeOpacity", $('#strokeopacity_select').val());
+
+                var width = Math.min(parseInt($('#img_width').val(), 10), 720);
+                if ($usamap.width() != width) {
+                    var keys = $usamap.mapster('get');
+                    $usamap.mapster('unbind');
+                    $usamap.animate({ 'width': String(width) + "px" }, 1000, function () {
+                        $statelist.children().remove();
+                        $usamap.mapster(default_options);
+                        $usamap.mapster('rebind', newOpts);
+                        $usamap.mapster('set', true,keys);
+                    });
+                } else {
+                    $usamap.mapster('set_options', newOpts);
+                }
+
+            });
+
+        };
+        bindlinks();
 
 
-		mapsterConfigured = function() {
-			// set html settings values
-			var opts = $usamap.mapster('get_options',null,true);
-
-			$('#stroke_highlight').prop("checked",opts.render_highlight.stroke);
-			$('#strokewidth_highlight').val(opts.render_highlight.strokeWidth);
-			$('#fill_highlight').val(opts.render_highlight.fillOpacity);
-			$('#strokeopacity_highlight').val(opts.render_highlight.strokeOpacity);
-			$('#stroke_select').prop("checked",opts.render_select.stroke);
-			$('#strokewidth_select').val(opts.render_select.strokeWidth);
-			$('#fill_select').val(opts.render_select.fillOpacity);
-			$('#strokeopacity_select').val(opts.render_select.strokeOpacity);
-		};
-
-
-
-		$.mapster.impl.init();
+        $.mapster.impl.init();
         $usamap.mapster(default_options);
 
 
 
-		});
+    });
 
 
            // Utility functions

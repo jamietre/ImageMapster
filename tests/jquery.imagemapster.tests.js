@@ -1,78 +1,72 @@
 
 
 mapster_tests = function (options) {
-    var map_test = new Test(options);
-    var map;
-
-    var onClickCalledBack = false;
-    var onClickCalledBackThis = null;
-    var onClickCallback = function (data) {
-        onClickCalledBack = data
-        onClickCalledBackThis = this;
-    };
-
-    var toolTipShowEventCalledBack = null;
-    var toolTipShowEventThis = null;
-    var toolTipShowEvent = function (data) {
-        toolTipShowEventCalledBack = data;
-        toolTipShowEventThis = this;
-    }
-
-    var onGetStateArgs;
-    var onGetStateThis;
-    var onGetStateCallback = function () {
-        onGetStateArgs = [];
-        onGetStateThis = this;
-        for (var arg in arguments) {
-            if (arguments.hasOwnProperty(arg)) {
-                onGetStateArgs.push(arguments[arg]);
-            }
-        }
-    };
-
-
-
-    var map_options = {
-        isSelectable: true,
-        singleSelect: false,
-        mapKey: 'state',
-        mapValue: 'full',
-        listKey: 'name',
-        listSelectedAttribute: 'checked',
-        sortList: "asc",
-        onGetList: onGetStateCallback,
-        onClick: onClickCallback,
-        showToolTip: true,
-        onShowToolTip: toolTipShowEvent,
-        toolTipClose: ["area-mouseout"],
-        areas: [
-        {
-            key: "TX",
-            selected: true
-        }
-        ,
-        {
-            key: "AK",
-            isSelectable: false,
-            selected: true
-        }
-        ,
-        {
-            key: "WA",
-            staticState: true
-        }
-        ,
-        {
-            key: "OR",
-            staticState: false
+    var map,
+        map_test = new Test(options),
+        callBackData = false,
+        callBackThis = null,
+        callBack = function (data) {
+            callBackData = data
+            callBackThis = this;
         },
-        {
-            key: "CA",
-            toolTip: $('<div>Don\'t mess with Louisiana. Why ? <a href = "http://dontmesswithtexas.org/" target="_blank" > Click here </a> for more info. </div> ')
-        }
+        callBackReset = function () {
+            callBackData = null;
+            callBackThis = null;
+        },
+        onGetStateArgs,
+        onGetStateThis,
+        onGetStateCallback = function () {
+            onGetStateArgs = [];
+            onGetStateThis = this;
+            for (var arg in arguments) {
+                if (arguments.hasOwnProperty(arg)) {
+                    onGetStateArgs.push(arguments[arg]);
+                }
+            }
+        },
+        map_options = {
+            isSelectable: true,
+            singleSelect: false,
+            mapKey: 'state',
+            mapValue: 'full',
+            listKey: 'name',
+            listSelectedAttribute: 'checked',
+            sortList: "asc",
+            onGetList: onGetStateCallback,
+            onClick: callBack,
+            onMouseover: callBack,
+            onMouseout: callBack,
+            showToolTip: true,
+            onShowToolTip: callBack,
+            toolTipClose: ["area-mouseout"],
+            areas: [
+            {
+                key: "TX",
+                selected: true
+            }
+            ,
+            {
+                key: "AK",
+                isSelectable: false,
+                selected: true
+            }
+            ,
+            {
+                key: "WA",
+                staticState: true
+            }
+            ,
+            {
+                key: "OR",
+                staticState: false
+            },
+            {
+                key: "CA",
+                toolTip: $('<div>Don\'t mess with Louisiana. Why ? <a href = "http://dontmesswithtexas.org/" target="_blank" > Click here </a> for more info. </div> ')
+            }
 
-        ]
-    };
+            ]
+        };
 
     map_test.addTest("Mapster Utility Function Tests", function (ut) {
 
@@ -190,8 +184,6 @@ mapster_tests = function (options) {
             $.mapster.impl.init(false);
         }
         map = $('img').mapster(map_options);
-
-
 
 
         // test using only bound images
@@ -364,21 +356,40 @@ mapster_tests = function (options) {
 
     map_test.addTest("Event/Tooltip Tests", function (ut) {
         var map = $('img').mapster(map_options);
-        onClickCalledBack = null;
-        onClickCalledBackThis = null;
+
+        callBackReset();
+        $('area[state="NV"]').first().mouseover();
+        ut.assertIsTruthy(callBackData, "Mouseover fired for Nevada");
+        ut.assertEq(callBackData.selected, false, "Selected state returned correctly");
+        ut.assertEq(callBackData.key, "NV", "Key returned correctly");
+
+        callBackReset();
+        $('area[state="AK"]').first().mouseover();
+        ut.assertIsTruthy(callBackData, "Mouseover fired for Alaska");
+        ut.assertEq(callBackData.selected, true, "Selected state returned correctly");
+        ut.assertEq(callBackData.key, "AK", "Key returned correctly");
+
+        callBackReset();
+        $('area[state="NV"]').first().mouseout();
+        ut.assertIsTruthy(callBackData, "Mouseout fired for Nevada");
+        ut.assertEq(callBackData.selected, false, "Selected state returned correctly");
+
+        callBackReset();
+
         $('area[state="GA"]').first().click();
-        ut.assertIsTruthy(onClickCalledBack, "Click callback fired for Georgia");
-        if (onClickCalledBack) {
-            ut.assertEq(onClickCalledBack.key, "GA", "Click callback fired for Georgia, and key was correct");
-            ut.assertEq(onClickCalledBack.selected, true, "Click callback fired for Georgia, and selected was correct");
-            ut.assertEq(onClickCalledBackThis, $('area[state="GA"]')[0], "Click callback fired for Georgia, and this was correct");
+        ut.assertIsTruthy(callBackData, "Click callback fired for Georgia");
+        if (callBackData) {
+            ut.assertEq(callBackData.key, "GA", "Click callback fired for Georgia, and key was correct");
+            ut.assertEq(callBackData.selected, true, "Click callback fired for Georgia, and selected was correct");
+            ut.assertEq(callBackThis, $('area[state="GA"]')[0], "Click callback fired for Georgia, and this was correct");
         }
-        // try clicking staticState=false
-        onClickCalledBack = null;
+
+        callBackReset();
+
         $('area[state="OR"]').first().click();
-        if (onClickCalledBack) {
-            ut.assertEq(onClickCalledBack.key, "OR", "Click callback fired for Oregon, and key was correct");
-            ut.assertEq(onClickCalledBack.selected, false, "Click callback fired for Oregon, and selected was correct");
+        if (callBackData) {
+            ut.assertEq(callBackData.key, "OR", "Click callback fired for Oregon, and key was correct");
+            ut.assertEq(callBackData.selected, false, "Click callback fired for Oregon, and selected was correct");
         }
 
         // Now try tooltips
@@ -387,15 +398,15 @@ mapster_tests = function (options) {
 
         ut.assertEq($(".mapster-tooltip").length, 0, "No tooltip showing");
 
-        toolTipShowEventCalledBack = null;
+        callBackReset();
         $('area[state="CA"]').first().mouseover();
         ut.assertEq($(".mapster-tooltip").length, 1, "Tooltip was shown");
         ut.assertEq($(".mapster-tooltip").is(":visible"), true, "Tooltip is visible");
-        ut.assertIsTruthy(toolTipShowEventCalledBack, "Click callback fired for LA tooltip");
-        if (toolTipShowEventCalledBack) {
-            ut.assertEq(toolTipShowEventCalledBack.key, "CA", "Tooltip show callback fired for CA, and key was correct");
-            ut.assertEq(toolTipShowEventCalledBack.selected, false, "Tooltip show callback fired for Louisiana, and selected was correct");
-            ut.assertEq(toolTipShowEventThis, $('area[state="CA"]')[0], "Tooltip show callback fired for Lousisiana, and this was correct");
+        ut.assertIsTruthy(callBackData, "Click callback fired for LA tooltip");
+        if (callBackData) {
+            ut.assertEq(callBackData.key, "CA", "Tooltip show callback fired for CA, and key was correct");
+            ut.assertEq(callBackData.selected, false, "Tooltip show callback fired for Louisiana, and selected was correct");
+            ut.assertEq(callBackThis, $('area[state="CA"]')[0], "Tooltip show callback fired for Lousisiana, and this was correct");
         }
         $('area[state="CA"]').first().mouseout();
         ut.assertEq($(".mapster-tooltip").length, 0, "No tooltip showing after mouseout");
