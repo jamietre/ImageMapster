@@ -50,8 +50,8 @@ div.input
 
 
 <div id="map_demo" style="width:920px; height:1000px;">
-	<div style="width:720px; overflow: hidden; float:left;">
-		<img style="width:720px;" id="usa_image" src="images/usa_map_720.png" usemap="#usa" >
+	<div style="width:720px; border:0; overflow: hidden; float:left;">
+		<img style="width:720px;border:0;" id="usa_image" src="images/usa_map_720.png" usemap="#usa" >
 	</div>
     <div  id="statelist" style="float:left; padding-left: 10px; width:180px; height: 445px; overflow-y: scroll;"></div>
 
@@ -124,7 +124,7 @@ div.input
         <tr><th colspan="3"><h1>Get Data Out</h1></th></tr>
         <tr><td colspan="3">
         <a id="show_selected" href="#">Click here to show selected items:</a>
-            <span id="selections"></div>
+            <span id="selections"></span>
         </td></tr>
         </table>
 
@@ -245,6 +245,7 @@ div.input
             $("#unbind_link").bind("click", function (e) {
                 e.preventDefault();
                 $usamap.mapster("unbind");
+                $usamap.width(720);
                 bindlinks();
             });
             $("#rebind_link").bind("click", function (e) {
@@ -337,7 +338,7 @@ div.input
                         $statelist.children().remove();
                         $usamap.mapster(default_options);
                         $usamap.mapster('rebind', newOpts);
-                        $usamap.mapster('set', true,keys);
+                        $usamap.mapster('set', true, keys);
                     });
                 } else {
                     $usamap.mapster('set_options', newOpts);

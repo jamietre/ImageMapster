@@ -7,6 +7,7 @@ https://github.com/jamietre/ImageMapster
 A jQuery plugin to enhance image maps.
 
 version 1.2 (prerelease)
+-- some tweaks for IE regarding borders to make appearance remain consistent across unbind/rebind
 -- Fixed "onMouseover" option, added tests for onMouseover/onMouseout.
 -- many performance improvements, tests, refactoring some old inefficient code. Improved memory usage.
 -- fix css flickering when debinding/rebinding
@@ -571,7 +572,10 @@ See complete changelog at github
 
         MapData = function (image, options) {
             var me = this;
+            // sorry - your image must have border:0 
+            $(image).css('border', 0);
             // elements own index in parent array - so we have an ID to use for wraper div
+
             this.index = -1;
             this.image = image;
             this.map = null;
@@ -586,6 +590,7 @@ See complete changelog at github
             this.complete = false;
             this.commands = [];
             this.data = [];
+
             this.imgCssText = image.style.cssText || null;
             this.bind_tries = options.configTimeout / 200;
             // private members
@@ -933,9 +938,7 @@ See complete changelog at github
                 $(this.wrapper).before(this.image).remove();
             }
             this.image = null;
-            u.each(this.alt_images, function () {
-                this = null;
-            });
+            this.alt_images = null;
             this.clearTooltip();
         };
         MapData.prototype.bindTooltipClose = function (option, event, obj) {
@@ -1655,7 +1658,7 @@ See complete changelog at github
                     me.render();
 
                     if (opts.fade && mode === 'highlight') {
-                        u.fader(canvas, 0, opts.fillOpacity, opts.fadeDuration);
+                        u.fader(canvas, 0, 1, opts.fadeDuration);
                     }
                 }
 
