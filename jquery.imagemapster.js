@@ -7,7 +7,8 @@ https://github.com/jamietre/ImageMapster
 A jQuery plugin to enhance image maps.
 
 version 1.2 (prerelease)
--- some tweaks for IE regarding borders to make appearance remain consistent across unbind/rebind
+-- another IE tweak: blur() on mouseover/click to remove browser-rendered border around area
+-- some tweaks for IE regarding image borders to make appearance remain consistent across unbind/rebind
 -- Fixed "onMouseover" option, added tests for onMouseover/onMouseout.
 -- many performance improvements, tests, refactoring some old inefficient code. Improved memory usage.
 -- fix css flickering when debinding/rebinding
@@ -88,7 +89,7 @@ See complete changelog at github
 */
 
 /*jslint browser: true, white: true, sloppy:true, nomen: true, plusplus: true, evil: true, forin: true, type: true, windows: true */
-/*global jQuery: true */
+/*global jQuery: true, HTMLElement: true */
 
 (function ($) {
     var methods;
@@ -105,7 +106,7 @@ See complete changelog at github
     // utility functions
     $.mapster.utils = {
         area_corner: function (coords, left, top) {
-            var bestX, bestY, curX, curY, coords, j;
+            var bestX, bestY, curX, curY, j;
 
             bestX = left ? 999999 : -1;
             bestY = top ? 999999 : -1;
@@ -268,7 +269,7 @@ See complete changelog at github
         },
         // Scale a set of AREAs, return old data as an array of objects
         scaleInfo: function (image, scale) {
-            var imgCopy, pct, pct, realH, realW, width, height, img = $(image);
+            var imgCopy, pct, realH, realW, width, height, img = $(image);
             if (!img.length) { return; }
 
             width = img.width();
@@ -293,7 +294,7 @@ See complete changelog at github
                 if (pct > 0.98 && pct < 1.02) { pct = 1; }
             }
             return {
-                scale: (pct != 1),
+                scale: (pct !== 1),
                 scalePct: pct,
                 realWidth: realW,
                 realHeight: realH,
@@ -417,8 +418,7 @@ See complete changelog at github
 
     $.mapster.impl = (function () {
         var me = {},
-        p,
-        AreaData, MapData, Method,
+        AreaData, MapData, MapArea, Method,
         u = $.mapster.utils,
         map_cache = [],
         ie_config_complete = false,
@@ -433,15 +433,13 @@ See complete changelog at github
             border: 0
         },
         is_image_loaded = function (map_data) {
-            var img, images = map_data.images();
+            var images = map_data.images();
 
             return u.each(images, function () {
-
                 var complete = this.complete || (this.width && this.height) ||
                     (typeof this.naturalWidth !== "undefined" && this.naturalWidth !== 0 && this.naturalHeight !== 0);
 
                 return complete;
-
             });
         };
         me.test = function (obj) {
@@ -450,13 +448,6 @@ See complete changelog at github
 
         // end utility functions
 
-        function shape_from_area(area) {
-            var i, coords = area.getAttribute('coords').split(',');
-            for (i = coords.length - 1; i >= 0; i--) {
-                coords[i] = parseInt(coords[i], 10);
-            }
-            return [area.getAttribute('shape').toLowerCase().substr(0, 4), coords];
-        }
         function create_canvas(img) {
             return $(graphics.create_canvas_for(img)).css(canvas_style)[0];
         }
@@ -602,6 +593,9 @@ See complete changelog at github
                 var ar = me.getDataForArea(this),
                     opts = ar.effectiveOptions();
 
+                if (!has_canvas) {
+                    this.blur();
+                }
                 if (!u.isBool(opts.staticState)) {
                     ar.highlight();
                 }
@@ -620,7 +614,7 @@ See complete changelog at github
                 }
             };
             this.mouseout = function (e) {
-                var key, data,
+                var key,
                     ar = me.getDataForArea(this),
                     opts = me.options;
 
@@ -645,8 +639,12 @@ See complete changelog at github
                 var selected, list_target, newSelectionState, canChangeState,
                     ar = me.getDataForArea(this),
                     opts = me.options;
-
+                
                 e.preventDefault();
+                
+                if (!has_canvas) {
+                    this.blur();
+                }
 
                 opts = me.options;
 
@@ -772,8 +770,8 @@ See complete changelog at github
             }
         };
         MapData.prototype.initialize = function () {
-            var $area, area, sel, areas, i, j, keys, key, area_id, default_group, group_value, img,
-                sort_func, sorted_list, isMask, dataItem, mapArea, scale,
+            var $area, area, css,sel, areas, i, j, keys, key, area_id, default_group, group_value, img,
+                sort_func, sorted_list, dataItem, mapArea, scale,
                 me = this,
                 selected_list = [],
                 opts = this.options;
@@ -924,7 +922,6 @@ See complete changelog at github
             });
         };
         MapData.prototype.clearMapData = function (preserveState) {
-            var div;
             this._clearCanvases(preserveState);
 
             // release refs to DOM elements
@@ -1160,7 +1157,7 @@ See complete changelog at github
             me.originalCoords = areaEl.coords.split(',');
             me.length = me.originalCoords.length;
 
-            me.shape = areaEl.shape.toLowerCase(),
+            me.shape = areaEl.shape.toLowerCase();
             me.nohref = areaEl.nohref || !areaEl.href;
             //change the area tag data if needed
             if (me.owner.scaleInfo.scale) {
@@ -1175,9 +1172,9 @@ See complete changelog at github
         };
 
         MapArea.prototype.coords = function (pct) {
-            var amount, j, newCoords = [];
+            var j, newCoords = [];
             pct = pct || this.owner.scaleInfo.scalePct;
-            if (pct == 1) {
+            if (pct === 1) {
                 return this.originalCoords;
             }
 
@@ -1186,7 +1183,7 @@ See complete changelog at github
                 newCoords.push(Math.round(this.originalCoords[j] * pct).toString());
             }
             return newCoords;
-        }
+        };
         // PUBLIC FUNCTIONS
 
         // Returns a comma-separated list of user-selected areas. "staticState" areas are not considered selected for the purposes of this method.
@@ -1452,7 +1449,7 @@ See complete changelog at github
             });
 
             return this.each(function () {
-                var css, h, w, realH, realW, last, lastProp, img, imgCopy, wrap, map, canvas, context, overlay_canvas, usemap, map_data, parent_id, wrap_id;
+                var last, lastProp, img, wrap, map, canvas,overlay_canvas, usemap, map_data, parent_id, wrap_id;
 
                 // save ref to this image even if we can't access it yet. commands will be queued
                 img = $(this);
@@ -1594,11 +1591,11 @@ See complete changelog at github
             // 3) call add_shape_to for each shape or mask, 4) call render() to finish
 
             graphics = (function () {
-                var map_data, canvas, context, width, height, masks, shapes, css3color, render_shape, addAltImage, me = {};
+                var element_name, map_data, canvas, context, width, height, masks, shapes, css3color, render_shape, addAltImage, me = {};
                 me.active = false;
 
                 function addShapeGroupImpl(areaData, mode) {
-                    var opts, areaOpts, shape;
+                    var opts, areaOpts;
                     // first get area options. Then override fade for selecting, and finally merge in the "select" effect options.
                     areaOpts = areaData.effectiveOptions();
                     opts = u.mergeObjects({
@@ -1620,14 +1617,14 @@ See complete changelog at github
                 me.init = function (_map_data) {
                     map_data = _map_data;
                 };
-                me.begin = function (_canvas, _name) {
-                    canvas = _canvas;
+                me.begin = function (curCanvas, curName) {
+                    canvas = curCanvas;
                     width = $(canvas).width();
                     height = $(canvas).height();
                     shapes = [];
                     masks = [];
                     me.active = true;
-                    me.beginSpecific(_name);
+                    me.beginSpecific(curName);
                 };
                 me.addShape = function (mapArea, options) {
                     var addto = options.isMask ? masks : shapes;
@@ -1660,9 +1657,7 @@ See complete changelog at github
                     if (opts.fade && mode === 'highlight') {
                         u.fader(canvas, 0, 1, opts.fadeDuration);
                     }
-                }
-
-
+                };
 
                 if (has_canvas) {
                     css3color = function (color, opacity) {
@@ -1670,7 +1665,7 @@ See complete changelog at github
                             return Math.max(0, Math.min(parseInt(hex, 16), 255));
                         }
                         return 'rgba(' + hex_to_decimal(color.substr(0, 2)) + ',' + hex_to_decimal(color.substr(2, 2)) + ',' + hex_to_decimal(color.substr(4, 2)) + ',' + opacity + ')';
-                    }
+                    };
                     // mapArea
                     render_shape = function (mapArea) {
                         var i, c = mapArea.coords();
@@ -1691,7 +1686,7 @@ See complete changelog at github
                                 context.arc(c[0], c[1], c[2], 0, Math.PI * 2, false);
                                 break;
                         }
-                    }
+                    };
                     addAltImage = function (image, mapArea, options) {
                         context.save();
                         context.beginPath();
@@ -1704,7 +1699,7 @@ See complete changelog at github
 
                         context.drawImage(image, 0, 0, mapArea.owner.scaleInfo.width, mapArea.owner.scaleInfo.height);
                         context.restore();
-                    }
+                    };
 
                     me.beginSpecific = function () {
                         context = canvas.getContext('2d');
@@ -1801,12 +1796,12 @@ See complete changelog at github
                     return me;
                 } else {
                     render_shape = function (mapArea, options) {
-                        var stroke, e, el_name, template, c = mapArea.coords();
-                        el_name = name ? 'name="' + name + '" ' : '';
+                        var stroke, e, t_fill, el_name, template, c = mapArea.coords();
+                        el_name = element_name ? 'name="' + element_name + '" ' : '';
 
-                        // fill
+                        
                         t_fill = '<v:fill color="#' + options.fillColor + '" opacity="' + (options.fill ? options.fillOpacity : 0) + '" /><v:stroke opacity="' + options.strokeOpacity + '"/>';
-                        // stroke
+                        
                         if (options.stroke) {
                             stroke = 'strokeweight=' + options.strokeWidth + ' stroked="t" strokecolor="#' + options.strokeColor + '"';
                         } else {
@@ -1834,9 +1829,9 @@ See complete changelog at github
                         $(canvas).append(e);
 
                         return e;
-                    }
-                    me.beginSpecific = function (_name) {
-                        name = _name;
+                    };
+                    me.beginSpecific = function (name) {
+                        element_name = name;
                     };
                     me.create_canvas_for = function (img) {
                         var $img = $(img),

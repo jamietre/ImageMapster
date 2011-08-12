@@ -9,12 +9,12 @@
 
 <STYLE TYPE="text/css">
 
-body 
+body
 {
     font-family: Arial, Helvetica;
     font-size: 12px;
 }
-h1 
+h1
 {
     padding-top: 4px; padding-bottom:4px;
     font-size: 13px;
@@ -24,12 +24,12 @@ input[type="text"]
 {
     width:30px;
 }
-td 
+td
 {
-   padding: 6px; 
+   padding: 6px;
    border: 1px solid black;
 }
-div.label 
+div.label
 {
     clear:both;
     float:left;
@@ -57,16 +57,16 @@ div.input
 
     <div style="clear:both; height:8px;"></div>
 	<div>
-	
+
 	<div style="clear:both;"></div>
        <p>Choose the style in which highlights will be rendered. For fill, "normal" uses solid color fills. The other options use an alternate image as the source of the fill.
        "Alternate image" requires HTML5 canvas support. In browsers that do not support it, typically Internet Explorer < 9, "normal" will be used instead.</p>
-	   
+
         Make changes to the options below and click here to update the map: <input id="update" type="submit" value="Update">
-       
+
 
        <table>
-        <tr><th colspan="3">        
+        <tr><th colspan="3">
             <h1>Image Size</h1>
             </th></tr>
          <tr><td colspan="3">
@@ -119,7 +119,7 @@ div.input
 		<a id="rebind_link" href="#">Rebind the map.</a><br>
 		<a id="unbind_link_preserve" href="#">Click here to unbind, preserving state.</a><br>
         </td>
-        
+
         </tr>
         <tr><th colspan="3"><h1>Get Data Out</h1></th></tr>
         <tr><td colspan="3">
@@ -130,9 +130,9 @@ div.input
 
 
 
-    	
+
 	</div>
-    
+
 </div>
 
 <script type="text/javascript">
@@ -311,8 +311,8 @@ div.input
             $("#update").click(function (e) {
                 var newOpts = {};
                 function setOption(base, opt, value) {
-                    if (value) {
-                        newOpts[opt] = value;
+                    if (value!=='' && value!==null) {
+                        base[opt] = value;
                     }
                 }
                 e.preventDefault();
