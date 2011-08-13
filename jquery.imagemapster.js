@@ -7,6 +7,7 @@ https://github.com/jamietre/ImageMapster
 A jQuery plugin to enhance image maps.
 
 version 1.2 (prerelease)
+-- bug when multiple images bound on same page 
 -- another IE tweak: blur() on mouseover/click to remove browser-rendered border around area
 -- some tweaks for IE regarding image borders to make appearance remain consistent across unbind/rebind
 -- Fixed "onMouseover" option, added tests for onMouseover/onMouseout.
@@ -1631,17 +1632,16 @@ See complete changelog at github
                     addto.push({ mapArea: mapArea, options: options });
                 };
                 me.addShapeGroup = function (areaData, mode) {
-                    var list, canvas, name,
+                    var list, name,
                          opts = areaData.effectiveOptions();
                     // render includeKeys first - because they could be masks
-
+                    me.init(areaData.owner);
                     if (mode === 'select') {
                         name = "static_" + areaData.areaId.toString();
                         canvas = map_data.base_canvas;
                     } else {
                         canvas = map_data.overlay_canvas;
                     }
-                    me.init(areaData.owner);
                     me.begin(canvas, name);
 
                     if (opts.includeKeys) {
