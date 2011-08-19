@@ -138,11 +138,13 @@ div.input
 <script type="text/javascript">
 
     $(document).ready(function () {
-        var $statelist, $usamap,
+        var $statelist, $usamap, ratio,
         mapsterConfigured = function () {
             // set html settings values
             var opts = $usamap.mapster('get_options', null, true);
-
+            if (!ratio) {
+                ratio = $usamap.width() / $usamap.height();
+            }
             $('#stroke_highlight').prop("checked", opts.render_highlight.stroke);
             $('#strokewidth_highlight').val(opts.render_highlight.strokeWidth);
             $('#fill_highlight').val(opts.render_highlight.fillOpacity);
@@ -335,20 +337,12 @@ div.input
                 setOption(newOpts.render_select, "strokeOpacity", $('#strokeopacity_select').val());
 
                 var width = parseInt($('#img_width').val(), 10);
+
                 if ($usamap.width() != width) {
+                    var height = width / ratio;
                     var hOpts = getHighlightOptions();
                     var keys = $usamap.mapster('get');
-                    $usamap.mapster('unbind');
-                    $usamap.animate({ 'width': String(width) + "px" }, 1000, function () {
-                        var options;
-                        $statelist.children().remove();
-                        options = $.extend(default_options, newOpts);
-                        options.render_select = hOpts.render_select;
-                        options.render_highlight = hOpts.render_highlight;
-                        $usamap.mapster(options);
-                        //$usamap.mapster('rebind', newOpts);
-                        $usamap.mapster('set', true, keys);
-                    });
+                    $usamap.mapster('resize', width, null, 1000);
                 } else {
                     $usamap.mapster('set_options', newOpts);
                 }
@@ -356,12 +350,10 @@ div.input
             });
 
         };
+
         bindlinks();
-
-
         $.mapster.impl.init();
         $usamap.mapster(default_options);
-
 
 
     });

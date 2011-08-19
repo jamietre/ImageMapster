@@ -130,6 +130,10 @@ See complete changelog at github
             }
             return [bestX, bestY];
         },
+        setOpacity: function (e, opacity) {
+            e.style.filter = "Alpha(opacity=" + String(opacity * 100) + ")";
+            e.style.opacity = opacity;
+        },
         // sorta like $.extend but limits to updating existing properties on the base object. If the base object is null, then it will
         // be limited to the properties of the FIRST object.
         // (options,target,source,source,...)
@@ -230,11 +234,11 @@ See complete changelog at github
             }
         },
         isImageLoaded: function (img) {
-            if (typeof img.complete !=='undefined' && !img.complete) {
+            if (typeof img.complete !== 'undefined' && !img.complete) {
                 return false;
             }
-            if (typeof img.naturalWidth !== 'undefined' && 
-                    (img.naturalWidth === 0 || img.naturalHeight===0)) {
+            if (typeof img.naturalWidth !== 'undefined' &&
+                    (img.naturalWidth === 0 || img.naturalHeight === 0)) {
                 return false;
             }
             return true;
@@ -283,9 +287,28 @@ See complete changelog at github
             }
             return true;
         },
+        getScaleInfo: function (realW, realH, width, height) {
+            var pct;
+            if (!width && !height) {
+                pct = 1;
+            } else {
+                pct = width / realW || height / realH;
+                // make sure a float error doesn't muck us up
+                if (pct > 0.98 && pct < 1.02) { pct = 1; }
+            }
+            return {
+                scale: (pct !== 1),
+                scalePct: pct,
+                realWidth: realW,
+                realHeight: realH,
+                width: width,
+                height: height,
+                ratio: width / height
+            };
+        },
         // Scale a set of AREAs, return old data as an array of objects
         scaleInfo: function (image, scale) {
-            var imgCopy, pct, realH, realW, width, height, img = $(image);
+            var imgCopy, realH, realW, width, height, img = $(image);
             if (!img.length) { return; }
 
             width = img.width();
@@ -301,30 +324,9 @@ See complete changelog at github
                 realH = height;
                 realW = width;
             }
-
-            if (!width && !height) {
-                pct = 1;
-            } else {
-                pct = width / realW || height / realH;
-                // make sure a float error doesn't muck us up
-                if (pct > 0.98 && pct < 1.02) { pct = 1; }
-            }
-            return {
-                scale: (pct !== 1),
-                scalePct: pct,
-                realWidth: realW,
-                realHeight: realH,
-                width: width,
-                height: height
-            };
-
+            return this.getScaleInfo(realW, realH, width, height);
         },
         fader: (function () {
-            function setOpacity(e, opacity) {
-                e.style.filter = "Alpha(opacity=" + String(opacity * 100) + ")";
-                e.style.opacity = opacity;
-            }
-
             var elements = [],
                 lastKey = 0,
                 fade_func = function (el, op, endOp, duration) {
@@ -349,7 +351,7 @@ See complete changelog at github
 
                     op = (op + (endOp / 10) > endOp - 0.01) ? endOp : op + (endOp / 10);
 
-                    setOpacity(obj, op);
+                    u.setOpacity(obj, op);
                     if (op < endOp) {
                         setTimeout(function () {
                             fade_func(el, op, endOp, duration);
@@ -595,7 +597,7 @@ See complete changelog at github
             this.data = [];
 
             this.imgCssText = image.style.cssText || null;
-            this.bind_tries = options.configTimeout / 200;
+            this.bindTries = options.configTimeout / 200;
             // private members
             this._xref = {};
             this._highlightId = -1;
@@ -688,6 +690,41 @@ See complete changelog at github
             };
 
         };
+        MapData.prototype.resize = function (width, height, duration) {
+            var newsize, keys, opts, me = this;
+            function finishResize() {
+                me.scaleInfo = u.getScaleInfo(me.scaleInfo.realWidth, me.scaleInfo.realHeight, width, height);
+                u.each(me.data, function () {
+                    u.each(this.areas, function () {
+                        this.resize();
+                    });
+                });
+                me.base_canvas.width = width;
+                me.base_canvas.height = height;
+                me.overlay_canvas.width = width;
+                me.overlay_canvas.height = height;
+                me.setAreasSelected();
+            }
+            if (!width) {
+                width = height * me.scaleInfo.ratio;
+            }
+            if (!height) {
+                height = width / me.scaleInfo.ratio;
+            }
+
+            newsize = { 'width': String(width) + 'px', 'height': String(height) + 'px' };
+            if (!has_canvas) {
+                $(me.base_canvas).children().remove();
+            }
+
+            if (duration) {
+                $('.mapster_el').add(me.wrapper).animate(newsize, duration || 1000);
+                $(this.image).animate(newsize, 1100, finishResize);
+            } else {
+                $('.mapster_el').add(me.wrapper).add(this.image).css(newsize);
+                finishResize();
+            }
+        };
         // bind a new image to a src, capturing load event. Return the new (or existing) image.
         MapData.prototype.addImage = function (src, altId) {
             var index;
@@ -702,7 +739,10 @@ See complete changelog at github
                 this.altImagesXref[altId] = index;
             }
         };
-        MapData.prototype.bindImages = function () {
+        // Wait until all images are loaded then call initialize. This is difficult because browsers are incosistent about
+        // how or if "onload" works and in how one can actually detect if an image is already loaded. Try to check first,
+        // then bind onload event, and finally use a timer to keep checking.
+        MapData.prototype.bindImages = function (dontBind) {
             var alreadyLoaded = true, index, img,
                 me = this;
 
@@ -720,13 +760,17 @@ See complete changelog at github
                     me.initialize();
                 }
             }
+            if (me.complete) {
+                return;
+            }
+
             u.each(this.imageSources, function (i) {
                 var img = new Image();
                 img.src = this;
                 if (u.isImageLoaded(img)) {
                     me.images[i] = img;
                     me.imageStatus[i] = true;
-                } else {
+                } else if (!dontBind) {
                     alreadyLoaded = false;
                     img = new Image();
                     me.images[i] = img;
@@ -736,6 +780,15 @@ See complete changelog at github
             });
             if (alreadyLoaded) {
                 me.initialize();
+            } else {
+                // to account for failure of onLoad to fire in rare situations
+                if (me.bindTries-- > 0) {
+                    window.setTimeout(function () {
+                        me.bindImages(true);
+                    }, 1000);
+                } else {
+                    throw ("Images never seemed to finish loading.");
+                }
             }
         };
         MapData.prototype.altImage = function (mode) {
@@ -747,6 +800,17 @@ See complete changelog at github
         MapData.prototype._idFromKey = function (key) {
             return this.complete && typeof key === "string" && this._xref.hasOwnProperty(key) ?
                 this._xref[key] : -1;
+        };
+        // getting all selected keys - return comma-separated string
+
+        MapData.prototype.getSelected = function () {
+            var result = '';
+            u.each(this.data, function () {
+                if (this.isSelected()) {
+                    result += (result ? ',' : '') + this.key;
+                }
+            });
+            return result;
         };
         MapData.prototype.getDataForArea = function (area) {
             var ar,
@@ -804,24 +868,32 @@ See complete changelog at github
                     }
                 }
             }
-            u.each(this.data, function (i) {
-                if (this.isSelectedOrStatic()) {
-                    selected_list.push(i);
-                }
-            });
-            return selected_list;
+            //            u.each(this.data, function (i) {
+            //                if (this.isSelectedOrStatic()) {
+            //                    selected_list.push(i);
+            //                }
+            //            });
+            //return selected_list;
         };
 
         MapData.prototype.setAreasSelected = function (selected_list) {
             var i;
             this.initGraphics();
-            for (i = selected_list.length - 1; i >= 0; i--) {
-                this.data[selected_list[i]].setAreaSelected();
+            if (selected_list) {
+                for (i = selected_list.length - 1; i >= 0; i--) {
+                    this.data[selected_list[i]].setAreaSelected();
+                }
+            } else {
+                u.each(this.data, function () {
+                    if (this.isSelectedOrStatic()) {
+                        this.setAreaSelected();
+                    }
+                });
             }
         };
         ///called when images are done loading
         MapData.prototype.initialize = function () {
-            var base_canvas, overlay_canvas, wrap, parentId, $area, area, css, sel, areas, i, j, keys, key, area_id, default_group, group_value, img,
+            var base_canvas, overlay_canvas, wrap, parentId, $area, area, css, sel, areas, i, j, keys, key, area_id, default_group, group_value, img, imgCopy,
                 sort_func, sorted_list, dataItem, mapArea, scale,
                 me = this,
                 selected_list = [],
@@ -832,6 +904,9 @@ See complete changelog at github
                 dataItem.areaId = me._xref[key] = me.data.push(dataItem) - 1;
                 return dataItem.areaId;
             }
+
+            if (me.complete) { return; }
+
             me.complete = true;
             img = $(me.image);
             parentId = img.parent().attr('id');
@@ -926,7 +1001,10 @@ See complete changelog at github
             };
 
             img.css(canvas_style);
+
             me.images[0].style.cssText = me.image.style.cssText;
+            me.images[0].className = 'mapster_el';
+            u.setOpacity(me.images[0], 1);
             // if we were rebinding with an existing wrapper, the image will aready be in it
             if (img.parent()[0] !== me.wrapper[0]) {
                 img.before(me.wrapper);
@@ -937,13 +1015,12 @@ See complete changelog at github
                 .append(base_canvas)
                 .append(overlay_canvas)
                 .append(img);
-            img.css('opacity', 0);
 
-            if (!has_canvas) {
-                img.css('filter', 'Alpha(opacity=0)');
-            }
+            u.setOpacity(me.image, 0);
 
-            selected_list = this.setAreaOptions(opts.areas);
+            //selected_list = this.setAreaOptions(opts.areas);
+
+            this.setAreaOptions(opts.areas);
 
             if (opts.isSelectable && opts.onGetList) {
                 sorted_list = this.data.slice(0);
@@ -974,7 +1051,8 @@ See complete changelog at github
             //            }
 
             // populate areas from config options
-            me.setAreasSelected(selected_list);
+            //me.setAreasSelected(selected_list);
+            me.setAreasSelected();
 
             // process queued commands
             if (me.commands.length) {
@@ -984,7 +1062,7 @@ See complete changelog at github
                 me.commands = [];
             }
 
-            
+
 
             if (opts.onConfigured && typeof opts.onConfigured === 'function') {
                 opts.onConfigured.call(img, true);
@@ -1233,7 +1311,7 @@ See complete changelog at github
 
 
             if (map_data.options.toolTipFade) {
-                tooltip.css({ "opacity": 0 });
+                u.setOpacity(tooltip[0], 0);
                 tooltip.show();
                 u.fader(tooltip[0], 0, 1, opts.fadeDuration);
             } else {
@@ -1250,6 +1328,8 @@ See complete changelog at github
             });
 
         };
+
+        // represents an area
         MapArea = function (owner, areaEl) {
             var me = this;
             me.owner = owner;
@@ -1261,16 +1341,16 @@ See complete changelog at github
             me.nohref = areaEl.nohref || !areaEl.href;
             //change the area tag data if needed
             if (me.owner.scaleInfo.scale) {
-                areaEl.coords = me.coords().join(',');
+                me.resize();
             }
         };
-        MapArea.prototype.reset = function (preserveState) {
-            if (!preserveState) {
-                this.area.coords = this.originalCoords.join(',');
-            }
-            this.area = null;
+        // scale this area's imagemap to the current scale
+        MapArea.prototype.resize = function () {
+            this.area.coords = this.coords().join(',');
         };
-
+        MapArea.prototype.reset = function () {
+            this.area.coords = this.coords(1).join(',');
+        };
         MapArea.prototype.coords = function (pct) {
             var j, newCoords = [];
             pct = pct || this.owner.scaleInfo.scalePct;
@@ -1300,13 +1380,9 @@ See complete changelog at github
                     ar = map_data.getDataForKey(key);
                     if (ar) { result = ar.isSelected(); }
                     return false; // break
+                } else {
+                    result = map_data.getSelected();
                 }
-                // getting all selected keys - return comma-separated string
-                u.each(map_data.data, function () {
-                    if (this.isSelected()) {
-                        result += (result ? ',' : '') + this.key;
-                    }
-                });
                 return false; // break
             });
             return result;
@@ -1506,8 +1582,10 @@ See complete changelog at github
                     merge_options(map_data, options);
 
                     // this will only update new areas that may have been passed
-                    selected_list = map_data.setAreaOptions(options.areas || {});
-                    map_data.setAreasSelected(selected_list);
+                    //selected_list = map_data.setAreaOptions(options.areas || {});
+                    map_data.setAreaOptions(options.areas || {});
+                    //map_data.setAreasSelected(selected_list);
+                    map_data.setAreasSelected();
                 }
             });
             return this;
@@ -1790,16 +1868,17 @@ See complete changelog at github
                         return canvas;
                     };
                     me.create_canvas_for = function (img, width, height) {
-                        var c, $img;
-                        if (img) {
-                            $img = $(img);
-                            height = img.height || $img.height();
-                            width = img.width || $img.width();
-                        }
-                        c = $('<canvas></canvas>')[0];
-                        c.width = width;
-                        c.height = height;
-                        c.getContext("2d").clearRect(0, 0, width, height);
+                        var c,
+                         $img = $(img);
+                        //                        if (img) {
+                        //                            $img = $(img);
+                        //                            height = img.height || $img.height();
+                        //                            width = img.width || $img.width();
+                        //                        }
+                        c = $('<canvas width=' + $img.width() + ' height=' + $img.height() + '></canvas>').addClass("mapster_el")[0];
+                        //c.width = width;
+                        //c.height = height;
+                        c.getContext("2d").clearRect(0, 0, $img.width(), $img.height());
                         return c;
                     };
                     me.clear_highlight = function () {
@@ -1813,17 +1892,18 @@ See complete changelog at github
                         var list_temp = [], canvas_temp;
                         // draw new base canvas, then swap with the old one to avoid flickering
                         canvas_temp = map_data.base_canvas;
-                        u.each(map_data.data, function (i) {
-                            if (this.isSelectedOrStatic()) {
-                                list_temp.push(i);
-                            }
-                        });
+                        //                        u.each(map_data.data, function (i) {
+                        //                            if (this.isSelectedOrStatic()) {
+                        //                                list_temp.push(i);
+                        //                            }
+                        //                        });
 
                         map_data.base_canvas = create_canvas(map_data.image);
                         $(map_data.base_canvas).hide();
                         $(map_data.image).before(map_data.base_canvas);
 
-                        map_data.setAreasSelected(list_temp);
+                        //map_data.setAreasSelected(list_temp);
+                        map_data.setAreasSelected();
 
                         $(map_data.base_canvas).show();
                         $(canvas_temp).remove();
@@ -1919,6 +1999,18 @@ See complete changelog at github
             }
             graphics = null;
         };
+        me.resize = function (width, height, duration) {
+            var d;
+            return this.each(function () {
+                d = get_map_data(this);
+                if ((!width && !height)
+                     || !d
+                     || queue_command(d, $(this), 'snapshot')) {
+                    return true;
+                }
+                d.resize(width, height, duration);
+            });
+        };
         me.snapshot = function () {
             var d;
             return this.filter('img').each(function () {
@@ -1975,24 +2067,15 @@ See complete changelog at github
     /// Code that gets executed when the plugin is first loaded
     methods =
     {
-        bind: $.mapster.impl.bind,
-        rebind: $.mapster.impl.rebind,
-        unbind: $.mapster.impl.unbind,
-        set: $.mapster.impl.set,
-        get: $.mapster.impl.get,
-        data: $.mapster.impl.data,
-        highlight: $.mapster.impl.highlight,
         select: function () {
             $.mapster.impl.set.call(this, true);
         },
         deselect: function () {
             $.mapster.impl.set.call(this, false);
-        },
-        get_options: $.mapster.impl.get_options,
-        set_options: $.mapster.impl.set_options,
-        snapshot: $.mapster.impl.snapshot,
-        tooltip: $.mapster.impl.tooltip,
-        test: $.mapster.impl.test
+        }
     };
+    $.each(["bind", "rebind", "unbind", "set", "get", "data", "highlight", "get_options", "set_options", "snapshot", "tooltip", "test", "resize"], function () {
+        methods[this] = $.mapster.impl[this];
+    });
     $.mapster.impl.init();
 } (jQuery));
