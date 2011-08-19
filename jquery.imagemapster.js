@@ -8,6 +8,7 @@ A jQuery plugin to enhance image maps.
 */
 /*
 version 1.2 (prerelease)
+-- improve startup speed by eliminating need for setTimeout callback
 -- address startup bug when images aren't loaded and there are lots of images
 -- fixed exception when "set" with no data for key
 -- bug when multiple images bound on same page 
@@ -106,7 +107,7 @@ See complete changelog at github
             $.error('Method ' + method + ' does not exist on jQuery.mapster');
         }
     };
-    /*ignore-start*/
+
     $.mapster = {};
     // utility functions
     $.mapster.utils = {
@@ -228,6 +229,10 @@ See complete changelog at github
                 obj.call(that, args);
             }
         },
+        isImageLoaded: function (img) {
+            return img.comlete || (img.naturalWidth && img.naturalHeight) ||
+               (img.width && img.height);
+        },
         arrayIndexOf: function (arr, el) {
             if (arr.indexOf) {
                 return arr.indexOf(el);
@@ -261,7 +266,7 @@ See complete changelog at github
                         return false;
                     }
                 }
-            } else {
+            } else if (obj) {
                 for (i in obj) {
                     if (obj.hasOwnProperty(i)) {
                         if (fn.call(obj[i], i) === false) {
@@ -436,16 +441,6 @@ See complete changelog at github
             top: 0,
             padding: 0,
             border: 0
-        },
-        is_image_loaded = function (map_data) {
-            var complete=true,
-            images = map_data.images();
-
-	    u.each(images, function () {
-                complete = complete && (this.complete || (this.width && this.height) ||
-                    (typeof this.naturalWidth !== "undefined" && this.naturalWidth !== 0 && this.naturalHeight !== 0));
-            });
-            return complete;
         };
         me.test = function (obj) {
             return eval(obj);
@@ -508,10 +503,11 @@ See complete changelog at github
 
         // EVENTS
 
-        function queue_command(map_data, command, args) {
+        function queue_command(map_data, that, command, args) {
             if (!map_data.complete) {
                 map_data.commands.push(
                 {
+                    that: that,
                     command: command,
                     args: args
                 });
@@ -573,7 +569,17 @@ See complete changelog at github
             // elements own index in parent array - so we have an ID to use for wraper div
 
             this.index = -1;
+            // main map image
             this.image = image;
+            // all images associated with this map. this will include a "copy" of the main one
+            this.images = [];
+            // src for each image
+            this.imageSources = [];
+            //this.images.push(image);
+            // the loaded status of each indexed image in images
+            this.imageStatus = [];
+            // xref of "render_xxx" to this.images
+            this.altImagesXref = {};
             this.map = null;
             this.options = options;
             this.area_options = u.mergeObjects({
@@ -582,7 +588,7 @@ See complete changelog at github
             });
             this.base_canvas = null;
             this.overlay_canvas = null;
-            this.alt_images = {};
+
             this.complete = false;
             this.commands = [];
             this.data = [];
@@ -682,25 +688,78 @@ See complete changelog at github
                     setBoundListProperties(opts, list_target, ar.isSelected());
                 }
             };
-        };
 
-        MapData.prototype.altImages = function () {
-            var i, arr = [];
-            for (i in this.alt_images) {
-                if (this.alt_images.hasOwnProperty(i)) {
-                    arr.push(this.alt_images[i]);
+        };
+        // bind a new image to a src, capturing load event. Return the new (or existing) image.
+        MapData.prototype.addImage = function (src, altId) {
+            var index;
+            if (!src) { return; }
+            index = $.inArray(src, this.imageSources);
+
+            if (index <= 0) {
+                index = this.imageSources.push(src) - 1;
+                this.imageStatus[index] = false;
+            }
+            if (altId) {
+                this.altImagesXref[altId] = index;
+            }
+        };
+        MapData.prototype.bindImages = function () {
+            var alreadyLoaded = true, index, img,
+                me = this;
+
+            function onLoad() {
+                var index;
+                if (alreadyLoaded) {
+                    return;
+                }
+                index = $.inArray(this, me.images);
+                if (index < 0) {
+                    throw ("Unable to find ref to image '" + this.src + "'.");
+                }
+                me.imageStatus[index] = true;
+                if ($.inArray(false, me.imageStatus) < 0) {
+                    me.initialize();
                 }
             }
-            return arr;
+            u.each(this.imageSources, function (i) {
+                var img = new Image();
+                img.src = this;
+                if (u.isImageLoaded(img)) {
+                    me.images[i] = img;
+                    me.imageStatus[i] = true;
+                } else {
+                    alreadyLoaded = false;
+                    img = new Image();
+                    me.images[i] = img;
+                    img.onload = onLoad;
+                    img.src = this;
+                }
+            });
+            if (alreadyLoaded) {
+                me.initialize();
+            }
         };
-        MapData.prototype.images = function () {
-            return [this.image].concat(this.altImages());
+        MapData.prototype.altImage = function (mode) {
+            return this.images[this.altImagesXref[mode]];
         };
+        // return the alternate images as an array
+        //        MapData.prototype.altImages = function () {
+        //            var i, arr = [];
+        //            u.each(this.alt_images, function () {
+        //                arr.push(this);
+        //            });
+        //            return arr;
+        //        };
+        // return ALL images as an array
+        //        MapData.prototype.images = function () {
+        //            return [this.image].concat(this.altImages());
+        //        };
         MapData.prototype.wrapId = function () {
             return 'mapster_wrap_' + this.index;
         };
         MapData.prototype._idFromKey = function (key) {
-            return typeof key === "string" && this._xref.hasOwnProperty(key) ?
+            return this.complete && typeof key === "string" && this._xref.hasOwnProperty(key) ?
                 this._xref[key] : -1;
         };
         MapData.prototype.getDataForArea = function (area) {
@@ -774,27 +833,56 @@ See complete changelog at github
                 this.data[selected_list[i]].setAreaSelected();
             }
         };
+        ///called when images are done loading
         MapData.prototype.initialize = function () {
-            var $area, area, css, sel, areas, i, j, keys, key, area_id, default_group, group_value, img,
+            var base_canvas, overlay_canvas, wrap, parentId, $area, area, css, sel, areas, i, j, keys, key, area_id, default_group, group_value, img,
                 sort_func, sorted_list, dataItem, mapArea, scale,
                 me = this,
                 selected_list = [],
-                opts = this.options;
+                opts = me.options;
 
             function addGroup(key, value) {
                 var dataItem = new AreaData(me, key, value, opts);
                 dataItem.areaId = me._xref[key] = me.data.push(dataItem) - 1;
                 return dataItem.areaId;
             }
-            this._xref = {};
-            this.data = [];
+            me.complete = true;
+            img = $(me.image);
+            parentId = img.parent().attr('id');
+
+            // create a div wrapper only if there's not already a wrapper, otherwise, own it
+            if (parentId && parentId.length >= 12 && parentId.substring(0, 12) === "mapster_wrap") {
+                wrap = img.parent();
+                wrap.attr('id', me.wrapId());
+            } else {
+                wrap = $('<div id="' + me.wrapId() + '"></div>');
+
+                if (opts.wrapClass) {
+                    if (opts.wrapClass === true) {
+                        wrap.addClass(img.attr('class'));
+                    }
+                    else {
+                        wrap.addClass(opts.wrapClass);
+                    }
+                }
+            }
+            me.wrapper = wrap;
+
+            base_canvas = create_canvas(me.image);
+            overlay_canvas = create_canvas(me.image);
+
+            me.base_canvas = base_canvas;
+            me.overlay_canvas = overlay_canvas;
+
+            me._xref = {};
+            me.data = [];
 
             default_group = !opts.mapKey;
             sel = ($.browser.msie && $.browser.version <= 7) ? 'area' :
                 (default_group ? 'area[coords]' : 'area[' + opts.mapKey + ']');
-            areas = $(this.map).find(sel);
+            areas = $(me.map).find(sel);
 
-            scale = this.scaleInfo = u.scaleInfo(this.image, opts.scaleMap);
+            scale = me.scaleInfo = u.scaleInfo(me.image, opts.scaleMap);
 
             for (i = areas.length - 1; i >= 0; i--) {
                 area_id = 0;
@@ -850,19 +938,36 @@ See complete changelog at github
                 width: scale.width,
                 height: scale.height
             };
-            if (has_canvas) {
-                css.background = 'url(' + this.image.src + ')';
-                css['background-repeat'] = 'no-repeat';
-                if (scale.scale) {
-                    css['background-size'] = scale.width + 'px ' + scale.height + 'px';
-                }
-            } else {
-                // cannot resize backgrounds with IE, add yet another image behind the map as the background
-                // (is there any reason not to just do this anyway?)
-                img = $('<img src="' + this.image.src + '" width="' + scale.width + '" height="' + scale.height + '">').css(canvas_style);
-                $(this.wrapper).find(":eq(0)").before(img);
+            //                        if (has_canvas) {
+            //                            css.background = 'url(' + this.image.src + ')';
+            //                            css['background-repeat'] = 'no-repeat';
+            //                            if (scale.scale) {
+            //                                css['background-size'] = scale.width + 'px ' + scale.height + 'px';
+            //                            }
+            //                        } else {
+            //                            // cannot resize backgrounds with IE, add yet another image behind the map as the background
+            //                            // (is there any reason not to just do this anyway?)
+            //                            img = $('<img src="' + this.image.src + '" width="' + scale.width + '" height="' + scale.height + '">').css(canvas_style);
+            //                            $(this.wrapper).find(":eq(0)").before(img);
+            //                        }
+
+            img.css(canvas_style);
+            me.images[0].style.cssText = me.image.style.cssText;
+            // if we were rebinding with an existing wrapper, the image will aready be in it
+            if (img.parent()[0] !== me.wrapper[0]) {
+                img.before(me.wrapper);
             }
-            $(this.wrapper).css(css);
+            $(me.wrapper)
+                .css(css)
+                .append(me.images[0])
+                .append(base_canvas)
+                .append(overlay_canvas)
+                .append(img);
+            img.css('opacity', 0);
+
+            if (!has_canvas) {
+                img.css('filter', 'Alpha(opacity=0)');
+            }
 
             selected_list = this.setAreaOptions(opts.areas);
 
@@ -894,6 +999,21 @@ See complete changelog at github
             //                opts.nitG.bind('click.mapster', event_hooks[map_data.hooks_index].listclick_hook);
             //            }
             this.setAreasSelected(selected_list);
+
+            // process queued commands
+            if (me.commands.length) {
+
+                u.each(me.commands, function () {
+                    methods[this.command].apply(this.that, this.args);
+                });
+                me.commands = [];
+            }
+            if (opts.onConfigured && typeof opts.onConfigured === 'function') {
+                opts.onConfigured.call(img, true);
+            }
+
+            ///
+
         };
         MapData.prototype.clearEvents = function () {
             $(this.map).find('area')
@@ -902,19 +1022,25 @@ See complete changelog at github
                 .unbind('click.mapster');
         };
         MapData.prototype._clearCanvases = function (preserveState) {
-            var canvases = [[this, "overlay_canvas"],
-                    [this.alt_images, "select"],
-                    [this.alt_images, "highlight"]];
+            // need to remove the canvas elements created, images[0], and release references to the extra images
+
+            //            var canvases = [[this, "overlay_canvas"],
+            //                    [this.alt_images, "select"],
+            //                    [this.alt_images, "highlight"]];
+            //            if (!preserveState) {
+            //                canvases.push([this, "base_canvas"]);
+            //            }
+            //            // crazy thing to remove the 2nd property from the 1st object
+            //            u.each(canvases, function () {
+            //                if (this[0] && this[0][this[1]]) {
+            //                    $(this[0][this[1]]).remove();
+            //                    delete this[0][this[1]];
+            //                }
+            //            });
             if (!preserveState) {
-                canvases.push([this, "base_canvas"]);
+                $(this.base_canvas).remove();
             }
-            // crazy thing to remove the 2nd property from the 1st object
-            u.each(canvases, function () {
-                if (this[0] && this[0][this[1]]) {
-                    $(this[0][this[1]]).remove();
-                    delete this[0][this[1]];
-                }
-            });
+            $(this.overlay_canvas).remove();
         };
         MapData.prototype.clearTooltip = function () {
             if (this.activeToolTip) {
@@ -927,6 +1053,7 @@ See complete changelog at github
             });
         };
         MapData.prototype.clearMapData = function (preserveState) {
+            var me = this;
             this._clearCanvases(preserveState);
 
             // release refs to DOM elements
@@ -938,9 +1065,16 @@ See complete changelog at github
                 // get rid of everything except the original image
                 this.image.style.cssText = this.imgCssText;
                 $(this.wrapper).before(this.image).remove();
+                $(this.images[0]).remove();
             }
+            // release image refs
             this.image = null;
-            this.alt_images = null;
+            u.each(this.images, function (i) {
+                me.images[i] = null;
+            });
+
+
+            //this.alt_images = null;
             this.clearTooltip();
         };
         MapData.prototype.bindTooltipClose = function (option, event, obj) {
@@ -1193,7 +1327,7 @@ See complete changelog at github
 
         // Returns a comma-separated list of user-selected areas. "staticState" areas are not considered selected for the purposes of this method.
         me.get = function (key) {
-            var map_data, result;
+            var ar, map_data, result = '';
             this.each(function () {
                 map_data = get_map_data(this);
                 if (!map_data) {
@@ -1202,11 +1336,11 @@ See complete changelog at github
 
                 if (key) {
                     // getting data for specific key --- return true or false
-                    result = map_data.getDataForKey(key).isSelected();
+                    ar = map_data.getDataForKey(key);
+                    if (ar) { result = ar.isSelected(); }
                     return false; // break
                 }
                 // getting all selected keys - return comma-separated string
-                result = '';
                 u.each(map_data.data, function () {
                     if (this.isSelected()) {
                         result += (result ? ',' : '') + this.key;
@@ -1295,7 +1429,7 @@ See complete changelog at github
                 }
                 key_list = '';
                 if ($(this).is('img')) {
-                    if (queue_command(map_data, 'set', [selected, key, set_bound])) {
+                    if (queue_command(map_data, $(this), 'set', [selected, key, do_set_bound])) {
                         return true;
                     }
                     if (key instanceof Array) {
@@ -1324,11 +1458,13 @@ See complete changelog at github
                         lastParent = parent;
                     }
                     lastParent = parent;
-                    ar = map_data.getDataForArea(this);
 
-                    if (queue_command(map_data, 'set', [selected, ar.key, do_set_bound])) {
+                    if (queue_command(map_data, $(this), 'set', [selected, key, do_set_bound])) {
                         return true;
                     }
+
+                    ar = map_data.getDataForArea(this);
+
                     if ((key_list + ",").indexOf(ar.key) < 0) {
                         key_list += (key_list === '' ? '' : ',') + ar.key;
                     }
@@ -1348,13 +1484,13 @@ See complete changelog at github
             return this.each(function () {
                 map_data = get_map_data(this);
                 if (map_data) {
-                    if (queue_command(map_data, 'unbind')) {
+                    if (queue_command(map_data, $(this), 'unbind')) {
                         return true;
                     }
 
                     map_data.clearEvents();
                     map_data.clearMapData(preserveState);
-                    map_cache[map_data.index] = null;
+                    map_cache.splice(map_data.index, 1);
                 }
             });
         };
@@ -1402,7 +1538,7 @@ See complete changelog at github
             this.filter('img').each(function () {
                 map_data = get_map_data(this);
                 if (map_data) {
-                    if (queue_command(map_data, 'rebind', [options])) {
+                    if (queue_command(map_data, $(this), 'rebind', [options])) {
                         return true;
                     }
 
@@ -1444,7 +1580,7 @@ See complete changelog at github
             var img = this.filter('img')[0],
                 map_data = get_map_data(img);
             if (map_data) {
-                if (queue_command(map_data, 'set_options', [options])) {
+                if (queue_command(map_data, $(this), 'set_options', [options])) {
                     return true;
                 }
                 merge_options(map_data, options);
@@ -1464,9 +1600,14 @@ See complete changelog at github
                 img = $(this);
 
                 map_data = get_map_data(this);
-                if (map_data && map_data.complete) {
-                    me.unbind.call(img);
-                    map_data = null;
+                // if already bound completely, do a total rebind
+                if (map_data) {
+                    if (queue_command(map_data, $(this), 'bind', [options])) {
+                        return true;
+                    } else {
+                        me.unbind.call(img);
+                        map_data = null;
+                    }
                 }
 
                 // ensure it's a valid image
@@ -1480,102 +1621,58 @@ See complete changelog at github
 
                 if (!map_data) {
                     map_data = new MapData(this, opts);
-                    map_data.index = u.arrayReuse(map_cache, map_data);
-                }
-
-                if (has_canvas) {
-                    last = {};
-                    u.each(["highlight", "select"], function () {
-                        var cur = opts["render_" + this].altImage || opts.altImage;
-                        if (cur) {
-                            if (cur !== last) {
-                                last = cur;
-                                lastProp = this;
-                                if (!map_data.alt_images[this]) {
-                                    map_data.alt_images[this] = new Image();
-                                    map_data.alt_images[this].src = cur;
-                                }
-                            } else {
-                                map_data.alt_images[this] = map_data.alt_images[lastProp];
-                            }
-                        }
-                    });
-                }
-
-                // If the image isn't fully loaded, this won't work right.  Try again later.                   
-                loaded = is_image_loaded(map_data);
-                if (!loaded || !map_data.redo) {
-                    // For some reason we need to cylce one more time after the images are done loading, if they
-                    // weren't at first. I am not sure if this is a bug in my code or some sync disconnect? But for
-                    // complex scenarious, its the only way to ensure it always works. So callback one time after
-                    // the images are done to be sure they were done when we started the entire process.
-                    if (loaded) {
-                        map_data.redo=true;
+                    map_data.index = map_cache.push(map_data) - 1;
+                    map_data.map = map;
+                    map_data.addImage(this.src);
+                    if (has_canvas) {
+                        map_data.addImage(opts.render_highlight.altImage || opts.altImage, "highlight");
+                        map_data.addImage(opts.render_select.altImage || opts.altImage, "select");
                     }
-                    if (--map_data.bind_tries > 0) {
-                        setTimeout((function () {
-                            return function() {
-                                me.bind.call(img,options);
-                          };
-                        }()), 100);
-                    } else {
-                        u.ifFunction(opts.onConfigured, this, false);
-                    }
-                    return true;
-                }
-                
-		//img = $(this);
-		
-                parent_id = img.parent().attr('id');
-
-                // wrap only if there's not already a wrapper, otherwise, own it
-                if (parent_id && parent_id.length >= 12 && parent_id.substring(0, 12) === "mapster_wrap") {
-                    img.parent().attr('id', wrap_id);
-                } else {
-                    wrap = $('<div id="' + map_data.wrapId() + '"></div>');
-
-                    if (opts.wrapClass) {
-                        if (opts.wrapClass === true) {
-                            wrap.addClass($(this).attr('class'));
-                        }
-                        else {
-                            wrap.addClass(opts.wrapClass);
-                        }
-                    }
-                    img.before(wrap).css('opacity', 0).css(canvas_style);
-                    if (!has_canvas) {
-                        img.css('filter', 'Alpha(opacity=0)');
-                    }
-                    wrap.append(img);
-                    map_data.wrapper = wrap;
-                }
-
-                canvas = create_canvas(this);
-                img.before(canvas);
-
-                overlay_canvas = create_canvas(this);
-                img.before(overlay_canvas);
-
-
-
-                map_data.map = map;
-                map_data.base_canvas = canvas;
-                map_data.overlay_canvas = overlay_canvas;
-                map_data.initialize();
-
-                // process queued commands
-                if (!map_data.complete) {
-                    map_data.complete = true;
-                    u.each(map_data.commands, function () {
-                        methods[this.command].apply(img, this.args);
-                    });
-                    map_data.commands = [];
-                }
-                if (opts.onConfigured && typeof opts.onConfigured === 'function') {
-                    opts.onConfigured.call(this, true);
+                    map_data.bindImages();
                 }
             });
         };
+
+        //        me.
+        //                if (!map_data.imagesLoaded()) {
+        //                    if (--map_data.bind_tries > 0) {
+        //                        setTimeout((function () {
+        //                            return function () {
+        //                                me.bind.call(img, options);
+        //                            };
+        //                        } ()), 100);
+        //                        return true;
+        //                    } else {
+        //                        u.ifFunction(opts.onConfigured, this, false);
+        //                    }
+        //                }
+
+        // If the image isn't fully loaded, this won't work right.  Try again later.                   
+        //                loaded = is_image_loaded(map_data);
+        //                if (!loaded || !map_data.redo) {
+        //                    // For some reason we need to cylce one more time after the images are done loading, if they
+        //                    // weren't at first. I am not sure if this is a bug in my code or some sync disconnect? But for
+        //                    // complex scenarious, its the only way to ensure it always works. So callback one time after
+        //                    // the images are done to be sure they were done when we started the entire process.
+        //                    if (loaded) {
+        //                        map_data.redo = true;
+        //                    }
+        //                    if (--map_data.bind_tries > 0) {
+        //                        setTimeout((function () {
+        //                            return function () {
+        //                                me.bind.call(img, options);
+        //                            };
+        //                        } ()), 100);
+        //                    } else {
+        //                        u.ifFunction(opts.onConfigured, this, false);
+        //                    }
+        //                    return true;
+        //                }
+
+        //img = $(this);
+
+
+        //};
 
 
         me.init = function (useCanvas) {
@@ -1624,7 +1721,7 @@ See complete changelog at github
                         areaOpts,
                         areaOpts['render_' + mode],
                         {
-                            alt_image: map_data.alt_images[mode]
+                            alt_image: map_data.altImage(mode)
                         }]
                     });
 
@@ -1909,7 +2006,7 @@ See complete changelog at github
             return this.filter('img').each(function () {
                 d = get_map_data(this);
                 if (d) {
-                    if (queue_command(d, 'snapshot')) {
+                    if (queue_command(d, $(this), 'snapshot')) {
                         return true;
                     }
                     u.each(d.data, function () {

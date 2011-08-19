@@ -467,13 +467,13 @@ mapster_tests = function (options) {
                 newDomCount = $('#test_elements *').length;
                 ut.assertEq(newDomCount, domCount, "Dom size is equal at test end");
             });
-            map_test.run(testName);
+           map_test.run(testName);
         }
 
         complete = false;
         map = $("#usa_image");
         //map.removeProp('complete')
-        map.mapster('test', 'is_image_loaded=function(){return false;};');
+        map.mapster('test', 'u.old=u.isImageLoaded;u.isImageLoaded=function(){return false;};');
 
         var queue_opts = $.extend({}, map_options, { onConfigured: continueTests });
 
@@ -483,7 +483,7 @@ mapster_tests = function (options) {
 
         ut.assertEq(map.mapster('get'), "", "No options present when simulating non-ready image");
         // simulate the timer callback, should simply run command queue instead of recreating b/c we set complete=false
-        map.mapster('test', 'is_image_loaded=function(){return true;};');
+        map.mapster('test', 'u.isImageLoaded=u.old;');
 
     });
 

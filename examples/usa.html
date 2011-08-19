@@ -1,4 +1,4 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+﻿<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
@@ -280,8 +280,7 @@ div.input
                 $('#is_deselectable_state').text(state ? "enabled" : "disabled");
                 $usamap.mapster("set_options", { isDeselectable: state });
             });
-            $("#highlight_style").bind("change", function (e) {
-                e.preventDefault();
+            function getHighlightOptions() {
                 var val = $("#highlight_style").find("option:selected").val();
                 var options,
                 state = !$usamap.mapster('get_options').highlightAltImage;
@@ -304,14 +303,19 @@ div.input
                     }
                 }
                 options = $.extend(true, {}, default_options, options);
+                return options;
+            }
+            $("#highlight_style").bind("change", function (e) {
+                e.preventDefault();
+
                 $statelist.children().remove();
-                $usamap.mapster(options);
+                $usamap.mapster(getHighlightOptions());
 
             });
             $("#update").click(function (e) {
                 var newOpts = {};
                 function setOption(base, opt, value) {
-                    if (value!=='' && value!==null) {
+                    if (value !== '' && value !== null) {
                         base[opt] = value;
                     }
                 }
@@ -332,12 +336,17 @@ div.input
 
                 var width = parseInt($('#img_width').val(), 10);
                 if ($usamap.width() != width) {
+                    var hOpts = getHighlightOptions();
                     var keys = $usamap.mapster('get');
                     $usamap.mapster('unbind');
                     $usamap.animate({ 'width': String(width) + "px" }, 1000, function () {
+                        var options;
                         $statelist.children().remove();
-                        $usamap.mapster(default_options);
-                        $usamap.mapster('rebind', newOpts);
+                        options = $.extend(default_options, newOpts);
+                        options.render_select = hOpts.render_select;
+                        options.render_highlight = hOpts.render_highlight;
+                        $usamap.mapster(options);
+                        //$usamap.mapster('rebind', newOpts);
                         $usamap.mapster('set', true, keys);
                     });
                 } else {

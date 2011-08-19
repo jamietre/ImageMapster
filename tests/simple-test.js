@@ -78,7 +78,7 @@ Test.prototype._arrayEq = function(arr1,arr2) {
     if (!(arr2.length && (arr2.length>-1))) {
         err='Expected value has no length property';
     }
-    if (!err && arr1.length != arr2.length) {
+    if (!err && arr1.length !== arr2.length) {
         err='Arrays different length (test: ' + arr1.length + ', expected: ' + arr2.length;
     }
     if (!err) {
@@ -97,11 +97,11 @@ Test.prototype.assertEq = function (testcase, expected, description) {
     var err ;
     this.startTest();
     this.runTest(testcase,function (testcase) {
-        if (typeof testcase != typeof expected) {
+        if (typeof testcase !== typeof expected) {
             err = 'Test case type "' + typeof testcase + '" != expected type "' + typeof expected + '"';
         }
     
-        if (!err && testcase != expected) {
+        if (!err && testcase !== expected) {
             err = '"' + testcase + '" != "' + expected + '"';
         }
     });
@@ -112,9 +112,9 @@ Test.prototype.assertNotEq = function(testcase,expected,description,test) {
     var err;
     this.startTest();
     this.runTest(testcase,function (testcase) {
-        if (typeof testcase == typeof expected &&
+        if (typeof testcase === typeof expected &&
             testcase === expected) {
-            err = '"' + testcase + '" == "' + expected + '"';
+            err = '"' + testcase + '" === "' + expected + '"';
          }
     });
     this.endTest(err,description);
@@ -165,10 +165,10 @@ Test.prototype.assertPropsEq = function(testcase,expected,description,test, notE
         }
         return err;
     }
-    var err;
+
     this.startTest();
    this.runTest(testcase,function (testcase) {
-    if (typeof testcase != 'object' || typeof expected != 'object') {
+    if (typeof testcase !== 'object' || typeof expected !== 'object') {
         err='Test cases are not both objects';
     }
     if (!err) {
@@ -212,11 +212,15 @@ Test.prototype.assertCsvElementsEq = function(testcase, expected, description,te
     me=this;
     this.startTest();
     this.runTest(testcase,function (testcase) {
-        arr1=testcase.split(',');
-        arr2=expected.split(',');
-        arr1.sort();
-        arr2.sort();
+    	if (!(typeof testcase==='string')) {
+    	  err="test case is not a string";
+    	} else {
+    	arr1=testcase.split(',');
+   	arr2=expected.split(',');
+    	arr1.sort();
+   	arr2.sort();
         err = me._arrayEq(arr1,arr2);
+        }
     });
     this.endTest(err,description);
 };
@@ -257,7 +261,7 @@ Test.prototype.run = function (test) {
         this.iterations=5;
     }
     for (i = 0; i < this.tests.length; i++) {
-        if (!test || this.tests[i].name == test) {
+        if (!test || this.tests[i].name === test) {
             startTest.call(this, this.tests[i]);
             this.tests[i].test(this);
             finishTest.call(this);
