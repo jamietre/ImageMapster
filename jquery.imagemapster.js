@@ -1,4 +1,4 @@
-/* ImageMapster 1.2 beta 2
+/* ImageMapster 1.2 beta 3
 
 Copyright 2011 James Treworgy
 http://www.outsharked.com/imagemapster
@@ -7,6 +7,8 @@ https://github.com/jamietre/ImageMapster
 A jQuery plugin to enhance image maps.
 
 version 1.2 (prerelease)
+-- address startup bug when images aren't loaded and there are lots of images
+-- fixed exception when "set" with no data for key
 -- bug when multiple images bound on same page 
 -- another IE tweak: blur() on mouseover/click to remove browser-rendered border around area
 -- some tweaks for IE regarding image borders to make appearance remain consistent across unbind/rebind
@@ -89,8 +91,8 @@ See complete changelog at github
 
 */
 
-/*jslint browser: true, white: true, sloppy:true, nomen: true, plusplus: true, evil: true, forin: true, type: true, windows: true */
-/*global jQuery: true, HTMLElement: true */
+
+/*global HTMLElement: true */
 
 (function ($) {
     var methods;
@@ -103,6 +105,7 @@ See complete changelog at github
             $.error('Method ' + method + ' does not exist on jQuery.mapster');
         }
     };
+    /*ignore-start*/
     $.mapster = {};
     // utility functions
     $.mapster.utils = {
@@ -434,14 +437,14 @@ See complete changelog at github
             border: 0
         },
         is_image_loaded = function (map_data) {
-            var images = map_data.images();
+            var complete=true,
+            	images = map_data.images();
 
-            return u.each(images, function () {
-                var complete = this.complete || (this.width && this.height) ||
-                    (typeof this.naturalWidth !== "undefined" && this.naturalWidth !== 0 && this.naturalHeight !== 0);
-
-                return complete;
+	    u.each(images, function () {
+                complete = complete && (this.complete || (this.width && this.height) ||
+                    (typeof this.naturalWidth !== "undefined" && this.naturalWidth !== 0 && this.naturalHeight !== 0));
             });
+            return complete;
         };
         me.test = function (obj) {
             return eval(obj);
@@ -640,9 +643,9 @@ See complete changelog at github
                 var selected, list_target, newSelectionState, canChangeState,
                     ar = me.getDataForArea(this),
                     opts = me.options;
-                
+
                 e.preventDefault();
-                
+
                 if (!has_canvas) {
                     this.blur();
                 }
@@ -771,7 +774,7 @@ See complete changelog at github
             }
         };
         MapData.prototype.initialize = function () {
-            var $area, area, css,sel, areas, i, j, keys, key, area_id, default_group, group_value, img,
+            var $area, area, css, sel, areas, i, j, keys, key, area_id, default_group, group_value, img,
                 sort_func, sorted_list, dataItem, mapArea, scale,
                 me = this,
                 selected_list = [],
@@ -1295,15 +1298,19 @@ See complete changelog at github
                         return true;
                     }
                     if (key instanceof Array) {
-                        key_list = key.join(",");
+                        if (key.length) {
+                            key_list = key.join(",");
+                        }
                     }
                     else {
                         key_list = key;
                     }
 
-                    u.each(key_list.split(','), function () {
-                        setSelection(map_data.getDataForKey(this.toString()));
-                    });
+                    if (key_list) {
+                        u.each(key_list.split(','), function () {
+                            setSelection(map_data.getDataForKey(this.toString()));
+                        });
+                    }
 
                 } else {
                     parent = $(this).parent()[0];
@@ -1450,7 +1457,7 @@ See complete changelog at github
             });
 
             return this.each(function () {
-                var last, lastProp, img, wrap, map, canvas,overlay_canvas, usemap, map_data, parent_id, wrap_id;
+                var last, lastProp, img, wrap, map, canvas, overlay_canvas, usemap, map_data, parent_id, wrap_id;
 
                 // save ref to this image even if we can't access it yet. commands will be queued
                 img = $(this);
@@ -1495,17 +1502,30 @@ See complete changelog at github
                 }
 
                 // If the image isn't fully loaded, this won't work right.  Try again later.                   
-                if (!is_image_loaded(map_data)) {
+                var loaded = is_image_loaded(map_data);
+                if (!loaded || !map_data.redo) {
+                    // For some reason we need to cylce one more time after the images are done loading, if they
+                    // weren't at first. I am not sure if this is a bug in my code or some sync disconnect? But for
+                    // complex scenarious, its the only way to ensure it always works. So callback one time after
+                    // the images are done to be sure they were done when we started the entire process.
+                    if (loaded) {
+                        map_data.redo=true;
+                    }
                     if (--map_data.bind_tries > 0) {
-                        setTimeout(function () {
-                            img.mapster(opts);
-                        }, 200);
+                    	
+                        setTimeout((function () {
+                            return function() {
+                            	me.bind.call(img,options);
+                          };
+                        }()), 100);
                     } else {
                         u.ifFunction(opts.onConfigured, this, false);
                     }
                     return true;
                 }
-
+                
+		//img = $(this);
+		
                 parent_id = img.parent().attr('id');
 
                 // wrap only if there's not already a wrapper, otherwise, own it
@@ -1799,9 +1819,9 @@ See complete changelog at github
                         var stroke, e, t_fill, el_name, template, c = mapArea.coords();
                         el_name = element_name ? 'name="' + element_name + '" ' : '';
 
-                        
+
                         t_fill = '<v:fill color="#' + options.fillColor + '" opacity="' + (options.fill ? options.fillOpacity : 0) + '" /><v:stroke opacity="' + options.strokeOpacity + '"/>';
-                        
+
                         if (options.stroke) {
                             stroke = 'strokeweight=' + options.strokeWidth + ' stroked="t" strokecolor="#' + options.strokeColor + '"';
                         } else {
