@@ -1,4 +1,4 @@
-/* ImageMapster 1.2 beta 3
+/* ImageMapster 1.2 beta 4
 
 Copyright 2011 James Treworgy
 http://www.outsharked.com/imagemapster
@@ -8,6 +8,7 @@ A jQuery plugin to enhance image maps.
 */
 /*
 version 1.2 (prerelease)
+-- "resize" option
 -- improve startup speed by eliminating need for setTimeout callback
 -- address startup bug when images aren't loaded and there are lots of images
 -- fixed exception when "set" with no data for key
@@ -567,42 +568,38 @@ See complete changelog at github
 
         MapData = function (image, options) {
             var me = this;
-            // sorry - your image must have border:0 
-            $(image).css('border', 0);
-            // elements own index in parent array - so we have an ID to use for wraper div
+            this.index = -1;                // index of this in map_cache - so we have an ID to use for wraper div
 
-            this.index = -1;
-            // main map image
-            this.image = image;
-            // all images associated with this map. this will include a "copy" of the main one
-            this.images = [];
-            // src for each image
-            this.imageSources = [];
-            //this.images.push(image);
-            // the loaded status of each indexed image in images
-            this.imageStatus = [];
-            // xref of "render_xxx" to this.images
-            this.altImagesXref = {};
-            this.map = null;
-            this.options = options;
+            this.image = image;             // (Image)  main map image
+            this.images = [];               // (Image)  all images associated with this map. this will include a "copy" of the main one
+            this.imageSources = [];         // (string) src for each image
+            this.imageStatus = [];          // (bool)   the loaded status of each indexed image in images
+            this.altImagesXref = {};        // (int)    xref of "render_xxx" to this.images
+            this.map = null;                // ($)      the image map
+            this.options = options;         // {}       options passed buy user
             this.area_options = u.mergeObjects({
                 template: $.mapster.area_defaults,
                 source: options
             });
-            this.base_canvas = null;
-            this.overlay_canvas = null;
+            this.base_canvas = null;       // (canvas|var)  where selections are rendered
+            this.overlay_canvas = null;    // (canvas|var)  where highlights are rendered
 
-            this.complete = false;
-            this.commands = [];
-            this.data = [];
+            this.complete = false;         // (bool)    when all images have finished loading
+            this.commands = [];            // {}        commands that were run before configuration was completed (b/c images weren't loaded)
+            this.data = [];                // (MapData) area groups
 
-            this.imgCssText = image.style.cssText || null;
+            // save the initial style of the image for unbinding. This is problematic, chrome duplicates styles when assigning, and
+            // cssText is apparently not universally supported. Need to do something more robust to make unbinding work universally.
+            this.imgCssText = image.style.cssText || null;           
+
             this.bindTries = options.configTimeout / 200;
+            
             // private members
-            this._xref = {};
-            this._highlightId = -1;
-            this._tooltip_events = [];
-            this.scaleInfo = null;
+            this._xref = {};               // (int)      xref of mapKeys to data[]
+            this._highlightId = -1;        // (int)      the currently highlighted element.
+            this._tooltip_events = [];     // {}         info on events we bound to a tooltip container, so we can properly unbind them
+            this.scaleInfo = null;         // {}         info about the image size, scaling, defaults
+            
             this.mouseover = function (e) {
                 var ar = me.getDataForArea(this),
                     opts = ar.effectiveOptions();
@@ -691,7 +688,7 @@ See complete changelog at github
 
         };
         MapData.prototype.resize = function (width, height, duration) {
-            var newsize, keys, opts, me = this;
+            var newsize, me = this;
             function finishResize() {
                 me.scaleInfo = u.getScaleInfo(me.scaleInfo.realWidth, me.scaleInfo.realHeight, width, height);
                 u.each(me.data, function () {
@@ -743,7 +740,7 @@ See complete changelog at github
         // how or if "onload" works and in how one can actually detect if an image is already loaded. Try to check first,
         // then bind onload event, and finally use a timer to keep checking.
         MapData.prototype.bindImages = function (dontBind) {
-            var alreadyLoaded = true, index, img,
+            var alreadyLoaded = true,
                 me = this;
 
             function onLoad() {
@@ -854,7 +851,6 @@ See complete changelog at github
         // it returns a list of all selected areas.
         MapData.prototype.setAreaOptions = function (area_list) {
             var i, area_options, ar,
-                selected_list = [],
                 areas = area_list || {};
             // refer by: map_data.options[map_data.data[x].area_option_id]
             for (i = areas.length - 1; i >= 0; i--) {
@@ -868,12 +864,6 @@ See complete changelog at github
                     }
                 }
             }
-            //            u.each(this.data, function (i) {
-            //                if (this.isSelectedOrStatic()) {
-            //                    selected_list.push(i);
-            //                }
-            //            });
-            //return selected_list;
         };
 
         MapData.prototype.setAreasSelected = function (selected_list) {
@@ -893,10 +883,9 @@ See complete changelog at github
         };
         ///called when images are done loading
         MapData.prototype.initialize = function () {
-            var base_canvas, overlay_canvas, wrap, parentId, $area, area, css, sel, areas, i, j, keys, key, area_id, default_group, group_value, img, imgCopy,
+            var base_canvas, overlay_canvas, wrap, parentId, $area, area, css, sel, areas, i, j, keys, key, area_id, default_group, group_value, img, 
                 sort_func, sorted_list, dataItem, mapArea, scale,
                 me = this,
-                selected_list = [],
                 opts = me.options;
 
             function addGroup(key, value) {
@@ -963,7 +952,6 @@ See complete changelog at github
                         area_id = addGroup(this.data.length, group_value);
                         dataItem = this.data[area_id];
                         dataItem.key = key = area_id.toString();
-                        //$area.attr('data-mapster-id', area_id);
                     }
                     else {
                         area_id = this._xref[key];
@@ -1018,8 +1006,6 @@ See complete changelog at github
 
             u.setOpacity(me.image, 0);
 
-            //selected_list = this.setAreaOptions(opts.areas);
-
             this.setAreaOptions(opts.areas);
 
             if (opts.isSelectable && opts.onGetList) {
@@ -1051,7 +1037,6 @@ See complete changelog at github
             //            }
 
             // populate areas from config options
-            //me.setAreasSelected(selected_list);
             me.setAreasSelected();
 
             // process queued commands
@@ -1061,9 +1046,6 @@ See complete changelog at github
                 });
                 me.commands = [];
             }
-
-
-
             if (opts.onConfigured && typeof opts.onConfigured === 'function') {
                 opts.onConfigured.call(img, true);
             }
@@ -1112,8 +1094,6 @@ See complete changelog at github
                 me.images[i] = null;
             });
 
-
-            //this.alt_images = null;
             this.clearTooltip();
         };
         MapData.prototype.bindTooltipClose = function (option, event, obj) {
@@ -1135,10 +1115,8 @@ See complete changelog at github
             this.areaId = -1;
             this.value = value || '';
             this.options = {};
-            this.selected = null;
-            //this.areas = [];
-            // object from scaleInfo contianing shape, coords, oldCoords
-            this.areas = [];
+            this.selected = null;   // "null" means unchanged. Use "isSelected" method to just test true/false
+            this.areas = [];        // MapArea objects
             this.area = null;
             this._effectiveOptions = null;
         };
@@ -1307,8 +1285,6 @@ See complete changelog at github
             map_data.bindTooltipClose('tooltip-click', 'click', tooltip);
             // not working properly- closes too soon sometimes
             //map_data.bindTooltipClose('img-mouseout', 'mouseout', $(map_data.image));
-
-
 
             if (map_data.options.toolTipFade) {
                 u.setOpacity(tooltip[0], 0);
@@ -1570,7 +1546,7 @@ See complete changelog at github
 
         // refresh options and update selection information.
         me.rebind = function (options) {
-            var map_data, selected_list;
+            var map_data;
             if (!options) { return; }
             this.filter('img').each(function () {
                 map_data = get_map_data(this);
@@ -1581,10 +1557,7 @@ See complete changelog at github
 
                     merge_options(map_data, options);
 
-                    // this will only update new areas that may have been passed
-                    //selected_list = map_data.setAreaOptions(options.areas || {});
                     map_data.setAreaOptions(options.areas || {});
-                    //map_data.setAreasSelected(selected_list);
                     map_data.setAreasSelected();
                 }
             });
@@ -1633,10 +1606,13 @@ See complete changelog at github
             });
 
             return this.each(function () {
-                var loaded, last, lastProp, img, wrap, map, canvas, overlay_canvas, usemap, map_data, parent_id, wrap_id;
+                var img, map, usemap, map_data;
 
                 // save ref to this image even if we can't access it yet. commands will be queued
                 img = $(this);
+
+                // sorry - your image must have border:0, things are too unpredictable otherwise.
+                img.css('border', 0);
 
                 map_data = get_map_data(this);
                 // if already bound completely, do a total rebind
@@ -1870,14 +1846,12 @@ See complete changelog at github
                     me.create_canvas_for = function (img, width, height) {
                         var c,
                          $img = $(img);
-                        //                        if (img) {
-                        //                            $img = $(img);
-                        //                            height = img.height || $img.height();
-                        //                            width = img.width || $img.width();
-                        //                        }
+//                        if (img) {
+//                            $img = $(img);
+//                            height = img.height || $img.height();
+//                            width = img.width || $img.width();
+//                        }
                         c = $('<canvas width=' + $img.width() + ' height=' + $img.height() + '></canvas>').addClass("mapster_el")[0];
-                        //c.width = width;
-                        //c.height = height;
                         c.getContext("2d").clearRect(0, 0, $img.width(), $img.height());
                         return c;
                     };
@@ -1889,20 +1863,14 @@ See complete changelog at github
                     };
                     // Draw all items from selected_list to a new canvas, then swap with the old one. This is used to delete items when using canvases. 
                     me.refresh_selections = function () {
-                        var list_temp = [], canvas_temp;
+                        var canvas_temp;
                         // draw new base canvas, then swap with the old one to avoid flickering
                         canvas_temp = map_data.base_canvas;
-                        //                        u.each(map_data.data, function (i) {
-                        //                            if (this.isSelectedOrStatic()) {
-                        //                                list_temp.push(i);
-                        //                            }
-                        //                        });
 
                         map_data.base_canvas = create_canvas(map_data.image);
                         $(map_data.base_canvas).hide();
                         $(map_data.image).before(map_data.base_canvas);
 
-                        //map_data.setAreasSelected(list_temp);
                         map_data.setAreasSelected();
 
                         $(map_data.base_canvas).show();
