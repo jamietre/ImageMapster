@@ -230,8 +230,13 @@ See complete changelog at github
             }
         },
         isImageLoaded: function (img) {
-            return img.comlete || (img.naturalWidth && img.naturalHeight) ||
-               (img.width && img.height);
+            if (!img.complete) {
+                return false;
+            }
+            if (!img.naturalWidth || !img.naturalHeight) {
+                return false;
+            }
+            return true;
         },
         arrayIndexOf: function (arr, el) {
             if (arr.indexOf) {
@@ -452,11 +457,6 @@ See complete changelog at github
             return $(graphics.create_canvas_for(img)).css(canvas_style)[0];
         }
 
-        // internal function to actually set the area
-
-        // Configures selections from a separate list.
-
-
         /// return current map_data for an image or area
         function get_map_data_index(obj) {
             var img, id;
@@ -632,9 +632,6 @@ See complete changelog at github
                 if (opts.toolTipClose && u.arrayIndexOf(opts.toolTipClose, 'area-mouseout') >= 0) {
                     me.clearTooltip();
                 }
-                //data = me.highlightId ? me.data[me.highlightId] : null;
-
-                //key = data ? data.key : '';
                 me.ensureNoHighlight();
                 if (u.isFunction(opts.onMouseout)) {
                     opts.onMouseout.call(this,
@@ -743,18 +740,6 @@ See complete changelog at github
         MapData.prototype.altImage = function (mode) {
             return this.images[this.altImagesXref[mode]];
         };
-        // return the alternate images as an array
-        //        MapData.prototype.altImages = function () {
-        //            var i, arr = [];
-        //            u.each(this.alt_images, function () {
-        //                arr.push(this);
-        //            });
-        //            return arr;
-        //        };
-        // return ALL images as an array
-        //        MapData.prototype.images = function () {
-        //            return [this.image].concat(this.altImages());
-        //        };
         MapData.prototype.wrapId = function () {
             return 'mapster_wrap_' + this.index;
         };
@@ -938,18 +923,6 @@ See complete changelog at github
                 width: scale.width,
                 height: scale.height
             };
-            //                        if (has_canvas) {
-            //                            css.background = 'url(' + this.image.src + ')';
-            //                            css['background-repeat'] = 'no-repeat';
-            //                            if (scale.scale) {
-            //                                css['background-size'] = scale.width + 'px ' + scale.height + 'px';
-            //                            }
-            //                        } else {
-            //                            // cannot resize backgrounds with IE, add yet another image behind the map as the background
-            //                            // (is there any reason not to just do this anyway?)
-            //                            img = $('<img src="' + this.image.src + '" width="' + scale.width + '" height="' + scale.height + '">').css(canvas_style);
-            //                            $(this.wrapper).find(":eq(0)").before(img);
-            //                        }
 
             img.css(canvas_style);
             me.images[0].style.cssText = me.image.style.cssText;
@@ -998,22 +971,23 @@ See complete changelog at github
             //            if (opts.listenToList && opts.nitG) {
             //                opts.nitG.bind('click.mapster', event_hooks[map_data.hooks_index].listclick_hook);
             //            }
-            this.setAreasSelected(selected_list);
+
+            // populate areas from config options
+            me.setAreasSelected(selected_list);
 
             // process queued commands
             if (me.commands.length) {
-
                 u.each(me.commands, function () {
                     methods[this.command].apply(this.that, this.args);
                 });
                 me.commands = [];
             }
+
+            
+
             if (opts.onConfigured && typeof opts.onConfigured === 'function') {
                 opts.onConfigured.call(img, true);
             }
-
-            ///
-
         };
         MapData.prototype.clearEvents = function () {
             $(this.map).find('area')
@@ -1022,21 +996,7 @@ See complete changelog at github
                 .unbind('click.mapster');
         };
         MapData.prototype._clearCanvases = function (preserveState) {
-            // need to remove the canvas elements created, images[0], and release references to the extra images
-
-            //            var canvases = [[this, "overlay_canvas"],
-            //                    [this.alt_images, "select"],
-            //                    [this.alt_images, "highlight"]];
-            //            if (!preserveState) {
-            //                canvases.push([this, "base_canvas"]);
-            //            }
-            //            // crazy thing to remove the 2nd property from the 1st object
-            //            u.each(canvases, function () {
-            //                if (this[0] && this[0][this[1]]) {
-            //                    $(this[0][this[1]]).remove();
-            //                    delete this[0][this[1]];
-            //                }
-            //            });
+            // remove the canvas elements created
             if (!preserveState) {
                 $(this.base_canvas).remove();
             }
@@ -1633,54 +1593,11 @@ See complete changelog at github
             });
         };
 
-        //        me.
-        //                if (!map_data.imagesLoaded()) {
-        //                    if (--map_data.bind_tries > 0) {
-        //                        setTimeout((function () {
-        //                            return function () {
-        //                                me.bind.call(img, options);
-        //                            };
-        //                        } ()), 100);
-        //                        return true;
-        //                    } else {
-        //                        u.ifFunction(opts.onConfigured, this, false);
-        //                    }
-        //                }
-
-        // If the image isn't fully loaded, this won't work right.  Try again later.                   
-        //                loaded = is_image_loaded(map_data);
-        //                if (!loaded || !map_data.redo) {
-        //                    // For some reason we need to cylce one more time after the images are done loading, if they
-        //                    // weren't at first. I am not sure if this is a bug in my code or some sync disconnect? But for
-        //                    // complex scenarious, its the only way to ensure it always works. So callback one time after
-        //                    // the images are done to be sure they were done when we started the entire process.
-        //                    if (loaded) {
-        //                        map_data.redo = true;
-        //                    }
-        //                    if (--map_data.bind_tries > 0) {
-        //                        setTimeout((function () {
-        //                            return function () {
-        //                                me.bind.call(img, options);
-        //                            };
-        //                        } ()), 100);
-        //                    } else {
-        //                        u.ifFunction(opts.onConfigured, this, false);
-        //                    }
-        //                    return true;
-        //                }
-
-        //img = $(this);
-
-
-        //};
-
-
         me.init = function (useCanvas) {
             var style, shapes;
 
-
             has_canvas = $('<canvas></canvas>')[0].getContext ? true : false;
-            //useCanvas = false;
+
             if (!(has_canvas || document.namespaces)) {
                 $.fn.mapster = function () {
                     return this;
