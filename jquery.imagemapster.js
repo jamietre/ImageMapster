@@ -230,10 +230,11 @@ See complete changelog at github
             }
         },
         isImageLoaded: function (img) {
-            if (!img.complete) {
+            if (typeof img.complete !=='undefined' && !img.complete) {
                 return false;
             }
-            if (!img.naturalWidth || !img.naturalHeight) {
+            if (typeof img.naturalWidth !== 'undefined' && 
+                    (img.naturalWidth === 0 || img.naturalHeight===0)) {
                 return false;
             }
             return true;
