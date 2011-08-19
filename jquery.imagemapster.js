@@ -5,7 +5,8 @@ http://www.outsharked.com/imagemapster
 https://github.com/jamietre/ImageMapster
 
 A jQuery plugin to enhance image maps.
-
+*/
+/*
 version 1.2 (prerelease)
 -- address startup bug when images aren't loaded and there are lots of images
 -- fixed exception when "set" with no data for key
@@ -438,7 +439,7 @@ See complete changelog at github
         },
         is_image_loaded = function (map_data) {
             var complete=true,
-            	images = map_data.images();
+            images = map_data.images();
 
 	    u.each(images, function () {
                 complete = complete && (this.complete || (this.width && this.height) ||
@@ -1457,7 +1458,7 @@ See complete changelog at github
             });
 
             return this.each(function () {
-                var last, lastProp, img, wrap, map, canvas, overlay_canvas, usemap, map_data, parent_id, wrap_id;
+                var loaded, last, lastProp, img, wrap, map, canvas, overlay_canvas, usemap, map_data, parent_id, wrap_id;
 
                 // save ref to this image even if we can't access it yet. commands will be queued
                 img = $(this);
@@ -1502,7 +1503,7 @@ See complete changelog at github
                 }
 
                 // If the image isn't fully loaded, this won't work right.  Try again later.                   
-                var loaded = is_image_loaded(map_data);
+                loaded = is_image_loaded(map_data);
                 if (!loaded || !map_data.redo) {
                     // For some reason we need to cylce one more time after the images are done loading, if they
                     // weren't at first. I am not sure if this is a bug in my code or some sync disconnect? But for
@@ -1512,10 +1513,9 @@ See complete changelog at github
                         map_data.redo=true;
                     }
                     if (--map_data.bind_tries > 0) {
-                    	
                         setTimeout((function () {
                             return function() {
-                            	me.bind.call(img,options);
+                                me.bind.call(img,options);
                           };
                         }()), 100);
                     } else {
