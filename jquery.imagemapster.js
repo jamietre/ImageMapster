@@ -1,4 +1,4 @@
-/* ImageMapster 1.2 beta 4
+/* ImageMapster 1.2 beta 5
 
 Copyright 2011 James Treworgy
 http://www.outsharked.com/imagemapster
@@ -8,6 +8,7 @@ A jQuery plugin to enhance image maps.
 */
 /*
 version 1.2 (prerelease)
+-- test browser features for filter vs. opacity
 -- "resize" option
 -- improve startup speed by eliminating need for setTimeout callback
 -- address startup bug when images aren't loaded and there are lots of images
@@ -19,8 +20,8 @@ version 1.2 (prerelease)
 -- many performance improvements, tests, refactoring some old inefficient code. Improved memory usage.
 -- fix css flickering when debinding/rebinding
 -- add "scaleMap" option to automatically resize image maps when a bound image is resized dynamically.
-   To use: set scaleMap: true in the options. ImageMapster will automatically detect images that have been scaled from their
-   original size, and refactor the imagemap to match the new size. 
+To use: set scaleMap: true in the options. ImageMapster will automatically detect images that have been scaled from their
+original size, and refactor the imagemap to match the new size. 
 -- And oh yeah... now that we can easily resize everything the next thing is going to be area zooms!
 
 version 1.1.3
@@ -131,9 +132,12 @@ See complete changelog at github
             }
             return [bestX, bestY];
         },
-        setOpacity: function (e, opacity) {
-            e.style.filter = "Alpha(opacity=" + String(opacity * 100) + ")";
-            e.style.opacity = opacity;
+        setOpacity: function (e, opacity, ie) {
+            if (ie) {
+                e.style.filter = "Alpha(opacity=" + String(opacity * 100) + ")";
+            } else {
+                e.style.opacity = opacity;
+            }
         },
         // sorta like $.extend but limits to updating existing properties on the base object. If the base object is null, then it will
         // be limited to the properties of the FIRST object.
@@ -330,7 +334,7 @@ See complete changelog at github
         fader: (function () {
             var elements = [],
                 lastKey = 0,
-                fade_func = function (el, op, endOp, duration) {
+                fade_func = function (el, op, endOp, duration, ie) {
                     var index, u = $.mapster.utils, obj;
                     if (typeof el === 'number') {
                         index = u.arrayIndexOfProp(elements, 'key', el);
@@ -352,7 +356,7 @@ See complete changelog at github
 
                     op = (op + (endOp / 10) > endOp - 0.01) ? endOp : op + (endOp / 10);
 
-                    u.setOpacity(obj, op);
+                    u.setOpacity(obj, op, ie);
                     if (op < endOp) {
                         setTimeout(function () {
                             fade_func(el, op, endOp, duration);
@@ -590,16 +594,16 @@ See complete changelog at github
 
             // save the initial style of the image for unbinding. This is problematic, chrome duplicates styles when assigning, and
             // cssText is apparently not universally supported. Need to do something more robust to make unbinding work universally.
-            this.imgCssText = image.style.cssText || null;           
+            this.imgCssText = image.style.cssText || null;
 
             this.bindTries = options.configTimeout / 200;
-            
+
             // private members
             this._xref = {};               // (int)      xref of mapKeys to data[]
             this._highlightId = -1;        // (int)      the currently highlighted element.
             this._tooltip_events = [];     // {}         info on events we bound to a tooltip container, so we can properly unbind them
             this.scaleInfo = null;         // {}         info about the image size, scaling, defaults
-            
+
             this.mouseover = function (e) {
                 var ar = me.getDataForArea(this),
                     opts = ar.effectiveOptions();
@@ -883,7 +887,7 @@ See complete changelog at github
         };
         ///called when images are done loading
         MapData.prototype.initialize = function () {
-            var base_canvas, overlay_canvas, wrap, parentId, $area, area, css, sel, areas, i, j, keys, key, area_id, default_group, group_value, img, 
+            var base_canvas, overlay_canvas, wrap, parentId, $area, area, css, sel, areas, i, j, keys, key, area_id, default_group, group_value, img,
                 sort_func, sorted_list, dataItem, mapArea, scale,
                 me = this,
                 opts = me.options;
@@ -992,7 +996,7 @@ See complete changelog at github
 
             me.images[0].style.cssText = me.image.style.cssText;
             me.images[0].className = 'mapster_el';
-            u.setOpacity(me.images[0], 1);
+            u.setOpacity(me.images[0], 1, !has_canvas);
             // if we were rebinding with an existing wrapper, the image will aready be in it
             if (img.parent()[0] !== me.wrapper[0]) {
                 img.before(me.wrapper);
@@ -1004,7 +1008,7 @@ See complete changelog at github
                 .append(overlay_canvas)
                 .append(img);
 
-            u.setOpacity(me.image, 0);
+            u.setOpacity(me.image, 0, !has_canvas);
 
             this.setAreaOptions(opts.areas);
 
@@ -1287,9 +1291,9 @@ See complete changelog at github
             //map_data.bindTooltipClose('img-mouseout', 'mouseout', $(map_data.image));
 
             if (map_data.options.toolTipFade) {
-                u.setOpacity(tooltip[0], 0);
+                u.setOpacity(tooltip[0], 0, !has_canvas);
                 tooltip.show();
-                u.fader(tooltip[0], 0, 1, opts.fadeDuration);
+                u.fader(tooltip[0], 0, 1, opts.fadeDuration, !has_canvas);
             } else {
                 tooltip.show();
             }
@@ -1744,7 +1748,7 @@ See complete changelog at github
                     me.render();
 
                     if (opts.fade && mode === 'highlight') {
-                        u.fader(canvas, 0, 1, opts.fadeDuration);
+                        u.fader(canvas, 0, 1, opts.fadeDuration, !has_canvas);
                     }
                 };
 
@@ -1846,11 +1850,11 @@ See complete changelog at github
                     me.create_canvas_for = function (img, width, height) {
                         var c,
                          $img = $(img);
-//                        if (img) {
-//                            $img = $(img);
-//                            height = img.height || $img.height();
-//                            width = img.width || $img.width();
-//                        }
+                        //                        if (img) {
+                        //                            $img = $(img);
+                        //                            height = img.height || $img.height();
+                        //                            width = img.width || $img.width();
+                        //                        }
                         c = $('<canvas width=' + $img.width() + ' height=' + $img.height() + '></canvas>').addClass("mapster_el")[0];
                         c.getContext("2d").clearRect(0, 0, $img.width(), $img.height());
                         return c;
