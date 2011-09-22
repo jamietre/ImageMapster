@@ -1,4 +1,7 @@
-
+/* Will not usually work on IE9 when simulating VML mode, because image-loaded callback doesn't fire in time.
+   Too hard to fix the test right now. In practice this shouldn't ever matter unless you actually want to 
+   test the selection state (as initially configured) before anything's been done.
+*/
 
 mapster_tests = function (options) {
     var map,

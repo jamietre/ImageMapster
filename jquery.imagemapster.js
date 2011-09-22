@@ -1,4 +1,4 @@
-/* ImageMapster 1.2
+/* ImageMapster 1.2.1
 
 Copyright 2011 James Treworgy
 http://www.outsharked.com/imagemapster
@@ -7,6 +7,9 @@ https://github.com/jamietre/ImageMapster
 A jQuery plugin to enhance image maps.
 */
 /*
+version 1.2.1
+-- Ugh, post-release bug introduced - click callback "this" - fixed
+-- Replace u.isFunction with $.isFunction to save a few bytes
 version 1.2
 -- fixed fader problem for old IE (again, really this time)
 -- allow selecting includeKeys areas from staticState areas
@@ -236,7 +239,7 @@ See complete changelog at github
         // evaluates "obj", if function, calls it with args
         // (todo - update this to handle variable lenght/more than one arg)
         ifFunction: function (obj, that, args) {
-            if (this.isFunction(obj)) {
+            if ($.isFunction(obj)) {
                 obj.call(that, args);
             }
         },
@@ -361,7 +364,7 @@ See complete changelog at github
                     u.setOpacity(obj, op, ie);
                     if (op < endOp) {
                         setTimeout(function () {
-                            fade_func(el, op, endOp, duration,ie);
+                            fade_func(el, op, endOp, duration, ie);
                         }, duration ? duration / 10 : 15);
                     }
                 };
@@ -618,7 +621,7 @@ See complete changelog at github
                 if (me.options.showToolTip && opts.toolTip && me.activeToolTipID !== ar.areaId) {
                     ar.showTooltip(this);
                 }
-                if (u.isFunction(me.options.onMouseover)) {
+                if ($.isFunction(me.options.onMouseover)) {
                     me.options.onMouseover.call(this,
                     {
                         e: e,
@@ -637,7 +640,7 @@ See complete changelog at github
                     me.clearTooltip();
                 }
                 me.ensureNoHighlight();
-                if (u.isFunction(opts.onMouseout)) {
+                if ($.isFunction(opts.onMouseout)) {
                     opts.onMouseout.call(this,
                     {
                         e: e,
@@ -649,6 +652,7 @@ See complete changelog at github
             };
             this.click = function (e) {
                 var selected, list, list_target, newSelectionState, canChangeState,
+                    that = this,
                     ar = me.getDataForArea(this),
                     opts = me.options;
 
@@ -670,8 +674,8 @@ See complete changelog at github
                     }
 
                     list_target = getBoundList(opts, ar.key);
-                    if (u.isFunction(opts.onClick)) {
-                        if (false === opts.onClick.call(this,
+                    if ($.isFunction(opts.onClick)) {
+                        if (false === opts.onClick.call(that,
                     {
                         e: e,
                         listTarget: list_target,
@@ -1178,7 +1182,7 @@ See complete changelog at github
             return this._effectiveOptions;
         };
         AreaData.prototype.changeState = function (state_type, state) {
-            if (u.isFunction(this.owner.options.onStateChange)) {
+            if ($.isFunction(this.owner.options.onStateChange)) {
                 this.owner.options.onStateChange.call(this.owner.image,
                 {
                     key: this.key,
