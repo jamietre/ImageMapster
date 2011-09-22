@@ -1,4 +1,4 @@
-/* ImageMapster 1.2 beta 5
+/* ImageMapster 1.2
 
 Copyright 2011 James Treworgy
 http://www.outsharked.com/imagemapster
@@ -7,7 +7,9 @@ https://github.com/jamietre/ImageMapster
 A jQuery plugin to enhance image maps.
 */
 /*
-version 1.2 (prerelease)
+version 1.2
+-- fixed fader problem for old IE (again, really this time)
+-- allow selecting includeKeys areas from staticState areas
 -- test browser features for filter vs. opacity
 -- "resize" option
 -- improve startup speed by eliminating need for setTimeout callback
@@ -359,7 +361,7 @@ See complete changelog at github
                     u.setOpacity(obj, op, ie);
                     if (op < endOp) {
                         setTimeout(function () {
-                            fade_func(el, op, endOp, duration);
+                            fade_func(el, op, endOp, duration,ie);
                         }, duration ? duration / 10 : 15);
                     }
                 };
@@ -611,9 +613,7 @@ See complete changelog at github
                 if (!has_canvas) {
                     this.blur();
                 }
-                if (!u.isBool(opts.staticState)) {
-                    ar.highlight();
-                }
+                ar.highlight();
 
                 if (me.options.showToolTip && opts.toolTip && me.activeToolTipID !== ar.areaId) {
                     ar.showTooltip(this);
@@ -648,7 +648,7 @@ See complete changelog at github
                 }
             };
             this.click = function (e) {
-                var selected, list_target, newSelectionState, canChangeState,
+                var selected, list, list_target, newSelectionState, canChangeState,
                     ar = me.getDataForArea(this),
                     opts = me.options;
 
@@ -659,35 +659,49 @@ See complete changelog at github
                 }
 
                 opts = me.options;
-
-                canChangeState = (ar.isSelectable() &&
+                function clickArea(ar) {
+                    var areaOpts;
+                    canChangeState = (ar.isSelectable() &&
                     (ar.isDeselectable() || !ar.isSelected()));
-                if (canChangeState) {
-                    newSelectionState = !ar.isSelected();
-                } else {
-                    newSelectionState = ar.isSelected();
-                }
+                    if (canChangeState) {
+                        newSelectionState = !ar.isSelected();
+                    } else {
+                        newSelectionState = ar.isSelected();
+                    }
 
-                list_target = getBoundList(opts, ar.key);
-                if (u.isFunction(opts.onClick)) {
-                    if (false === opts.onClick.call(this,
+                    list_target = getBoundList(opts, ar.key);
+                    if (u.isFunction(opts.onClick)) {
+                        if (false === opts.onClick.call(this,
                     {
                         e: e,
                         listTarget: list_target,
                         key: ar.key,
                         selected: newSelectionState
                     })) {
-                        return;
+                            return;
+                        }
+                    }
+
+                    if (canChangeState) {
+                        selected = ar.toggleSelection();
+                    }
+
+                    if (opts.boundList && opts.boundList.length > 0) {
+                        setBoundListProperties(opts, list_target, ar.isSelected());
+                    }
+                    areaOpts = ar.effectiveOptions();
+                    if (areaOpts.includeKeys) {
+                        list = areaOpts.includeKeys.split(',');
+                        u.each(list, function () {
+                            var ar = me.getDataForKey(this.toString());
+                            if (!ar.options.isMask) {
+                                clickArea(ar);
+                            }
+                        });
                     }
                 }
+                clickArea(ar);
 
-                if (canChangeState) {
-                    selected = ar.toggleSelection();
-                }
-
-                if (opts.boundList && opts.boundList.length > 0) {
-                    setBoundListProperties(opts, list_target, ar.isSelected());
-                }
             };
 
         };
@@ -1703,7 +1717,9 @@ See complete changelog at github
 
                     u.each(areaData.areas, function () {
                         opts.isMask = areaOpts.isMask || (this.nohref && map_data.options.noHrefIsMask);
-                        me.addShape(this, opts);
+                        if (!u.isBool(opts.staticState)) {
+                            me.addShape(this, opts);
+                        }
                     });
 
                     return areaOpts;
@@ -1885,7 +1901,6 @@ See complete changelog at github
                     render_shape = function (mapArea, options) {
                         var stroke, e, t_fill, el_name, template, c = mapArea.coords();
                         el_name = element_name ? 'name="' + element_name + '" ' : '';
-
 
                         t_fill = '<v:fill color="#' + options.fillColor + '" opacity="' + (options.fill ? options.fillOpacity : 0) + '" /><v:stroke opacity="' + options.strokeOpacity + '"/>';
 

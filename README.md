@@ -27,8 +27,6 @@ Image Mapster: A Jquery Plugin to make image maps useful.
 
 Project home page. http://www.outsharked.com/imagemapster
 
-Online demo. http://www.outsharked.com/imagemapster/demo1.aspx
-
 Source repository: https://github.com/jamietre/ImageMapster 
 
 ## Details
