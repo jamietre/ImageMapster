@@ -1,4 +1,4 @@
-/* ImageMapster 1.2.1
+/* ImageMapster 1.2.2
 
 Copyright 2011 James Treworgy
 http://www.outsharked.com/imagemapster
@@ -7,6 +7,8 @@ https://github.com/jamietre/ImageMapster
 A jQuery plugin to enhance image maps.
 */
 /*
+version 1.2.2
+-- firefox 6.0 context.save() bug workaround
 version 1.2.1
 -- Ugh, post-release bug introduced - click callback "this" - fixed
 -- Replace u.isFunction with $.isFunction to save a few bytes
@@ -158,12 +160,12 @@ See complete changelog at github
         // returns - new object.
         mergeObjects: function (options) {
             var obj, i, len, prop,
-	                add = this.boolOrDefault(options.add, options.template ? false : true),
-	                ignore = options.ignore ? options.ignore.split(',') : '',
-	                include = options.include ? options.include.split(',') : '',
-	                deep = options.deep ? options.deep.split(',') : '',
-	                target = options.target || {},
-	                source = [].concat(options.source);
+                    add = this.boolOrDefault(options.add, options.template ? false : true),
+                    ignore = options.ignore ? options.ignore.split(',') : '',
+                    include = options.include ? options.include.split(',') : '',
+                    deep = options.deep ? options.deep.split(',') : '',
+                    target = options.target || {},
+                    source = [].concat(options.source);
             if (options.template) {
                 target = this.mergeObjects({ target: {}, source: [options.template, target] });
             }
@@ -173,9 +175,9 @@ See complete changelog at github
                 if (obj) {
                     for (prop in obj) {
                         if ((!ignore || this.arrayIndexOf(ignore, prop) === -1)
-	                          && (!include || this.arrayIndexOf(include, prop) >= 0)
-	                          && obj.hasOwnProperty(prop)
-	                          && (add || target.hasOwnProperty(prop))) {
+                              && (!include || this.arrayIndexOf(include, prop) >= 0)
+                              && obj.hasOwnProperty(prop)
+                              && (add || target.hasOwnProperty(prop))) {
 
                             if (deep && this.arrayIndexOf(deep, prop) >= 0 && typeof obj[prop] === 'object') {
                                 if (typeof target[prop] !== 'object' && add) {
@@ -1249,8 +1251,8 @@ See complete changelog at github
         AreaData.prototype.showTooltip = function (forArea) {
             var tooltip, left, top, tooltipCss, coords, fromCoords, container,
                 alignLeft = true,
-	        alignTop = true,
-	        opts = this.effectiveOptions(),
+            alignTop = true,
+            opts = this.effectiveOptions(),
                 map_data = this.owner,
                 baseOpts = map_data.options,
                 template = map_data.options.toolTipContainer;
@@ -1703,6 +1705,7 @@ See complete changelog at github
             // 3) call add_shape_to for each shape or mask, 4) call render() to finish
 
             graphics = (function () {
+
                 var element_name, map_data, canvas, context, width, height, masks, shapes, css3color, render_shape, addAltImage, me = {};
                 me.active = false;
 
@@ -1780,7 +1783,7 @@ See complete changelog at github
                         return 'rgba(' + hex_to_decimal(color.substr(0, 2)) + ',' + hex_to_decimal(color.substr(2, 2)) + ',' + hex_to_decimal(color.substr(4, 2)) + ',' + opacity + ')';
                     };
                     // mapArea
-                    render_shape = function (mapArea) {
+                    render_shape = function (context, mapArea) {
                         var i, c = mapArea.coords();
                         switch (mapArea.shape) {
                             case 'rect':
@@ -1800,69 +1803,85 @@ See complete changelog at github
                                 break;
                         }
                     };
-                    addAltImage = function (image, mapArea, options) {
-                        context.save();
+                    addAltImage = function (context, image, mapArea, options) {
                         context.beginPath();
 
-                        render_shape(mapArea);
+                        render_shape(context, mapArea);
                         context.closePath();
                         context.clip();
 
                         context.globalAlpha = options.altImageOpacity;
 
                         context.drawImage(image, 0, 0, mapArea.owner.scaleInfo.width, mapArea.owner.scaleInfo.height);
-                        context.restore();
                     };
 
                     me.beginSpecific = function () {
                         context = canvas.getContext('2d');
                     };
                     me.render = function () {
-                        context.save();
+
+                        // firefox 6.0 context.save() seems to be broken. to work around,  we have to draw the contents on one temp canvas, 
+                        // the mask on another, and merge everything. ugh. fixed in 1.2.2. unfortunately this is a lot more code for masks,
+                        // but no other way around it that i can see.
+
+                        var maskCanvas = $('<canvas width=' + canvas.width + ' height=' + canvas.height + '></canvas>')[0],
+                            maskContext = maskCanvas.getContext('2d'),
+                            shapeCanvas = $('<canvas width=' + canvas.width + ' height=' + canvas.height + '></canvas>')[0],
+                            shapeContext = shapeCanvas.getContext('2d');
+
                         if (masks.length) {
                             u.each(masks, function () {
-                                context.beginPath();
-                                render_shape(this.mapArea);
-                                context.closePath();
-                                context.fill();
-
+                                maskContext.beginPath();
+                                render_shape(maskContext, this.mapArea);
+                                maskContext.closePath();
+                                maskContext.fillStyle = '#fff';
+                                maskContext.fill();
                             });
-                            context.globalCompositeOperation = "source-out";
                         }
 
                         u.each(shapes, function () {
-                            var s = this;
-                            if (s.options.alt_image) {
-                                addAltImage(s.options.alt_image, s.mapArea, s.options);
-                            } else if (s.options.fill) {
-                                context.save();
-                                context.beginPath();
-                                render_shape(s.mapArea);
-                                context.closePath();
-                                context.clip();
-                                context.fillStyle = css3color(s.options.fillColor, s.options.fillOpacity);
-                                context.fill();
-                                context.restore();
-                            }
 
+                            var s = this;
+                            shapeContext.save();
+                            if (s.options.alt_image) {
+                                addAltImage(shapeContext, s.options.alt_image, s.mapArea, s.options);
+                            } else if (s.options.fill) {
+
+                                shapeContext.beginPath();
+                                render_shape(shapeContext, s.mapArea);
+                                shapeContext.closePath();
+                                shapeContext.clip();
+                                shapeContext.fillStyle = css3color(s.options.fillColor, s.options.fillOpacity);
+                                shapeContext.fill();
+                            }
+                            shapeContext.restore();
                         });
 
 
                         // render strokes at end since masks get stroked too
-                        context.restore();
 
-                        //context.globalCompositeOperation="source-over";
                         u.each(shapes.concat(masks), function () {
                             var s = this;
                             if (s.options.stroke) {
-                                context.beginPath();
-                                render_shape(s.mapArea);
-                                context.closePath();
-                                context.strokeStyle = css3color(s.options.strokeColor, s.options.strokeOpacity);
-                                context.lineWidth = s.options.strokeWidth;
-                                context.stroke();
+                                shapeContext.save();
+                                shapeContext.strokeStyle = css3color(s.options.strokeColor, s.options.strokeOpacity);
+                                shapeContext.lineWidth = s.options.strokeWidth;
+
+                                shapeContext.beginPath();
+                                render_shape(shapeContext, s.mapArea);
+                                shapeContext.closePath();
+                                shapeContext.stroke();
+                                shapeContext.restore();
+                                shapeContext.restore();
                             }
                         });
+
+                        // render the new shapes against the mask
+                        maskContext.globalCompositeOperation = "source-out";
+                        maskContext.drawImage(shapeCanvas, 0, 0);
+                        // flatten into the main canvas
+                        context.drawImage(maskCanvas, 0, 0);
+
                         context = null;
                         me.active = false;
                         return canvas;
@@ -1870,11 +1889,7 @@ See complete changelog at github
                     me.create_canvas_for = function (img, width, height) {
                         var c,
                          $img = $(img);
-                        //                        if (img) {
-                        //                            $img = $(img);
-                        //                            height = img.height || $img.height();
-                        //                            width = img.width || $img.width();
-                        //                        }
+
                         c = $('<canvas width=' + $img.width() + ' height=' + $img.height() + '></canvas>').addClass("mapster_el")[0];
                         c.getContext("2d").clearRect(0, 0, $img.width(), $img.height());
                         return c;
