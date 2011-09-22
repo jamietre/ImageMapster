@@ -1872,7 +1872,6 @@ See complete changelog at github
                                 shapeContext.closePath();
                                 shapeContext.stroke();
                                 shapeContext.restore();
-                                shapeContext.restore();
                             }
                         });
 
