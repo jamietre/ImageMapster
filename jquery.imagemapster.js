@@ -1,4 +1,4 @@
-/* ImageMapster 1.2.2
+/* ImageMapster 1.2.3
 
 Copyright 2011 James Treworgy
 http://www.outsharked.com/imagemapster
@@ -7,6 +7,8 @@ https://github.com/jamietre/ImageMapster
 A jQuery plugin to enhance image maps.
 */
 /*
+version 1.2.3
+-- resize with multiple images affecting other images - fixed
 version 1.2.2
 -- firefox 6.0 context.save() bug workaround
 version 1.2.1
@@ -160,12 +162,12 @@ See complete changelog at github
         // returns - new object.
         mergeObjects: function (options) {
             var obj, i, len, prop,
-                    add = this.boolOrDefault(options.add, options.template ? false : true),
-                    ignore = options.ignore ? options.ignore.split(',') : '',
-                    include = options.include ? options.include.split(',') : '',
-                    deep = options.deep ? options.deep.split(',') : '',
-                    target = options.target || {},
-                    source = [].concat(options.source);
+	                add = this.boolOrDefault(options.add, options.template ? false : true),
+	                ignore = options.ignore ? options.ignore.split(',') : '',
+	                include = options.include ? options.include.split(',') : '',
+	                deep = options.deep ? options.deep.split(',') : '',
+	                target = options.target || {},
+	                source = [].concat(options.source);
             if (options.template) {
                 target = this.mergeObjects({ target: {}, source: [options.template, target] });
             }
@@ -175,9 +177,9 @@ See complete changelog at github
                 if (obj) {
                     for (prop in obj) {
                         if ((!ignore || this.arrayIndexOf(ignore, prop) === -1)
-                              && (!include || this.arrayIndexOf(include, prop) >= 0)
-                              && obj.hasOwnProperty(prop)
-                              && (add || target.hasOwnProperty(prop))) {
+	                          && (!include || this.arrayIndexOf(include, prop) >= 0)
+	                          && obj.hasOwnProperty(prop)
+	                          && (add || target.hasOwnProperty(prop))) {
 
                             if (deep && this.arrayIndexOf(deep, prop) >= 0 && typeof obj[prop] === 'object') {
                                 if (typeof target[prop] !== 'object' && add) {
@@ -739,10 +741,10 @@ See complete changelog at github
             }
 
             if (duration) {
-                $('.mapster_el').add(me.wrapper).animate(newsize, duration || 1000);
+                $(me.wrapper).find('.mapster_el').add(me.wrapper).animate(newsize, duration || 1000);
                 $(this.image).animate(newsize, 1100, finishResize);
             } else {
-                $('.mapster_el').add(me.wrapper).add(this.image).css(newsize);
+                $(me.wrapper).find('.mapster_el').add(me.wrapper).add(this.image).css(newsize);
                 finishResize();
             }
         };
@@ -1251,8 +1253,8 @@ See complete changelog at github
         AreaData.prototype.showTooltip = function (forArea) {
             var tooltip, left, top, tooltipCss, coords, fromCoords, container,
                 alignLeft = true,
-            alignTop = true,
-            opts = this.effectiveOptions(),
+	        alignTop = true,
+	        opts = this.effectiveOptions(),
                 map_data = this.owner,
                 baseOpts = map_data.options,
                 template = map_data.options.toolTipContainer;
@@ -1871,6 +1873,7 @@ See complete changelog at github
                                 render_shape(shapeContext, s.mapArea);
                                 shapeContext.closePath();
                                 shapeContext.stroke();
+                                shapeContext.restore();
                                 shapeContext.restore();
                             }
                         });
