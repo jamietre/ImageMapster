@@ -1,4 +1,4 @@
-/* ImageMapster 1.2.3
+/* ImageMapster 1.2.4
 
 Copyright 2011 James Treworgy
 http://www.outsharked.com/imagemapster
@@ -7,6 +7,8 @@ https://github.com/jamietre/ImageMapster
 A jQuery plugin to enhance image maps.
 */
 /*
+version 1.2.4
+-- resize bug in IE <9 fixed
 version 1.2.3
 -- resize with multiple images affecting other images - fixed
 version 1.2.2
@@ -715,6 +717,15 @@ See complete changelog at github
         };
         MapData.prototype.resize = function (width, height, duration) {
             var newsize, me = this;
+            function sizeCanvas(canvas, w, h) {
+                if (has_canvas) {
+                    canvas.width = w;
+                    canvas.height = h;
+                } else {
+                    $(canvas).width(w);
+                    $(canvas).height(h);
+                }
+            }
             function finishResize() {
                 me.scaleInfo = u.getScaleInfo(me.scaleInfo.realWidth, me.scaleInfo.realHeight, width, height);
                 u.each(me.data, function () {
@@ -722,10 +733,8 @@ See complete changelog at github
                         this.resize();
                     });
                 });
-                me.base_canvas.width = width;
-                me.base_canvas.height = height;
-                me.overlay_canvas.width = width;
-                me.overlay_canvas.height = height;
+                sizeCanvas(me.base_canvas, width, height);
+                sizeCanvas(me.overlay_canvas,width,height);
                 me.setAreasSelected();
             }
             if (!width) {
