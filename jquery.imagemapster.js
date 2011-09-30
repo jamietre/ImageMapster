@@ -1,4 +1,4 @@
-/* ImageMapster 1.2.4
+/* ImageMapster 1.2.5 b2
 
 Copyright 2011 James Treworgy
 http://www.outsharked.com/imagemapster
@@ -7,6 +7,10 @@ https://github.com/jamietre/ImageMapster
 A jQuery plugin to enhance image maps.
 */
 /*
+version 1.2.5
+-- fix resize bug when groups are used
+-- "highlight" option
+-- detect touchscreen devices
 version 1.2.4
 -- resize bug in IE <9 fixed
 version 1.2.3
@@ -122,6 +126,7 @@ See complete changelog at github
     };
 
     $.mapster = {};
+    $.mapster.version = "1.2.5b1";
     // utility functions
     $.mapster.utils = {
         area_corner: function (coords, left, top) {
@@ -391,6 +396,7 @@ See complete changelog at github
         altImage: null,
         altImageOpacity: 0.7,
         fill: true,
+        highlight: null,     // let device type determine highlighting
         fillColor: '000000',
         fillColorMask: 'FFFFFF',
         fillOpacity: 0.5,
@@ -446,7 +452,7 @@ See complete changelog at github
                 isMask: false
             }],
             deep: "render_highlight, render_select",
-            include: "fade,fadeDuration,fill,fillColor,fillOpacity,stroke,strokeColor,strokeOpacity,strokeWidth,staticState,selected,"
+            include: "fade,fadeDuration,highlight,fill,fillColor,fillOpacity,stroke,strokeColor,strokeOpacity,strokeWidth,staticState,selected,"
             + "isSelectable,isDeselectable,render_highlight,render_select,isMask,toolTip"
         });
 
@@ -457,6 +463,7 @@ See complete changelog at github
         map_cache = [],
         ie_config_complete = false,
         has_canvas = null,
+        is_touch = null,
         graphics = null,
         canvas_style =
         {
@@ -601,7 +608,8 @@ See complete changelog at github
 
             this.complete = false;         // (bool)    when all images have finished loading
             this.commands = [];            // {}        commands that were run before configuration was completed (b/c images weren't loaded)
-            this.data = [];                // (MapData) area groups
+            this.data = [];                // (MapData[]) area groups
+            this.originalAreaData = [];    // ref of all coord data from areas as bound, indexed by auto-generated id during "initialize"
 
             // save the initial style of the image for unbinding. This is problematic, chrome duplicates styles when assigning, and
             // cssText is apparently not universally supported. Need to do something more robust to make unbinding work universally.
@@ -622,7 +630,9 @@ See complete changelog at github
                 if (!has_canvas) {
                     this.blur();
                 }
-                ar.highlight();
+                if (opts.highlight) {
+                    ar.highlight();
+                }
 
                 if (me.options.showToolTip && opts.toolTip && me.activeToolTipID !== ar.areaId) {
                     ar.showTooltip(this);
@@ -734,7 +744,7 @@ See complete changelog at github
                     });
                 });
                 sizeCanvas(me.base_canvas, width, height);
-                sizeCanvas(me.overlay_canvas,width,height);
+                sizeCanvas(me.overlay_canvas, width, height);
                 me.setAreasSelected();
             }
             if (!width) {
@@ -844,10 +854,12 @@ See complete changelog at github
             });
             return result;
         };
+        // Locate MapArea data from an HTML area
         MapData.prototype.getDataForArea = function (area) {
             var ar,
-                key = $(area).data('mapster_key');
+                key = $(area).data('mapster_key').key;
             ar = this.data[this._idFromKey(key)];
+            // set the actual area moused over/selected
             if (ar) {
                 ar.area = area;
             }
@@ -900,7 +912,6 @@ See complete changelog at github
                 }
             }
         };
-
         MapData.prototype.setAreasSelected = function (selected_list) {
             var i;
             this.initGraphics();
@@ -973,10 +984,19 @@ See complete changelog at github
                 area_id = 0;
                 area = areas[i];
                 $area = $(area);
+
+                // skip areas with no coords - selector broken for older ie 
+                if (!area.coords) {
+                    continue;
+                }
+
                 key = area.getAttribute(opts.mapKey);
                 keys = (default_group || typeof key !== 'string') ? [''] : key.split(',');
                 // conditions for which the area will be bound to mouse events
                 // only bind to areas that don't have nohref. ie 6&7 cannot detect the presence of nohref, so we have to also not bind if href is missing.
+
+                mapArea = new MapArea(this, area);
+                // Iterate through each mapKey assigned to this area
                 for (j = keys.length - 1; j >= 0; j--) {
                     key = keys[j];
                     if (opts.mapValue) {
@@ -1001,7 +1021,7 @@ See complete changelog at github
                             dataItem = this.data[area_id];
                         }
                     }
-                    mapArea = new MapArea(this, area);
+                    //mapArea = new MapArea(this, area);
                     dataItem.areas.push(mapArea);
                 }
 
@@ -1009,7 +1029,12 @@ See complete changelog at github
                     $area.bind('mouseover.mapster', this.mouseover)
                         .bind('mouseout.mapster', this.mouseout)
                         .bind('click.mapster', this.click);
-                    $area.data('mapster_key', key);
+                    // key will represent the FIRST key for a given area. This makes the first key the one that causes mouseover grouping.
+                    // We will also assign a unique id
+                    $area.data('mapster_key', {
+                        key: key,
+                        id: i
+                    });
                 }
             }
 
@@ -1152,7 +1177,7 @@ See complete changelog at github
             this.options = {};
             this.selected = null;   // "null" means unchanged. Use "isSelected" method to just test true/false
             this.areas = [];        // MapArea objects
-            this.area = null;
+            this.area = null;       // (temporary storage) - the actual area moused over 
             this._effectiveOptions = null;
         };
         AreaData.prototype.reset = function (preserveState) {
@@ -1210,12 +1235,10 @@ See complete changelog at github
             this.owner.setHighlight(this.areaId);
             this.changeState('highlight', true);
         };
-
         AreaData.prototype.setAreaSelected = function () {
             graphics.addShapeGroup(this, "select");
             this.changeState('select', true);
         };
-
         AreaData.prototype.addSelection = function () {
             // need to add the new one first so that the double-opacity effect leaves the current one highlighted for singleSelect
             var o = this.owner;
@@ -1340,7 +1363,7 @@ See complete changelog at github
 
         };
 
-        // represents an area
+        // represents an HTML area
         MapArea = function (owner, areaEl) {
             var me = this;
             me.owner = owner;
@@ -1686,13 +1709,20 @@ See complete changelog at github
         me.init = function (useCanvas) {
             var style, shapes;
 
-            has_canvas = $('<canvas></canvas>')[0].getContext ? true : false;
+            // check for excanvas explicitly - don't be fooled
+            has_canvas = (document.namespaces && document.namespaces.g_vml_) ? false :
+                $('<canvas></canvas>')[0].getContext ? true : false;
+
+            is_touch = 'ontouchstart' in document.documentElement;
 
             if (!(has_canvas || document.namespaces)) {
                 $.fn.mapster = function () {
                     return this;
                 };
                 return;
+            }
+            if (!u.isBool($.mapster.defaults.highlight)) {
+                $.mapster.defaults.highlight = !is_touch;
             }
 
             // for testing/debugging, use of canvas can be forced by initializing manually with "true" or "false"            

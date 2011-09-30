@@ -238,7 +238,7 @@ Test.prototype.assertInstanceOf = function(testcase, expected, description,test)
 
 // run all tests if no name provided
 Test.prototype.run = function (test) {
-    var i, started = false;
+    var i, started = false, len;
     function startTest(test) {
         if (!started) {
             this.output.append('<h1>"' + this.title + '"</h1><br /><hr /><br />');
@@ -260,7 +260,8 @@ Test.prototype.run = function (test) {
     if (this.timer) {
         this.iterations=5;
     }
-    for (i = 0; i < this.tests.length; i++) {
+    len = this.tests.length;
+    for (i = 0; i < len; i++) {
         if (!test || this.tests[i].name === test) {
             startTest.call(this, this.tests[i]);
             this.tests[i].test(this);
