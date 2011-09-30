@@ -1,4 +1,4 @@
-/* ImageMapster 1.2.5 b6
+/* ImageMapster 1.2.5 b5
 
 Copyright 2011 James Treworgy
 http://www.outsharked.com/imagemapster
@@ -8,7 +8,6 @@ A jQuery plugin to enhance image maps.
 */
 /*
 version 1.2.5
--- Keep tooltips & selections active when moving between two areas in the same area group
 -- Refactor "graphics" into an object and instiate for each instance. In Safari (and possibly mobile devices?)
 "load" callbacks were changing event order, resulting in the single instance getting wires crossed. Isolated
 each map instance completely, problem solved.
@@ -632,17 +631,19 @@ See complete changelog at github
                 if (!has_canvas) {
                     this.blur();
                 }
-                if (me.currentAreaId !== ar.areaId) {
-                    me.clearEffects(true);
-                    if (opts.highlight) {
-                        ar.highlight();
-                    }
-
-                    if (me.options.showToolTip && opts.toolTip) {
-                        ar.showTooltip();
-                    }
-                    me.currentAreaId = ar.areaId;
+                if (me.currentAreaId == ar.areaId) {
+                    return;
                 }
+                me.clearEffects(true);
+                if (opts.highlight) {
+                    ar.highlight();
+                }
+
+                if (me.options.showToolTip && opts.toolTip) {
+                    ar.showTooltip();
+                }
+                me.currentAreaId = ar.areaId;
+
 
                 if ($.isFunction(me.options.onMouseover)) {
                     me.options.onMouseover.call(this,
@@ -653,6 +654,7 @@ See complete changelog at github
                         selected: ar.isSelected()
                     });
                 }
+
             };
             this.mouseout = function (e) {
                 var key,
@@ -680,7 +682,7 @@ See complete changelog at github
             this.clearEffects = function (force) {
 
                 var opts = me.options;
-                if (me.currentAreaId < 0 || force !== true && me.inArea) {
+                if ((me.currentAreaId < 0 || force !== true) && me.inArea) {
                     return;
                 }
                 me.ensureNoHighlight();
