@@ -1,4 +1,4 @@
-/* ImageMapster 1.2.5 b2
+/* ImageMapster 1.2.5 b6
 
 Copyright 2011 James Treworgy
 http://www.outsharked.com/imagemapster
@@ -8,6 +8,10 @@ A jQuery plugin to enhance image maps.
 */
 /*
 version 1.2.5
+-- Keep tooltips & selections active when moving between two areas in the same area group
+-- Refactor "graphics" into an object and instiate for each instance. In Safari (and possibly mobile devices?)
+"load" callbacks were changing event order, resulting in the single instance getting wires crossed. Isolated
+each map instance completely, problem solved.
 -- fix canvases re-ordered after first selection making effect sometimes inconsistent
 -- fix resize bug when groups are used
 -- "highlight" option
@@ -128,7 +132,7 @@ See complete changelog at github
     };
 
     $.mapster = {};
-    $.mapster.version = "1.2.5b1";
+    $.mapster.version = "1.2.5b5";
     // utility functions
     $.mapster.utils = {
         area_corner: function (coords, left, top) {
@@ -615,23 +619,31 @@ See complete changelog at github
             // private members
             this._xref = {};               // (int)      xref of mapKeys to data[]
             this._highlightId = -1;        // (int)      the currently highlighted element.
+            this.currentAreaId = -1;
             this._tooltip_events = [];     // {}         info on events we bound to a tooltip container, so we can properly unbind them
             this.scaleInfo = null;         // {}         info about the image size, scaling, defaults
+            this.inArea = false;
 
             this.mouseover = function (e) {
                 var ar = me.getDataForArea(this),
                     opts = ar.effectiveOptions();
 
+                me.inArea = true;
                 if (!has_canvas) {
                     this.blur();
                 }
-                if (opts.highlight) {
-                    ar.highlight();
+                if (me.currentAreaId !== ar.areaId) {
+                    me.clearEffects(true);
+                    if (opts.highlight) {
+                        ar.highlight();
+                    }
+
+                    if (me.options.showToolTip && opts.toolTip) {
+                        ar.showTooltip();
+                    }
+                    me.currentAreaId = ar.areaId;
                 }
 
-                if (me.options.showToolTip && opts.toolTip && me.activeToolTipID !== ar.areaId) {
-                    ar.showTooltip(this);
-                }
                 if ($.isFunction(me.options.onMouseover)) {
                     me.options.onMouseover.call(this,
                     {
@@ -647,10 +659,13 @@ See complete changelog at github
                     ar = me.getDataForArea(this),
                     opts = me.options;
 
-                if (opts.toolTipClose && u.arrayIndexOf(opts.toolTipClose, 'area-mouseout') >= 0) {
-                    me.clearTooltip();
-                }
-                me.ensureNoHighlight();
+                me.inArea = false;
+
+
+                window.setTimeout(function () {
+                    me.clearEffects(false);
+                }, 50);
+
                 if ($.isFunction(opts.onMouseout)) {
                     opts.onMouseout.call(this,
                     {
@@ -660,6 +675,21 @@ See complete changelog at github
                         selected: ar.isSelected()
                     });
                 }
+            };
+
+            this.clearEffects = function (force) {
+
+                var opts = me.options;
+                if (me.currentAreaId < 0 || force !== true && me.inArea) {
+                    return;
+                }
+                me.ensureNoHighlight();
+                if (opts.toolTipClose && u.arrayIndexOf(opts.toolTipClose, 'area-mouseout') >= 0) {
+                    me.toolTipClear = true;
+                    me.clearTooltip();
+                }
+                me.currentAreaId = -1;
+
             };
             this.click = function (e) {
                 var selected, list, list_target, newSelectionState, canChangeState,
@@ -1029,6 +1059,7 @@ See complete changelog at github
                     $area.bind('mouseover.mapster', this.mouseover)
                         .bind('mouseout.mapster', this.mouseout)
                         .bind('click.mapster', this.click);
+
                     // key will represent the FIRST key for a given area. This makes the first key the one that causes mouseover grouping.
                     // We will also assign a unique id
                     $area.data('mapster_key', {
@@ -1128,6 +1159,9 @@ See complete changelog at github
             $(this.overlay_canvas).remove();
         };
         MapData.prototype.clearTooltip = function () {
+            if (!this.toolTipClear) {
+                return;
+            }
             if (this.activeToolTip) {
                 this.activeToolTip.remove();
                 this.activeToolTip = null;
@@ -1294,6 +1328,13 @@ See complete changelog at github
                 baseOpts = map_data.options,
                 template = map_data.options.toolTipContainer;
 
+            // prevent tooltip from being cleared if it was in progress - area is in the same group
+
+            this.owner.toolTipClear = false;
+            if (map_data.activeToolTipID === this.areaId) {
+                return;
+            }
+
             if (typeof template === 'string') {
                 container = $(template);
             } else {
@@ -1307,7 +1348,7 @@ See complete changelog at github
             } else {
                 fromCoords = [];
                 u.each(this.areas, function () {
-                    fromCoords = fromCoords.concat(this.coords);
+                    fromCoords = fromCoords.concat(this.coords());
                 });
             }
             coords = u.area_corner(fromCoords, alignLeft, alignTop);
@@ -1452,7 +1493,7 @@ See complete changelog at github
             this.masks = [];
             this.active = true;
             if (!has_canvas) {
-                this.elementName = name;
+                this.elementName = curName;
             }
         };
         Graphics.prototype.addShape = function (mapArea, options) {
@@ -1648,7 +1689,7 @@ See complete changelog at github
                     var me = this, opts;
                     function renderShape(mapArea, options) {
                         var stroke, e, t_fill, el_name, template, c = mapArea.coords();
-                        el_name = me.element_name ? 'name="' + me.element_name + '" ' : '';
+                        el_name = me.elementName ? 'name="' + me.elementName + '" ' : '';
 
                         t_fill = '<v:fill color="#' + options.fillColor + '" opacity="' + (options.fill ? options.fillOpacity : 0) + '" /><v:stroke opacity="' + options.strokeOpacity + '"/>';
 
