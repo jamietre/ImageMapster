@@ -4,6 +4,19 @@
 */
 
 mapster_tests = function (options) {
+
+    var CallbackTest = function (onCallback) {
+        var me = this;
+        me.cbData = false;
+        me.cbThis = null;
+        this.onCallback = onCallback;
+        CallbackTest.prototype.callback = function (data) {
+            me.cbData = data;
+            me.cbThis = this;
+            me.onCallback.call(me);
+        };
+    };
+
     var map,
         map_test = new Test(options),
         callBackData = false,
@@ -411,45 +424,55 @@ mapster_tests = function (options) {
             ut.assertEq(callBackData.selected, false, "Tooltip show callback fired for Louisiana, and selected was correct");
             ut.assertEq(callBackThis, $('area[state="CA"]')[0], "Tooltip show callback fired for Lousisiana, and this was correct");
         }
+
+        var cbtest = new CallbackTest(function(){
+            ut.assertEq($(".mapster-tooltip").length, 0, "No tooltip showing after mouseout");
+
+            map.mapster('tooltip', "CA");
+            ut.assertEq($(".mapster-tooltip").length, 1, "Tooltip appeared when activated manually");
+            map.mapster('tooltip');
+            ut.assertEq($(".mapster-tooltip").length, 0, "Tooltip hidden after manual activation");
+            $('area[state="CA"]').first().mapster('tooltip');
+            ut.assertEq($(".mapster-tooltip").length, 1, "Tooltip appeared when activated manually calling mapster on an area");
+
+            var first = $(".mapster-tooltip").position();
+            if ($.browser.chrome) {
+                ut.assertPropsEq(first, { left: 50, top: 199 }, "Tooltip for CA when no area was specified used first area");
+            }
+            //ut.assertPropsEq($(".mapster-tooltip").position(),{left: 50, top: 198},"Sanity check -0- should fail");
+
+            map.mapster('tooltip', $("area[state='CA']:eq(2)"));
+
+            ut.assertEq($(".mapster-tooltip").length, 1, "Tooltip appeared when activated manually with specific area");
+
+            var second = $(".mapster-tooltip").position();
+
+            if ($.browser.chrome) {
+                ut.assertPropsEq(second, { left: 38, top: 178 }, "Tooltip for CA when 2nd area was specified was different");
+            }
+
+            ut.assertPropsNotEq(first, second, "Tooltip locations should be different when called with and without an area.");
+
+            map.mapster('tooltip', "VT");
+            ut.assertEq($(".mapster-tooltip").length, 1, "Nothing happened when calling tooltip on an area with no tooltips");
+
+            map.mapster('tooltip', false);
+            ut.assertEq($(".mapster-tooltip").length, 0, "Tooltip closed appeared when deactivated manually");
+
+
+            $('img').mapster('unbind');
+
+
+
+        });
+        map.mapster('set_options', { onMouseout: cbtest.callback });
+
         $('area[state="CA"]').first().mouseout();
-        ut.assertEq($(".mapster-tooltip").length, 0, "No tooltip showing after mouseout");
 
-        // Try tooltips manually
+        
+       // Try tooltips manually
 
-        map.mapster('tooltip', "CA");
-        ut.assertEq($(".mapster-tooltip").length, 1, "Tooltip appeared when activated manually");
-        map.mapster('tooltip');
-        ut.assertEq($(".mapster-tooltip").length, 0, "Tooltip hidden after manual activation");
-        $('area[state="CA"]').first().mapster('tooltip');
-        ut.assertEq($(".mapster-tooltip").length, 1, "Tooltip appeared when activated manually calling mapster on an area");
-
-        var first = $(".mapster-tooltip").position();
-        if ($.browser.chrome) {
-            ut.assertPropsEq(first, { left: 50, top: 199 }, "Tooltip for CA when no area was specified used first area");
-        }
-        //ut.assertPropsEq($(".mapster-tooltip").position(),{left: 50, top: 198},"Sanity check -0- should fail");
-
-        map.mapster('tooltip', $("area[state='CA']:eq(2)"));
-
-        ut.assertEq($(".mapster-tooltip").length, 1, "Tooltip appeared when activated manually with specific area");
-
-        var second = $(".mapster-tooltip").position();
-
-        if ($.browser.chrome) {
-            ut.assertPropsEq(second, { left: 38, top: 178 }, "Tooltip for CA when 2nd area was specified was different");
-        }
-
-        ut.assertPropsNotEq(first, second, "Tooltip locations should be different when called with and without an area.");
-
-        map.mapster('tooltip', "VT");
-        ut.assertEq($(".mapster-tooltip").length, 1, "Nothing happened when calling tooltip on an area with no tooltips");
-
-        map.mapster('tooltip', false);
-        ut.assertEq($(".mapster-tooltip").length, 0, "Tooltip closed appeared when deactivated manually");
-
-
-        $('img').mapster('unbind');
-
+      
 
     });
 
