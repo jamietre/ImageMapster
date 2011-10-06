@@ -1569,7 +1569,7 @@ See complete changelog at github
 
             me.render();
 
-            if (opts.fade) {
+            if (opts.fade && mode=='highlight') {
                 u.fader(canvas, 0, 1, opts.fadeDuration, !has_canvas);
             }
 
