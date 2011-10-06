@@ -1,4 +1,4 @@
-/* ImageMapster 1.2.5 b11
+/* ImageMapster 1.2.5 b12
 
 Copyright 2011 James Treworgy
 http://www.outsharked.com/imagemapster
@@ -131,7 +131,7 @@ See complete changelog at github
     };
 
     $.mapster = {};
-    $.mapster.version = "1.2.5b11";
+    $.mapster.version = "1.2.5b12";
     // utility functions
     $.mapster.utils = {
         area_corner: function (coords, left, top) {
@@ -813,7 +813,6 @@ See complete changelog at github
             }
 
             if (duration) {
-                //debugger;
                 $(me.wrapper).find('.mapster_el').add(me.wrapper).animate(newsize, duration || 1000);
                 $(this.image).animate(newsize, 1100, finishResize);
             } else {
@@ -1101,7 +1100,6 @@ See complete changelog at github
 
                 if (!mapArea.nohref) {
                     if (!$.mapster.tested) {
-                        /// alert('binding an area - ');
                         $.mapster.tested = true;
                     }
                     $area.bind('mouseover.mapster', this.mouseover)
@@ -1659,7 +1657,7 @@ See complete changelog at github
                             maskContext.fill();
                             maskContext.restore();
                         });
-                        
+
                     }
 
                     u.each(me.shapes, function () {
