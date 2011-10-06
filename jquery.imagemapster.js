@@ -1584,7 +1584,7 @@ See complete changelog at github
 
         };
         function configureGraphics(has_canvas) {
-            var p = Graphics.prototype, gu;
+            var p = Graphics.prototype;
             if (has_canvas) {
                 p.gu = {
                     hex_to_decimal: function (hex) {
@@ -1627,15 +1627,14 @@ See complete changelog at github
                         context.drawImage(image, 0, 0, mapArea.owner.scaleInfo.width, mapArea.owner.scaleInfo.height);
                     }
                 };
-                gu = p.gu;
                 p.render = function (ops) {
-
                     // firefox 6.0 context.save() seems to be broken. to work around,  we have to draw the contents on one temp canvas, 
                     // the mask on another, and merge everything. ugh. fixed in 1.2.2. unfortunately this is a lot more code for masks,
                     // but no other way around it that i can see.
 
                     var maskCanvas, maskContext,
                         me = this,
+                        gu = me.gu,
                         hasMasks = me.masks.length,
                         shapeCanvas = me.createCanvasFor(me.canvas),
                         shapeContext = shapeCanvas.getContext('2d'),
@@ -1747,53 +1746,51 @@ See complete changelog at github
                     $(canvas_temp).remove();
                 };
             } else {
+                p.renderShape=function (mapArea, options) {
+                    var me=this,stroke, e, t_fill, el_name, template, c = mapArea.coords();
+                    el_name = me.elementName ? 'name="' + me.elementName + '" ' : '';
+
+                    t_fill = '<v:fill color="#' + options.fillColor + '" opacity="' + (options.fill ? options.fillOpacity : 0) + '" /><v:stroke opacity="' + options.strokeOpacity + '"/>';
+
+                    if (options.stroke) {
+                        stroke = 'strokeweight=' + options.strokeWidth + ' stroked="t" strokecolor="#' + options.strokeColor + '"';
+                    } else {
+                        stroke = 'stroked="f"';
+                    }
+
+                    switch (mapArea.shape) {
+                        case 'rect':
+                            template = '<v:rect ' + el_name + ' filled="t" ' + stroke + ' style="zoom:1;margin:0;padding:0;display:block;position:absolute;left:' + c[0] + 'px;top:' + c[1]
+                                + 'px;width:' + (c[2] - c[0]) + 'px;height:' + (c[3] - c[1]) + 'px;">' + t_fill + '</v:rect>';
+                            break;
+                        case 'poly':
+                            template = '<v:shape ' + el_name + ' filled="t" ' + stroke + ' coordorigin="0,0" coordsize="' + me.width + ',' + me.height
+                                + '" path="m ' + c[0] + ',' + c[1] + ' l ' + c.slice(2).join(',')
+                                + ' x e" style="zoom:1;margin:0;padding:0;display:block;position:absolute;top:0px;left:0px;width:' + me.width + 'px;height:' + me.height + 'px;">' + t_fill + '</v:shape>';
+                            break;
+                        case 'circ':
+                        case 'circle':
+                            template = '<v:oval ' + el_name + ' filled="t" ' + stroke
+                                + ' style="zoom:1;margin:0;padding:0;display:block;position:absolute;left:' + (c[0] - c[2]) + 'px;top:' + (c[1] - c[2])
+                                + 'px;width:' + (c[2] * 2) + 'px;height:' + (c[2] * 2) + 'px;">' + t_fill + '</v:oval>';
+                            break;
+                    }
+                    e = $(template);
+                    $(me.canvas).append(e);
+
+                    return e;
+                };
                 p.render = function () {
-                    var me = this, opts;
-                    me.gu = {
-                        renderShape: function (mapArea, options) {
-                            var stroke, e, t_fill, el_name, template, c = mapArea.coords();
-                            el_name = me.elementName ? 'name="' + me.elementName + '" ' : '';
-
-                            t_fill = '<v:fill color="#' + options.fillColor + '" opacity="' + (options.fill ? options.fillOpacity : 0) + '" /><v:stroke opacity="' + options.strokeOpacity + '"/>';
-
-                            if (options.stroke) {
-                                stroke = 'strokeweight=' + options.strokeWidth + ' stroked="t" strokecolor="#' + options.strokeColor + '"';
-                            } else {
-                                stroke = 'stroked="f"';
-                            }
-
-                            switch (mapArea.shape) {
-                                case 'rect':
-                                    template = '<v:rect ' + el_name + ' filled="t" ' + stroke + ' style="zoom:1;margin:0;padding:0;display:block;position:absolute;left:' + c[0] + 'px;top:' + c[1]
-                                    + 'px;width:' + (c[2] - c[0]) + 'px;height:' + (c[3] - c[1]) + 'px;">' + t_fill + '</v:rect>';
-                                    break;
-                                case 'poly':
-                                    template = '<v:shape ' + el_name + ' filled="t" ' + stroke + ' coordorigin="0,0" coordsize="' + me.width + ',' + me.height
-                                    + '" path="m ' + c[0] + ',' + c[1] + ' l ' + c.slice(2).join(',')
-                                    + ' x e" style="zoom:1;margin:0;padding:0;display:block;position:absolute;top:0px;left:0px;width:' + me.width + 'px;height:' + me.height + 'px;">' + t_fill + '</v:shape>';
-                                    break;
-                                case 'circ':
-                                case 'circle':
-                                    template = '<v:oval ' + el_name + ' filled="t" ' + stroke
-                                    + ' style="zoom:1;margin:0;padding:0;display:block;position:absolute;left:' + (c[0] - c[2]) + 'px;top:' + (c[1] - c[2])
-                                    + 'px;width:' + (c[2] * 2) + 'px;height:' + (c[2] * 2) + 'px;">' + t_fill + '</v:oval>';
-                                    break;
-                            }
-                            e = $(template);
-                            $(me.canvas).append(e);
-
-                            return e;
-                        }
-                    };
+                    var opts, me=this;
 
                     u.each(this.shapes, function () {
-                        gu.renderShape(this.mapArea, this.options);
+                        me.renderShape(this.mapArea, this.options);
                     });
 
                     if (this.masks.length) {
                         u.each(this.masks, function () {
                             opts = u.mergeObjects({ source: [this.options, { fillOpacity: 1, fillColor: this.options.fillColorMask}] });
-                            gu.renderShape(this.mapArea, opts);
+                            me.renderShape(this.mapArea, opts);
                         });
                     }
 
