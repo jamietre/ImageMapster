@@ -120,6 +120,12 @@ See complete changelog at github
 
 (function ($) {
     var methods;
+    // add a trim method if needed
+    if (!String.prototype.trim) {
+        String.prototype.trim = function () {
+            return this.replace(/^\s+|\s+$/g, '');
+        };
+    }
     $.fn.mapster = function (method) {
         if (methods[method]) {
             return methods[method].apply(this, Array.prototype.slice.call(arguments, 1));
@@ -153,6 +159,12 @@ See complete changelog at github
             }
             return [bestX, bestY];
         },
+        split: function (text) {
+            var arr = text.split(',');
+            return $.each(arr, function (i) {
+                arr[i] = arr[i].trim();
+            });
+        },
         setOpacity: function (e, opacity, ie) {
             if (ie) {
                 e.style.filter = "Alpha(opacity=" + String(opacity * 100) + ")";
@@ -173,11 +185,11 @@ See complete changelog at github
         //          
         // returns - new object.
         mergeObjects: function (options) {
-            var obj, i, len, prop,
+            var obj, i, len, prop, u = this,
 	                add = this.boolOrDefault(options.add, options.template ? false : true),
-	                ignore = options.ignore ? options.ignore.split(',') : '',
-	                include = options.include ? options.include.split(',') : '',
-	                deep = options.deep ? options.deep.split(',') : '',
+	                ignore = options.ignore ? u.split(options.ignore) : '',
+	                include = options.include ? u.split(options.include) : '',
+	                deep = options.deep ? u.split(options.deep) : '',
 	                target = options.target || {},
 	                source = [].concat(options.source);
             if (options.template) {
@@ -763,7 +775,7 @@ See complete changelog at github
                     }
                     areaOpts = ar.effectiveOptions();
                     if (areaOpts.includeKeys) {
-                        list = areaOpts.includeKeys.split(',');
+                        list = u.split(areaOpts.includeKeys);
                         u.each(list, function () {
                             var ar = me.getDataForKey(this.toString());
                             if (!ar.options.isMask) {
@@ -1064,7 +1076,7 @@ See complete changelog at github
                 }
 
                 key = area.getAttribute(opts.mapKey);
-                keys = (default_group || typeof key !== 'string') ? [''] : key.split(',');
+                keys = (default_group || typeof key !== 'string') ? [''] : u.split(key);
                 // conditions for which the area will be bound to mouse events
                 // only bind to areas that don't have nohref. ie 6&7 cannot detect the presence of nohref, so we have to also not bind if href is missing.
 
@@ -1390,7 +1402,7 @@ See complete changelog at github
             tooltip = container.html(opts.toolTip).hide();
 
             if (forArea) {
-                fromCoords = $(forArea).attr("coords").split(",");
+                fromCoords = u.split($(forArea).attr("coords"));
             } else {
                 fromCoords = [];
                 u.each(this.areas, function () {
@@ -1458,7 +1470,7 @@ See complete changelog at github
             var me = this;
             me.owner = owner;
             me.area = areaEl;
-            me.originalCoords = areaEl.coords.split(',');
+            me.originalCoords = u.split(areaEl.coords);
             me.length = me.originalCoords.length;
 
             me.shape = areaEl.shape.toLowerCase();
@@ -1568,7 +1580,7 @@ See complete changelog at github
             me.begin(canvas, name);
 
             if (opts.includeKeys) {
-                list = opts.includeKeys.split(',');
+                list = u.split(opts.includeKeys);
                 u.each(list, function () {
                     me._addShapeGroupImpl(map_data.getDataForKey(this.toString()), mode);
                 });
@@ -1746,8 +1758,8 @@ See complete changelog at github
                     $(canvas_temp).remove();
                 };
             } else {
-                p.renderShape=function (mapArea, options) {
-                    var me=this,stroke, e, t_fill, el_name, template, c = mapArea.coords();
+                p.renderShape = function (mapArea, options) {
+                    var me = this, stroke, e, t_fill, el_name, template, c = mapArea.coords();
                     el_name = me.elementName ? 'name="' + me.elementName + '" ' : '';
 
                     t_fill = '<v:fill color="#' + options.fillColor + '" opacity="' + (options.fill ? options.fillOpacity : 0) + '" /><v:stroke opacity="' + options.strokeOpacity + '"/>';
@@ -1781,7 +1793,7 @@ See complete changelog at github
                     return e;
                 };
                 p.render = function () {
-                    var opts, me=this;
+                    var opts, me = this;
 
                     u.each(this.shapes, function () {
                         me.renderShape(this.mapArea, this.options);
@@ -1935,7 +1947,7 @@ See complete changelog at github
                     }
 
                     if (key_list) {
-                        u.each(key_list.split(','), function () {
+                        u.each(u.split(key_list), function () {
                             setSelection(map_data.getDataForKey(this.toString()));
                         });
                     }
@@ -2142,6 +2154,7 @@ See complete changelog at github
         me.init = function (useCanvas) {
             var style, shapes;
 
+
             // check for excanvas explicitly - don't be fooled
             has_canvas = (document.namespaces && document.namespaces.g_vml_) ? false :
                 $('<canvas></canvas>')[0].getContext ? true : false;
@@ -2173,7 +2186,6 @@ See complete changelog at github
                 });
                 ie_config_complete = true;
             }
-
 
 
         };
