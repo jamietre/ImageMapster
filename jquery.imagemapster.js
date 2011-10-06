@@ -1,4 +1,4 @@
-/* ImageMapster 1.2.5 b10
+/* ImageMapster 1.2.5 b11
 
 Copyright 2011 James Treworgy
 http://www.outsharked.com/imagemapster
@@ -118,8 +118,6 @@ See complete changelog at github
 */
 
 
-/*global HTMLElement: true */
-
 (function ($) {
     var methods;
     $.fn.mapster = function (method) {
@@ -133,7 +131,7 @@ See complete changelog at github
     };
 
     $.mapster = {};
-    $.mapster.version = "1.2.5b10";
+    $.mapster.version = "1.2.5b11";
     // utility functions
     $.mapster.utils = {
         area_corner: function (coords, left, top) {
@@ -352,7 +350,6 @@ See complete changelog at github
                             (img.naturalWidth === 0 || img.naturalHeight === 0)) {
                 return false;
             }
-            //alert(img.complete + ":" + img.naturalWidth);
             return true;
         },
         // thanks paul irish
@@ -469,6 +466,7 @@ See complete changelog at github
         configTimeout: 10000,
         noHrefIsMask: true,
         scaleMap: true,
+        safeLoad: false,
         areas: []
     }, $.mapster.render_defaults]
     });
@@ -492,6 +490,7 @@ See complete changelog at github
         ie_config_complete = false,
         has_canvas = null,
         is_touch = null,
+        windowLoaded = false,
         canvas_style =
         {
             position: 'absolute',
@@ -500,6 +499,10 @@ See complete changelog at github
             padding: 0,
             border: 0
         };
+        // for safari
+        $(window).bind('load', function () {
+            windowLoaded = true;
+        });
         me.test = function (obj) {
             return eval(obj);
         };
@@ -679,35 +682,32 @@ See complete changelog at github
 
             };
             this.mouseout = function (e) {
+                var key,
+                    ar = me.getDataForArea(this),
+                    opts = me.options;
+
                 me.inArea = false;
 
+
                 window.setTimeout(function () {
-                    me.clearEffects(false,e);
+                    me.clearEffects(false);
                 }, 50);
 
+                if ($.isFunction(opts.onMouseout)) {
+                    opts.onMouseout.call(this,
+                    {
+                        e: e,
+                        options: opts,
+                        key: key,
+                        selected: ar.isSelected()
+                    });
+                }
             };
 
-            this.clearEffects = function (force,e) {
+            this.clearEffects = function (force) {
 
                 var opts = me.options;
-
-                function doEvent() {
-                    if (e) {
-                        var ar = me.getDataForArea(me);
-                        if ($.isFunction(opts.onMouseout)) {
-                            opts.onMouseout.call(me,
-                        {
-                            e: e,
-                            options: opts,
-                            key: ar.key,
-                            selected: ar.isSelected()
-                        });
-                        }
-                    }
-                }
-
                 if ((me.currentAreaId < 0 || force !== true) && me.inArea) {
-                    doEvent();
                     return;
                 }
                 me.ensureNoHighlight();
@@ -716,7 +716,7 @@ See complete changelog at github
                     me.clearTooltip();
                 }
                 me.currentAreaId = -1;
-                doEvent();
+
             };
             this.click = function (e) {
                 var selected, list, list_target, newSelectionState, canChangeState,
@@ -813,6 +813,7 @@ See complete changelog at github
             }
 
             if (duration) {
+                //debugger;
                 $(me.wrapper).find('.mapster_el').add(me.wrapper).animate(newsize, duration || 1000);
                 $(this.image).animate(newsize, 1100, finishResize);
             } else {
@@ -830,8 +831,13 @@ See complete changelog at github
             if (!source) { throw ("Missing image source"); }
 
             if (!image) {
+                //                image = $('<image></image>')
+                //                    .addClass('mapster_el')
+                //                    .css('display', 'none')[0];
                 image = new Image();
                 image.src = source;
+
+                $(this.wrapper).append(image);
             }
             index = $.inArray(image, this.images);
 
@@ -849,12 +855,15 @@ See complete changelog at github
         // how or if "onload" works and in how one can actually detect if an image is already loaded. Try to check first,
         // then bind onload event, and finally use a timer to keep checking.
         MapData.prototype.bindImages = function (retry) {
-            var alreadyLoaded = false,
+            var alreadyLoaded = true,
+                isLoaded = function () {
+                    return alreadyLoaded && (!me.options.safeLoad || windowLoaded);
+                },
                 me = this;
 
             function onLoad() {
                 var index;
-                if (alreadyLoaded) {
+                if (isLoaded()) {
                     return;
                 }
                 index = $.inArray(this, me.images);
@@ -862,8 +871,8 @@ See complete changelog at github
                     throw ("Unable to find ref to image '" + this.src + "'.");
                 }
                 me.imageStatus[index] = true;
-                if ($.inArray(false, me.imageStatus) < 0) {
-
+                if ($.inArray(false, me.imageStatus) < 0 &&
+                    (!me.options.safeLoad || windowLoaded)) {
                     me.initialize();
                 }
             }
@@ -873,12 +882,12 @@ See complete changelog at github
             }
             // check to see if every image has already been loaded
             u.each(me.images, function (i) {
-                if (u.isImageLoaded(this)) {
-                    alreadyLoaded = true;
+                if (!u.isImageLoaded(this)) {
+                    alreadyLoaded = false;
                 }
             });
 
-            if (alreadyLoaded) {
+            if (isLoaded()) {
                 me.initialize();
                 return;
             }
@@ -891,7 +900,7 @@ See complete changelog at github
             if (me.bindTries-- > 0) {
                 window.setTimeout(function () {
                     me.bindImages(true);
-                }, 500);
+                }, 200);
             } else {
                 throw ("Images never seemed to finish loading.");
             }
@@ -1525,15 +1534,17 @@ See complete changelog at github
         Graphics.prototype.begin = function (curCanvas, curName) {
             var c = $(curCanvas);
 
+            if (!has_canvas) {
+                this.elementName = curName;
+            }
             this.canvas = curCanvas;
+
             this.width = c.width();
             this.height = c.height();
             this.shapes = [];
             this.masks = [];
             this.active = true;
-            if (!has_canvas) {
-                this.elementName = curName;
-            }
+
         };
         Graphics.prototype.addShape = function (mapArea, options) {
             var addto = options.isMask ? this.masks : this.shapes;
@@ -1569,23 +1580,24 @@ See complete changelog at github
 
             me.render();
 
-            if (opts.fade && mode=='highlight') {
+            if (opts.fade) {
                 u.fader(canvas, 0, 1, opts.fadeDuration, !has_canvas);
             }
 
         };
         function configureGraphics(has_canvas) {
-            var p = Graphics.prototype;
+            var p = Graphics.prototype, gu;
             if (has_canvas) {
-                p.render = function (ops) {
-                    function css3color(color, opacity) {
-                        function hex_to_decimal(hex) {
-                            return Math.max(0, Math.min(parseInt(hex, 16), 255));
-                        }
-                        return 'rgba(' + hex_to_decimal(color.substr(0, 2)) + ',' + hex_to_decimal(color.substr(2, 2)) + ',' + hex_to_decimal(color.substr(4, 2)) + ',' + opacity + ')';
-                    }
-
-                    function renderShape(context, mapArea) {
+                p.gu = {
+                    hex_to_decimal: function (hex) {
+                        return Math.max(0, Math.min(parseInt(hex, 16), 255));
+                    },
+                    css3color: function (color, opacity) {
+                        return 'rgba(' + this.hex_to_decimal(color.substr(0, 2)) + ','
+                        + this.hex_to_decimal(color.substr(2, 2)) + ','
+                        + this.hex_to_decimal(color.substr(4, 2)) + ',' + opacity + ')';
+                    },
+                    renderShape: function (context, mapArea) {
                         var i, c = mapArea.coords();
                         switch (mapArea.shape) {
                             case 'rect':
@@ -1604,12 +1616,11 @@ See complete changelog at github
                                 context.arc(c[0], c[1], c[2], 0, Math.PI * 2, false);
                                 break;
                         }
-                    }
-
-                    function addAltImage(context, image, mapArea, options) {
+                    },
+                    addAltImage: function (context, image, mapArea, options) {
                         context.beginPath();
 
-                        renderShape(context, mapArea);
+                        this.renderShape(context, mapArea);
                         context.closePath();
                         context.clip();
 
@@ -1617,40 +1628,52 @@ See complete changelog at github
 
                         context.drawImage(image, 0, 0, mapArea.owner.scaleInfo.width, mapArea.owner.scaleInfo.height);
                     }
+                };
+                gu = p.gu;
+                p.render = function (ops) {
 
                     // firefox 6.0 context.save() seems to be broken. to work around,  we have to draw the contents on one temp canvas, 
                     // the mask on another, and merge everything. ugh. fixed in 1.2.2. unfortunately this is a lot more code for masks,
                     // but no other way around it that i can see.
 
-                    var me = this,
-                        maskCanvas = me.createCanvasFor(me.canvas),
-                        maskContext = maskCanvas.getContext('2d'),
+                    var maskCanvas, maskContext,
+                        me = this,
+                        hasMasks = me.masks.length,
                         shapeCanvas = me.createCanvasFor(me.canvas),
-                        shapeContext = shapeCanvas.getContext('2d');
+                        shapeContext = shapeCanvas.getContext('2d'),
+                        context = me.canvas.getContext('2d');
 
-                    if (me.masks.length) {
+                    if (hasMasks) {
+                        maskCanvas = me.createCanvasFor(me.canvas);
+                        maskContext = maskCanvas.getContext('2d');
+                        maskContext.clearRect(0, 0, maskCanvas.width, maskCanvas.height);
+
                         u.each(me.masks, function () {
+                            maskContext.save();
                             maskContext.beginPath();
-                            renderShape(maskContext, this.mapArea);
+                            gu.renderShape(maskContext, this.mapArea);
                             maskContext.closePath();
-                            maskContext.fillStyle = '#fff';
+                            maskContext.clip();
+                            maskContext.lineWidth = 0;
+                            maskContext.fillStyle = '#000';
                             maskContext.fill();
+                            maskContext.restore();
                         });
+                        
                     }
 
                     u.each(me.shapes, function () {
-
                         var s = this;
                         shapeContext.save();
                         if (s.options.alt_image) {
-                            addAltImage(shapeContext, s.options.alt_image, s.mapArea, s.options);
+                            gu.addAltImage(shapeContext, s.options.alt_image, s.mapArea, s.options);
                         } else if (s.options.fill) {
 
                             shapeContext.beginPath();
-                            renderShape(shapeContext, s.mapArea);
+                            gu.renderShape(shapeContext, s.mapArea);
                             shapeContext.closePath();
-                            shapeContext.clip();
-                            shapeContext.fillStyle = css3color(s.options.fillColor, s.options.fillOpacity);
+                            //shapeContext.clip();
+                            shapeContext.fillStyle = gu.css3color(s.options.fillColor, s.options.fillOpacity);
                             shapeContext.fill();
                         }
                         shapeContext.restore();
@@ -1663,22 +1686,28 @@ See complete changelog at github
                         var s = this;
                         if (s.options.stroke) {
                             shapeContext.save();
-                            shapeContext.strokeStyle = css3color(s.options.strokeColor, s.options.strokeOpacity);
+                            shapeContext.strokeStyle = gu.css3color(s.options.strokeColor, s.options.strokeOpacity);
                             shapeContext.lineWidth = s.options.strokeWidth;
 
                             shapeContext.beginPath();
-                            renderShape(shapeContext, s.mapArea);
+                            gu.renderShape(shapeContext, s.mapArea);
                             shapeContext.closePath();
                             shapeContext.stroke();
                             shapeContext.restore();
                         }
                     });
 
-                    // render the new shapes against the mask
-                    maskContext.globalCompositeOperation = "source-out";
-                    maskContext.drawImage(shapeCanvas, 0, 0);
-                    // flatten into the main canvas
-                    me.canvas.getContext('2d').drawImage(maskCanvas, 0, 0);
+                    if (hasMasks) {
+                        // render the new shapes against the mask
+
+                        maskContext.globalCompositeOperation = "source-out";
+                        maskContext.drawImage(shapeCanvas, 0, 0);
+
+                        // flatten into the main canvas
+                        context.drawImage(maskCanvas, 0, 0);
+                    } else {
+                        context.drawImage(shapeCanvas, 0, 0);
+                    }
 
                     me.active = false;
                     return me.canvas;
@@ -1722,49 +1751,51 @@ See complete changelog at github
             } else {
                 p.render = function () {
                     var me = this, opts;
-                    function renderShape(mapArea, options) {
-                        var stroke, e, t_fill, el_name, template, c = mapArea.coords();
-                        el_name = me.elementName ? 'name="' + me.elementName + '" ' : '';
+                    me.gu = {
+                        renderShape: function (mapArea, options) {
+                            var stroke, e, t_fill, el_name, template, c = mapArea.coords();
+                            el_name = me.elementName ? 'name="' + me.elementName + '" ' : '';
 
-                        t_fill = '<v:fill color="#' + options.fillColor + '" opacity="' + (options.fill ? options.fillOpacity : 0) + '" /><v:stroke opacity="' + options.strokeOpacity + '"/>';
+                            t_fill = '<v:fill color="#' + options.fillColor + '" opacity="' + (options.fill ? options.fillOpacity : 0) + '" /><v:stroke opacity="' + options.strokeOpacity + '"/>';
 
-                        if (options.stroke) {
-                            stroke = 'strokeweight=' + options.strokeWidth + ' stroked="t" strokecolor="#' + options.strokeColor + '"';
-                        } else {
-                            stroke = 'stroked="f"';
-                        }
+                            if (options.stroke) {
+                                stroke = 'strokeweight=' + options.strokeWidth + ' stroked="t" strokecolor="#' + options.strokeColor + '"';
+                            } else {
+                                stroke = 'stroked="f"';
+                            }
 
-                        switch (mapArea.shape) {
-                            case 'rect':
-                                template = '<v:rect ' + el_name + ' filled="t" ' + stroke + ' style="zoom:1;margin:0;padding:0;display:block;position:absolute;left:' + c[0] + 'px;top:' + c[1]
+                            switch (mapArea.shape) {
+                                case 'rect':
+                                    template = '<v:rect ' + el_name + ' filled="t" ' + stroke + ' style="zoom:1;margin:0;padding:0;display:block;position:absolute;left:' + c[0] + 'px;top:' + c[1]
                                     + 'px;width:' + (c[2] - c[0]) + 'px;height:' + (c[3] - c[1]) + 'px;">' + t_fill + '</v:rect>';
-                                break;
-                            case 'poly':
-                                template = '<v:shape ' + el_name + ' filled="t" ' + stroke + ' coordorigin="0,0" coordsize="' + me.width + ',' + me.height
+                                    break;
+                                case 'poly':
+                                    template = '<v:shape ' + el_name + ' filled="t" ' + stroke + ' coordorigin="0,0" coordsize="' + me.width + ',' + me.height
                                     + '" path="m ' + c[0] + ',' + c[1] + ' l ' + c.slice(2).join(',')
                                     + ' x e" style="zoom:1;margin:0;padding:0;display:block;position:absolute;top:0px;left:0px;width:' + me.width + 'px;height:' + me.height + 'px;">' + t_fill + '</v:shape>';
-                                break;
-                            case 'circ':
-                            case 'circle':
-                                template = '<v:oval ' + el_name + ' filled="t" ' + stroke
+                                    break;
+                                case 'circ':
+                                case 'circle':
+                                    template = '<v:oval ' + el_name + ' filled="t" ' + stroke
                                     + ' style="zoom:1;margin:0;padding:0;display:block;position:absolute;left:' + (c[0] - c[2]) + 'px;top:' + (c[1] - c[2])
                                     + 'px;width:' + (c[2] * 2) + 'px;height:' + (c[2] * 2) + 'px;">' + t_fill + '</v:oval>';
-                                break;
-                        }
-                        e = $(template);
-                        $(me.canvas).append(e);
+                                    break;
+                            }
+                            e = $(template);
+                            $(me.canvas).append(e);
 
-                        return e;
-                    }
+                            return e;
+                        }
+                    };
 
                     u.each(this.shapes, function () {
-                        renderShape(this.mapArea, this.options);
+                        gu.renderShape(this.mapArea, this.options);
                     });
 
                     if (this.masks.length) {
                         u.each(this.masks, function () {
                             opts = u.mergeObjects({ source: [this.options, { fillOpacity: 1, fillColor: this.options.fillColorMask}] });
-                            renderShape(this.mapArea, opts);
+                            gu.renderShape(this.mapArea, opts);
                         });
                     }
 
@@ -1954,7 +1985,6 @@ See complete changelog at github
                 map_data = get_map_data(this);
 
                 if (map_data) {
-                    //alert('unbind' + ' map cache:' + map_cache.length);
                     if (queue_command(map_data, $(this), 'unbind')) {
                         return true;
                     }
@@ -1966,10 +1996,6 @@ See complete changelog at github
                     for (i = map_cache.length - 1; i >= map_data.index; i--) {
                         map_cache[i].index--;
                     }
-                    //alert('map-cache: ' + map_cache.length);
-                } else {
-                    //alert('not unbinding ' + this.src + ' map cahce:' + map_cache.length);
-
                 }
             });
         };
