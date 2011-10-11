@@ -1,4 +1,4 @@
-/* ImageMapster 1.2.5 b16
+/* ImageMapster 1.2.5 b17
 
 Copyright 2011 James Treworgy
 http://www.outsharked.com/imagemapster
@@ -85,12 +85,6 @@ See complete changelog at github
 
 (function ($) {
     var methods;
-    // add a trim method if needed
-    if (!String.prototype.trim) {
-        String.prototype.trim = function () {
-            return this.replace(/^\s+|\s+$/g, '');
-        };
-    }
     $.fn.mapster = function (method) {
         if (methods[method]) {
             return methods[method].apply(this, Array.prototype.slice.call(arguments, 1));
@@ -102,7 +96,7 @@ See complete changelog at github
     };
 
     $.mapster = {};
-    $.mapster.version = "1.2.5b16";
+    $.mapster.version = "1.2.5b17";
     // utility functions
     $.mapster.utils = {
         area_corner: function (coords, left, top) {
@@ -127,7 +121,7 @@ See complete changelog at github
         split: function (text) {
             var arr = text.split(',');
             return $.each(arr, function (i) {
-                arr[i] = arr[i].trim();
+                arr[i] = $.trim(arr[i]);
             });
         },
         setOpacity: function (e, opacity, ie) {
@@ -165,12 +159,12 @@ See complete changelog at github
                 obj = source[i];
                 if (obj) {
                     for (prop in obj) {
-                        if ((!ignore || this.arrayIndexOf(ignore, prop) === -1)
-	                          && (!include || this.arrayIndexOf(include, prop) >= 0)
+                        if ((!ignore || $.inArray(prop, ignore) < 0)
+	                          && (!include || $.inArray(prop, include) >= 0)
 	                          && obj.hasOwnProperty(prop)
 	                          && (add || target.hasOwnProperty(prop))) {
 
-                            if (deep && this.arrayIndexOf(deep, prop) >= 0 && typeof obj[prop] === 'object') {
+                            if (deep && $.inArray(prop, deep) >= 0 && typeof obj[prop] === 'object') {
                                 if (typeof target[prop] !== 'object' && add) {
                                     target[prop] = {};
                                 }
@@ -236,23 +230,10 @@ See complete changelog at github
                 obj.call(that, args);
             }
         },
-        arrayIndexOf: function (arr, el) {
-            if (arr.indexOf) {
-                return arr.indexOf(el);
-            } else {
-                var i;
-                for (i = arr.length - 1; i >= 0; i--) {
-                    if (arr[i] === el) {
-                        return i;
-                    }
-                }
-                return -1;
-            }
-        },
         // recycle empty array elements
         arrayReuse: function (arr, obj) {
-            var index = this.arrayIndexOf(arr, null);
-            if (index === -1) {
+            var index = $.inArray(null, arr);
+            if (index < 0) {
                 index = arr.push(obj) - 1;
             } else {
                 arr[index] = obj;
@@ -338,7 +319,9 @@ See complete changelog at github
                   len = elems.length;
 
             elems.bind('load.mapster', function () {
-                if (--len <= 0) { callback.call(this); }
+                if (--len <= 0) {
+                    callback.call(this);
+                }
             }).each(function () {
                 // cached images don't fire load sometimes, so we reset src.
                 if (this.complete ||
@@ -465,7 +448,6 @@ See complete changelog at github
         var me = {},
         AreaData, MapData, MapArea, Method, Graphics,
         u = $.mapster.utils,
-        map_cache = [],
         ie_config_complete = false,
         has_canvas = null,
         is_touch = null,
@@ -478,9 +460,25 @@ See complete changelog at github
             padding: 0,
             border: 0
         };
+        me.map_cache = [];
+        function addMap(map_data) {
+            return me.map_cache.push(map_data) - 1;
+
+        }
+        function removeMap(map_data) {
+            me.map_cache.splice(map_data.index, 1);
+            for (var i = me.map_cache.length - 1; i >= this.index; i--) {
+                me.map_cache[i].index--;
+            }
+        }
         // for safari
         $(window).bind('load', function () {
             windowLoaded = true;
+            $(me.map_cache).each(function () {
+                if (!this.complete && this.isReadyToBind()) {
+                    this.initialize();
+                }
+            });
         });
         me.test = function (obj) {
             return eval(obj);
@@ -498,12 +496,12 @@ See complete changelog at github
                     break;
             }
             return img ?
-                u.arrayIndexOfProp(map_cache, 'image', img) : -1;
+                u.arrayIndexOfProp(me.map_cache, 'image', img) : -1;
         }
         function get_map_data(obj) {
             var index = get_map_data_index(obj);
             if (index >= 0) {
-                return index >= 0 ? map_cache[index] : null;
+                return index >= 0 ? me.map_cache[index] : null;
             }
         }
 
@@ -565,6 +563,9 @@ See complete changelog at github
         //}
         // name: name of method
         // args: arguments to re-call with 
+        // Iterates through all the objects passed, and determines whether it's an area or an image, and calls the appropriate
+        // callback for each. If anything is returned from that callback, the process is stopped and that data return. Otherwise,
+        // the object itself is returned.
         Method = function (that, func_map, func_area, opts) {
             var me = this;
             me.output = that;
@@ -577,27 +578,40 @@ See complete changelog at github
             me.func_area = func_area;
             //$.extend(me, opts);
             me.name = opts.name;
+
         };
         Method.prototype.go = function () {
-            var i, data, ar, len, result, src = this.input;
+            var i, data, ar, len, result, src = this.input,
+                area_list = [],
+                me = this;
             len = src.length;
             for (i = 0; i < len; i++) {
                 data = get_map_data(src[i]);
                 if (data) {
                     if (queue_command(data, this.input, this.name, this.args)) {
-                        return true;
+                        if (this.first) {
+                            result = '';
+                        }
+                        continue;
                     }
                     ar = data.getData(src[i].nodeName === 'AREA' ? src[i] : this.key);
                     if (ar) {
-                        result = this.func_area.apply(ar, this.args);
+                        if ($.inArray(ar, area_list) < 0) {
+                            area_list.push(ar);
+                        }
                     } else {
                         result = this.func_map.apply(data, this.args);
                     }
-                    if (this.first) {
+                    if (this.first || typeof result !== 'undefined') {
                         break;
                     }
                 }
             }
+            // if there were areas, call the area function for each unique group
+            $(area_list).each(function () {
+                result = me.func_area.apply(this, me.args);
+            });
+
             if (typeof result !== 'undefined') {
                 return result;
             } else {
@@ -666,9 +680,10 @@ See complete changelog at github
                 me.inArea = false;
 
 
-                window.setTimeout(function () {
-                    me.clearEffects(false);
-                }, 50);
+                //window.setTimeout(function () {
+                //    me.clearEffects(false);
+                //}, 50);
+                me.clearEffects(false);
 
                 if ($.isFunction(opts.onMouseout)) {
                     opts.onMouseout.call(this,
@@ -684,15 +699,14 @@ See complete changelog at github
             this.clearEffects = function (force) {
                 var opts = me.options;
                 // this is a timer callback - ensure it hasn't been unbound
-                if (!me.image) {
-                    return;
-                }
+                //if (!me.image) {
+                //    return;
+                //}
                 if ((me.currentAreaId < 0 || force !== true) && me.inArea) {
                     return;
                 }
                 me.ensureNoHighlight();
-                if (opts.toolTipClose && u.arrayIndexOf(opts.toolTipClose, 'area-mouseout') >= 0) {
-                    me.toolTipClear = true;
+                if (opts.toolTipClose && $.inArray('area-mouseout', opts.toolTipClose) >= 0) {
                     me.clearTooltip();
                 }
                 me.currentAreaId = -1;
@@ -767,7 +781,9 @@ See complete changelog at github
             this.base_canvas = null;       // (canvas|var)  where selections are rendered
             this.overlay_canvas = null;    // (canvas|var)  where highlights are rendered
 
-            this.complete = false;         // (bool)    when all images have finished loading
+            this.imagesAdded = false;      // (bool)    when all images have been added, we can now test for all being done loaded
+            this.imagesLoaded = false;     // (bool)    when all images have finished loading (config can proceed)
+            this.complete = false;         // (bool)    when configuration is complete
             this.commands = [];            // {}        commands that were run before configuration was completed (b/c images weren't loaded)
             this.data = [];                // (MapData[]) area groups
             this.originalAreaData = [];    // ref of all coord data from areas as bound, indexed by auto-generated id during "initialize"
@@ -826,9 +842,33 @@ See complete changelog at github
                 finishResize();
             }
         };
+        MapData.prototype.isReadyToBind = function () {
+            return this.imagesAdded && this.imagesLoaded && (!this.options.safeLoad || windowLoaded);
+        };
         // bind a new image to a src, capturing load event. Return the new (or existing) image.
         MapData.prototype.addImage = function (img, src, altId) {
-            var index, image, source;
+            var index, image, source, me = this;
+
+            // fires on image onLoad evetns, could mean everything is ready
+            function onLoad() {
+                var index;
+
+                if (me.complete) {
+                    return;
+                }
+
+                index = $.inArray(this, me.images);
+                if (index < 0) {
+                    throw ("Unable to find ref to image '" + this.src + "'.");
+                }
+
+                me.imageStatus[index] = true;
+                if ($.inArray(false, me.imageStatus) < 0 &&
+                    (!me.options.safeLoad || windowLoaded)) {
+                    me.initialize();
+                }
+            }
+
             if (!img && !src) { return; }
 
             image = img;
@@ -845,6 +885,7 @@ See complete changelog at github
                 //image.src = source;
 
                 $('body').append(image);
+                $(image).bind('load.mapster', onLoad);
                 $(image).attr('src', source);
             }
             index = $.inArray(image, this.images);
@@ -864,47 +905,30 @@ See complete changelog at github
         // then bind onload event, and finally use a timer to keep checking.
         MapData.prototype.bindImages = function (retry) {
             var alreadyLoaded = true,
-                isLoaded = function () {
-                    return alreadyLoaded && (!me.options.safeLoad || windowLoaded);
-                },
                 me = this;
-            function readyToInitialize() {
-                me.initialize();
-            }
-            function onLoad() {
-                var index;
-                if (isLoaded()) {
-                    return;
-                }
-                index = $.inArray(this, me.images);
-                if (index < 0) {
-                    throw ("Unable to find ref to image '" + this.src + "'.");
-                }
-                me.imageStatus[index] = true;
-                if ($.inArray(false, me.imageStatus) < 0 &&
-                    (!me.options.safeLoad || windowLoaded)) {
-                    readyToInitialize();
-                }
-            }
+
+            me.imagesAdded = true;
 
             if (me.complete) {
                 return;
             }
             // check to see if every image has already been loaded
-            u.each(me.images, function (i) {
+            u.each(me.images, function () {
                 if (!u.isImageLoaded(this)) {
                     alreadyLoaded = false;
+                    return false;
                 }
             });
+            me.imagesLoaded = alreadyLoaded;
 
-            if (isLoaded()) {
-                readyToInitialize();
+            if (me.isReadyToBind()) {
+                me.initialize();
                 return;
             }
 
-            u.each(me.images, function (i) {
-                u.imageLoaded(this, onLoad);
-            });
+            //            for (i = 0; i < me.images.length; i++) {
+            //                whenLoaded(me.images[i], onLoad);
+            //            }
 
             // to account for failure of onLoad to fire in rare situations
             if (me.bindTries-- > 0) {
@@ -941,6 +965,9 @@ See complete changelog at github
         MapData.prototype.getDataForArea = function (area) {
             var ar,
                 key = $(area).attr(this.options.mapKey);
+            if (key) {
+                key = u.split(key)[0];
+            }
             ar = this.data[this._idFromKey(key)];
             // set the actual area moused over/selected
             if (ar) {
@@ -1105,8 +1132,8 @@ See complete changelog at github
                 }
 
                 if (!mapArea.nohref) {
-                    $area.bind('mouseover.mapster', this.mouseover)
-                        .bind('mouseout.mapster', this.mouseout)
+                    $area.bind('mouseenter.mapster', this.mouseover)
+                        .bind('mouseleave.mapster', this.mouseout)
                         .bind('click.mapster', this.click);
                 }
                 // Create a key if none was assigned by the user
@@ -1222,9 +1249,6 @@ See complete changelog at github
             $(this.overlay_canvas).remove();
         };
         MapData.prototype.clearTooltip = function () {
-            if (!this.toolTipClear) {
-                return;
-            }
             if (this.activeToolTip) {
                 this.activeToolTip.remove();
                 this.activeToolTip = null;
@@ -1263,7 +1287,7 @@ See complete changelog at github
         };
         MapData.prototype.bindTooltipClose = function (option, event, obj) {
             var event_name = event + '.mapster-tooltip', me = this;
-            if (u.arrayIndexOf(this.options.toolTipClose, option) >= 0) {
+            if ($.inArray(option, this.options.toolTipClose) >= 0) {
                 obj.unbind(event_name).bind(event_name, function () {
                     me.clearTooltip();
                 });
@@ -1274,6 +1298,9 @@ See complete changelog at github
             }
         };
         // END MAPDATA
+
+        // AREADATA - represents an area group (one or more areas)
+
         AreaData = function (owner, key, value) {
             this.owner = owner;
             this.key = key || '';
@@ -1324,6 +1351,7 @@ See complete changelog at github
             }
             return this._effectiveOptions;
         };
+        // Fire callback on area state change
         AreaData.prototype.changeState = function (state_type, state) {
             if ($.isFunction(this.owner.options.onStateChange)) {
                 this.owner.options.onStateChange.call(this.owner.image,
@@ -1334,16 +1362,20 @@ See complete changelog at github
                 });
             }
         };
-        // highlight an area
+        // highlight this 
         AreaData.prototype.highlight = function () {
             var o = this.owner;
             o.graphics.addShapeGroup(this, "highlight");
             o.setHighlight(this.areaId);
             this.changeState('highlight', true);
         };
-        AreaData.prototype.setAreaSelected = function () {
+        // select this area. if "callEvent" is true then the state change event will be called. (This method can be used
+        // during config operations, in which case no event is indicated)
+        AreaData.prototype.setAreaSelected = function (callEvent) {
             this.owner.graphics.addShapeGroup(this, "select");
-            this.changeState('select', true);
+            if (callEvent) {
+                this.changeState('select', true);
+            }
         };
         AreaData.prototype.addSelection = function () {
             // need to add the new one first so that the double-opacity effect leaves the current one highlighted for singleSelect
@@ -1356,7 +1388,7 @@ See complete changelog at github
             }
 
             if (!this.isSelected()) {
-                this.setAreaSelected();
+                this.setAreaSelected(true);
                 this.selected = true;
             }
 
@@ -1386,7 +1418,7 @@ See complete changelog at github
             return this.isSelected();
         };
         // Show tooltip adjacent to DOM element "area"
-        AreaData.prototype.showTooltip = function (forArea) {
+        AreaData.prototype.showTooltip = function () {
             var tooltip, left, top, tooltipCss, coords, fromCoords, container,
                 alignLeft = true,
 	        alignTop = true,
@@ -1397,7 +1429,6 @@ See complete changelog at github
 
             // prevent tooltip from being cleared if it was in progress - area is in the same group
 
-            this.owner.toolTipClear = false;
             if (map_data.activeToolTipID === this.areaId) {
                 return;
             }
@@ -1410,8 +1441,8 @@ See complete changelog at github
 
             tooltip = container.html(opts.toolTip).hide();
 
-            if (forArea) {
-                fromCoords = u.split($(forArea).attr("coords"));
+            if (this.area) {
+                fromCoords = $(this.area).attr("coords");
             } else {
                 fromCoords = [];
                 u.each(this.areas, function () {
@@ -1464,7 +1495,7 @@ See complete changelog at github
             }
 
             //"this" will be null unless they passed something to forArea
-            u.ifFunction(baseOpts.onShowToolTip, forArea || null,
+            u.ifFunction(baseOpts.onShowToolTip, this.area || null,
             {
                 toolTip: tooltip,
                 areaOptions: opts,
@@ -1857,7 +1888,8 @@ See complete changelog at github
                 { name: 'get',
                     args: arguments,
                     key: key,
-                    first: true
+                    first: true,
+                    defaultReturn: ''
                 }
             )).go();
         };
@@ -1885,8 +1917,7 @@ See complete changelog at github
                 },
                 function () {
                     if (this.effectiveOptions().toolTip) {
-                        //TODO warning: will this.area be set even if called witout an area? I hope not
-                        this.showTooltip(this.area);
+                        this.showTooltip();
                     }
                 },
                 { name: 'tooltip',
@@ -1926,8 +1957,9 @@ See complete changelog at github
         // if set_bound is true, the bound list will also be updated. Default is true. If neither true nor false,
         // it will be toggled.
         me.set = function (selected, key, set_bound) {
-            var lastParent, parent, map_data, key_list, do_set_bound;
-
+            var lastParent, parent, map_data, do_set_bound,
+                key_list,
+                area_list = []; // array of unique areas passed
 
             function setSelection(ar) {
                 if (ar) {
@@ -1943,6 +1975,7 @@ See complete changelog at github
             }
 
             do_set_bound = u.isBool(set_bound) ? set_bound : true;
+
             this.each(function () {
                 var ar;
                 map_data = get_map_data(this);
@@ -1987,13 +2020,15 @@ See complete changelog at github
 
                     ar = map_data.getDataForArea(this);
 
-                    if ((key_list + ",").indexOf(ar.key) < 0) {
-                        key_list += (key_list === '' ? '' : ',') + ar.key;
+                    if ($.inArray(ar, area_list) < 0) {
+                        area_list.push(ar);
                     }
-
-                    setSelection(ar);
-
                 }
+                // set all areas collected from the loop
+
+                $.each(area_list, function () {
+                    setSelection(this);
+                });
                 if (do_set_bound && map_data.options.boundList) {
                     setBoundListProperties(map_data.options, getBoundList(map_data.options, key_list), selected);
                 }
@@ -2005,11 +2040,7 @@ See complete changelog at github
                 function () {
                     this.clearEvents();
                     this.clearMapData(preserveState);
-
-                    map_cache.splice(this.index, 1);
-                    for (var i = map_cache.length - 1; i >= this.index; i--) {
-                        map_cache[i].index--;
-                    }
+                    removeMap(this);
                 },
                 null,
                 { name: 'unbind',
@@ -2108,9 +2139,9 @@ See complete changelog at github
         };
         me.unload = function () {
             var i;
-            for (i = map_cache.length - 1; i >= 0; i--) {
-                if (map_cache[i]) {
-                    me.unbind.call($(map_cache[i].image));
+            for (i = me.map_cache.length - 1; i >= 0; i--) {
+                if (me.map_cache[i]) {
+                    me.unbind.call($(me.map_cache[i].image));
                 }
             }
             me.graphics = null;
@@ -2167,7 +2198,7 @@ See complete changelog at github
                     if (!map_data.complete) {
                         // will be queued
                         img.bind();
-                        return;
+                        return true;
                     }
                 }
 
@@ -2182,7 +2213,8 @@ See complete changelog at github
 
                 if (!map_data) {
                     map_data = new MapData(this, opts);
-                    map_data.index = map_cache.push(map_data) - 1;
+
+                    map_data.index = addMap(map_data);
                     map_data.map = map;
                     // add the actual main image
                     map_data.addImage(this);

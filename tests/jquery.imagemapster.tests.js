@@ -2,6 +2,8 @@
    Too hard to fix the test right now. In practice this shouldn't ever matter unless you actually want to 
    test the selection state (as initially configured) before anything's been done.
 */
+/*jslint onevar: false */
+/*global mapster_tests: true, Test: true */
 
 mapster_tests = function (options) {
 
@@ -22,7 +24,7 @@ mapster_tests = function (options) {
         callBackData = false,
         callBackThis = null,
         callBack = function (data) {
-            callBackData = data
+            callBackData = data;
             callBackThis = this;
         },
         callBackReset = function () {
@@ -126,12 +128,12 @@ mapster_tests = function (options) {
 
 
         otherObj = { a: "a3" };
-        var result = func();
+        result = func();
         ut.assertPropsEq(function () { return u.mergeObjects({ add: false, target: result, source: otherObj }); }, { a: "a3", b: "b2", c: "c" }, "Merge with missing properties");
 
         // test several at once
         otherObj = { b: "b4" };
-        otherObj2 = { a: "a4" };
+        var otherObj2 = { a: "a4" };
 
         ut.assertPropsEq(u.mergeObjects({ add: false, target: obj, source: [otherObj, otherObj2] }), { a: "a4", b: "b4", c: "c" }, "Merge with mutiple inputs");
 
@@ -204,15 +206,9 @@ mapster_tests = function (options) {
 
         // test using only bound images
 
-        ut.assertEq(map.mapster("test", "map_cache.length"), 1, "Only imagemap bound images were obtained on generic create");
+        ut.assertEq(map.mapster("test", "me.map_cache.length"), 1, "Only imagemap bound images were obtained on generic create");
         map = $('img,div').mapster({ mapKey: "state" });
-        ut.assertEq(map.mapster("test", "map_cache.length"), 1, "Only imagemap bound images were obtained on generic create with other elements");
-        $('area:attrMatches("state","AK,HI,LA")').mapster('set', true);
-        var area_sel = map.mapster('get');
-        ut.assertCsvElementsEq(area_sel, "HI,AK,LA", "Set using area works");
-
-
-        // test command queue
+        ut.assertEq(map.mapster("test", "me.map_cache.length"), 1, "Only imagemap bound images were obtained on generic create with other elements");
 
         map = $("#usa_image").mapster(map_options);
 
@@ -250,18 +246,36 @@ mapster_tests = function (options) {
 
         ut.assertCsvElementsEq(selected, "AK,TX", "Initially selected items returned with 'get'");
 
+
         selected = map.mapster('get', 'TX');
         ut.assertEq(selected, true, "Initially selected single item returned true with 'get'");
         selected = map.mapster('get', 'ME');
         ut.assertEq(selected, false, "Initially deselected single item returned false with 'get'");
 
-        // test clicking
-        $('area[state="ME"]').first().click();
-        selected = map.mapster('get', 'ME');
-        ut.assertEq(selected, true, "Click-selected area returned 'get'");
 
-        selected = map.mapster('get');
-        ut.assertCsvElementsEq(selected, "AK,ME,TX", "Complete list returned with 'get'");
+        // Test setting/getting via area
+
+        // AK was already selected, should be ignored
+
+        $('area:attrMatches("state","AK,HI,LA")').mapster('set', true);
+        var area_sel = map.mapster('get');
+        ut.assertCsvElementsEq(area_sel, "HI,AK,LA,TX", "Set using area works");
+
+        map.mapster('set', false, 'LA,TX');
+        ut.assertCsvElementsEq("HI,AK", map.mapster('get'), "unset using keys works");
+
+        map.mapster('set', true, 'ME,OH,TX');
+        ut.assertCsvElementsEq("HI,AK,ME,OH,TX", map.mapster('get'), "set using keys works");
+
+        // test toggling: AK should go off, MT should go on
+        $('area:attrMatches("state","AK,MT")').mapster('set');
+        ut.assertCsvElementsEq("HI,ME,OH,TX,MT", map.mapster('get'), "toggling keys works");
+
+        // test clicking
+        $('area[state="AZ"]').first().click();
+        selected = map.mapster('get', 'AZ');
+        ut.assertEq(true, selected, "Click-selected area returned 'get'");
+        ut.assertCsvElementsEq("HI,ME,OH,TX,MT,AZ", map.mapster('get'), "Complete list returned with 'get'");
 
         /// try to click select "staticstate areas
 
@@ -294,7 +308,7 @@ mapster_tests = function (options) {
 
         // test rebind
         map.mapster('rebind', { singleSelect: true });
-        ut.assertCsvElementsEq(map.mapster('get'), 'AK,ME,TX,OR', "Rebind with singleSelect preserved selections");
+        ut.assertCsvElementsEq(map.mapster('get'), 'OR,AZ,TX,MT,OH,ME,HI', "Rebind with singleSelect preserved selections");
 
 
 
@@ -410,7 +424,7 @@ mapster_tests = function (options) {
 
         // Now try tooltips
 
-        var opts = map.mapster('get_options', true);
+        //var opts = map.mapster('get_options', true);
 
         ut.assertEq($(".mapster-tooltip").length, 0, "No tooltip showing");
 
@@ -425,7 +439,7 @@ mapster_tests = function (options) {
             ut.assertEq(callBackThis, $('area[state="CA"]')[0], "Tooltip show callback fired for Lousisiana, and this was correct");
         }
 
-        var cbtest = new CallbackTest(function(){
+        var cbtest = new CallbackTest(function () {
             ut.assertEq($(".mapster-tooltip").length, 0, "No tooltip showing after mouseout");
 
             map.mapster('tooltip', "CA");
@@ -440,7 +454,8 @@ mapster_tests = function (options) {
                 ut.assertPropsEq(first, { left: 50, top: 199 }, "Tooltip for CA when no area was specified used first area");
             }
             //ut.assertPropsEq($(".mapster-tooltip").position(),{left: 50, top: 198},"Sanity check -0- should fail");
-
+            // clear and reset tooltip, this time calling for a specific area
+            map.mapster('tooltip');
             map.mapster('tooltip', $("area[state='CA']:eq(2)"));
 
             ut.assertEq($(".mapster-tooltip").length, 1, "Tooltip appeared when activated manually with specific area");
@@ -469,10 +484,10 @@ mapster_tests = function (options) {
 
         $('area[state="CA"]').first().mouseout();
 
-        
-       // Try tooltips manually
 
-      
+        // Try tooltips manually
+
+
 
     });
 
