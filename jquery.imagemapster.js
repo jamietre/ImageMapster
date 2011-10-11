@@ -1,4 +1,4 @@
-/* ImageMapster 1.2.5 b17
+/* ImageMapster 1.2.5 b19
 
 Copyright 2011 James Treworgy
 http://www.outsharked.com/imagemapster
@@ -8,6 +8,7 @@ A jQuery plugin to enhance image maps.
 */
 /*
 version 1.2.5
+-- offset 1 pixel strokes by 0.5 px to prevent the fuzzies
 -- inore UI events during resize - causes issues
 -- queue all methods (highlight, data, tooltip) so configuration delays don't cause problems ever
 -- unbind "load" event explicitly from images added. 
@@ -82,6 +83,7 @@ See complete changelog at github
 
 */
 
+/*jslint eqeqeq: false */
 
 (function ($) {
     var methods;
@@ -96,7 +98,7 @@ See complete changelog at github
     };
 
     $.mapster = {};
-    $.mapster.version = "1.2.5b17";
+    $.mapster.version = "1.2.5b19";
     // utility functions
     $.mapster.utils = {
         area_corner: function (coords, left, top) {
@@ -201,7 +203,7 @@ See complete changelog at github
         },
         isElement: function (o) {
             return (typeof HTMLElement === "object" ? o instanceof HTMLElement :
-                typeof o === "object" && o.nodeType === 1 && typeof o.nodeName === "string");
+               o && typeof o === "object" && o.nodeType === 1 && typeof o.nodeName === "string");
         },
         arrayIndexOfProp: function (arr, prop, obj) {
             var i = arr.length;
@@ -851,8 +853,6 @@ See complete changelog at github
 
             // fires on image onLoad evetns, could mean everything is ready
             function onLoad() {
-                var index;
-
                 if (me.complete) {
                     return;
                 }
@@ -868,7 +868,14 @@ See complete changelog at github
                     me.initialize();
                 }
             }
-
+            function storeImage(image) {
+                var index = me.images.push(image) - 1;
+                me.imageSources[index] = source;
+                me.imageStatus[index] = false;
+                if (altId) {
+                    me.altImagesXref[altId] = index;
+                }
+            }
             if (!img && !src) { return; }
 
             image = img;
@@ -885,18 +892,12 @@ See complete changelog at github
                 //image.src = source;
 
                 $('body').append(image);
+                storeImage(image);
                 $(image).bind('load.mapster', onLoad);
                 $(image).attr('src', source);
-            }
-            index = $.inArray(image, this.images);
 
-            if (index <= 0) {
-                index = this.images.push(image) - 1;
-                this.imageSources[index] = source;
-                this.imageStatus[index] = false;
-                if (altId) {
-                    this.altImagesXref[altId] = index;
-                }
+            } else {
+                storeImage(image);
             }
 
         };
@@ -1510,7 +1511,10 @@ See complete changelog at github
             var me = this;
             me.owner = owner;
             me.area = areaEl;
-            me.originalCoords = u.split(areaEl.coords);
+            me.originalCoords = [];
+            $.each(u.split(areaEl.coords), function () {
+                me.originalCoords.push(parseFloat(this));
+            });
             me.length = me.originalCoords.length;
 
             me.shape = areaEl.shape.toLowerCase();
@@ -1527,16 +1531,18 @@ See complete changelog at github
         MapArea.prototype.reset = function () {
             this.area.coords = this.coords(1).join(',');
         };
-        MapArea.prototype.coords = function (pct) {
-            var j, newCoords = [];
-            pct = pct || this.owner.scaleInfo.scalePct;
-            if (pct === 1) {
+        MapArea.prototype.coords = function (percent, coordOffset) {
+            var j, newCoords = [],
+                pct = percent || this.owner.scaleInfo.scalePct,
+                offset = coordOffset || 0;
+
+            if (pct === 1 && coordOffset === 0) {
                 return this.originalCoords;
             }
 
             for (j = 0; j < this.length; j++) {
                 //amount = j % 2 === 0 ? xPct : yPct;
-                newCoords.push(Math.round(this.originalCoords[j] * pct).toString());
+                newCoords.push(Math.round(this.originalCoords[j] * pct) + offset);
             }
             return newCoords;
         };
@@ -1638,55 +1644,56 @@ See complete changelog at github
         function configureGraphics(has_canvas) {
             var p = Graphics.prototype;
             if (has_canvas) {
-                p.gu = {
-                    hex_to_decimal: function (hex) {
-                        return Math.max(0, Math.min(parseInt(hex, 16), 255));
-                    },
-                    css3color: function (color, opacity) {
-                        return 'rgba(' + this.hex_to_decimal(color.substr(0, 2)) + ','
-                        + this.hex_to_decimal(color.substr(2, 2)) + ','
-                        + this.hex_to_decimal(color.substr(4, 2)) + ',' + opacity + ')';
-                    },
-                    renderShape: function (context, mapArea) {
-                        var i, c = mapArea.coords();
-                        switch (mapArea.shape) {
-                            case 'rect':
-                                context.rect(c[0], c[1], c[2] - c[0], c[3] - c[1]);
-                                break;
-                            case 'poly':
-                                context.moveTo(c[0], c[1]);
+                p.hex_to_decimal = function (hex) {
+                    return Math.max(0, Math.min(parseInt(hex, 16), 255));
+                };
+                p.css3color = function (color, opacity) {
+                    return 'rgba(' + this.hex_to_decimal(color.substr(0, 2)) + ','
+                    + this.hex_to_decimal(color.substr(2, 2)) + ','
+                    + this.hex_to_decimal(color.substr(4, 2)) + ',' + opacity + ')';
+                };
 
-                                for (i = 2; i < mapArea.length; i += 2) {
-                                    context.lineTo(c[i], c[i + 1]);
-                                }
-                                context.lineTo(c[0], c[1]);
-                                break;
-                            case 'circ':
-                            case 'circle':
-                                context.arc(c[0], c[1], c[2], 0, Math.PI * 2, false);
-                                break;
-                        }
-                    },
-                    addAltImage: function (context, image, mapArea, options) {
-                        context.beginPath();
+                p.renderShape = function (context, mapArea, offset) {
+                    var i,
+                        c = mapArea.coords(null, offset);
 
-                        this.renderShape(context, mapArea);
-                        context.closePath();
-                        context.clip();
+                    switch (mapArea.shape) {
+                        case 'rect':
+                            context.rect(c[0], c[1], c[2] - c[0], c[3] - c[1]);
+                            break;
+                        case 'poly':
+                            context.moveTo(c[0], c[1]);
 
-                        context.globalAlpha = options.altImageOpacity;
-
-                        context.drawImage(image, 0, 0, mapArea.owner.scaleInfo.width, mapArea.owner.scaleInfo.height);
+                            for (i = 2; i < mapArea.length; i += 2) {
+                                context.lineTo(c[i], c[i + 1]);
+                            }
+                            context.lineTo(c[0], c[1]);
+                            break;
+                        case 'circ':
+                        case 'circle':
+                            context.arc(c[0], c[1], c[2], 0, Math.PI * 2, false);
+                            break;
                     }
                 };
-                p.render = function (ops) {
+                p.addAltImage = function (context, image, mapArea, options) {
+                    context.beginPath();
+
+                    this.renderShape(context, mapArea);
+                    context.closePath();
+                    context.clip();
+
+                    context.globalAlpha = options.altImageOpacity;
+
+                    context.drawImage(image, 0, 0, mapArea.owner.scaleInfo.width, mapArea.owner.scaleInfo.height);
+                };
+
+                p.render = function () {
                     // firefox 6.0 context.save() seems to be broken. to work around,  we have to draw the contents on one temp canvas, 
                     // the mask on another, and merge everything. ugh. fixed in 1.2.2. unfortunately this is a lot more code for masks,
                     // but no other way around it that i can see.
 
                     var maskCanvas, maskContext,
                         me = this,
-                        gu = me.gu,
                         hasMasks = me.masks.length,
                         shapeCanvas = me.createCanvasFor(me.canvas),
                         shapeContext = shapeCanvas.getContext('2d'),
@@ -1700,7 +1707,7 @@ See complete changelog at github
                         u.each(me.masks, function () {
                             maskContext.save();
                             maskContext.beginPath();
-                            gu.renderShape(maskContext, this.mapArea);
+                            me.renderShape(maskContext, this.mapArea);
                             maskContext.closePath();
                             maskContext.clip();
                             maskContext.lineWidth = 0;
@@ -1715,14 +1722,14 @@ See complete changelog at github
                         var s = this;
                         shapeContext.save();
                         if (s.options.alt_image) {
-                            gu.addAltImage(shapeContext, s.options.alt_image, s.mapArea, s.options);
+                            me.addAltImage(shapeContext, s.options.alt_image, s.mapArea, s.options);
                         } else if (s.options.fill) {
 
                             shapeContext.beginPath();
-                            gu.renderShape(shapeContext, s.mapArea);
+                            me.renderShape(shapeContext, s.mapArea);
                             shapeContext.closePath();
                             //shapeContext.clip();
-                            shapeContext.fillStyle = gu.css3color(s.options.fillColor, s.options.fillOpacity);
+                            shapeContext.fillStyle = me.css3color(s.options.fillColor, s.options.fillOpacity);
                             shapeContext.fill();
                         }
                         shapeContext.restore();
@@ -1732,14 +1739,18 @@ See complete changelog at github
                     // render strokes at end since masks get stroked too
 
                     u.each(me.shapes.concat(me.masks), function () {
-                        var s = this;
+                        var s = this,
+                            offset = s.options.strokeWidth == 1 ? 0.5 : 0;
+                        // offset applies only when stroke width is 1 and stroke would render between pixels.
+
                         if (s.options.stroke) {
                             shapeContext.save();
-                            shapeContext.strokeStyle = gu.css3color(s.options.strokeColor, s.options.strokeOpacity);
+                            shapeContext.strokeStyle = me.css3color(s.options.strokeColor, s.options.strokeOpacity);
                             shapeContext.lineWidth = s.options.strokeWidth;
 
                             shapeContext.beginPath();
-                            gu.renderShape(shapeContext, s.mapArea);
+
+                            me.renderShape(shapeContext, s.mapArea, offset);
                             shapeContext.closePath();
                             shapeContext.stroke();
                             shapeContext.restore();
