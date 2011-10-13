@@ -8,8 +8,6 @@ A jQuery plugin to enhance image maps.
 */
 /*
 version 1.2.5
--- prototype zoom feature
--- optimize removal of more than one element at a time (was wasting lots of time redrawing the canvas for each element)
 -- offset 1 pixel strokes by 0.5 px to prevent the fuzzies
 -- inore UI events during resize - causes issues
 -- queue all methods (highlight, data, tooltip) so configuration delays don't cause problems ever
@@ -437,7 +435,8 @@ See complete changelog at github
         isSelectable: true,
         isDeselectable: true,
         singleSelect: false,
-        wrapClass: false,
+        wrapClass: null,
+        wrapCss: null,
         onGetList: null,
         sortList: false,
         listenToList: false,
@@ -684,9 +683,9 @@ See complete changelog at github
                         return;
                     }
                     me.clearEffects(true);
-                    if (opts.highlight) {
-                        ar.highlight();
-                    }
+
+                    ar.highlight(!opts.highlight);
+
 
                     if (me.options.showToolTip && opts.toolTip) {
                         ar.showTooltip();
@@ -866,12 +865,15 @@ See complete changelog at github
             }
             function finishResize() {
                 sizeCanvas(me.overlay_canvas, width, height);
-                if (highlightId >= 0) {
-                    me.tempOptions = { fade: false };
-                    var areaData = me.data[highlightId];
-                    areaData.tempOptions = { fade: false };
-                    me.getDataForKey(areaData.key).highlight();
-                    areaData.tempOptions = null;
+
+                // restore highlight state if it was highlighted before
+                if (opts.highlight) {
+                    if (highlightId >= 0) {
+                        var areaData = me.data[highlightId];
+                        areaData.tempOptions = { fade: false };
+                        me.getDataForKey(areaData.key).highlight();
+                        areaData.tempOptions = null;
+                    }
                 }
                 sizeCanvas(me.base_canvas, width, height);
 
@@ -898,22 +900,23 @@ See complete changelog at github
 
             if (me.resizing && opts.force) {
                 $(els).stop();
-                $(me.wrapper).stop();
+                //(me.wrapper).stop();
             }
             me.resizing = true;
 
             if (opts.duration) {
                 els.animate(newsize, { duration: duration, complete: finishResize, easing: "linear" });
-
-                if (opts.css) {
-                    $(me.wrapper).animate(opts.css, { duration: duration, easing: "linear" });
-                }
+                $(me.wrapper).animate({
+                    scrollLeft: opts.scrollLeft || 0,
+                    scrollTop: opts.scrollTop || 0
+                },
+                { duration: duration, easing: "linear" });
             } else {
                 els.css(newsize);
                 finishResize();
-                if (opts.css) {
-                    me.wrapper.css(opts.css);
-                }
+                //                if (opts.css) {
+                //                    me.wrapper.css(opts.css);
+                //                }
             }
             $(this.image).css(newsize);
             // start calculation at the same time as effect
@@ -926,8 +929,12 @@ See complete changelog at github
 
         };
         MapData.prototype.state = function () {
-            return { complete: this.complete,
-                resizing: this.resizing
+            return {
+                complete: this.complete,
+                resizing: this.resizing,
+                zoomed: this.zoomed,
+                zoomedArea: this.zoomedArea,
+                scaleInfo: this.scaleInfo
             };
         };
         MapData.prototype.isReadyToBind = function () {
@@ -1245,7 +1252,10 @@ See complete changelog at github
                 width: scale.width,
                 height: scale.height
             };
+            if (opts.wrapCss) {
+                $.extend(css, opts.wrapCss);
 
+            }
             // if we were rebinding with an existing wrapper, the image will aready be in it
             if (img.parent()[0] !== me.wrapper[0]) {
 
@@ -1471,10 +1481,12 @@ See complete changelog at github
                 });
             }
         };
-        // highlight this 
-        AreaData.prototype.highlight = function () {
+        // highlight this area, no render causes it to happen internally only
+        AreaData.prototype.highlight = function (noRender) {
             var o = this.owner;
-            o.graphics.addShapeGroup(this, "highlight");
+            if (!noRender) {
+                o.graphics.addShapeGroup(this, "highlight");
+            }
             o.setHighlight(this.areaId);
             this.changeState('highlight', true);
         };
@@ -2303,18 +2315,23 @@ See complete changelog at github
                 { name: 'snapshot' }
             )).go();
         };
+        // do not queue this function
         me.state = function () {
-            return (new Method(this,
-                function () {
-                    return this.state();
-                },
-                null,
-                { name: 'state' }
-            )).go();
+            var md, result = null;
+            $(this).each(function () {
+                if (this.nodeName === 'IMG') {
+                    md = get_map_data(this);
+                    if (md) {
+                        result = md.state();
+                    }
+                    return false;
+                }
+            });
+            return result;
         };
         // options {
         //    padding: n,
-        // duration: m,
+        //    duration: m,
         //}
         //
         me.zoom = function (key, opts) {
@@ -2327,13 +2344,19 @@ See complete changelog at github
                     diffX, diffY, ratioX, ratioY, offsetX, offsetY, newWidth, newHeight, scrollLeft, scrollTop,
                     padding = options.padding || 0,
                     scrollBarSize = areaData ? 20 : 0,
-                    me = this;
+                    me = this,
+                    zoomOut = false;
 
                 if (areaData) {
                     // save original state on first zoom operation
-                    if (!me.preZoomWidth) {
+                    if (!me.zoomed) {
+                        me.zoomed = true;
                         me.preZoomWidth = me.scaleInfo.width;
                         me.preZoomHeight = me.scaleInfo.height;
+                        me.zoomedArea = areaData;
+                        if (options.scroll) {
+                            me.wrapper.css({ overflow: 'auto' });
+                        }
                     }
                     corners = $.mapster.utils.areaCorners(areaData.coords(1, 0));
                     width = me.wrapper.innerWidth() - scrollBarSize - padding * 2;
@@ -2350,40 +2373,44 @@ See complete changelog at github
                     newHeight = me.scaleInfo.realHeight * ratio;
                     scrollLeft = (corners.minX) * ratio - padding - offsetX;
                     scrollTop = (corners.minY) * ratio - padding - offsetY;
-                    scroll = true;
-                    if (!me.preZoomWrapperOverflow) {
-                        me.preZoomWrapperOverflow = me.wrapper.css('overflow');
-                    }
-                    me.wrapper.css('overflow', 'scroll');
                 } else {
-                    if (!me.preZoomWidth) {
+                    if (!me.zoomed) {
                         return;
                     }
+                    zoomOut = true;
                     newWidth = me.preZoomWidth;
                     newHeight = me.preZoomHeight;
-                    me.preZoomWidth = null;
-                    me.preZoomHeight = null;
-                    scrollLeft = 0;
-                    scrollTop = 0;
-                    scroll = false;
+                    scrollLeft = null;
+                    scrollTop = null;
                 }
 
                 this.resize({
                     width: newWidth,
                     height: newHeight,
-                    css: {
-                        scrollLeft: scrollLeft,
-                        scrollTop: scrollTop
-                    },
                     duration: options.duration,
                     scroll: scroll,
-                    callback: function () {
-                        if (!scroll) {
-                            me.wrapper.css('overflow', me.preZoomWrapperOverflow);
-                            me.preZoomWrapperOverflow = null;
-                        }
-
-                    }
+                    scrollLeft: scrollLeft,
+                    scrollTop: scrollTop,
+                    // closure so we can be sure values are correct
+                    callback: (function () {
+                        var isZoomOut = zoomOut,
+                            scroll = options.scroll,
+                            areaD = areaData;
+                        return function () {
+                            if (isZoomOut) {
+                                me.preZoomWidth = null;
+                                me.preZoomHeight = null;
+                                me.zoomed = false;
+                                me.zoomedArea = false;
+                                if (scroll) {
+                                    me.wrapper.css({ overflow: 'inherit' });
+                                }
+                            } else {
+                                // just to be sure it wasn't canceled & restarted
+                                me.zoomedArea = areaD;
+                            }
+                        };
+                    } ())
                 });
             }
             return (new Method(this,
