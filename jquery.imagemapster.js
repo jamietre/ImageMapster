@@ -1,4 +1,4 @@
-/* ImageMapster 1.2.5 b19
+/* ImageMapster 1.2.5 b20
 
 Copyright 2011 James Treworgy
 http://www.outsharked.com/imagemapster
@@ -8,6 +8,8 @@ A jQuery plugin to enhance image maps.
 */
 /*
 version 1.2.5
+-- prototype zoom feature
+-- optimize removal of more than one element at a time (was wasting lots of time redrawing the canvas for each element)
 -- offset 1 pixel strokes by 0.5 px to prevent the fuzzies
 -- inore UI events during resize - causes issues
 -- queue all methods (highlight, data, tooltip) so configuration delays don't cause problems ever
@@ -98,9 +100,38 @@ See complete changelog at github
     };
 
     $.mapster = {};
-    $.mapster.version = "1.2.5b19";
+    $.mapster.version = "1.2.5b20";
     // utility functions
     $.mapster.utils = {
+        // return four outer corners
+        areaCorners: function (coords, left, top) {
+            var minX, minY, maxX, maxY, curX, curY, j;
+
+            minX = 999999;
+            minY = minX;
+            maxX = -1;
+            maxY = -1;
+
+            for (j = coords.length - 2; j >= 0; j -= 2) {
+                curX = parseInt(coords[j], 10);
+                curY = parseInt(coords[j + 1], 10);
+                if (curX < minX) {
+                    minX = curX;
+                }
+                if (curX > maxX) {
+                    maxX = curX;
+                }
+
+                if (curY < minY) {
+                    minY = curY;
+                }
+                if (curY > maxY) {
+                    maxY = curY;
+                }
+
+            }
+            return { minX: minX, minY: minY, maxX: maxX, maxY: maxY };
+        },
         area_corner: function (coords, left, top) {
             var bestX, bestY, curX, curY, j;
 
@@ -641,60 +672,56 @@ See complete changelog at github
 
             this.mouseover = function (e) {
                 var ar = me.getDataForArea(this), opts;
-                if (!ar || ar.owner.resizing) { return; }
+                if (ar && !ar.owner.resizing) {
 
-                opts = ar.effectiveOptions();
+                    opts = ar.effectiveOptions();
 
-                me.inArea = true;
-                if (!has_canvas) {
-                    this.blur();
-                }
-                if (me.currentAreaId === ar.areaId) {
-                    return;
-                }
-                me.clearEffects(true);
-                if (opts.highlight) {
-                    ar.highlight();
-                }
+                    me.inArea = true;
+                    if (!has_canvas) {
+                        this.blur();
+                    }
+                    if (me.currentAreaId === ar.areaId) {
+                        return;
+                    }
+                    me.clearEffects(true);
+                    if (opts.highlight) {
+                        ar.highlight();
+                    }
 
-                if (me.options.showToolTip && opts.toolTip) {
-                    ar.showTooltip();
-                }
-                me.currentAreaId = ar.areaId;
+                    if (me.options.showToolTip && opts.toolTip) {
+                        ar.showTooltip();
+                    }
+                    me.currentAreaId = ar.areaId;
 
 
-                if ($.isFunction(me.options.onMouseover)) {
-                    me.options.onMouseover.call(this,
+                    if ($.isFunction(me.options.onMouseover)) {
+                        me.options.onMouseover.call(this,
                     {
                         e: e,
                         options: opts,
                         key: ar.key,
                         selected: ar.isSelected()
                     });
+                    }
                 }
-
             };
             this.mouseout = function (e) {
                 var key,
                     ar = me.getDataForArea(this),
                     opts = me.options;
-                if (!ar || ar.owner.resizing) { return; }
-                me.inArea = false;
+                if (ar && !ar.owner.resizing) {
+                    me.inArea = false;
+                    me.clearEffects(false);
 
-
-                //window.setTimeout(function () {
-                //    me.clearEffects(false);
-                //}, 50);
-                me.clearEffects(false);
-
-                if ($.isFunction(opts.onMouseout)) {
-                    opts.onMouseout.call(this,
+                    if ($.isFunction(opts.onMouseout)) {
+                        opts.onMouseout.call(this,
                     {
                         e: e,
                         options: opts,
                         key: key,
                         selected: ar.isSelected()
                     });
+                    }
                 }
             };
 
@@ -797,11 +824,36 @@ See complete changelog at github
             this.currentAreaId = -1;
             this._tooltip_events = [];     // {}         info on events we bound to a tooltip container, so we can properly unbind them
             this.scaleInfo = null;         // {}         info about the image size, scaling, defaults
+            //                scale: (bool) image is scaled
+            //                scalePct: pct (perctage of scale)
+            //                realWidth: realW,
+            //                realHeight: realH,
+            //                width: width,
+            //                height: height,
+            //                ratio: width / height
             this.inArea = false;
 
         };
-        MapData.prototype.resize = function (width, height, duration) {
-            var newsize, me = this;
+        // options: duration = animation time (zero = no animation)
+        // force: supercede any existing animation
+        // css = any css to be applied to the wrapper
+        MapData.prototype.resize = function (newWidth, newHeight, effectDuration) {
+            var highlightId, ratio, width, height, duration, opts = {}, newsize, els, me = this;
+            if (typeof newWidth === 'object') {
+                opts = newWidth;
+            } else {
+                opts.width = newWidth;
+                opts.height = newHeight;
+                opts.duration = effectDuration;
+            }
+            width = opts.width;
+            height = opts.height;
+            duration = opts.duration || 1000;
+
+            if (me.scaleInfo.width === width && me.scaleInfo.height === height) {
+                return;
+            }
+            highlightId = me._highlightId;
 
             function sizeCanvas(canvas, w, h) {
                 if (has_canvas) {
@@ -813,36 +865,70 @@ See complete changelog at github
                 }
             }
             function finishResize() {
-                me.scaleInfo = u.getScaleInfo(me.scaleInfo.realWidth, me.scaleInfo.realHeight, width, height);
-                u.each(me.data, function () {
-                    u.each(this.areas, function () {
-                        this.resize();
-                    });
-                });
-                sizeCanvas(me.base_canvas, width, height);
                 sizeCanvas(me.overlay_canvas, width, height);
+                if (highlightId >= 0) {
+                    me.tempOptions = { fade: false };
+                    var areaData = me.data[highlightId];
+                    areaData.tempOptions = { fade: false };
+                    me.getDataForKey(areaData.key).highlight();
+                    areaData.tempOptions = null;
+                }
+                sizeCanvas(me.base_canvas, width, height);
+
                 me.setAreasSelected();
                 me.resizing = false;
+                if ($.isFunction(opts.callback)) {
+                    opts.callback();
+                }
             }
             if (!width) {
-                width = height * me.scaleInfo.ratio;
+                ratio = height / me.scaleInfo.realHeight;
+                width = Math.round(me.scaleInfo.realWidth * ratio);
             }
             if (!height) {
-                height = width / me.scaleInfo.ratio;
+                ratio = width / me.scaleInfo.realWidth;
+                height = Math.round(me.scaleInfo.realHeight * ratio);
             }
 
             newsize = { 'width': String(width) + 'px', 'height': String(height) + 'px' };
             if (!has_canvas) {
                 $(me.base_canvas).children().remove();
             }
-            me.resizing = true;
-            if (duration) {
-                $(me.wrapper).find('.mapster_el').add(me.wrapper).animate(newsize, duration || 1000);
-                $(this.image).animate(newsize, 1100, finishResize);
-            } else {
-                $(me.wrapper).find('.mapster_el').add(me.wrapper).add(this.image).css(newsize);
-                finishResize();
+            els = $(me.wrapper).find('.mapster_el');
+
+            if (me.resizing && opts.force) {
+                $(els).stop();
+                $(me.wrapper).stop();
             }
+            me.resizing = true;
+
+            if (opts.duration) {
+                els.animate(newsize, { duration: duration, complete: finishResize, easing: "linear" });
+
+                if (opts.css) {
+                    $(me.wrapper).animate(opts.css, { duration: duration, easing: "linear" });
+                }
+            } else {
+                els.css(newsize);
+                finishResize();
+                if (opts.css) {
+                    me.wrapper.css(opts.css);
+                }
+            }
+            $(this.image).css(newsize);
+            // start calculation at the same time as effect
+            me.scaleInfo = u.getScaleInfo(me.scaleInfo.realWidth, me.scaleInfo.realHeight, width, height);
+            u.each(me.data, function () {
+                u.each(this.areas, function () {
+                    this.resize();
+                });
+            });
+
+        };
+        MapData.prototype.state = function () {
+            return { complete: this.complete,
+                resizing: this.resizing
+            };
         };
         MapData.prototype.isReadyToBind = function () {
             return this.imagesAdded && this.imagesLoaded && (!this.options.safeLoad || windowLoaded);
@@ -1298,6 +1384,15 @@ See complete changelog at github
                 });
             }
         };
+        // Compelete cleanup process for deslecting items. Called after a batch operation, or by AreaData for single
+        // operations not flagged as "partial"
+        MapData.prototype.removeSelectionFinish = function () {
+            var g = this.graphics;
+
+            g.refresh_selections();
+            // do not call ensure_no_highlight- we don't really want to unhilight it, just remove the effect
+            g.clear_highlight();
+        };
         // END MAPDATA
 
         // AREADATA - represents an area group (one or more areas)
@@ -1312,6 +1407,14 @@ See complete changelog at github
             this.areas = [];        // MapArea objects
             this.area = null;       // (temporary storage) - the actual area moused over 
             this._effectiveOptions = null;
+        };
+        // return all coordinates for all areas
+        AreaData.prototype.coords = function (percent, offset) {
+            var coords = [];
+            $.each(this.areas, function () {
+                coords = coords.concat(this.coords(percent, offset));
+            });
+            return coords;
         };
         AreaData.prototype.reset = function (preserveState) {
             u.each(this.areas, function () {
@@ -1339,18 +1442,23 @@ See complete changelog at github
             return u.isBool(this.effectiveOptions().staticState) ? false :
                 (u.isBool(this.owner.options.staticState) ? false : this.effectiveOptions().isDeselectable);
         };
+        AreaData.prototype.setTemporaryOption = function (options) {
+            this.tempOptions = options;
+        };
         AreaData.prototype.effectiveOptions = function (override_options) {
-            if (!this._effectiveOptions) {
-                //TODO this isSelectable should cascade already this seems redundant
-                this._effectiveOptions = u.mergeObjects({
-                    source: [this.owner.area_options,
+            //if (!this._effectiveOptions) {
+            //TODO this isSelectable should cascade already this seems redundant
+            var opts = this._effectiveOptions = u.mergeObjects({
+                source: [this.owner.area_options,
                         this.options,
                         override_options || {},
+                        this.tempOptions || {},
                         { id: this.areaId}],
-                    deep: "render_highlight,render_select"
-                });
-            }
-            return this._effectiveOptions;
+                deep: "render_highlight,render_select"
+            });
+            return opts;
+            //}
+            //return this._effectiveOptions;
         };
         // Fire callback on area state change
         AreaData.prototype.changeState = function (state_type, state) {
@@ -1382,7 +1490,7 @@ See complete changelog at github
             // need to add the new one first so that the double-opacity effect leaves the current one highlighted for singleSelect
             var o = this.owner;
             if (o.options.singleSelect) {
-                o.graphics.clear_selections();
+                o.graphics.remove_selections();
                 u.each(o.data, function () {
                     this.selected = false;
                 });
@@ -1397,24 +1505,29 @@ See complete changelog at github
                 o.graphics.refresh_selections();
             }
         };
-        AreaData.prototype.removeSelection = function () {
-            var o = this.owner;
+        // Remve a selected area group. If the parameter "partial" is true, then this is a manual operation 
+        // and the caller mus call "finishRemoveSelection" after multiple "removeSelectionFinish" events
+        AreaData.prototype.removeSelection = function (partial) {
+
             if (this.selected === false) {
                 return;
             }
             this.selected = false;
-            o.graphics.clear_selections(this.areaId);
-            o.graphics.refresh_selections();
-            // do not call ensure_no_highlight- we don't really want to unhilight it, just remove the effect
-            o.graphics.clear_highlight();
             this.changeState('select', false);
+            this.owner.graphics.remove_selections(this.areaId);
+            if (!partial) {
+                this.owner.removeSelectionFinish();
+            }
         };
-        AreaData.prototype.toggleSelection = function () {
+        // Complete selection removal process. This is separated because it's very inefficient to perform the whole
+        // process for multiple removals, as the canvas must be totally redrawn at the end of the process.ar.remove
+
+        AreaData.prototype.toggleSelection = function (partial) {
             if (!this.isSelected()) {
                 this.addSelection();
             }
             else {
-                this.removeSelection();
+                this.removeSelection(partial);
             }
             return this.isSelected();
         };
@@ -1542,7 +1655,7 @@ See complete changelog at github
 
             for (j = 0; j < this.length; j++) {
                 //amount = j % 2 === 0 ? xPct : yPct;
-                newCoords.push(Math.round(this.originalCoords[j] * pct) + offset);
+                newCoords.push(this.originalCoords[j] * pct + offset);
             }
             return newCoords;
         };
@@ -1790,8 +1903,8 @@ See complete changelog at github
                     var c = this.map_data.overlay_canvas;
                     c.getContext('2d').clearRect(0, 0, c.width, c.height);
                 };
-                p.clear_selections = function () {
-                    return null;
+                p.remove_selections = function () {
+
                 };
                 // Draw all items from selected_list to a new canvas, then swap with the old one. This is used to delete items when using canvases. 
                 p.refresh_selections = function () {
@@ -1872,7 +1985,8 @@ See complete changelog at github
                 p.clear_highlight = function () {
                     $(this.map_data.overlay_canvas).children().remove();
                 };
-                p.clear_selections = function (area_id) {
+                // remove single or all selections
+                p.remove_selections = function (area_id) {
                     if (area_id >= 0) {
                         $(this.map_data.base_canvas).find('[name="static_' + area_id.toString() + '"]').remove();
                     }
@@ -1978,7 +2092,7 @@ See complete changelog at github
                         case true:
                             ar.addSelection(); break;
                         case false:
-                            ar.removeSelection(); break;
+                            ar.removeSelection(true); break;
                         default:
                             ar.toggleSelection(); break;
                     }
@@ -2011,6 +2125,9 @@ See complete changelog at github
                         u.each(u.split(key_list), function () {
                             setSelection(map_data.getDataForKey(this.toString()));
                         });
+                        if (selected) {
+                            map_data.removeSelectionFinish();
+                        }
                     }
 
                 } else {
@@ -2186,6 +2303,106 @@ See complete changelog at github
                 { name: 'snapshot' }
             )).go();
         };
+        me.state = function () {
+            return (new Method(this,
+                function () {
+                    return this.state();
+                },
+                null,
+                { name: 'state' }
+            )).go();
+        };
+        // options {
+        //    padding: n,
+        // duration: m,
+        //}
+        //
+        me.zoom = function (key, opts) {
+            var options = opts || {};
+
+            function zoom(areaData) {
+                // this will be MapData object returned by Method
+
+                var scroll, corners, height, width, ratio,
+                    diffX, diffY, ratioX, ratioY, offsetX, offsetY, newWidth, newHeight, scrollLeft, scrollTop,
+                    padding = options.padding || 0,
+                    scrollBarSize = areaData ? 20 : 0,
+                    me = this;
+
+                if (areaData) {
+                    // save original state on first zoom operation
+                    if (!me.preZoomWidth) {
+                        me.preZoomWidth = me.scaleInfo.width;
+                        me.preZoomHeight = me.scaleInfo.height;
+                    }
+                    corners = $.mapster.utils.areaCorners(areaData.coords(1, 0));
+                    width = me.wrapper.innerWidth() - scrollBarSize - padding * 2;
+                    height = me.wrapper.innerHeight() - scrollBarSize - padding * 2;
+                    diffX = corners.maxX - corners.minX;
+                    diffY = corners.maxY - corners.minY;
+                    ratioX = width / diffX;
+                    ratioY = height / diffY;
+                    ratio = Math.min(ratioX, ratioY);
+                    offsetX = (width - diffX * ratio) / 2;
+                    offsetY = (height - diffY * ratio) / 2;
+
+                    newWidth = me.scaleInfo.realWidth * ratio;
+                    newHeight = me.scaleInfo.realHeight * ratio;
+                    scrollLeft = (corners.minX) * ratio - padding - offsetX;
+                    scrollTop = (corners.minY) * ratio - padding - offsetY;
+                    scroll = true;
+                    if (!me.preZoomWrapperOverflow) {
+                        me.preZoomWrapperOverflow = me.wrapper.css('overflow');
+                    }
+                    me.wrapper.css('overflow', 'scroll');
+                } else {
+                    if (!me.preZoomWidth) {
+                        return;
+                    }
+                    newWidth = me.preZoomWidth;
+                    newHeight = me.preZoomHeight;
+                    me.preZoomWidth = null;
+                    me.preZoomHeight = null;
+                    scrollLeft = 0;
+                    scrollTop = 0;
+                    scroll = false;
+                }
+
+                this.resize({
+                    width: newWidth,
+                    height: newHeight,
+                    css: {
+                        scrollLeft: scrollLeft,
+                        scrollTop: scrollTop
+                    },
+                    duration: options.duration,
+                    scroll: scroll,
+                    callback: function () {
+                        if (!scroll) {
+                            me.wrapper.css('overflow', me.preZoomWrapperOverflow);
+                            me.preZoomWrapperOverflow = null;
+                        }
+
+                    }
+                });
+            }
+            return (new Method(this,
+                function (opts) {
+                    zoom.call(this);
+                },
+                function () {
+                    zoom.call(this.owner, this);
+                },
+                {
+                    name: 'zoom',
+                    args: arguments,
+                    first: true,
+                    key: key
+                }
+                )).go();
+
+
+        };
 
         me.bind = function (options) {
             var opts = u.mergeObjects({
@@ -2325,7 +2542,7 @@ See complete changelog at github
             $.mapster.impl.set.call(this, false);
         }
     };
-    $.each(["bind", "rebind", "unbind", "set", "get", "data", "highlight", "get_options", "set_options", "snapshot", "tooltip", "test", "resize"], function () {
+    $.each(["bind", "rebind", "unbind", "set", "get", "data", "highlight", "get_options", "set_options", "snapshot", "tooltip", "test", "resize", "state", "zoom"], function () {
         methods[this] = $.mapster.impl[this];
     });
     $.mapster.impl.init();
