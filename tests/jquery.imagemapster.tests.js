@@ -19,6 +19,19 @@ mapster_tests = function (options) {
         };
     };
 
+    var attrMatches = function (jq, attr, matches) {
+        var list = matches.split(','), result = $();
+        jq.each(function () {
+            for (var i = 0; i < list.length; i++) {
+                if ($(this).is("[" + attr + "='" + list[i] + "']")) {
+                    result = result.add(this);
+                    i = list.length;
+                }
+            }
+        });
+        return result;
+    };
+
     var map,
         map_test = new Test(options),
         callBackData = false,
@@ -115,6 +128,9 @@ mapster_tests = function (options) {
 
         var obj = { a: "a", b: "b" };
         var otherObj = { a: "a2", b: "b2", c: "c" };
+        var arrObj = { a: [1, 2], b: { a: "a2", b: "b2"} };
+
+        ut.assertArrayEq([1, 2], u.mergeObjects({ source: arrObj }).a, "Array copied as array");
 
         var func = function () {
             return u.mergeObjects({ add: false, target: obj, source: otherObj });
@@ -217,7 +233,7 @@ mapster_tests = function (options) {
         // queue options 
 
         // options
-
+        var x = $();
         var initialOpts = u.mergeObjects({ template: $.mapster.defaults, source: [map_options], deep: "areas" });
         var opts = map.mapster('get_options');
         ut.assertPropsEq(opts, initialOpts, "Options retrieved match initial options");
@@ -230,13 +246,13 @@ mapster_tests = function (options) {
         map.mapster('set_options', newOpts);
         opts = map.mapster('get_options');
 
-        ut.assertPropsEq(opts, $.extend(true, {}, initialOpts, newOpts), "Options retrieved match updated value");
+        ut.assertPropsEq(opts, $.extend({}, initialOpts, newOpts), "Options retrieved match updated value");
         ut.assertEq(opts.areas.length, 6, "Area option was added");
 
         // put them back or nothing will work...
         opts = map.mapster('set_options', { isSelectable: true, areas: [{ key: 'MT', isDeselectable: true}] });
 
-        ut.assertInstanceOf(map, "jQuery", "Plugin returns jQuery object");
+        ut.assertEq(map.isJquery, true, "Plugin returns jQuery object");
         ut.assertArrayEq(map, $("#usa_image"), "Plugin returns jquery same object as invocation");
 
         // order is not guaranteed - this is the order the areas are created.
@@ -257,7 +273,7 @@ mapster_tests = function (options) {
 
         // AK was already selected, should be ignored
 
-        $('area:attrMatches("state","AK,HI,LA")').mapster('set', true);
+        attrMatches($('area'), "state", "AK,HI,LA").mapster('set', true);
         var area_sel = map.mapster('get');
         ut.assertCsvElementsEq(area_sel, "HI,AK,LA,TX", "Set using area works");
 
@@ -268,7 +284,7 @@ mapster_tests = function (options) {
         ut.assertCsvElementsEq("HI,AK,ME,OH,TX", map.mapster('get'), "set using keys works");
 
         // test toggling: AK should go off, MT should go on
-        $('area:attrMatches("state","AK,MT")').mapster('set');
+        attrMatches($('area'), "state", "AK,MT").mapster('set');
         ut.assertCsvElementsEq("HI,ME,OH,TX,MT", map.mapster('get'), "toggling keys works");
 
         // test clicking
@@ -431,7 +447,7 @@ mapster_tests = function (options) {
         callBackReset();
         $('area[state="CA"]').first().mouseover();
         ut.assertEq($(".mapster-tooltip").length, 1, "Tooltip was shown");
-        ut.assertEq($(".mapster-tooltip").is(":visible"), true, "Tooltip is visible");
+        ut.assertEq($(".mapster-tooltip").css("display"), "block", "Tooltip is visible");
         ut.assertIsTruthy(callBackData, "Click callback fired for LA tooltip");
         if (callBackData) {
             ut.assertEq(callBackData.key, "CA", "Tooltip show callback fired for CA, and key was correct");
@@ -456,7 +472,7 @@ mapster_tests = function (options) {
             //ut.assertPropsEq($(".mapster-tooltip").position(),{left: 50, top: 198},"Sanity check -0- should fail");
             // clear and reset tooltip, this time calling for a specific area
             map.mapster('tooltip');
-            map.mapster('tooltip', $("area[state='CA']:eq(2)"));
+            map.mapster('tooltip', $("area[state='CA']").eq(2));
 
             ut.assertEq($(".mapster-tooltip").length, 1, "Tooltip appeared when activated manually with specific area");
 

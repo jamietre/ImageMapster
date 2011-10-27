@@ -4,7 +4,9 @@
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
 <title>Untitled Document</title>
 
-<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.6.1/jquery.js"></script>
+<ignore type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.6.1/jquery.js"></ignore>
+<script type="text/javascript" src="../../zepto/zepto.js"></script>
+<script type="text/javascript" src="../../zepto/event.js"></script>
 <script type="text/javascript" src="../jquery.imagemapster.js"></script>
 
 <STYLE TYPE="text/css">
@@ -137,6 +139,14 @@ div.input
 </div>
 
 <script type="text/javascript">
+	(function($) {
+		if ($) {
+			$.fn.prop=$.fn.attr;
+			$.fn.animate = function(target) {
+				$.fn.css(target);
+			};
+		}
+	}(Zepto))
 
     $(document).ready(function () {
         var $statelist, $usamap, ratio,
@@ -230,7 +240,7 @@ div.input
                 $usamap.mapster('highlight', true, key);
             });
             // return the list to mapster so it can bind to it
-            return $statelist.find('input:checkbox').unbind('click').click(function (e) {
+            return $statelist.find('input[type="checkbox"]').unbind('click').click(function (e) {
                 var selected = $(this).is(':checked');
                 $usamap.mapster('set', selected, $(this).attr('name'));
                 styleCheckbox(selected, $(this));
@@ -283,29 +293,38 @@ div.input
                 $('#is_deselectable_state').text(state ? "enabled" : "disabled");
                 $usamap.mapster("set_options", { isDeselectable: state });
             });
+            function getSelected(sel) {
+            	var item=$();
+            	sel.each(function() {
+            		if (this.selected) {
+            			item=item.add(this);
+            			return false;
+            		}
+
+            	});
+            	return item;
+
+            }
             function getHighlightOptions() {
-                var val = $("#highlight_style").find("option:selected").val();
-                var options,
+                var val = getSelected($("#highlight_style").find("option")).val();
+                var new_options,
                 state = !$usamap.mapster('get_options').highlightAltImage;
 
                 if (val > "0") {
-                    options = {
-                        render_select: {
-                            altImage: 'images/usa_map_720_alt_' + val + '.jpg',
-                            stroke: true,
-                            altImageOpacity: 0.5
-                        }
+                    new_options = {
+						altImage: 'images/usa_map_720_alt_' + val + '.jpg',
+						stroke: true,
+						altImageOpacity: 0.5
                     }
                 } else {
-                    options = {
-                        render_select: {
-                            altImage: null,
-                            stroke: false,
-                            altImageOpacity: null
-                        }
+                    new_options = {
+						altImage: null,
+						stroke: false,
+						altImageOpacity: null
                     }
                 }
-                options = $.extend(true, {}, default_options, options);
+                options = $.extend({}, default_options);
+                options.render_select = new_options;
                 return options;
             }
             $("#highlight_style").bind("change", function (e) {
