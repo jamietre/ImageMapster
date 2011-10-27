@@ -1,4 +1,4 @@
-/* ImageMapster 1.2.5 b21
+/* ImageMapster 1.2.5 b22
 
 Copyright 2011 James Treworgy
 http://www.outsharked.com/imagemapster
@@ -8,8 +8,6 @@ A jQuery plugin to enhance image maps.
 */
 /*
 version 1.2.5
--- Zepto compatible (mostly- unfinished)
--- fix some tooltip/area group glitches
 -- remove "attrmatches" to save space
 -- offset 1 pixel strokes by 0.5 px to prevent the fuzzies
 -- inore UI events during resize - causes issues
@@ -89,9 +87,9 @@ See complete changelog at github
 /*jslint eqeqeq: false */
 /*global jQuery: true, Zepto: true */
 
-(function ($) {
-    if ($) {
-
+if (window.Zepto) {
+    jQuery = Zepto;
+    (function ($) {
         $.trim = function (str) { return str.replace(/^\s+/, '').replace(/\s+$/, ''); };
         $.inArray = function (target, arr) {
             return arr.indexOf(target);
@@ -109,8 +107,8 @@ See complete changelog at github
         $.fn.position = function () { var e = this.elOrEmpty(); return { left: e.left, top: e.top }; };
         $.browser = {};
         $.browser.msie = false;
-    }
-} (Zepto));
+    } (jQuery));
+}
 
 
 
@@ -128,7 +126,7 @@ See complete changelog at github
     };
 
     $.mapster = {};
-    $.mapster.version = "1.2.5b21";
+    $.mapster.version = "1.2.5b22";
     // utility functions
     $.mapster.utils = {
         // return four outer corners
@@ -591,15 +589,15 @@ See complete changelog at github
             if (!opts.boundList) {
                 return null;
             }
-            var index,key,result = $(), list = key_list.split(',');
-            opts.boundList.each(function() {
-                for (index=0;index<list.length;index++) {
+            var index, key, result = $(), list = key_list.split(',');
+            opts.boundList.each(function () {
+                for (index = 0; index < list.length; index++) {
                     key = list[index];
-                    if ($(this).is('['+opts.listKey+'="'+key+'"]')) {
-                        result=result.add(this);
+                    if ($(this).is('[' + opts.listKey + '="' + key + '"]')) {
+                        result = result.add(this);
                     }
-	            }
-	        });
+                }
+            });
             return result;
         }
 
@@ -857,11 +855,12 @@ See complete changelog at github
             this.imagesLoaded = false;     // (bool)    when all images have finished loading (config can proceed)
             this.complete = false;         // (bool)    when configuration is complete
             this.commands = [];            // {}        commands that were run before configuration was completed (b/c images weren't loaded)
-            this.data = [];                // (AreaData[]) area groups
+            this.data = [];                // (MapData[]) area groups
             this.originalAreaData = [];    // ref of all coord data from areas as bound, indexed by auto-generated id during "initialize"
 
+
             // private members
-            this._xref = {};               // (int)      xref of mapKeys to data[] index. 
+            this._xref = {};               // (int)      xref of mapKeys to data[]
             this._highlightId = -1;        // (int)      the currently highlighted element.
             this.currentAreaId = -1;
             this._tooltip_events = [];     // {}         info on events we bound to a tooltip container, so we can properly unbind them
@@ -876,7 +875,6 @@ See complete changelog at github
             this.inArea = false;
 
         };
-        MapData.prototype.
         // options: duration = animation time (zero = no animation)
         // force: supercede any existing animation
         // css = any css to be applied to the wrapper
@@ -1108,8 +1106,12 @@ See complete changelog at github
             }
             ar = this.data[this._idFromKey(key)];
             // set the actual area moused over/selected
+            // TODO: this is a brittle model for capturing which specific area - if this method was not used,
+            // ar.area could have old data. fix this.
             if (ar) {
-                ar.area = area;
+                ar.area = area.length ? area[0] : area;
+            } else {
+                ar.area = null;
             }
             return ar;
         };
@@ -1465,7 +1467,7 @@ See complete changelog at github
         // return all coordinates for all areas
         AreaData.prototype.coords = function (percent, offset) {
             var coords = [];
-            $.each(this.areas, function (i,el) {
+            $.each(this.areas, function (i, el) {
                 coords = coords.concat(el.coords(percent, offset));
             });
             return coords;
@@ -1554,8 +1556,8 @@ See complete changelog at github
 
             // because areas can overlap - we can't depend on the selection state to tell us anything about the inner areas.
             //if (!this.isSelected()) {
-                this.setAreaSelected(true);
-                this.selected = true;
+            this.setAreaSelected(true);
+            this.selected = true;
             //}
 
             if (o.options.singleSelect) {
@@ -1566,10 +1568,9 @@ See complete changelog at github
         // and the caller mus call "finishRemoveSelection" after multiple "removeSelectionFinish" events
         AreaData.prototype.removeSelection = function (partial) {
 
-            // see comment in addSelection
-            //if (this.selected === false) {
-            //    return;
-           // }
+            //            if (this.selected === false) {
+            //                return;
+            //            }
             this.selected = false;
             this.changeState('select', false);
             this.owner.graphics.remove_selections(this.areaId);
@@ -1614,7 +1615,7 @@ See complete changelog at github
             tooltip = container.html(opts.toolTip).hide();
 
             if (this.area) {
-                fromCoords = $(this.area).attr("coords");
+                fromCoords = u.split(this.area.coords, ',');
             } else {
                 fromCoords = [];
                 u.each(this.areas, function () {
@@ -1683,7 +1684,7 @@ See complete changelog at github
             me.owner = owner;
             me.area = areaEl;
             me.originalCoords = [];
-            $.each(u.split(areaEl.coords), function (i,el) {
+            $.each(u.split(areaEl.coords), function (i, el) {
                 me.originalCoords.push(parseFloat(el));
             });
             me.length = me.originalCoords.length;
@@ -1713,7 +1714,7 @@ See complete changelog at github
 
             for (j = 0; j < this.length; j++) {
                 //amount = j % 2 === 0 ? xPct : yPct;
-                newCoords.push(this.originalCoords[j] * pct + offset);
+                newCoords.push(Math.round(this.originalCoords[j] * pct) + offset);
             }
             return newCoords;
         };
@@ -2212,7 +2213,7 @@ See complete changelog at github
                 }
                 // set all areas collected from the loop
 
-                $.each(area_list, function (i,el) {
+                $.each(area_list, function (i, el) {
                     setSelection(el);
                 });
                 if (do_set_bound && map_data.options.boundList) {
@@ -2561,7 +2562,7 @@ See complete changelog at github
                 style = document.createStyleSheet();
                 shapes = ['shape', 'rect', 'oval', 'circ', 'fill', 'stroke', 'imagedata', 'group', 'textbox'];
                 $.each(shapes,
-                function (i,el) {
+                function (i, el) {
                     style.addRule('v\\:' + el, "behavior: url(#default#VML); antialias:true");
                 });
                 ie_config_complete = true;
@@ -2595,8 +2596,8 @@ See complete changelog at github
             $.mapster.impl.set.call(this, false);
         }
     };
-    $.each(["bind", "rebind", "unbind", "set", "get", "data", "highlight", "get_options", "set_options", "snapshot", "tooltip", "test", "resize", "state", "zoom"], function (i,el) {
+    $.each(["bind", "rebind", "unbind", "set", "get", "data", "highlight", "get_options", "set_options", "snapshot", "tooltip", "test", "resize", "state", "zoom"], function (i, el) {
         methods[el] = $.mapster.impl[el];
     });
     $.mapster.impl.init();
-} (Zepto || jQuery));
+} (jQuery));
