@@ -8,6 +8,8 @@ A jQuery plugin to enhance image maps.
 */
 /*
 version 1.2.5
+-- Zepto compatible (mostly- unfinished)
+-- fix some tooltip/area group glitches
 -- remove "attrmatches" to save space
 -- offset 1 pixel strokes by 0.5 px to prevent the fuzzies
 -- inore UI events during resize - causes issues
