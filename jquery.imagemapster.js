@@ -1,5 +1,4 @@
-/* ImageMapster 1.2.5 b23
-
+/* ImageMapster 1.2.5 b24
 Copyright 2011 James Treworgy
 http://www.outsharked.com/imagemapster
 https://github.com/jamietre/ImageMapster
@@ -8,6 +7,9 @@ A jQuery plugin to enhance image maps.
 */
 /*
 version 1.2.5
+-- zepto compatible now
+-- bug with rebinding
+-- another safari problem attempt. looking good.
 -- remove "attrmatches" to save space
 -- offset 1 pixel strokes by 0.5 px to prevent the fuzzies
 -- inore UI events during resize - causes issues
@@ -110,8 +112,6 @@ if (window.Zepto) {
     } (jQuery));
 }
 
-
-
 (function ($) {
     var methods;
     $.fn.isJquery = $.fn.isJquery || true;
@@ -126,7 +126,7 @@ if (window.Zepto) {
     };
 
     $.mapster = {};
-    $.mapster.version = "1.2.5b23";
+    $.mapster.version = "1.2.5b24";
     // utility functions
     $.mapster.utils = {
         // return four outer corners
@@ -716,6 +716,9 @@ if (window.Zepto) {
             this.imgCssText = image.style.cssText || null;
 
             this.initializeDefaults();
+            this.mousedown = function (e) {
+                e.preventDefault();
+            };
 
             this.mouseover = function (e) {
                 var ar = me.getDataForArea(this), opts;
@@ -1280,7 +1283,8 @@ if (window.Zepto) {
                     if (!mapArea.nohref) {
                         $area.bind('mouseover.mapster', me.mouseover)
                             .bind('mouseout.mapster', me.mouseout)
-                            .bind('click.mapster', me.click);
+                            .bind('click.mapster', me.click)
+                            .bind('mousedown.mapster', me.mousedown);
                     }
                     // Create a key if none was assigned by the user
 
@@ -1414,7 +1418,7 @@ if (window.Zepto) {
 
             // release refs to DOM elements
             u.each(this.data, function () {
-                //this.reset(preserveState);
+                this.reset(preserveState);
             });
             this.data = null;
             if (!preserveState) {
@@ -2503,12 +2507,13 @@ if (window.Zepto) {
                 map_data = get_map_data(this);
                 // if already bound completely, do a total rebind
                 if (map_data) {
-                    img.unbind();
+                    me.unbind.apply(img);
                     if (!map_data.complete) {
                         // will be queued
                         img.bind();
                         return true;
                     }
+                    map_data=null;
                 }
 
                 // ensure it's a valid image
