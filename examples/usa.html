@@ -4,9 +4,9 @@
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
 <title>Untitled Document</title>
 
-<ignore type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.6.1/jquery.js"></ignore>
-<script type="text/javascript" src="../../zepto/src/zepto.js"></script>
-<script type="text/javascript" src="../../zepto/src/event.js"></script>
+<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.6.1/jquery.js"></script>
+<ignore type="text/javascript" src="../../zepto/src/zepto.js"></ignore>
+<ignore type="text/javascript" src="../../zepto/src/event.js"></ignore>
 <script type="text/javascript" src="../jquery.imagemapster.js"></script>
 
 <STYLE TYPE="text/css">
@@ -139,14 +139,17 @@ div.input
 </div>
 
 <script type="text/javascript">
-	(function($) {
-		if ($) {
-			$.fn.prop=$.fn.attr;
-			$.fn.animate = function(target) {
-				$.fn.css(target);
-			};
-		}
-	}(Zepto))
+    if (window.Zepto) {
+        jQuery = Zepto;
+        (function ($) {
+            if ($) {
+                $.fn.prop = $.fn.attr;
+                $.fn.animate = function (target) {
+                    $.fn.css(target);
+                };
+            }
+        } (jQuery));
+    }
 
     $(document).ready(function () {
         var $statelist, $usamap, ratio,

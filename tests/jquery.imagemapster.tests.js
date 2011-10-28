@@ -207,7 +207,9 @@ mapster_tests = function (options) {
         map = $('img').mapster();
 
         // testing with no canvas on a browser that doesn't support it anyway doesn't make sense, regular test will cover it
-        var has_canvas = map.mapster("test", "has_canvas");
+        var has_canvas = (document.namespaces && document.namespaces.g_vml_) ? false :
+                $('<canvas></canvas>')[0].getContext ? true : false;
+                
         if (!has_canvas && disableCanvas) {
             map.mapster('unbind');
             return;
@@ -222,9 +224,9 @@ mapster_tests = function (options) {
 
         // test using only bound images
 
-        ut.assertEq(map.mapster("test", "me.map_cache.length"), 1, "Only imagemap bound images were obtained on generic create");
+        ut.assertEq(map.mapster("test", "typeof me !== 'undefined' && me.map_cache && me.map_cache.length"), 1, "(ok to fail if obfuscated) Only imagemap bound images were obtained on generic create");
         map = $('img,div').mapster({ mapKey: "state" });
-        ut.assertEq(map.mapster("test", "me.map_cache.length"), 1, "Only imagemap bound images were obtained on generic create with other elements");
+        ut.assertEq(map.mapster("test", "typeof me !== 'undefined' && me.map_cache && me.map_cache.length"), 1, "(ok to fail if obfuscated) Only imagemap bound images were obtained on generic create with other elements");
 
         map = $("#usa_image").mapster(map_options);
 
@@ -492,18 +494,10 @@ mapster_tests = function (options) {
 
 
             $('img').mapster('unbind');
-
-
-
         });
         map.mapster('set_options', { onMouseout: cbtest.callback });
 
         $('area[state="CA"]').first().mouseout();
-
-
-        // Try tooltips manually
-
-
 
     });
 
@@ -547,7 +541,7 @@ mapster_tests = function (options) {
         map.mapster('set', true, 'KS,KY');
         opts_should_be = "AK,KY,TX,KS";
 
-        ut.assertEq(map.mapster('get'), "", "No options present when simulating non-ready image");
+        ut.assertEq(map.mapster('get'), "", "(ok to fail if obfuscated) No options present when simulating non-ready image");
         // simulate the timer callback, should simply run command queue instead of recreating b/c we set complete=false
         map.mapster('test', 'u.isImageLoaded=u.old;');
 

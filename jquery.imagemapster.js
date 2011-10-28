@@ -1,4 +1,4 @@
-/* ImageMapster 1.2.5 b24
+/* ImageMapster 1.2.5 b25
 Copyright 2011 James Treworgy
 http://www.outsharked.com/imagemapster
 https://github.com/jamietre/ImageMapster
@@ -7,6 +7,7 @@ A jQuery plugin to enhance image maps.
 */
 /*
 version 1.2.5
+-- tighten up tooltip code a little
 -- zepto compatible now
 -- bug with rebinding
 -- another safari problem attempt. looking good.
@@ -126,56 +127,55 @@ if (window.Zepto) {
     };
 
     $.mapster = {};
-    $.mapster.version = "1.2.5b24";
+    $.mapster.version = "1.2.5b25";
     // utility functions
     $.mapster.utils = {
-        // return four outer corners
-        areaCorners: function (coords, left, top) {
-            var minX, minY, maxX, maxY, curX, curY, j;
+        // return four outer corners, as well as possible places
+        areaCorners: function (coords,width,height) {
+            var minX, minY, maxX, maxY, bestMinX, bestMaxX, bestMinY, bestMaxY,curX, curY, nest,j;
 
-            minX = 999999;
-            minY = minX;
-            maxX = -1;
-            maxY = -1;
+            minX = minY = bestMinX =bestMinY= 999999;
+            maxX = maxY = bestMaxX =bestMaxY= -1;
 
             for (j = coords.length - 2; j >= 0; j -= 2) {
                 curX = parseInt(coords[j], 10);
                 curY = parseInt(coords[j + 1], 10);
                 if (curX < minX) {
                     minX = curX;
+                    bestMaxY = curY;
                 }
                 if (curX > maxX) {
                     maxX = curX;
+                    bestMinY = curY;
                 }
-
                 if (curY < minY) {
                     minY = curY;
+                    bestMaxX = curX;
                 }
                 if (curY > maxY) {
                     maxY = curY;
+                    bestMinX = curX;
                 }
 
             }
-            return { minX: minX, minY: minY, maxX: maxX, maxY: maxY };
-        },
-        area_corner: function (coords, left, top) {
-            var bestX, bestY, curX, curY, j;
-
-            bestX = left ? 999999 : -1;
-            bestY = top ? 999999 : -1;
-
-            for (j = coords.length - 2; j >= 0; j -= 2) {
-                curX = parseInt(coords[j], 10);
-                curY = parseInt(coords[j + 1], 10);
-
-                if (top ? curY < bestY : curY > bestY) {
-                    bestY = curY;
-                    if (left ? curX < bestX : curX > bestX) {
-                        bestX = curX;
+            // try to figure out the best place for the tooltip
+            if (width && height) {
+                $([[bestMaxX-width,minY-height],[bestMinX,minY-height],
+                         [minX-width,bestMaxY-height],[minX-width,bestMinY],
+                         [bestMaxY-height,maxX],[bestMinY,maxX],
+                         [bestMaxX-width,maxY],[bestMinX,maxY]
+                  ]).each(function(i,e) {
+                    if (e[0]>0 && e[1]>0) {
+                        nest=e;
+                        return false;
                     }
-                }
+                });
             }
-            return [bestX, bestY];
+
+            return { tl: [minX,minY],
+                    br: [maxX,maxY],
+                    tt: nest
+                };
         },
         split: function (text) {
             var arr = text.split(',');
@@ -378,28 +378,6 @@ if (window.Zepto) {
                 return false;
             }
             return true;
-        },
-        // thanks paul irish
-        imageLoaded: function (images, callback) {
-            var elems = images && images.isJquery ? images.filter('img') : $(images),
-            //elems = this.filter('img'),
-                  len = elems.length;
-
-            elems.bind('load.mapster', function () {
-                if (--len <= 0) {
-                    callback.call(this);
-                }
-            }).each(function () {
-                // cached images don't fire load sometimes, so we reset src.
-                if (this.complete ||
-                    (typeof this.complete === 'undefined' && (this.naturalWidth === 0 || this.naturalHeight === 0))) {
-                    var src = this.src;
-                    // webkit hack from http://groups.google.com/group/jquery-dev/browse_thread/thread/eee6ab7b2da50e1f
-                    // data uri bypasses webkit log warning (thx doug jones)
-                    this.src = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==";
-                    this.src = src;
-                }
-            });
         },
         fader: (function () {
             var elements = [],
@@ -1603,10 +1581,8 @@ if (window.Zepto) {
         };
         // Show tooltip adjacent to DOM element "area"
         AreaData.prototype.showTooltip = function () {
-            var tooltip, left, top, tooltipCss, coords, fromCoords, container,
-                alignLeft = true,
-	        alignTop = true,
-	        opts = this.effectiveOptions(),
+            var tooltip, left, top, tooltipCss, corners, fromCoords, container,
+	            opts = this.effectiveOptions(),
                 map_data = this.owner,
                 baseOpts = map_data.options,
                 template = map_data.options.toolTipContainer;
@@ -1633,7 +1609,6 @@ if (window.Zepto) {
                     fromCoords = fromCoords.concat(this.coords());
                 });
             }
-            coords = u.area_corner(fromCoords, alignLeft, alignTop);
 
             map_data.clearTooltip();
 
@@ -1641,22 +1616,13 @@ if (window.Zepto) {
             map_data.activeToolTip = tooltip;
             map_data.activeToolTipID = this.areaId;
 
+            corners = u.areaCorners(fromCoords, 
+                tooltip.outerWidth(true),
+                tooltip.outerHeight(true));
             // Try to upper-left align it first, if that doesn't work, change the parameters
-            left = coords[0] - tooltip.outerWidth(true);
-            top = coords[1] - tooltip.outerHeight(true);
-            if (left < 0) {
-                alignLeft = false;
-            }
-            if (top < 0) {
-                alignTop = false;
-            }
-            // get the coords again if didn't work before
-            if (!alignLeft || !alignTop) {
-                coords = u.area_corner(fromCoords, alignLeft, alignTop);
-            }
 
-            left = coords[0] - (alignLeft ? tooltip.outerWidth(true) : 0);
-            top = coords[1] - (alignTop ? tooltip.outerHeight(true) : 0);
+            left = corners.tt[0];
+            top = corners.tt[1];
 
             tooltipCss = { "left": left + "px", "top": top + "px" };
 
