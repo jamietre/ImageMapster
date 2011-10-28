@@ -2,7 +2,7 @@
    Too hard to fix the test right now. In practice this shouldn't ever matter unless you actually want to 
    test the selection state (as initially configured) before anything's been done.
 */
-/*jslint onevar: false */
+/*jslint onevar: false */ 
 /*global mapster_tests: true, Test: true */
 
 mapster_tests = function (options) {
