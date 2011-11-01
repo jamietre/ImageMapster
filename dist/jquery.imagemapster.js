@@ -615,7 +615,7 @@ A jQuery plugin to enhance image maps.
                     setSelection(el);
                 });
                 if (do_set_bound && map_data.options.boundList) {
-                    m.setBoundListProperties(map_data.options, me.getBoundList(map_data.options, key_list), selected);
+                    m.setBoundListProperties(map_data.options, m.getBoundList(map_data.options, key_list), selected);
                 }
             });
             return this;
@@ -918,7 +918,8 @@ A jQuery plugin to enhance image maps.
         if (opts.includeKeys) {
             list = u.split(opts.includeKeys);
             $.each(list, function (i,e) {
-                me._addShapeGroupImpl(map_data.getDataForKey(e.toString()), opts);
+                var areaData = map_data.getDataForKey(e.toString());
+                me._addShapeGroupImpl(areaData, areaData.effectiveOptions());
             });
         }
 

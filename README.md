@@ -68,3 +68,11 @@ Select or deselect alements in the mapster bound to the image using a key (as id
 ## Options
 
 Please see github repository for complete documentation.
+
+## Zepto Compatibility
+
+Include the module "zepto.cs" before any others and this will work with Zepto.
+
+## Build instructions
+
+"rake"

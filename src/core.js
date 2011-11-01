@@ -615,7 +615,7 @@ A jQuery plugin to enhance image maps.
                     setSelection(el);
                 });
                 if (do_set_bound && map_data.options.boundList) {
-                    m.setBoundListProperties(map_data.options, me.getBoundList(map_data.options, key_list), selected);
+                    m.setBoundListProperties(map_data.options, m.getBoundList(map_data.options, key_list), selected);
                 }
             });
             return this;
