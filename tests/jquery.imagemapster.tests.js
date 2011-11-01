@@ -130,42 +130,45 @@ mapster_tests = function (options) {
         var otherObj = { a: "a2", b: "b2", c: "c" };
         var arrObj = { a: [1, 2], b: { a: "a2", b: "b2"} };
 
-        ut.assertArrayEq([1, 2], u.mergeObjects({ source: arrObj }).a, "Array copied as array");
+        result = u.updateProps({}, arrObj);
+        ut.assertArrayEq([1, 2], result.a, "Array copied as array");
 
-        var func = function () {
-            return u.mergeObjects({ add: false, target: obj, source: otherObj });
-        };
-        ut.assertPropsEq(func, { a: "a2", b: "b2" }, "Merge with extra properties - no add");
+        result = u.updateProps(obj, otherObj);
+
+        ut.assertPropsEq(result, { a: "a2", b: "b2" }, "Merge with extra properties - no add");
         // input object should be affected
         ut.assertPropsEq(obj, { a: "a2", b: "b2" }, "Test input object following merge matches output");
 
-        result = u.mergeObjects({ target: obj, source: otherObj });
+        result = u.updateProps(otherObj, obj, otherObj);
         ut.assertPropsEq(result, { a: "a2", b: "b2", c: "c" }, "Merge with extra properties - add");
 
-
         otherObj = { a: "a3" };
-        result = func();
-        ut.assertPropsEq(function () { return u.mergeObjects({ add: false, target: result, source: otherObj }); }, { a: "a3", b: "b2", c: "c" }, "Merge with missing properties");
+        result = u.updateProps(obj, otherObj);
+
+        // ut.assertPropsEq(function () { return u.updateProps(result, otherObj); }, { a: "a3", b: "b2", c: "c" }, "Merge with missing properties");
 
         // test several at once
+        obj = { a: "unchanged-a", b: "unchanged-b" };
         otherObj = { b: "b4" };
         var otherObj2 = { a: "a4" };
 
-        ut.assertPropsEq(u.mergeObjects({ add: false, target: obj, source: [otherObj, otherObj2] }), { a: "a4", b: "b4", c: "c" }, "Merge with mutiple inputs");
+        ut.assertPropsEq(u.updateProps(obj, otherObj, otherObj2), { a: "a4", b: "b4" }, "Merge with mutiple inputs");
 
         var templateObj = { p1: "prop1", p2: "prop2" };
         otherObj = { p1: "newProp1", p3: "prop3", p4: "prop4" };
 
-        ut.assertPropsEq(u.mergeObjects({ template: templateObj, source: otherObj, add: false }), { p1: "newProp1", p2: "prop2" }, "Template works.");
+        ut.assertPropsEq(u.updateProps({}, templateObj, otherObj), { p1: "newProp1", p2: "prop2" }, "Template works.");
 
         var expectedResult = { p1: "newProp1", p2: "prop2", p4: "prop4" };
-        ut.assertPropsEq(u.mergeObjects({ template: templateObj, source: otherObj, add: true, ignore: "p3" }), expectedResult, "Ignore works.");
+        //ut.assertPropsEq(u.updateProps({},templateObj, otherObj, ), expectedResult, "Ignore works.");
 
         templateObj.p3 = { subp1: "subprop1", subp2: "subprop2" };
-        result = { p3: null };
+        templateObj.p4 = null;
+
+        result = { };
         expectedResult.p3 = otherObj.p3;
 
-        u.mergeObjects({ target: result, source: [templateObj, otherObj], add: true });
+        u.updateProps(result, templateObj, otherObj);
         ut.assertPropsEq(result, expectedResult, "Copying a sub-object - start");
 
         delete otherObj.p3;
@@ -174,23 +177,23 @@ mapster_tests = function (options) {
         expectedResult.p3 = templateObj.p3;
         expectedResult.p3.existing = "bar";
 
-        u.mergeObjects({ target: result, source: [templateObj, otherObj], add: true, deep: "p3" });
+        u.updateProps(result, templateObj, otherObj);
         ut.assertPropsEq(result, expectedResult, "Deep works");
 
-        // test arrayIndexOfProp
+        // test indexOfProp
 
         obj = { test: "test" };
         var arr = [{ name: "test1", value: "value1" }, { name: "test2", value: "value2" }, { name: "test3", value: obj}];
 
-        var index = u.arrayIndexOfProp(arr, "name", "test2");
+        var index = u.indexOfProp(arr, "name", "test2");
         ut.assertEq(index, 1, "arrayIndexOfProp returns correct value for string");
-        index = u.arrayIndexOfProp(arr, "value", obj);
+        index = u.indexOfProp(arr, "value", obj);
         ut.assertEq(index, 2, "arrayIndexOfProp returns correct value for object & last element");
-        index = u.arrayIndexOfProp(arr, "name", "test1");
+        index = u.indexOfProp(arr, "name", "test1");
         ut.assertEq(index, 0, "arrayIndexOfProp returns correct value for first element");
-        index = u.arrayIndexOfProp(arr, "foo", "bar");
+        index = u.indexOfProp(arr, "foo", "bar");
         ut.assertEq(index, -1, "Missing property handled correctly");
-        index = u.arrayIndexOfProp(arr, "name", "bar");
+        index = u.indexOfProp(arr, "name", "bar");
         ut.assertEq(index, -1, "Missing property value handled correctly");
 
 
@@ -209,7 +212,7 @@ mapster_tests = function (options) {
         // testing with no canvas on a browser that doesn't support it anyway doesn't make sense, regular test will cover it
         var has_canvas = (document.namespaces && document.namespaces.g_vml_) ? false :
                 $('<canvas></canvas>')[0].getContext ? true : false;
-                
+
         if (!has_canvas && disableCanvas) {
             map.mapster('unbind');
             return;
@@ -224,9 +227,9 @@ mapster_tests = function (options) {
 
         // test using only bound images
 
-        ut.assertEq(map.mapster("test", "typeof me !== 'undefined' && me.map_cache && me.map_cache.length"), 1, "(ok to fail if obfuscated) Only imagemap bound images were obtained on generic create");
+        ut.assertEq(map.mapster("test", "typeof m !== 'undefined' && m.map_cache && m.map_cache.length"), 1, "(ok to fail if obfuscated) Only imagemap bound images were obtained on generic create");
         map = $('img,div').mapster({ mapKey: "state" });
-        ut.assertEq(map.mapster("test", "typeof me !== 'undefined' && me.map_cache && me.map_cache.length"), 1, "(ok to fail if obfuscated) Only imagemap bound images were obtained on generic create with other elements");
+        ut.assertEq(map.mapster("test", "typeof m !== 'undefined' && m.map_cache && m.map_cache.length"), 1, "(ok to fail if obfuscated) Only imagemap bound images were obtained on generic create with other elements");
 
         map = $("#usa_image").mapster(map_options);
 
@@ -236,7 +239,7 @@ mapster_tests = function (options) {
 
         // options
         var x = $();
-        var initialOpts = u.mergeObjects({ template: $.mapster.defaults, source: [map_options], deep: "areas" });
+        var initialOpts = u.updateProps({}, $.mapster.defaults, map_options);
         var opts = map.mapster('get_options');
         ut.assertPropsEq(opts, initialOpts, "Options retrieved match initial options");
 
@@ -254,7 +257,7 @@ mapster_tests = function (options) {
         // put them back or nothing will work...
         opts = map.mapster('set_options', { isSelectable: true, areas: [{ key: 'MT', isDeselectable: true}] });
 
-        ut.assertEq(map.isJquery, true, "Plugin returns jQuery object");
+        ut.assertEq(!!map.mapster, true, "Plugin returns jQuery object");
         ut.assertArrayEq(map, $("#usa_image"), "Plugin returns jquery same object as invocation");
 
         // order is not guaranteed - this is the order the areas are created.
@@ -525,7 +528,7 @@ mapster_tests = function (options) {
         complete = false;
         map = $("#usa_image");
         //map.removeProp('complete')
-        map.mapster('test', 'u.old=u.isImageLoaded;u.isImageLoaded=function(){return false;};');
+        map.mapster('test', 'if (typeof u!=="undefined") {u.old=u.isImageLoaded;u.isImageLoaded=function(){return false;};}');
 
         // TODO: Test fails in IE because onLoad fires immediately: this code results in isImageLoaded never being called.
         //if ($file:///D:/VSProjects/jquery/imagemapster/tests/test.html < 0) {
@@ -543,7 +546,7 @@ mapster_tests = function (options) {
 
         ut.assertEq(map.mapster('get'), "", "(ok to fail if obfuscated) No options present when simulating non-ready image");
         // simulate the timer callback, should simply run command queue instead of recreating b/c we set complete=false
-        map.mapster('test', 'u.isImageLoaded=u.old;');
+        map.mapster('test', 'if (typeof u !== "undefined") {u.isImageLoaded=u.old;}');
 
     });
 
