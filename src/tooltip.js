@@ -1,0 +1,129 @@
+/* tooltip.js - tooltip functionality
+   requires areacorners.js
+*/
+
+(function ($) {
+    var m = $.mapster, u = m.utils;
+    m.defaults.toolTipContainer = '<div class="mapster-tooltip" style="border: 2px solid black; background: #EEEEEE; position:absolute; width:160px; padding:4px; margin: 4px; -moz-box-shadow: 3px 3px 5px #535353; ' +
+        '-webkit-box-shadow: 3px 3px 5px #535353; box-shadow: 3px 3px 5px #535353; -moz-border-radius: 6px 6px 6px 6px; -webkit-border-radius: 6px; ' +
+        'border-radius: 6px 6px 6px 6px;"></div>';
+
+    m.MapData.prototype.clearTooltip = function () {
+        if (this.activeToolTip) {
+            this.activeToolTip.remove();
+            this.activeToolTip = null;
+            this.activeToolTipID = -1;
+        }
+        $.each(this._tooltip_events, function (i,e) {
+            e.object.unbind(e.event);
+        });
+    };
+   m.MapData.prototype.bindTooltipClose = function (option, event, obj) {
+        var event_name = event + '.mapster-tooltip', me = this;
+        if ($.inArray(option, this.options.toolTipClose) >= 0) {
+            obj.unbind(event_name).bind(event_name, function () {
+                me.clearTooltip();
+            });
+            this._tooltip_events.push(
+            {
+                object: obj, event: event_name
+            });
+        }
+    };
+    // Show tooltip adjacent to DOM element "area"
+    m.AreaData.prototype.showTooltip = function () {
+        var tooltip, left, top, tooltipCss, corners, fromCoords, container,
+	                    opts = this.effectiveOptions(),
+                        map_data = this.owner,
+                        baseOpts = map_data.options,
+                        template = map_data.options.toolTipContainer;
+
+        // prevent tooltip from being cleared if it was in progress - area is in the same group
+
+        if (map_data.activeToolTipID === this.areaId) {
+            return;
+        }
+
+        if (typeof template === 'string') {
+            container = $(template);
+        } else {
+            container = $(template).clone();
+        }
+
+        tooltip = container.html(opts.toolTip).hide();
+
+        if (this.area) {
+            fromCoords = u.split(this.area.coords, ',');
+        } else {
+            fromCoords = [];
+            $.each(this.areas, function (i,e) {
+                fromCoords = fromCoords.concat(e.coords());
+            });
+        }
+
+        map_data.clearTooltip();
+
+        $(map_data.image).after(tooltip);
+        map_data.activeToolTip = tooltip;
+        map_data.activeToolTipID = this.areaId;
+
+        corners = u.areaCorners(fromCoords,
+                        tooltip.outerWidth(true),
+                        tooltip.outerHeight(true));
+        // Try to upper-left align it first, if that doesn't work, change the parameters
+
+        left = corners.tt[0];
+        top = corners.tt[1];
+
+        tooltipCss = { "left": left + "px", "top": top + "px" };
+
+        if (!tooltip.css("z-index") || tooltip.css("z-index") === "auto") {
+            tooltipCss["z-index"] = "2000";
+        }
+        tooltip.css(tooltipCss).addClass('mapster_tooltip');
+
+        map_data.bindTooltipClose('area-click', 'click', $(map_data.map));
+        map_data.bindTooltipClose('tooltip-click', 'click', tooltip);
+        // not working properly- closes too soon sometimes
+        //map_data.bindTooltipClose('img-mouseout', 'mouseout', $(map_data.image));
+
+        if (map_data.options.toolTipFade) {
+            u.setOpacity(tooltip[0], 0);
+            tooltip.show();
+            u.fader(tooltip[0], 0, 1, opts.fadeDuration);
+        } else {
+            tooltip.show();
+        }
+
+        //"this" will be null unless they passed something to forArea
+        u.ifFunction(baseOpts.onShowToolTip, this.area || null,
+        {
+            toolTip: tooltip,
+            areaOptions: opts,
+            key: this.key,
+            selected: this.isSelected()
+        });
+
+    };
+    // key is one of: (string) area key: target the area -- will use the largest
+    //                (DOM el/jq) area: target specific area
+    //                 any falsy value: close the tooltip
+
+    // or you don't care which is used.
+    m.impl.tooltip = function (key) {
+        return (new m.Method(this,
+        function () {
+            this.clearTooltip();
+        },
+        function () {
+            if (this.effectiveOptions().toolTip) {
+                this.showTooltip();
+            }
+        },
+        { name: 'tooltip',
+            args: arguments,
+            key: key
+        }
+    )).go();
+    };
+} (jQuery));
