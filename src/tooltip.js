@@ -4,10 +4,16 @@
 
 (function ($) {
     var m = $.mapster, u = m.utils;
-    m.defaults.toolTipContainer = '<div class="mapster-tooltip" style="border: 2px solid black; background: #EEEEEE; position:absolute; width:160px; padding:4px; margin: 4px; -moz-box-shadow: 3px 3px 5px #535353; ' +
+    $.extend(m.defaults, {
+        toolTipContainer: '<div class="mapster-tooltip" style="border: 2px solid black; background: #EEEEEE; position:absolute; width:160px; padding:4px; margin: 4px; -moz-box-shadow: 3px 3px 5px #535353; ' +
         '-webkit-box-shadow: 3px 3px 5px #535353; box-shadow: 3px 3px 5px #535353; -moz-border-radius: 6px 6px 6px 6px; -webkit-border-radius: 6px; ' +
-        'border-radius: 6px 6px 6px 6px;"></div>';
-
+        'border-radius: 6px 6px 6px 6px;"></div>',
+        showToolTip: false,
+        toolTipFade: true,
+        toolTipClose: ['area-mouseout'],
+        onShowToolTip: null,
+        onCreateTooltip: null
+    });
     m.MapData.prototype.clearTooltip = function () {
         if (this.activeToolTip) {
             this.activeToolTip.remove();
@@ -33,7 +39,7 @@
     // Show tooltip adjacent to DOM element "area"
     m.AreaData.prototype.showTooltip = function () {
         var tooltip, left, top, tooltipCss, corners, fromCoords, container,
-	                    opts = this.effectiveOptions(),
+                        opts = this.effectiveOptions(),
                         map_data = this.owner,
                         baseOpts = map_data.options,
                         template = map_data.options.toolTipContainer;

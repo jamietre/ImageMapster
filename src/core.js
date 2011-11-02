@@ -86,16 +86,11 @@ A jQuery plugin to enhance image maps.
             listKey: 'value',
             listSelectedAttribute: 'selected',
             listSelectedClass: null,
-            showToolTip: false,
-            toolTipFade: true,
-            toolTipClose: ['area-mouseout'],
             onClick: null,
             onMouseover: null,
             onMouseout: null,
             onStateChange: null,
-            onShowToolTip: null,
             boundList: null,
-            onCreateTooltip: null,
             onConfigured: null,
             configTimeout: 10000,
             noHrefIsMask: true,
@@ -120,6 +115,15 @@ A jQuery plugin to enhance image maps.
         isTouch: null,
         windowLoaded: false,
         map_cache: [],
+        hooks: {},
+        addHook: function(name,callback) {
+            this.hooks[name]=(this.hooks[name]||[]).push(callback);
+        },
+        callHooks: function(name,context) {
+            $.each(this.hooks[name]||[],function() {
+                this.apply(context);
+            });
+        },
         utils: {
 
             //            extend: function (target, sources, deep) {
