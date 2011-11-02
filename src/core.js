@@ -184,7 +184,7 @@ A jQuery plugin to enhance image maps.
                         if (!onlyProps || $.inArray(prop, onlyProps) >= 0) {
                             var p = obj[prop];
                             if (typeof p !== 'undefined') {
-                                if (p && p.constructor === {}.constructor) {
+                                if ($.isPlainObject(p)) {
                                     // not recursive - only copies 1 level of subobjects, and always merges
                                     target[prop] = $.extend(target[prop] || {}, p);
                                 } else if (p && p.constructor === Array) {
