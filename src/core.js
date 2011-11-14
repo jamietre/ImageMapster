@@ -50,14 +50,13 @@ A jQuery plugin to enhance image maps.
     };
 
     $.mapster = {
-        version: "1.2.5b27",
+        version: "1.2.5b28",
         render_defaults: {
             fade: false,
             fadeDuration: 150,
             altImage: null,
             altImageOpacity: 0.7,
             fill: true,
-            highlight: null,     // let device type determine highlighting
             fillColor: '000000',
             fillColorMask: 'FFFFFF',
             fillOpacity: 0.5,
@@ -69,13 +68,7 @@ A jQuery plugin to enhance image maps.
             alt_image: null // used internally
         },
         defaults: {
-            render_highlight: { fade: true },
-            render_select: { fade: false },
-            staticState: null,
-            selected: false,
-            isSelectable: true,
-            isDeselectable: true,
-            singleSelect: false,
+            highlight: null,     // let device type determine highlighting
             wrapClass: null,
             wrapCss: null,
             onGetList: null,
@@ -83,6 +76,7 @@ A jQuery plugin to enhance image maps.
             listenToList: false,
             mapKey: '',
             mapValue: '',
+            singleSelect: false,
             listKey: 'value',
             listSelectedAttribute: 'selected',
             listSelectedClass: null,
@@ -97,6 +91,14 @@ A jQuery plugin to enhance image maps.
             scaleMap: true,
             safeLoad: false,
             areas: []
+        },
+        shared_defaults: {
+            render_highlight: { fade: true },
+            render_select: { fade: false },        
+            staticState: null,
+            selected: null,
+            isSelectable: true,
+            isDeselectable: true
         },
         area_defaults:
         {
@@ -427,10 +429,6 @@ A jQuery plugin to enhance image maps.
             u = $.mapster.utils,
             removeMap, addMap;
 
-
-        $.extend(m.defaults, m.render_defaults);
-        $.extend(m.area_defaults, m.defaults);
-
         addMap = function (map_data) {
             return m.map_cache.push(map_data) - 1;
         };
@@ -611,17 +609,19 @@ A jQuery plugin to enhance image maps.
 
                     if ($.inArray(ar, area_list) < 0) {
                         area_list.push(ar);
+                        key_list+=key_list===''?'':','+ar.key;
                     }
                 }
-                // set all areas collected from the loop
-
-                $.each(area_list, function (i, el) {
-                    setSelection(el);
-                });
-                if (do_set_bound && map_data.options.boundList) {
-                    m.setBoundListProperties(map_data.options, m.getBoundList(map_data.options, key_list), selected);
-                }
             });
+            // set all areas collected from the loop
+
+            $.each(area_list, function (i, el) {
+                setSelection(el);
+            });
+            if (do_set_bound && map_data.options.boundList) {
+                m.setBoundListProperties(map_data.options, m.getBoundList(map_data.options, key_list), selected);
+            }
+
             return this;
         };
         me.unbind = function (preserveState) {
@@ -640,11 +640,19 @@ A jQuery plugin to enhance image maps.
 
 
         // refresh options and update selection information.
-        me.rebind = function (options) {
+        me.rebind = function (options, replaceOptions) {
             return (new m.Method(this,
                 function () {
+                    if (replaceOptions) {
+                        this.options = u.updateProps({}, m.defaults, options);
+                        $.each(this.data,function() {
+                            this.options={};
+                        });
+                    }
+                    
                     merge_options(this, options);
                     this.setAreaOptions(options.areas || {});
+
                     this.redrawSelections();
                 },
                 null,
@@ -811,6 +819,9 @@ A jQuery plugin to enhance image maps.
                 m.defaults.highlight = !m.isTouch;
             }
 
+            $.extend(m.defaults, m.render_defaults,m.shared_defaults);
+            $.extend(m.area_defaults, m.render_defaults,m.shared_defaults);
+
             // for testing/debugging, use of canvas can be forced by initializing manually with "true" or "false"
             if (u.isBool(useCanvas)) {
                 m.hasCanvas = useCanvas;
@@ -824,6 +835,7 @@ A jQuery plugin to enhance image maps.
                     style.addRule('v\\:' + el, "behavior: url(#default#VML); antialias:true");
                 });
             }
+            
             // for safe load option
             $(window).bind('load', function () {
                 m.windowLoaded = true;

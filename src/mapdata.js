@@ -40,7 +40,7 @@
                 }
                 me.clearEffects(true);
 
-                ar.highlight(!opts.highlight);
+                ar.highlight(!me.options.highlight);
 
                 if (me.options.showToolTip && opts.toolTip) {
                     ar.showTooltip();
@@ -169,7 +169,8 @@
         this.imagesLoaded = false;     // (bool)    when all images have finished loading (config can proceed)
         this.complete = false;         // (bool)    when configuration is complete
         this.commands = [];            // {}        commands that were run before configuration was completed (b/c images weren't loaded)
-        this.data = [];                // (MapData[]) area groups
+        this.data = [];                // MapData[] area groups
+        this.mapAreas = [];            // MapArea[] list. AreaData entities contain refs to this array, so options are stored with each.
         this.originalAreaData = [];    // ref of all coord data from areas as bound, indexed by auto-generated id during "initialize"
 
 
@@ -401,12 +402,12 @@
     ///called when images are done loading
     p.initialize = function () {
         var base_canvas, overlay_canvas, wrap, parentId, $area, area, css, sel, areas, i, j, keys, key, area_id, default_group, group_value, img,
-                    sort_func, sorted_list, dataItem, mapArea, scale,  curKey,
+                    sort_func, sorted_list, dataItem, mapArea, scale,  curKey, mapAreaId,
                     me = this,
                     opts = me.options;
 
-        function addGroup(key, value) {
-            var dataItem = new m.AreaData(me, key, value, opts);
+        function addAreaData(key, value) {
+            var dataItem = new m.AreaData(me, key, value);
             dataItem.areaId = me._xref[key] = me.data.push(dataItem) - 1;
             return dataItem.areaId;
         }
@@ -467,11 +468,17 @@
                 }
 
                 curKey = default_group ? '' : area.getAttribute(opts.mapKey);
-                keys = (default_group || !curKey) ? [''] : u.split(curKey);
+                
                 // conditions for which the area will be bound to mouse events
                 // only bind to areas that don't have nohref. ie 6&7 cannot detect the presence of nohref, so we have to also not bind if href is missing.
 
-                mapArea = new m.MapArea(me, area);
+                mapArea = new m.MapArea(me, area,
+                    default_group || !curKey ? '' : curKey);
+                keys = mapArea.keys; // converted to an array by mapArea
+                
+                me.mapAreas.push(mapArea);
+                mapAreaId=me.mapAreas.length-1;
+                
                 // Iterate through each mapKey assigned to this area
                 for (j = keys.length - 1; j >= 0; j--) {
                     key = keys[j];
@@ -480,7 +487,7 @@
                     }
                     if (default_group) {
                         // set an attribute so we can refer to the area by index from the DOM object if no key
-                        area_id = addGroup(me.data.length, group_value);
+                        area_id = addAreaData(me.data.length, group_value);
                         dataItem = me.data[area_id];
                         dataItem.key = key = area_id.toString();
                     }
@@ -493,12 +500,11 @@
                             }
                         }
                         else {
-                            area_id = addGroup(key, group_value);
+                            area_id = addAreaData(key, group_value);
                             dataItem = me.data[area_id];
                         }
                     }
-                    //mapArea = new MapArea(this, area);
-                    dataItem.areas.push(mapArea);
+                    dataItem.areasXref.push(mapAreaId);
                 }
 
                 if (!mapArea.nohref) {
@@ -583,11 +589,10 @@
 
                 me.options.boundList = opts.onGetList.call(me.image, sorted_list);
             }
-            // TODO listenToList... why haven't I done this yet?
+            // TODO listenToList
             //            if (opts.listenToList && opts.nitG) {
             //                opts.nitG.bind('click.mapster', event_hooks[map_data.hooks_index].listclick_hook);
             //            }
-
 
             // populate areas from config options
             me.redrawSelections();

@@ -50,14 +50,13 @@ A jQuery plugin to enhance image maps.
     };
 
     $.mapster = {
-        version: "1.2.5b27",
+        version: "1.2.5b28",
         render_defaults: {
             fade: false,
             fadeDuration: 150,
             altImage: null,
             altImageOpacity: 0.7,
             fill: true,
-            highlight: null,     // let device type determine highlighting
             fillColor: '000000',
             fillColorMask: 'FFFFFF',
             fillOpacity: 0.5,
@@ -69,13 +68,7 @@ A jQuery plugin to enhance image maps.
             alt_image: null // used internally
         },
         defaults: {
-            render_highlight: { fade: true },
-            render_select: { fade: false },
-            staticState: null,
-            selected: false,
-            isSelectable: true,
-            isDeselectable: true,
-            singleSelect: false,
+            highlight: null,     // let device type determine highlighting
             wrapClass: null,
             wrapCss: null,
             onGetList: null,
@@ -83,25 +76,29 @@ A jQuery plugin to enhance image maps.
             listenToList: false,
             mapKey: '',
             mapValue: '',
+            singleSelect: false,
             listKey: 'value',
             listSelectedAttribute: 'selected',
             listSelectedClass: null,
-            showToolTip: false,
-            toolTipFade: true,
-            toolTipClose: ['area-mouseout'],
             onClick: null,
             onMouseover: null,
             onMouseout: null,
             onStateChange: null,
-            onShowToolTip: null,
             boundList: null,
-            onCreateTooltip: null,
             onConfigured: null,
             configTimeout: 10000,
             noHrefIsMask: true,
             scaleMap: true,
             safeLoad: false,
             areas: []
+        },
+        shared_defaults: {
+            render_highlight: { fade: true },
+            render_select: { fade: false },        
+            staticState: null,
+            selected: null,
+            isSelectable: true,
+            isDeselectable: true
         },
         area_defaults:
         {
@@ -120,6 +117,15 @@ A jQuery plugin to enhance image maps.
         isTouch: null,
         windowLoaded: false,
         map_cache: [],
+        hooks: {},
+        addHook: function(name,callback) {
+            this.hooks[name]=(this.hooks[name]||[]).push(callback);
+        },
+        callHooks: function(name,context) {
+            $.each(this.hooks[name]||[],function() {
+                this.apply(context);
+            });
+        },
         utils: {
 
             //            extend: function (target, sources, deep) {
@@ -184,7 +190,7 @@ A jQuery plugin to enhance image maps.
                         if (!onlyProps || $.inArray(prop, onlyProps) >= 0) {
                             var p = obj[prop];
                             if (typeof p !== 'undefined') {
-                                if (p && p.constructor === {}.constructor) {
+                                if ($.isPlainObject(p)) {
                                     // not recursive - only copies 1 level of subobjects, and always merges
                                     target[prop] = $.extend(target[prop] || {}, p);
                                 } else if (p && p.constructor === Array) {
@@ -423,10 +429,6 @@ A jQuery plugin to enhance image maps.
             u = $.mapster.utils,
             removeMap, addMap;
 
-
-        $.extend(m.defaults, m.render_defaults);
-        $.extend(m.area_defaults, m.defaults);
-
         addMap = function (map_data) {
             return m.map_cache.push(map_data) - 1;
         };
@@ -607,17 +609,19 @@ A jQuery plugin to enhance image maps.
 
                     if ($.inArray(ar, area_list) < 0) {
                         area_list.push(ar);
+                        key_list+=key_list===''?'':','+ar.key;
                     }
                 }
-                // set all areas collected from the loop
-
-                $.each(area_list, function (i, el) {
-                    setSelection(el);
-                });
-                if (do_set_bound && map_data.options.boundList) {
-                    m.setBoundListProperties(map_data.options, m.getBoundList(map_data.options, key_list), selected);
-                }
             });
+            // set all areas collected from the loop
+
+            $.each(area_list, function (i, el) {
+                setSelection(el);
+            });
+            if (do_set_bound && map_data.options.boundList) {
+                m.setBoundListProperties(map_data.options, m.getBoundList(map_data.options, key_list), selected);
+            }
+
             return this;
         };
         me.unbind = function (preserveState) {
@@ -636,11 +640,19 @@ A jQuery plugin to enhance image maps.
 
 
         // refresh options and update selection information.
-        me.rebind = function (options) {
+        me.rebind = function (options, replaceOptions) {
             return (new m.Method(this,
                 function () {
+                    if (replaceOptions) {
+                        this.options = u.updateProps({}, m.defaults, options);
+                        $.each(this.data,function() {
+                            this.options={};
+                        });
+                    }
+                    
                     merge_options(this, options);
                     this.setAreaOptions(options.areas || {});
+
                     this.redrawSelections();
                 },
                 null,
@@ -807,6 +819,9 @@ A jQuery plugin to enhance image maps.
                 m.defaults.highlight = !m.isTouch;
             }
 
+            $.extend(m.defaults, m.render_defaults,m.shared_defaults);
+            $.extend(m.area_defaults, m.render_defaults,m.shared_defaults);
+
             // for testing/debugging, use of canvas can be forced by initializing manually with "true" or "false"
             if (u.isBool(useCanvas)) {
                 m.hasCanvas = useCanvas;
@@ -820,6 +835,7 @@ A jQuery plugin to enhance image maps.
                     style.addRule('v\\:' + el, "behavior: url(#default#VML); antialias:true");
                 });
             }
+            
             // for safe load option
             $(window).bind('load', function () {
                 m.windowLoaded = true;
@@ -853,7 +869,7 @@ A jQuery plugin to enhance image maps.
         // 3) call add_shape_to for each shape or mask, 4) call render() to finish
 
         var me = this;
-
+        me.hasCanvas=false;
         me.active = false;
         me.canvas = null;
         me.width = 0;
@@ -863,16 +879,20 @@ A jQuery plugin to enhance image maps.
         me.map_data = map_data;
     };
     p = m.Graphics.prototype;
-    p._addShapeGroupImpl = function (areaData, opts) {
+    p._addShapeGroupImpl = function (areaData, mode) {
         var me = this,
-            map_data = me.map_data;
+            md = me.map_data,
+            opts = areaData.effectiveRenderOptions(mode);
+        
         // first get area options. Then override fade for selecting, and finally merge in the "select" effect options.
-
-        $.each(areaData.areas, function (i,e) {
-            opts.isMask = opts.isMask || (e.nohref && map_data.options.noHrefIsMask);
-            if (!u.isBool(opts.staticState)) {
+        
+        $.each(areaData.areas(), function (i,e) {
+            
+            var opts = this.effectiveOptions(mode);
+            opts.isMask = opts.isMask || (e.nohref && md.options.noHrefIsMask);
+            //if (!u.isBool(opts.staticState)) {
                 me.addShape(e, opts);
-            }
+            //}
         });
 
         return opts;
@@ -880,9 +900,7 @@ A jQuery plugin to enhance image maps.
     p.begin = function (curCanvas, curName) {
         var c = $(curCanvas);
 
-        if (!$.mapster.hasCanvas) {
-            this.elementName = curName;
-        }
+        this.elementName = curName;
         this.canvas = curCanvas;
 
         this.width = c.width();
@@ -919,11 +937,11 @@ A jQuery plugin to enhance image maps.
             list = u.split(opts.includeKeys);
             $.each(list, function (i,e) {
                 var areaData = map_data.getDataForKey(e.toString());
-                me._addShapeGroupImpl(areaData, areaData.effectiveOptions());
+                me._addShapeGroupImpl(areaData, mode);
             });
         }
 
-        opts = me._addShapeGroupImpl(areaData, opts);
+        opts = me._addShapeGroupImpl(areaData, mode);
 
         me.render();
 
@@ -933,251 +951,253 @@ A jQuery plugin to enhance image maps.
 
     };
     // configure remaining prototype methods for ie or canvas-supporting browser
-    if ($.mapster.hasCanvas) {
-        p.hex_to_decimal = function (hex) {
-            return Math.max(0, Math.min(parseInt(hex, 16), 255));
-        };
-        p.css3color = function (color, opacity) {
-            return 'rgba(' + this.hex_to_decimal(color.substr(0, 2)) + ','
-                    + this.hex_to_decimal(color.substr(2, 2)) + ','
-                    + this.hex_to_decimal(color.substr(4, 2)) + ',' + opacity + ')';
-        };
+    m.initGraphics = function(hasCanvas) {
+        if (hasCanvas) {
+            p.hex_to_decimal = function (hex) {
+                return Math.max(0, Math.min(parseInt(hex, 16), 255));
+            };
+            p.css3color = function (color, opacity) {
+                return 'rgba(' + this.hex_to_decimal(color.substr(0, 2)) + ','
+                        + this.hex_to_decimal(color.substr(2, 2)) + ','
+                        + this.hex_to_decimal(color.substr(4, 2)) + ',' + opacity + ')';
+            };
 
-        p.renderShape = function (context, mapArea, offset) {
-            var i,
-                c = mapArea.coords(null, offset);
+            p.renderShape = function (context, mapArea, offset) {
+                var i,
+                    c = mapArea.coords(null, offset);
 
-            switch (mapArea.shape) {
-                case 'rect':
-                    context.rect(c[0], c[1], c[2] - c[0], c[3] - c[1]);
-                    break;
-                case 'poly':
-                    context.moveTo(c[0], c[1]);
+                switch (mapArea.shape) {
+                    case 'rect':
+                        context.rect(c[0], c[1], c[2] - c[0], c[3] - c[1]);
+                        break;
+                    case 'poly':
+                        context.moveTo(c[0], c[1]);
 
-                    for (i = 2; i < mapArea.length; i += 2) {
-                        context.lineTo(c[i], c[i + 1]);
-                    }
-                    context.lineTo(c[0], c[1]);
-                    break;
-                case 'circ':
-                case 'circle':
-                    context.arc(c[0], c[1], c[2], 0, Math.PI * 2, false);
-                    break;
-            }
-        };
-        p.addAltImage = function (context, image, mapArea, options) {
-            context.beginPath();
-
-            this.renderShape(context, mapArea);
-            context.closePath();
-            context.clip();
-
-            context.globalAlpha = options.altImageOpacity;
-
-            context.drawImage(image, 0, 0, mapArea.owner.scaleInfo.width, mapArea.owner.scaleInfo.height);
-        };
-
-        p.render = function () {
-            // firefox 6.0 context.save() seems to be broken. to work around,  we have to draw the contents on one temp canvas,
-            // the mask on another, and merge everything. ugh. fixed in 1.2.2. unfortunately this is a lot more code for masks,
-            // but no other way around it that i can see.
-
-            var maskCanvas, maskContext,
-                        me = this,
-                        hasMasks = me.masks.length,
-                        shapeCanvas = me.createCanvasFor(me.canvas),
-                        shapeContext = shapeCanvas.getContext('2d'),
-                        context = me.canvas.getContext('2d');
-
-            if (hasMasks) {
-                maskCanvas = me.createCanvasFor(me.canvas);
-                maskContext = maskCanvas.getContext('2d');
-                maskContext.clearRect(0, 0, maskCanvas.width, maskCanvas.height);
-
-                $.each(me.masks, function (i,e) {
-                    maskContext.save();
-                    maskContext.beginPath();
-                    me.renderShape(maskContext, e.mapArea);
-                    maskContext.closePath();
-                    maskContext.clip();
-                    maskContext.lineWidth = 0;
-                    maskContext.fillStyle = '#000';
-                    maskContext.fill();
-                    maskContext.restore();
-                });
-
-            }
-
-            $.each(me.shapes, function (i,s) {
-                shapeContext.save();
-                if (s.options.alt_image) {
-                    me.addAltImage(shapeContext, s.options.alt_image, s.mapArea, s.options);
-                } else if (s.options.fill) {
-
-                    shapeContext.beginPath();
-                    me.renderShape(shapeContext, s.mapArea);
-                    shapeContext.closePath();
-                    //shapeContext.clip();
-                    shapeContext.fillStyle = me.css3color(s.options.fillColor, s.options.fillOpacity);
-                    shapeContext.fill();
+                        for (i = 2; i < mapArea.length; i += 2) {
+                            context.lineTo(c[i], c[i + 1]);
+                        }
+                        context.lineTo(c[0], c[1]);
+                        break;
+                    case 'circ':
+                    case 'circle':
+                        context.arc(c[0], c[1], c[2], 0, Math.PI * 2, false);
+                        break;
                 }
-                shapeContext.restore();
-            });
+            };
+            p.addAltImage = function (context, image, mapArea, options) {
+                context.beginPath();
 
+                this.renderShape(context, mapArea);
+                context.closePath();
+                context.clip();
 
-            // render strokes at end since masks get stroked too
+                context.globalAlpha = options.altImageOpacity;
 
-            $.each(me.shapes.concat(me.masks), function (i,s) {
-                var offset = s.options.strokeWidth === 1 ? 0.5 : 0;
-                // offset applies only when stroke width is 1 and stroke would render between pixels.
+                context.drawImage(image, 0, 0, mapArea.owner.scaleInfo.width, mapArea.owner.scaleInfo.height);
+            };
 
-                if (s.options.stroke) {
+            p.render = function () {
+                // firefox 6.0 context.save() seems to be broken. to work around,  we have to draw the contents on one temp canvas,
+                // the mask on another, and merge everything. ugh. fixed in 1.2.2. unfortunately this is a lot more code for masks,
+                // but no other way around it that i can see.
+
+                var maskCanvas, maskContext,
+                            me = this,
+                            hasMasks = me.masks.length,
+                            shapeCanvas = me.createCanvasFor(me.canvas),
+                            shapeContext = shapeCanvas.getContext('2d'),
+                            context = me.canvas.getContext('2d');
+
+                if (hasMasks) {
+                    maskCanvas = me.createCanvasFor(me.canvas);
+                    maskContext = maskCanvas.getContext('2d');
+                    maskContext.clearRect(0, 0, maskCanvas.width, maskCanvas.height);
+
+                    $.each(me.masks, function (i,e) {
+                        maskContext.save();
+                        maskContext.beginPath();
+                        me.renderShape(maskContext, e.mapArea);
+                        maskContext.closePath();
+                        maskContext.clip();
+                        maskContext.lineWidth = 0;
+                        maskContext.fillStyle = '#000';
+                        maskContext.fill();
+                        maskContext.restore();
+                    });
+
+                }
+
+                $.each(me.shapes, function (i,s) {
                     shapeContext.save();
-                    shapeContext.strokeStyle = me.css3color(s.options.strokeColor, s.options.strokeOpacity);
-                    shapeContext.lineWidth = s.options.strokeWidth;
+                    if (s.options.alt_image) {
+                        me.addAltImage(shapeContext, s.options.alt_image, s.mapArea, s.options);
+                    } else if (s.options.fill) {
 
-                    shapeContext.beginPath();
-
-                    me.renderShape(shapeContext, s.mapArea, offset);
-                    shapeContext.closePath();
-                    shapeContext.stroke();
+                        shapeContext.beginPath();
+                        me.renderShape(shapeContext, s.mapArea);
+                        shapeContext.closePath();
+                        //shapeContext.clip();
+                        shapeContext.fillStyle = me.css3color(s.options.fillColor, s.options.fillOpacity);
+                        shapeContext.fill();
+                    }
                     shapeContext.restore();
-                }
-            });
-
-            if (hasMasks) {
-                // render the new shapes against the mask
-
-                maskContext.globalCompositeOperation = "source-out";
-                maskContext.drawImage(shapeCanvas, 0, 0);
-
-                // flatten into the main canvas
-                context.drawImage(maskCanvas, 0, 0);
-            } else {
-                context.drawImage(shapeCanvas, 0, 0);
-            }
-
-            me.active = false;
-            return me.canvas;
-
-
-
-        };
-
-        // create a canvas mimicing dimensions of an existing element
-        p.createCanvasFor = function (element) {
-            var el = $(element),
-                                w = el.width() || el[0].width,
-                                h = el.height() || el[0].height,
-                                c = $('<canvas width="' + w + '" height="' + h + '"></canvas>')[0];
-
-            //c.getContext("2d").clearRect(0, 0, w, h);
-            return c;
-        };
-        p.clearHighlight = function () {
-            var c = this.map_data.overlay_canvas;
-            c.getContext('2d').clearRect(0, 0, c.width, c.height);
-        };
-        p.removeSelections = function () {
-
-        };
-        // Draw all items from selected_list to a new canvas, then swap with the old one. This is used to delete items when using canvases.
-        p.refreshSelections = function () {
-            var canvas_temp, map_data = this.map_data;
-            // draw new base canvas, then swap with the old one to avoid flickering
-            canvas_temp = map_data.base_canvas;
-
-            map_data.base_canvas = this.createVisibleCanvas(map_data.image);
-            $(map_data.base_canvas).hide();
-            $(canvas_temp).before(map_data.base_canvas);
-
-            map_data.redrawSelections();
-
-            $(map_data.base_canvas).show();
-            $(canvas_temp).remove();
-        };
-    } else {
-        p.renderShape = function (mapArea, options, cssclass) {
-            var me = this, stroke, e, t_fill, el_name, el_class, template, c = mapArea.coords();
-            el_name = me.elementName ? 'name="' + me.elementName + '" ' : '';
-            el_class = cssclass ? 'class="' + cssclass + '" ' : '';
-
-            t_fill = '<v:fill color="#' + options.fillColor + '" opacity="' + (options.fill ? options.fillOpacity : 0) + '" /><v:stroke opacity="' + options.strokeOpacity + '"/>';
-
-            if (options.stroke) {
-                stroke = 'strokeweight=' + options.strokeWidth + ' stroked="t" strokecolor="#' + options.strokeColor + '"';
-            } else {
-                stroke = 'stroked="f"';
-            }
-
-            switch (mapArea.shape) {
-                case 'rect':
-                    template = '<v:rect ' + el_class + el_name + ' filled="t" ' + stroke + ' style="zoom:1;margin:0;padding:0;display:block;position:absolute;left:' + c[0] + 'px;top:' + c[1]
-                                + 'px;width:' + (c[2] - c[0]) + 'px;height:' + (c[3] - c[1]) + 'px;">' + t_fill + '</v:rect>';
-                    break;
-                case 'poly':
-                    template = '<v:shape ' + el_class + el_name + ' filled="t" ' + stroke + ' coordorigin="0,0" coordsize="' + me.width + ',' + me.height
-                                + '" path="m ' + c[0] + ',' + c[1] + ' l ' + c.slice(2).join(',')
-                                + ' x e" style="zoom:1;margin:0;padding:0;display:block;position:absolute;top:0px;left:0px;width:' + me.width + 'px;height:' + me.height + 'px;">' + t_fill + '</v:shape>';
-                    break;
-                case 'circ':
-                case 'circle':
-                    template = '<v:oval ' + el_class + el_name + ' filled="t" ' + stroke
-                                + ' style="zoom:1;margin:0;padding:0;display:block;position:absolute;left:' + (c[0] - c[2]) + 'px;top:' + (c[1] - c[2])
-                                + 'px;width:' + (c[2] * 2) + 'px;height:' + (c[2] * 2) + 'px;">' + t_fill + '</v:oval>';
-                    break;
-            }
-            e = $(template);
-            $(me.canvas).append(e);
-
-            return e;
-        };
-        p.render = function () {
-            var opts, me = this;
-
-            $.each(this.shapes, function (i,e) {
-                me.renderShape(e.mapArea, e.options);
-            });
-
-            if (this.masks.length) {
-                $.each(this.masks, function (i,e) {
-                    opts = u.updateProps({},
-                        e.options, {
-                            fillOpacity: 1,
-                            fillColor: e.options.fillColorMask
-                        });
-                    me.renderShape(e.mapArea, opts, 'mapster_mask');
                 });
-            }
 
-            this.active = false;
-            return this.canvas;
-        };
 
-        p.createCanvasFor = function (element) {
-            var el = $(element),
-                            w = el.width(),
-                            h = el.height();
-            return $('<var width="' + w + '" height="' + h + '" style="zoom:1;overflow:hidden;display:block;width:' + w + 'px;height:' + h + 'px;"></var>')[0];
-        };
+                // render strokes at end since masks get stroked too
 
-        p.clearHighlight = function () {
-            $(this.map_data.overlay_canvas).children().remove();
-        };
-        // remove single or all selections
-        p.removeSelections = function (area_id) {
-            if (area_id >= 0) {
-                $(this.map_data.base_canvas).find('[name="static_' + area_id.toString() + '"]').remove();
-            }
-            else {
-                $(this.map_data.base_canvas).children().remove();
-            }
-        };
-        p.refreshSelections = function () {
-            return null;
-        };
-    }
+                $.each(me.shapes.concat(me.masks), function (i,s) {
+                    var offset = s.options.strokeWidth === 1 ? 0.5 : 0;
+                    // offset applies only when stroke width is 1 and stroke would render between pixels.
 
+                    if (s.options.stroke) {
+                        shapeContext.save();
+                        shapeContext.strokeStyle = me.css3color(s.options.strokeColor, s.options.strokeOpacity);
+                        shapeContext.lineWidth = s.options.strokeWidth;
+
+                        shapeContext.beginPath();
+
+                        me.renderShape(shapeContext, s.mapArea, offset);
+                        shapeContext.closePath();
+                        shapeContext.stroke();
+                        shapeContext.restore();
+                    }
+                });
+
+                if (hasMasks) {
+                    // render the new shapes against the mask
+
+                    maskContext.globalCompositeOperation = "source-out";
+                    maskContext.drawImage(shapeCanvas, 0, 0);
+
+                    // flatten into the main canvas
+                    context.drawImage(maskCanvas, 0, 0);
+                } else {
+                    context.drawImage(shapeCanvas, 0, 0);
+                }
+
+                me.active = false;
+                return me.canvas;
+
+
+
+            };
+
+            // create a canvas mimicing dimensions of an existing element
+            p.createCanvasFor = function (element) {
+                var el = $(element),
+                                    w = el.width() || el[0].width,
+                                    h = el.height() || el[0].height,
+                                    c = $('<canvas width="' + w + '" height="' + h + '"></canvas>')[0];
+
+                //c.getContext("2d").clearRect(0, 0, w, h);
+                return c;
+            };
+            p.clearHighlight = function () {
+                var c = this.map_data.overlay_canvas;
+                c.getContext('2d').clearRect(0, 0, c.width, c.height);
+            };
+            p.removeSelections = function () {
+
+            };
+            // Draw all items from selected_list to a new canvas, then swap with the old one. This is used to delete items when using canvases.
+            p.refreshSelections = function () {
+                var canvas_temp, map_data = this.map_data;
+                // draw new base canvas, then swap with the old one to avoid flickering
+                canvas_temp = map_data.base_canvas;
+
+                map_data.base_canvas = this.createVisibleCanvas(map_data.image);
+                $(map_data.base_canvas).hide();
+                $(canvas_temp).before(map_data.base_canvas);
+
+                map_data.redrawSelections();
+
+                $(map_data.base_canvas).show();
+                $(canvas_temp).remove();
+            };
+        } else {
+            p.renderShape = function (mapArea, options, cssclass) {
+                var me = this, stroke, e, t_fill, el_name, el_class, template, c = mapArea.coords();
+                el_name = me.elementName ? 'name="' + me.elementName + '" ' : '';
+                el_class = cssclass ? 'class="' + cssclass + '" ' : '';
+
+                t_fill = '<v:fill color="#' + options.fillColor + '" opacity="' + (options.fill ? options.fillOpacity : 0) + '" /><v:stroke opacity="' + options.strokeOpacity + '"/>';
+
+                if (options.stroke) {
+                    stroke = 'strokeweight=' + options.strokeWidth + ' stroked="t" strokecolor="#' + options.strokeColor + '"';
+                } else {
+                    stroke = 'stroked="f"';
+                }
+
+                switch (mapArea.shape) {
+                    case 'rect':
+                        template = '<v:rect ' + el_class + el_name + ' filled="t" ' + stroke + ' style="zoom:1;margin:0;padding:0;display:block;position:absolute;left:' + c[0] + 'px;top:' + c[1]
+                                    + 'px;width:' + (c[2] - c[0]) + 'px;height:' + (c[3] - c[1]) + 'px;">' + t_fill + '</v:rect>';
+                        break;
+                    case 'poly':
+                        template = '<v:shape ' + el_class + el_name + ' filled="t" ' + stroke + ' coordorigin="0,0" coordsize="' + me.width + ',' + me.height
+                                    + '" path="m ' + c[0] + ',' + c[1] + ' l ' + c.slice(2).join(',')
+                                    + ' x e" style="zoom:1;margin:0;padding:0;display:block;position:absolute;top:0px;left:0px;width:' + me.width + 'px;height:' + me.height + 'px;">' + t_fill + '</v:shape>';
+                        break;
+                    case 'circ':
+                    case 'circle':
+                        template = '<v:oval ' + el_class + el_name + ' filled="t" ' + stroke
+                                    + ' style="zoom:1;margin:0;padding:0;display:block;position:absolute;left:' + (c[0] - c[2]) + 'px;top:' + (c[1] - c[2])
+                                    + 'px;width:' + (c[2] * 2) + 'px;height:' + (c[2] * 2) + 'px;">' + t_fill + '</v:oval>';
+                        break;
+                }
+                e = $(template);
+                $(me.canvas).append(e);
+
+                return e;
+            };
+            p.render = function () {
+                var opts, me = this;
+
+                $.each(this.shapes, function (i,e) {
+                    me.renderShape(e.mapArea, e.options);
+                });
+
+                if (this.masks.length) {
+                    $.each(this.masks, function (i,e) {
+                        opts = u.updateProps({},
+                            e.options, {
+                                fillOpacity: 1,
+                                fillColor: e.options.fillColorMask
+                            });
+                        me.renderShape(e.mapArea, opts, 'mapster_mask');
+                    });
+                }
+
+                this.active = false;
+                return this.canvas;
+            };
+
+            p.createCanvasFor = function (element) {
+                var el = $(element),
+                                w = el.width(),
+                                h = el.height();
+                return $('<var width="' + w + '" height="' + h + '" style="zoom:1;overflow:hidden;display:block;width:' + w + 'px;height:' + h + 'px;"></var>')[0];
+            };
+
+            p.clearHighlight = function () {
+                $(this.map_data.overlay_canvas).children().remove();
+            };
+            // remove single or all selections
+            p.removeSelections = function (area_id) {
+                if (area_id >= 0) {
+                    $(this.map_data.base_canvas).find('[name="static_' + area_id.toString() + '"]').remove();
+                }
+                else {
+                    $(this.map_data.base_canvas).children().remove();
+                }
+            };
+            p.refreshSelections = function () {
+                return null;
+            };
+        }
+    };
+    m.initGraphics(m.hasCanvas);
 } (jQuery));
 /* mapdata.js
    the MapData object, repesents an instance of a single bound imagemap
@@ -1221,7 +1241,7 @@ A jQuery plugin to enhance image maps.
                 }
                 me.clearEffects(true);
 
-                ar.highlight(!opts.highlight);
+                ar.highlight(!me.options.highlight);
 
                 if (me.options.showToolTip && opts.toolTip) {
                     ar.showTooltip();
@@ -1350,7 +1370,8 @@ A jQuery plugin to enhance image maps.
         this.imagesLoaded = false;     // (bool)    when all images have finished loading (config can proceed)
         this.complete = false;         // (bool)    when configuration is complete
         this.commands = [];            // {}        commands that were run before configuration was completed (b/c images weren't loaded)
-        this.data = [];                // (MapData[]) area groups
+        this.data = [];                // MapData[] area groups
+        this.mapAreas = [];            // MapArea[] list. AreaData entities contain refs to this array, so options are stored with each.
         this.originalAreaData = [];    // ref of all coord data from areas as bound, indexed by auto-generated id during "initialize"
 
 
@@ -1582,12 +1603,12 @@ A jQuery plugin to enhance image maps.
     ///called when images are done loading
     p.initialize = function () {
         var base_canvas, overlay_canvas, wrap, parentId, $area, area, css, sel, areas, i, j, keys, key, area_id, default_group, group_value, img,
-                    sort_func, sorted_list, dataItem, mapArea, scale,  curKey,
+                    sort_func, sorted_list, dataItem, mapArea, scale,  curKey, mapAreaId,
                     me = this,
                     opts = me.options;
 
-        function addGroup(key, value) {
-            var dataItem = new m.AreaData(me, key, value, opts);
+        function addAreaData(key, value) {
+            var dataItem = new m.AreaData(me, key, value);
             dataItem.areaId = me._xref[key] = me.data.push(dataItem) - 1;
             return dataItem.areaId;
         }
@@ -1648,11 +1669,17 @@ A jQuery plugin to enhance image maps.
                 }
 
                 curKey = default_group ? '' : area.getAttribute(opts.mapKey);
-                keys = (default_group || !curKey) ? [''] : u.split(curKey);
+                
                 // conditions for which the area will be bound to mouse events
                 // only bind to areas that don't have nohref. ie 6&7 cannot detect the presence of nohref, so we have to also not bind if href is missing.
 
-                mapArea = new m.MapArea(me, area);
+                mapArea = new m.MapArea(me, area,
+                    default_group || !curKey ? '' : curKey);
+                keys = mapArea.keys; // converted to an array by mapArea
+                
+                me.mapAreas.push(mapArea);
+                mapAreaId=me.mapAreas.length-1;
+                
                 // Iterate through each mapKey assigned to this area
                 for (j = keys.length - 1; j >= 0; j--) {
                     key = keys[j];
@@ -1661,7 +1688,7 @@ A jQuery plugin to enhance image maps.
                     }
                     if (default_group) {
                         // set an attribute so we can refer to the area by index from the DOM object if no key
-                        area_id = addGroup(me.data.length, group_value);
+                        area_id = addAreaData(me.data.length, group_value);
                         dataItem = me.data[area_id];
                         dataItem.key = key = area_id.toString();
                     }
@@ -1674,12 +1701,11 @@ A jQuery plugin to enhance image maps.
                             }
                         }
                         else {
-                            area_id = addGroup(key, group_value);
+                            area_id = addAreaData(key, group_value);
                             dataItem = me.data[area_id];
                         }
                     }
-                    //mapArea = new MapArea(this, area);
-                    dataItem.areas.push(mapArea);
+                    dataItem.areasXref.push(mapAreaId);
                 }
 
                 if (!mapArea.nohref) {
@@ -1764,11 +1790,10 @@ A jQuery plugin to enhance image maps.
 
                 me.options.boundList = opts.onGetList.call(me.image, sorted_list);
             }
-            // TODO listenToList... why haven't I done this yet?
+            // TODO listenToList
             //            if (opts.listenToList && opts.nitG) {
             //                opts.nitG.bind('click.mapster', event_hooks[map_data.hooks_index].listclick_hook);
             //            }
-
 
             // populate areas from config options
             me.redrawSelections();
@@ -1848,36 +1873,44 @@ A jQuery plugin to enhance image maps.
         this.value = value || '';
         this.options = {};
         this.selected = null;   // "null" means unchanged. Use "isSelected" method to just test true/false
-        this.areas = [];        // MapArea objects
+        this.areasXref = [];        // xref to MapArea objects
         this.area = null;       // (temporary storage) - the actual area moused over
-        this._effectiveOptions = null;
+        //this._effectiveOptions = null;
     };
     p = m.AreaData.prototype;
+    p.areas = function() {
+        var i,result=[];
+        for (i=0;i<this.areasXref.length;i++) {
+            result.push(this.owner.mapAreas[this.areasXref[i]]);
+        }
+        return result;
+    };
     // return all coordinates for all areas
     p.coords = function (percent, offset) {
         var coords = [];
-        $.each(this.areas, function (i, el) {
+        $.each(this.areas(), function (i, el) {
             coords = coords.concat(el.coords(percent, offset));
         });
         return coords;
     };
     p.reset = function (preserveState) {
-        $.each(this.areas, function (i, e) {
+        $.each(this.areas(), function (i, e) {
             e.reset(preserveState);
         });
-        this.areas = null;
+        this.areasXref = [];
         this.options = null;
-        this._effectiveOptions = null;
+        //this._effectiveOptions = null;
     };
     // Return the effective selected state of an area, incorporating staticState
     p.isSelectedOrStatic = function () {
+
         var o = this.effectiveOptions();
-        return u.isBool(this.selected) ? this.selected :
-                    (u.isBool(o.staticState) ? o.staticState :
-                    (u.isBool(this.owner.options.staticState) ? this.owner.options.staticState : false));
+        return u.isBool(o.staticState) ? o.staticState :
+                    this.isSelected();
     };
     p.isSelected = function () {
-        return this.selected || false;
+        return u.isBool(this.selected) ? this.selected : 
+            u.isBool(this.owner.area_options.selected) ? this.owner.area_options.selected : false;
     };
     p.isSelectable = function () {
         return u.isBool(this.effectiveOptions().staticState) ? false :
@@ -1897,20 +1930,19 @@ A jQuery plugin to enhance image maps.
                 this.owner.area_options,
                 this.options,
                 override_options || {},
-            //this.tempOptions || {},
                 {id: this.areaId }
             );
-
+        opts.selected = this.isSelected();
         return opts;
         //}
         //return this._effectiveOptions;
     };
-    p.effectiveRenderOptions = function (type, override_options) {
+    p.effectiveRenderOptions = function (mode, override_options) {
         var allOpts = this.effectiveOptions(override_options),
             opts = u.updateProps({},
             allOpts,
-            allOpts["render_" + type],
-            { alt_image: this.owner.altImage(type) });
+            allOpts["render_" + mode],
+            { alt_image: this.owner.altImage(mode) });
         return opts;
     };
     // Fire callback on area state change
@@ -1957,7 +1989,7 @@ A jQuery plugin to enhance image maps.
             o.graphics.refreshSelections();
         }
     };
-    // Remve a selected area group. If the parameter "partial" is true, then this is a manual operation
+    // Remove a selected area group. If the parameter "partial" is true, then this is a manual operation
     // and the caller mus call "finishRemoveSelection" after multiple "removeSelectionFinish" events
     p.removeSelection = function (partial) {
 
@@ -1986,7 +2018,7 @@ A jQuery plugin to enhance image maps.
 
 
     // represents an HTML area
-    m.MapArea = function (owner, areaEl) {
+    m.MapArea = function (owner, areaEl,keys) {
         if (!owner) {
             return;
         }
@@ -2000,11 +2032,29 @@ A jQuery plugin to enhance image maps.
         me.length = me.originalCoords.length;
         me.shape = areaEl.shape.toLowerCase();
         me.nohref = areaEl.nohref || !areaEl.href;
+        me.keys = u.split(keys);
 
     };
+    
     m.MapArea.prototype.coords = function () {
         return this.originalCoords;
     };
+    // get effective options for a specific area - can be result of more than one key
+    m.MapArea.prototype.effectiveOptions = function(mode) {
+        var i,ad,m=this.owner,
+            opts=u.updateProps({},m.area_options);
+        
+        for (i=this.keys.length-1;i>=0;i--) {
+            ad = m.getDataForKey(this.keys[i]);
+            u.updateProps(opts,
+                           ad.options,
+                           ad.options["render_" + mode],
+                { alt_image: this.owner.altImage(mode) });
+        }
+        return opts;
+        
+    };
+
 
 } (jQuery));
 /* areacorners.js
@@ -2366,10 +2416,16 @@ A jQuery plugin to enhance image maps.
 
 (function ($) {
     var m = $.mapster, u = m.utils;
-    m.defaults.toolTipContainer = '<div class="mapster-tooltip" style="border: 2px solid black; background: #EEEEEE; position:absolute; width:160px; padding:4px; margin: 4px; -moz-box-shadow: 3px 3px 5px #535353; ' +
+    $.extend(m.defaults, {
+        toolTipContainer: '<div class="mapster-tooltip" style="border: 2px solid black; background: #EEEEEE; position:absolute; width:160px; padding:4px; margin: 4px; -moz-box-shadow: 3px 3px 5px #535353; ' +
         '-webkit-box-shadow: 3px 3px 5px #535353; box-shadow: 3px 3px 5px #535353; -moz-border-radius: 6px 6px 6px 6px; -webkit-border-radius: 6px; ' +
-        'border-radius: 6px 6px 6px 6px;"></div>';
-
+        'border-radius: 6px 6px 6px 6px;"></div>',
+        showToolTip: false,
+        toolTipFade: true,
+        toolTipClose: ['area-mouseout'],
+        onShowToolTip: null,
+        onCreateTooltip: null
+    });
     m.MapData.prototype.clearTooltip = function () {
         if (this.activeToolTip) {
             this.activeToolTip.remove();
@@ -2395,7 +2451,7 @@ A jQuery plugin to enhance image maps.
     // Show tooltip adjacent to DOM element "area"
     m.AreaData.prototype.showTooltip = function () {
         var tooltip, left, top, tooltipCss, corners, fromCoords, container,
-	                    opts = this.effectiveOptions(),
+                        opts = this.effectiveOptions(),
                         map_data = this.owner,
                         baseOpts = map_data.options,
                         template = map_data.options.toolTipContainer;

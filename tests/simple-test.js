@@ -158,7 +158,7 @@ Test.prototype.assertPropsEq = function(testcase,expected,description,test, notE
         }
         if (notEqual) {
             if (!err) {
-            	err="The two objects had the same properties.";
+                err="The two objects had the same properties.";
             } else {
                 err=null;
             }
@@ -196,14 +196,14 @@ Test.prototype.assertArrayEq = function(testcase, expected, description,test) {
 };
 // sorts first
 Test.prototype.assertArrayElementsEq = function(testcase, expected, description,test) {
-    var err,arr1, arr2;
+    var me=this,err,arr1, arr2;
     this.startTest();
     this.runTest(testcase,function (testcase) {
        arr1=testcase;
        arr2=expected;
         arr1.sort();
         arr2.sort();
-        err = this._arrayEq(arr1,arr2);
+        err = me._arrayEq(arr1,arr2);
     });
     this.endTest(err,description);
 };
@@ -212,13 +212,13 @@ Test.prototype.assertCsvElementsEq = function(testcase, expected, description,te
     me=this;
     this.startTest();
     this.runTest(testcase,function (testcase) {
-    	if (!(typeof testcase==='string')) {
-    	  err="test case is not a string";
-    	} else {
-    	arr1=testcase.split(',');
-   	arr2=expected.split(',');
-    	arr1.sort();
-   	arr2.sort();
+        if (!(typeof testcase==='string')) {
+          err="test case is not a string";
+        } else {
+        arr1=testcase.split(',');
+    arr2=expected.split(',');
+        arr1.sort();
+    arr2.sort();
         err = me._arrayEq(arr1,arr2);
         }
     });

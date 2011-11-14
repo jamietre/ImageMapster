@@ -11,36 +11,44 @@
         this.value = value || '';
         this.options = {};
         this.selected = null;   // "null" means unchanged. Use "isSelected" method to just test true/false
-        this.areas = [];        // MapArea objects
+        this.areasXref = [];        // xref to MapArea objects
         this.area = null;       // (temporary storage) - the actual area moused over
-        this._effectiveOptions = null;
+        //this._effectiveOptions = null;
     };
     p = m.AreaData.prototype;
+    p.areas = function() {
+        var i,result=[];
+        for (i=0;i<this.areasXref.length;i++) {
+            result.push(this.owner.mapAreas[this.areasXref[i]]);
+        }
+        return result;
+    };
     // return all coordinates for all areas
     p.coords = function (percent, offset) {
         var coords = [];
-        $.each(this.areas, function (i, el) {
+        $.each(this.areas(), function (i, el) {
             coords = coords.concat(el.coords(percent, offset));
         });
         return coords;
     };
     p.reset = function (preserveState) {
-        $.each(this.areas, function (i, e) {
+        $.each(this.areas(), function (i, e) {
             e.reset(preserveState);
         });
-        this.areas = null;
+        this.areasXref = [];
         this.options = null;
-        this._effectiveOptions = null;
+        //this._effectiveOptions = null;
     };
     // Return the effective selected state of an area, incorporating staticState
     p.isSelectedOrStatic = function () {
+
         var o = this.effectiveOptions();
-        return u.isBool(this.selected) ? this.selected :
-                    (u.isBool(o.staticState) ? o.staticState :
-                    (u.isBool(this.owner.options.staticState) ? this.owner.options.staticState : false));
+        return u.isBool(o.staticState) ? o.staticState :
+                    this.isSelected();
     };
     p.isSelected = function () {
-        return this.selected || false;
+        return u.isBool(this.selected) ? this.selected : 
+            u.isBool(this.owner.area_options.selected) ? this.owner.area_options.selected : false;
     };
     p.isSelectable = function () {
         return u.isBool(this.effectiveOptions().staticState) ? false :
@@ -60,20 +68,19 @@
                 this.owner.area_options,
                 this.options,
                 override_options || {},
-            //this.tempOptions || {},
                 {id: this.areaId }
             );
-
+        opts.selected = this.isSelected();
         return opts;
         //}
         //return this._effectiveOptions;
     };
-    p.effectiveRenderOptions = function (type, override_options) {
+    p.effectiveRenderOptions = function (mode, override_options) {
         var allOpts = this.effectiveOptions(override_options),
             opts = u.updateProps({},
             allOpts,
-            allOpts["render_" + type],
-            { alt_image: this.owner.altImage(type) });
+            allOpts["render_" + mode],
+            { alt_image: this.owner.altImage(mode) });
         return opts;
     };
     // Fire callback on area state change
@@ -120,7 +127,7 @@
             o.graphics.refreshSelections();
         }
     };
-    // Remve a selected area group. If the parameter "partial" is true, then this is a manual operation
+    // Remove a selected area group. If the parameter "partial" is true, then this is a manual operation
     // and the caller mus call "finishRemoveSelection" after multiple "removeSelectionFinish" events
     p.removeSelection = function (partial) {
 
@@ -149,7 +156,7 @@
 
 
     // represents an HTML area
-    m.MapArea = function (owner, areaEl) {
+    m.MapArea = function (owner, areaEl,keys) {
         if (!owner) {
             return;
         }
@@ -163,10 +170,28 @@
         me.length = me.originalCoords.length;
         me.shape = areaEl.shape.toLowerCase();
         me.nohref = areaEl.nohref || !areaEl.href;
+        me.keys = u.split(keys);
 
     };
+    
     m.MapArea.prototype.coords = function () {
         return this.originalCoords;
     };
+    // get effective options for a specific area - can be result of more than one key
+    m.MapArea.prototype.effectiveOptions = function(mode) {
+        var i,ad,m=this.owner,
+            opts=u.updateProps({},m.area_options);
+        
+        for (i=this.keys.length-1;i>=0;i--) {
+            ad = m.getDataForKey(this.keys[i]);
+            u.updateProps(opts,
+                           ad.options,
+                           ad.options["render_" + mode],
+                { alt_image: this.owner.altImage(mode) });
+        }
+        return opts;
+        
+    };
+
 
 } (jQuery));

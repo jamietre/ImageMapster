@@ -202,6 +202,7 @@ mapster_tests = function (options) {
 
     var basicTests = function (ut, disableCanvas) {
         var u = $.mapster.utils;
+        
 
         // Save current state to see if we cleaned up properly later
         var domCount = $('#test_elements *').length;
@@ -238,7 +239,7 @@ mapster_tests = function (options) {
         // queue options 
 
         // options
-        var x = $();
+        
         var initialOpts = u.updateProps({}, $.mapster.defaults, map_options);
         var opts = map.mapster('get_options');
         ut.assertPropsEq(opts, initialOpts, "Options retrieved match initial options");
@@ -403,7 +404,94 @@ mapster_tests = function (options) {
     }
 
     map_test.addTest("Mapster Basic Tests", basicTests);
+    
+    // Run rendering tests with VML mode enabled, which makes testing the output much easier than with canvases since
+    // we can just observe the elements that have been added
+    
+    var renderingTests = function (ut, disableCanvas) {
+        $.mapster.initGraphics(false);
+        //var u = $.mapster.utils;
+        var opts = {
+            mapKey: 'state',
+            areas: [{
+                key: "WA",
+                selected: true
+            }]
+        };
+           
+        var map = $('img').mapster(opts);
+        
+        // WA should be staticstate=true
+        var ctr = $('#mapster_wrap_0');
+        var polys = ctr.find('var').children();
+        
+        // 10 for AK, 3 for TX, 2 for WA should be initially rendered
+        ut.assertEq(2,polys.length,'Correct # of shapes found on initial rendering');
+        
+        function getVmls() {
+            var vmlPath=[];
+            polys.each(function() {
+                var path = $(this).attr('path') || '';
+                var index = path.indexOf(' l ');
+                vmlPath.push(path && index>=0 ? path.substring(0,index):'');
+            });
+            return vmlPath;
+        }
+        var vmlPath = getVmls();
+        
+        ut.assertArrayElementsEq(['m 61,23','m 68,19'],vmlPath,'Correct area appears to have been rendered for initial selected');
+        map.mapster('set',false,'WA');
+        
+        polys = ctr.find('var').children();
+        ut.assertEq(0,polys.length,"Deselecting got rid of everything");
+        
+       
+        opts = {
+            mapKey: 'state',
+            areas: [{
+                key: "TX",
+                staticState: true
+            }]
+        };
+        map.unbind();
+        map = $('img').mapster(opts);
+        ctr = $('#mapster_wrap_0');
+        polys = ctr.find('var').children();
+        vmlPath = getVmls(polys);
+        
+        ut.assertEq(3,polys.length,'Correct # of shapes found on initial rendering for TX staticState=true');
+        ut.assertArrayElementsEq(['','m 332,426','m 259,256'],vmlPath,'Correct area appears to have been rendered for staticState');
+        
+        // now try global options
+        
+         opts = {
+            mapKey: 'state',
+            selected: true
+        };
+        map.unbind();
+        map = $('img').mapster(opts);
+        
+        ctr = $('#mapster_wrap_0');
+        polys = ctr.find('var').children();
+        vmlPath = getVmls(polys);
 
+        ut.assertEq(94,polys.length,'Correct # of shapes found on initial rendering for TX staticState=true');
+
+        delete opts.selected;
+        opts.staticState=true;
+        map.unbind();
+        map = $('img').mapster(opts);
+        ctr = $('#mapster_wrap_0');
+        polys = ctr.find('var').children();
+        vmlPath = getVmls(polys);
+        ut.assertEq(94,polys.length,'Correct # of shapes found on initial rendering for TX staticState=true');
+
+        
+        // restore graphics object to normal state for this type of browses
+        $.mapster.initGraphics($.mapster.hasCanvas);
+    };
+
+    map_test.addTest("Rendering Tests", renderingTests);
 
     map_test.addTest("Event/Tooltip Tests", function (ut) {
         var map = $('img').mapster(map_options);
