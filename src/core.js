@@ -50,7 +50,7 @@ A jQuery plugin to enhance image maps.
     };
 
     $.mapster = {
-        version: "1.2.5b29",
+        version: "1.2.5b30",
         render_defaults: {
             fade: false,
             fadeDuration: 150,
@@ -383,14 +383,15 @@ A jQuery plugin to enhance image maps.
         me.name = opts.name;
     };
     m.Method.prototype.go = function () {
-        var i, data, ar, len, result, src = this.input,
+        var i,  data, ar, len, result, src = this.input,
                 area_list = [],
-                me = this;
+                me = this,
+                args = me.args || [];
         len = src.length;
         for (i = 0; i < len; i++) {
             data = $.mapster.getMapData(src[i]);
             if (data) {
-                if (m.queueCommand(data, this.input, this.name, this.args)) {
+                if (m.queueCommand(data, this.input, this.name, args)) {
                     if (this.first) {
                         result = '';
                     }
@@ -402,7 +403,7 @@ A jQuery plugin to enhance image maps.
                         area_list.push(ar);
                     }
                 } else {
-                    result = this.func_map.apply(data, this.args);
+                    result = this.func_map.apply(data, args);
                 }
                 if (this.first || typeof result !== 'undefined') {
                     break;
@@ -411,7 +412,7 @@ A jQuery plugin to enhance image maps.
         }
         // if there were areas, call the area function for each unique group
         $(area_list).each(function () {
-            result = me.func_area.apply(this, me.args);
+            result = me.func_area.apply(this, args);
         });
 
         if (typeof result !== 'undefined') {

@@ -43,18 +43,18 @@
     m.AreaData.prototype.showTooltip = function () {
         var tooltip, left, top, tooltipCss, corners, fromCoords, container,
                         opts = this.effectiveOptions(),
-                        map_data = this.owner,
-                        baseOpts = map_data.options,
-                        template = map_data.options.toolTipContainer;
+                        md = this.owner,
+                        baseOpts = md.options,
+                        template = md.options.toolTipContainer;
 
         // prevent tooltip from being cleared if it was in progress - area is in the same group
 
-        map_data.cancelClear=false;
-        if (map_data.activeToolTipID === this.areaId) {
-            map_data.cancelClear=true;
+        md.cancelClear=true;
+        if (md.activeToolTipID === this.areaId) {
+        
             return;
         }
-
+        
         if (typeof template === 'string') {
             container = $(template);
         } else {
@@ -72,11 +72,11 @@
             });
         }
 
-        map_data.clearTooltip();
+        md.clearTooltip();
 
-        $(map_data.image).after(tooltip);
-        map_data.activeToolTip = tooltip;
-        map_data.activeToolTipID = this.areaId;
+        $(md.image).after(tooltip);
+        md.activeToolTip = tooltip;
+        md.activeToolTipID = this.areaId;
 
         corners = u.areaCorners(fromCoords,
                         tooltip.outerWidth(true),
@@ -93,12 +93,12 @@
         }
         tooltip.css(tooltipCss).addClass('mapster_tooltip');
 
-        map_data.bindTooltipClose('area-click', 'click', $(map_data.map));
-        map_data.bindTooltipClose('tooltip-click', 'click', tooltip);
+        md.bindTooltipClose('area-click', 'click', $(md.map));
+        md.bindTooltipClose('tooltip-click', 'click', tooltip);
         // not working properly- closes too soon sometimes
-        //map_data.bindTooltipClose('img-mouseout', 'mouseout', $(map_data.image));
+        //md.bindTooltipClose('img-mouseout', 'mouseout', $(md.image));
 
-        if (map_data.options.toolTipFade) {
+        if (md.options.toolTipFade) {
             u.setOpacity(tooltip[0], 0);
             tooltip.show();
             u.fader(tooltip[0], 0, 1, opts.fadeDuration);

@@ -88,10 +88,7 @@
 
         this.clearEffects = function (force) {
             var opts = me.options;
-            // this is a timer callback - ensure it hasn't been unbound
-            //if (!me.image) {
-            //    return;
-            //}
+
             if ((me.currentAreaId < 0 || force !== true) && me.inArea) {
                 return;
             }
@@ -99,15 +96,15 @@
             me.ensureNoHighlight();
             
             if (opts.toolTipClose && $.inArray('area-mouseout', opts.toolTipClose) >= 0 && this.activeToolTip) {
+                me.cancelClear=false;
                 window.setTimeout(function() {
                     if (!me.cancelClear) {
                         me.clearTooltip();
-                        }
-                        me.cancelClear=false;
-                    },50);
+                    }
+                    me.cancelClear=false;
+                },50);
             }
             me.currentAreaId = -1;
-
         };
         this.click = function (e) {
             var selected, list, list_target, newSelectionState, canChangeState,

@@ -50,7 +50,7 @@ A jQuery plugin to enhance image maps.
     };
 
     $.mapster = {
-        version: "1.2.5b29",
+        version: "1.2.5b30",
         render_defaults: {
             fade: false,
             fadeDuration: 150,
@@ -383,14 +383,15 @@ A jQuery plugin to enhance image maps.
         me.name = opts.name;
     };
     m.Method.prototype.go = function () {
-        var i, data, ar, len, result, src = this.input,
+        var i,  data, ar, len, result, src = this.input,
                 area_list = [],
-                me = this;
+                me = this,
+                args = me.args || [];
         len = src.length;
         for (i = 0; i < len; i++) {
             data = $.mapster.getMapData(src[i]);
             if (data) {
-                if (m.queueCommand(data, this.input, this.name, this.args)) {
+                if (m.queueCommand(data, this.input, this.name, args)) {
                     if (this.first) {
                         result = '';
                     }
@@ -402,7 +403,7 @@ A jQuery plugin to enhance image maps.
                         area_list.push(ar);
                     }
                 } else {
-                    result = this.func_map.apply(data, this.args);
+                    result = this.func_map.apply(data, args);
                 }
                 if (this.first || typeof result !== 'undefined') {
                     break;
@@ -411,7 +412,7 @@ A jQuery plugin to enhance image maps.
         }
         // if there were areas, call the area function for each unique group
         $(area_list).each(function () {
-            result = me.func_area.apply(this, me.args);
+            result = me.func_area.apply(this, args);
         });
 
         if (typeof result !== 'undefined') {
@@ -1288,10 +1289,7 @@ A jQuery plugin to enhance image maps.
 
         this.clearEffects = function (force) {
             var opts = me.options;
-            // this is a timer callback - ensure it hasn't been unbound
-            //if (!me.image) {
-            //    return;
-            //}
+
             if ((me.currentAreaId < 0 || force !== true) && me.inArea) {
                 return;
             }
@@ -1299,15 +1297,15 @@ A jQuery plugin to enhance image maps.
             me.ensureNoHighlight();
             
             if (opts.toolTipClose && $.inArray('area-mouseout', opts.toolTipClose) >= 0 && this.activeToolTip) {
+                me.cancelClear=false;
                 window.setTimeout(function() {
                     if (!me.cancelClear) {
                         me.clearTooltip();
-                        }
-                        me.cancelClear=false;
-                    },50);
+                    }
+                    me.cancelClear=false;
+                },50);
             }
             me.currentAreaId = -1;
-
         };
         this.click = function (e) {
             var selected, list, list_target, newSelectionState, canChangeState,
@@ -2483,18 +2481,18 @@ A jQuery plugin to enhance image maps.
     m.AreaData.prototype.showTooltip = function () {
         var tooltip, left, top, tooltipCss, corners, fromCoords, container,
                         opts = this.effectiveOptions(),
-                        map_data = this.owner,
-                        baseOpts = map_data.options,
-                        template = map_data.options.toolTipContainer;
+                        md = this.owner,
+                        baseOpts = md.options,
+                        template = md.options.toolTipContainer;
 
         // prevent tooltip from being cleared if it was in progress - area is in the same group
 
-        map_data.cancelClear=false;
-        if (map_data.activeToolTipID === this.areaId) {
-            map_data.cancelClear=true;
+        md.cancelClear=true;
+        if (md.activeToolTipID === this.areaId) {
+        
             return;
         }
-
+        
         if (typeof template === 'string') {
             container = $(template);
         } else {
@@ -2512,11 +2510,11 @@ A jQuery plugin to enhance image maps.
             });
         }
 
-        map_data.clearTooltip();
+        md.clearTooltip();
 
-        $(map_data.image).after(tooltip);
-        map_data.activeToolTip = tooltip;
-        map_data.activeToolTipID = this.areaId;
+        $(md.image).after(tooltip);
+        md.activeToolTip = tooltip;
+        md.activeToolTipID = this.areaId;
 
         corners = u.areaCorners(fromCoords,
                         tooltip.outerWidth(true),
@@ -2533,12 +2531,12 @@ A jQuery plugin to enhance image maps.
         }
         tooltip.css(tooltipCss).addClass('mapster_tooltip');
 
-        map_data.bindTooltipClose('area-click', 'click', $(map_data.map));
-        map_data.bindTooltipClose('tooltip-click', 'click', tooltip);
+        md.bindTooltipClose('area-click', 'click', $(md.map));
+        md.bindTooltipClose('tooltip-click', 'click', tooltip);
         // not working properly- closes too soon sometimes
-        //map_data.bindTooltipClose('img-mouseout', 'mouseout', $(map_data.image));
+        //md.bindTooltipClose('img-mouseout', 'mouseout', $(md.image));
 
-        if (map_data.options.toolTipFade) {
+        if (md.options.toolTipFade) {
             u.setOpacity(tooltip[0], 0);
             tooltip.show();
             u.fader(tooltip[0], 0, 1, opts.fadeDuration);
