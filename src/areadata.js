@@ -156,13 +156,14 @@
 
 
     // represents an HTML area
-    m.MapArea = function (owner, areaEl,keys) {
+    m.MapArea = function (owner,areaEl,keys) {
         if (!owner) {
             return;
         }
         var me = this;
         me.owner = owner;   // a MapData object
         me.area = areaEl;
+        me.areaDataXref=[]; // a list of map_data.data[] id's for each areaData object containing this
         me.originalCoords = [];
         $.each(u.split(areaEl.coords), function (i, el) {
             me.originalCoords.push(parseFloat(el));

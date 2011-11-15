@@ -19,11 +19,11 @@ function Test(options) {
     this.timerStart=function (){
         var d = new Date();
         this.time  = d.getTime();
-    },
+    };
     this.timerEnd=function (){
         var d = new Date();
         return (d.getTime()-this.time);
-    }
+    };
 }
 
 Test.prototype.addError = function (err,test,passed) {
@@ -212,7 +212,7 @@ Test.prototype.assertCsvElementsEq = function(testcase, expected, description,te
     me=this;
     this.startTest();
     this.runTest(testcase,function (testcase) {
-        if (!(typeof testcase==='string')) {
+        if (typeof testcase!=='string') {
           err="test case is not a string";
         } else {
         arr1=testcase.split(',');
@@ -224,7 +224,7 @@ Test.prototype.assertCsvElementsEq = function(testcase, expected, description,te
     });
     this.endTest(err,description);
 };
-Test.prototype.assertInstanceOf = function(testcase, expected, description,test) {
+Test.prototype.assertInstanceOf = function(testcase, expected, description) {
     var err,
         test = eval("testcase instanceof " + expected);
     this.startTest();
@@ -238,7 +238,7 @@ Test.prototype.assertInstanceOf = function(testcase, expected, description,test)
 
 // run all tests if no name provided
 Test.prototype.run = function (test) {
-    var i, started = false, len;
+    var i,cur,started = false, me=this;
     function startTest(test) {
         if (!started) {
             this.output.append('<h1>"' + this.title + '"</h1><br /><hr /><br />');
@@ -260,15 +260,24 @@ Test.prototype.run = function (test) {
     if (this.timer) {
         this.iterations=5;
     }
-    len = this.tests.length;
-    for (i = 0; i < len; i++) {
-        if (!test || this.tests[i].name === test) {
-            startTest.call(this, this.tests[i]);
-            this.tests[i].test(this);
-            finishTest.call(this);
+    
+    cur=0;
+    function doTests() {
+        for (i = cur; i < me.tests.length; i++) {
+            if (!test || me.tests[i].name === test) {
+                startTest.call(me, me.tests[i]);
+                me.tests[i].test(me);
+                finishTest.call(me);
+            }
         }
+        cur=i;
+        window.setTimeout(function() {
+            if (cur<me.tests.length) {
+                doTests();
+            }},500);
     }
-
+    doTests();
+    
     this.output.append('<hr /');
 
 };

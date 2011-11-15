@@ -1,0 +1,10 @@
+TODO
+
+Update documentation:
+   rebind 2nd parameter (replace all options)
+   Group
+
+Fix alt image handling:
+   alt-images do not work when applied as an area-specific option. We need to make 
+   alt-image processing dynamic (when the image is set) so this works as well
+   as changing this option on the fly.

@@ -26,7 +26,10 @@
         };
 
         this.mouseover = function (e) {
-            var ar = me.getDataForArea(this), opts;
+            var arData = me.getAllDataForArea(this), 
+                ar=arData.length ? arData[0] : null,
+                opts;
+                
             if (ar && !ar.owner.resizing) {
 
                 opts = ar.effectiveOptions();
@@ -42,8 +45,12 @@
 
                 ar.highlight(!me.options.highlight);
 
-                if (me.options.showToolTip && opts.toolTip) {
-                    ar.showTooltip();
+                if (me.options.showToolTip) {
+                    $.each(arData,function() {
+                        if (this.effectiveOptions().toolTip) {
+                            this.showTooltip();
+                        }
+                    });
                 }
                 me.currentAreaId = ar.areaId;
 
@@ -88,9 +95,16 @@
             if ((me.currentAreaId < 0 || force !== true) && me.inArea) {
                 return;
             }
+            
             me.ensureNoHighlight();
-            if (opts.toolTipClose && $.inArray('area-mouseout', opts.toolTipClose) >= 0) {
-                me.clearTooltip();
+            
+            if (opts.toolTipClose && $.inArray('area-mouseout', opts.toolTipClose) >= 0 && this.activeToolTip) {
+                window.setTimeout(function() {
+                    if (!me.cancelClear) {
+                        me.clearTooltip();
+                        }
+                        me.cancelClear=false;
+                    },50);
             }
             me.currentAreaId = -1;
 
@@ -317,22 +331,34 @@
         return result;
     };
     // Locate MapArea data from an HTML area
-    p.getDataForArea = function (area) {
-        var ar,
-                    key = $(area).attr(this.options.mapKey);
+    p.getAllDataForArea = function (area) {
+        var i,ar, result=[],
+            me=this,
+            key = $(area).attr(this.options.mapKey);
+        
         if (key) {
-            key = u.split(key)[0];
+            key = u.split(key);
         }
-        ar = this.data[this._idFromKey(key)];
-        // set the actual area moused over/selected
-        // TODO: this is a brittle model for capturing which specific area - if this method was not used,
-        // ar.area could have old data. fix this.
-        if (ar) {
-            ar.area = area.length ? area[0] : area;
+        for (i=0;i<key.length;i++) {
+            ar = me.data[me._idFromKey(key[i])];
+            // set the actual area moused over/selected
+            // TODO: this is a brittle model for capturing which specific area - if this method was not used,
+            // ar.area could have old data. fix this.
+            result.push(ar);
+        }
+
+
+        return result;
+    };
+    p.getDataForArea = function(area) {
+        var data = this.getAllDataForArea(area);
+        if (data.length) {
+            data[0].area = area.length?area[0]:area;
+            return data[0];
         } else {
-            ar.area = null;
+            data.area = null;
+            return null;
         }
-        return ar;
     };
     p.getDataForKey = function (key) {
         return this.data[this._idFromKey(key)];
@@ -482,6 +508,7 @@
                 // Iterate through each mapKey assigned to this area
                 for (j = keys.length - 1; j >= 0; j--) {
                     key = keys[j];
+                    
                     if (opts.mapValue) {
                         group_value = $area.attr(opts.mapValue);
                     }
@@ -504,6 +531,7 @@
                             dataItem = me.data[area_id];
                         }
                     }
+                    mapArea.areaDataXref.push(area_id);
                     dataItem.areasXref.push(mapAreaId);
                 }
 

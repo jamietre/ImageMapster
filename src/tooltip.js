@@ -14,6 +14,9 @@
         onShowToolTip: null,
         onCreateTooltip: null
     });
+    $.extend(m.area_defaults, {
+        toolTip: null
+    });
     m.MapData.prototype.clearTooltip = function () {
         if (this.activeToolTip) {
             this.activeToolTip.remove();
@@ -46,7 +49,9 @@
 
         // prevent tooltip from being cleared if it was in progress - area is in the same group
 
+        map_data.cancelClear=false;
         if (map_data.activeToolTipID === this.areaId) {
+            map_data.cancelClear=true;
             return;
         }
 
@@ -62,7 +67,7 @@
             fromCoords = u.split(this.area.coords, ',');
         } else {
             fromCoords = [];
-            $.each(this.areas, function (i,e) {
+            $.each(this.areas(), function (i,e) {
                 fromCoords = fromCoords.concat(e.coords());
             });
         }

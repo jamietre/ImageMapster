@@ -221,7 +221,7 @@ mapster_tests = function (options) {
         map.mapster('unbind');
 
         if (disableCanvas) {
-            $.mapster.impl.init(false);
+            $.mapster.initGraphics(false);
         }
         map = $('img').mapster(map_options);
 
@@ -393,8 +393,9 @@ mapster_tests = function (options) {
         ut.assertEq($('#test_elements *').length, domCount, "# elements in DOM is the same.");
 
         if (disableCanvas) {
-            $.mapster.impl.init();
+            $.mapster.initGraphics($.mapster.hasCanvas);
         }
+        
     };
 
     if (!($.browser.msie && $.browser.version < 9)) {
@@ -453,7 +454,7 @@ mapster_tests = function (options) {
                 staticState: true
             }]
         };
-        map.unbind();
+        map.mapster('unbind');
         map = $('img').mapster(opts);
         ctr = $('#mapster_wrap_0');
         polys = ctr.find('var').children();
@@ -468,7 +469,7 @@ mapster_tests = function (options) {
             mapKey: 'state',
             selected: true
         };
-        map.unbind();
+        map.mapster('unbind');
         map = $('img').mapster(opts);
         
         ctr = $('#mapster_wrap_0');
@@ -479,7 +480,7 @@ mapster_tests = function (options) {
 
         delete opts.selected;
         opts.staticState=true;
-        map.unbind();
+        map.mapster('unbind');
         map = $('img').mapster(opts);
         ctr = $('#mapster_wrap_0');
         polys = ctr.find('var').children();
@@ -489,9 +490,11 @@ mapster_tests = function (options) {
         
         // restore graphics object to normal state for this type of browses
         $.mapster.initGraphics($.mapster.hasCanvas);
+        map.mapster('unbind');
     };
 
     map_test.addTest("Rendering Tests", renderingTests);
+
 
     map_test.addTest("Event/Tooltip Tests", function (ut) {
         var map = $('img').mapster(map_options);
@@ -565,7 +568,8 @@ mapster_tests = function (options) {
             //ut.assertPropsEq($(".mapster-tooltip").position(),{left: 50, top: 198},"Sanity check -0- should fail");
             // clear and reset tooltip, this time calling for a specific area
             map.mapster('tooltip');
-            map.mapster('tooltip', $("area[state='CA']").eq(2));
+            
+            map.mapster('tooltip', $("area[state='CA']").eq(1));
 
             ut.assertEq($(".mapster-tooltip").length, 1, "Tooltip appeared when activated manually with specific area");
 
@@ -583,60 +587,68 @@ mapster_tests = function (options) {
             map.mapster('tooltip', false);
             ut.assertEq($(".mapster-tooltip").length, 0, "Tooltip closed appeared when deactivated manually");
 
-
-            $('img').mapster('unbind');
+            map.mapster('unbind');
+            
+             map_test.addTest("Mapster Command Queue Tests", function (ut) {
+                    var map, complete, opts_should_be,
+                    domCount = $('#test_elements *').length;
+            
+                    function continueTests() {
+                        var testName = "Master Command Queue (async completion)";
+                        var map = $(this);
+                        map_test.addTest(testName, function (ut) {
+                            var newDomCount;
+            
+                            ut.assertCsvElementsEq(map.mapster('get'), opts_should_be, "Only initial selections present when simulating non-ready image");
+                            newDomCount = $('#test_elements *').length;
+                            ut.assertNotEq(newDomCount, domCount, "Dom size is unequal before unbinding at test end");
+                            map.mapster('unbind');
+                            
+                            newDomCount = $('#test_elements *').length;
+                            ut.assertEq(newDomCount, domCount, "Dom size is equal at test end");
+                        });
+                        //map_test.run(testName);
+                    }
+            
+                    complete = false;
+                    map = $("#usa_image");
+                    //map.removeProp('complete')
+                    map.mapster('test', 'if (typeof u!=="undefined") {u.old=u.isImageLoaded;u.isImageLoaded=function(){return false;};}');
+            
+                    // TODO: Test fails in IE because onLoad fires immediately: this code results in isImageLoaded never being called.
+                    //if ($file:///D:/VSProjects/jquery/imagemapster/tests/test.html < 0) {
+                    //    me.initialize();
+                    //}
+                    opts_should_be = "AK,TX";
+                    // in IE the onConfigured event may fire before we get a chace to try this (not sure how to fix right now) so just skip test of "opts_set" is false
+                    var queue_opts = $.extend({}, map_options, { onConfigured: continueTests });
+            
+                    map.mapster(queue_opts);
+            
+                    //map.mapster('test','map_data=get_map_data(this[0]); map_data.complete=false;');
+                    map.mapster('set', true, 'KS,KY');
+                    opts_should_be = "AK,KY,TX,KS";
+            
+                    ut.assertEq(map.mapster('get'), "", "(ok to fail if obfuscated) No options present when simulating non-ready image");
+                    // simulate the timer callback, should simply run command queue instead of recreating b/c we set complete=false
+                    map.mapster('test', 'if (typeof u !== "undefined") {u.isImageLoaded=u.old;}');
+            
+            });
+            // really need to get a decent deferral structure set up for these tests
         });
-        map.mapster('set_options', { onMouseout: cbtest.callback });
+           
+        map.mapster('set_options', { onMouseout: function() {
+            window.setTimeout(function() {
+                cbtest.callback();
+               },100);
+            }});
 
         $('area[state="CA"]').first().mouseout();
 
     });
 
 
-    map_test.addTest("Mapster Command Queue Tests", function (ut) {
-        var map, complete, opts_should_be,
-        domCount = $('#test_elements *').length;
-
-        function continueTests() {
-            var testName = "Master Command Queue (async completion)";
-            var map = $(this);
-            map_test.addTest(testName, function (ut) {
-                var newDomCount;
-
-                ut.assertCsvElementsEq(map.mapster('get'), opts_should_be, "Only initial selections present when simulating non-ready image");
-                newDomCount = $('#test_elements *').length;
-                ut.assertNotEq(newDomCount, domCount, "Dom size is unequal before unbinding at test end");
-                map.mapster('unbind');
-                newDomCount = $('#test_elements *').length;
-                ut.assertEq(newDomCount, domCount, "Dom size is equal at test end");
-            });
-            map_test.run(testName);
-        }
-
-        complete = false;
-        map = $("#usa_image");
-        //map.removeProp('complete')
-        map.mapster('test', 'if (typeof u!=="undefined") {u.old=u.isImageLoaded;u.isImageLoaded=function(){return false;};}');
-
-        // TODO: Test fails in IE because onLoad fires immediately: this code results in isImageLoaded never being called.
-        //if ($file:///D:/VSProjects/jquery/imagemapster/tests/test.html < 0) {
-        //    me.initialize();
-        //}
-        opts_should_be = "AK,TX";
-        // in IE the onConfigured event may fire before we get a chace to try this (not sure how to fix right now) so just skip test of "opts_set" is false
-        var queue_opts = $.extend({}, map_options, { onConfigured: continueTests });
-
-        map.mapster(queue_opts);
-
-        //map.mapster('test','map_data=get_map_data(this[0]); map_data.complete=false;');
-        map.mapster('set', true, 'KS,KY');
-        opts_should_be = "AK,KY,TX,KS";
-
-        ut.assertEq(map.mapster('get'), "", "(ok to fail if obfuscated) No options present when simulating non-ready image");
-        // simulate the timer callback, should simply run command queue instead of recreating b/c we set complete=false
-        map.mapster('test', 'if (typeof u !== "undefined") {u.isImageLoaded=u.old;}');
-
-    });
+   
 
 
     return map_test;
