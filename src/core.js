@@ -403,7 +403,7 @@ A jQuery plugin to enhance image maps.
                         area_list.push(ar);
                     }
                 } else {
-                    result = this.func_map.apply(data, args);
+                    result = this.func_map.apply(data, args || []);
                 }
                 if (this.first || typeof result !== 'undefined') {
                     break;
