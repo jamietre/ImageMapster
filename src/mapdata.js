@@ -26,10 +26,10 @@
         };
 
         this.mouseover = function (e) {
-            var arData = me.getAllDataForArea(this), 
+            var arData = me.getAllDataForArea(this),
                 ar=arData.length ? arData[0] : null,
                 opts;
-                
+
             if (ar && !ar.owner.resizing) {
 
                 opts = ar.effectiveOptions();
@@ -92,9 +92,9 @@
             if ((me.currentAreaId < 0 || force !== true) && me.inArea) {
                 return;
             }
-            
+
             me.ensureNoHighlight();
-            
+
             if (opts.toolTipClose && $.inArray('area-mouseout', opts.toolTipClose) >= 0 && this.activeToolTip) {
                 me.cancelClear=false;
                 window.setTimeout(function() {
@@ -332,7 +332,7 @@
         var i,ar, result=[],
             me=this,
             key = $(area).attr(this.options.mapKey);
-        
+
         if (key) {
             key = u.split(key);
         }
@@ -491,21 +491,21 @@
                 }
 
                 curKey = default_group ? '' : area.getAttribute(opts.mapKey);
-                
+
                 // conditions for which the area will be bound to mouse events
                 // only bind to areas that don't have nohref. ie 6&7 cannot detect the presence of nohref, so we have to also not bind if href is missing.
 
                 mapArea = new m.MapArea(me, area,
                     default_group || !curKey ? '' : curKey);
                 keys = mapArea.keys; // converted to an array by mapArea
-                
+
                 me.mapAreas.push(mapArea);
                 mapAreaId=me.mapAreas.length-1;
-                
+
                 // Iterate through each mapKey assigned to this area
                 for (j = keys.length - 1; j >= 0; j--) {
                     key = keys[j];
-                    
+
                     if (opts.mapValue) {
                         group_value = $area.attr(opts.mapValue);
                     }

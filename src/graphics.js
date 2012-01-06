@@ -25,11 +25,11 @@
         var me = this,
             md = me.map_data,
             opts = areaData.effectiveRenderOptions(mode);
-        
+
         // first get area options. Then override fade for selecting, and finally merge in the "select" effect options.
-        
+
         $.each(areaData.areas(), function (i,e) {
-            
+
             var opts = this.effectiveOptions(mode);
             opts.isMask = opts.isMask || (e.nohref && md.options.noHrefIsMask);
             //if (!u.isBool(opts.staticState)) {

@@ -51,10 +51,10 @@
 
         md.cancelClear=true;
         if (md.activeToolTipID === this.areaId) {
-        
+
             return;
         }
-        
+
         if (typeof template === 'string') {
             container = $(template);
         } else {

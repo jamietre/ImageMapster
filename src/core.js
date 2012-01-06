@@ -94,7 +94,7 @@ A jQuery plugin to enhance image maps.
         },
         shared_defaults: {
             render_highlight: { fade: true },
-            render_select: { fade: false },        
+            render_select: { fade: false },
             staticState: null,
             selected: null,
             isSelectable: true,
@@ -649,7 +649,7 @@ A jQuery plugin to enhance image maps.
                             this.options={};
                         });
                     }
-                    
+
                     merge_options(this, options);
                     this.setAreaOptions(options.areas || {});
 
@@ -835,7 +835,7 @@ A jQuery plugin to enhance image maps.
                     style.addRule('v\\:' + el, "behavior: url(#default#VML); antialias:true");
                 });
             }
-            
+
             // for safe load option
             $(window).bind('load', function () {
                 m.windowLoaded = true;

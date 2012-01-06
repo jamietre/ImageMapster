@@ -47,7 +47,7 @@
                     this.isSelected();
     };
     p.isSelected = function () {
-        return u.isBool(this.selected) ? this.selected : 
+        return u.isBool(this.selected) ? this.selected :
             u.isBool(this.owner.area_options.selected) ? this.owner.area_options.selected : false;
     };
     p.isSelectable = function () {
@@ -174,7 +174,7 @@
         me.keys = u.split(keys);
 
     };
-    
+
     m.MapArea.prototype.coords = function () {
         return this.originalCoords;
     };
@@ -182,7 +182,7 @@
     m.MapArea.prototype.effectiveOptions = function(mode) {
         var i,ad,m=this.owner,
             opts=u.updateProps({},m.area_options);
-        
+
         for (i=this.keys.length-1;i>=0;i--) {
             ad = m.getDataForKey(this.keys[i]);
             u.updateProps(opts,
@@ -191,7 +191,7 @@
                 { alt_image: this.owner.altImage(mode) });
         }
         return opts;
-        
+
     };
 
 

@@ -94,7 +94,7 @@ A jQuery plugin to enhance image maps.
         },
         shared_defaults: {
             render_highlight: { fade: true },
-            render_select: { fade: false },        
+            render_select: { fade: false },
             staticState: null,
             selected: null,
             isSelectable: true,
@@ -403,7 +403,7 @@ A jQuery plugin to enhance image maps.
                         area_list.push(ar);
                     }
                 } else {
-                    result = this.func_map.apply(data, args);
+                    result = this.func_map.apply(data, args || []);
                 }
                 if (this.first || typeof result !== 'undefined') {
                     break;
@@ -649,7 +649,7 @@ A jQuery plugin to enhance image maps.
                             this.options={};
                         });
                     }
-                    
+
                     merge_options(this, options);
                     this.setAreaOptions(options.areas || {});
 
@@ -835,7 +835,7 @@ A jQuery plugin to enhance image maps.
                     style.addRule('v\\:' + el, "behavior: url(#default#VML); antialias:true");
                 });
             }
-            
+
             // for safe load option
             $(window).bind('load', function () {
                 m.windowLoaded = true;
@@ -883,11 +883,11 @@ A jQuery plugin to enhance image maps.
         var me = this,
             md = me.map_data,
             opts = areaData.effectiveRenderOptions(mode);
-        
+
         // first get area options. Then override fade for selecting, and finally merge in the "select" effect options.
-        
+
         $.each(areaData.areas(), function (i,e) {
-            
+
             var opts = this.effectiveOptions(mode);
             opts.isMask = opts.isMask || (e.nohref && md.options.noHrefIsMask);
             //if (!u.isBool(opts.staticState)) {
@@ -1227,10 +1227,10 @@ A jQuery plugin to enhance image maps.
         };
 
         this.mouseover = function (e) {
-            var arData = me.getAllDataForArea(this), 
+            var arData = me.getAllDataForArea(this),
                 ar=arData.length ? arData[0] : null,
                 opts;
-                
+
             if (ar && !ar.owner.resizing) {
 
                 opts = ar.effectiveOptions();
@@ -1293,9 +1293,9 @@ A jQuery plugin to enhance image maps.
             if ((me.currentAreaId < 0 || force !== true) && me.inArea) {
                 return;
             }
-            
+
             me.ensureNoHighlight();
-            
+
             if (opts.toolTipClose && $.inArray('area-mouseout', opts.toolTipClose) >= 0 && this.activeToolTip) {
                 me.cancelClear=false;
                 window.setTimeout(function() {
@@ -1533,7 +1533,7 @@ A jQuery plugin to enhance image maps.
         var i,ar, result=[],
             me=this,
             key = $(area).attr(this.options.mapKey);
-        
+
         if (key) {
             key = u.split(key);
         }
@@ -1692,21 +1692,21 @@ A jQuery plugin to enhance image maps.
                 }
 
                 curKey = default_group ? '' : area.getAttribute(opts.mapKey);
-                
+
                 // conditions for which the area will be bound to mouse events
                 // only bind to areas that don't have nohref. ie 6&7 cannot detect the presence of nohref, so we have to also not bind if href is missing.
 
                 mapArea = new m.MapArea(me, area,
                     default_group || !curKey ? '' : curKey);
                 keys = mapArea.keys; // converted to an array by mapArea
-                
+
                 me.mapAreas.push(mapArea);
                 mapAreaId=me.mapAreas.length-1;
-                
+
                 // Iterate through each mapKey assigned to this area
                 for (j = keys.length - 1; j >= 0; j--) {
                     key = keys[j];
-                    
+
                     if (opts.mapValue) {
                         group_value = $area.attr(opts.mapValue);
                     }
@@ -1934,7 +1934,7 @@ A jQuery plugin to enhance image maps.
                     this.isSelected();
     };
     p.isSelected = function () {
-        return u.isBool(this.selected) ? this.selected : 
+        return u.isBool(this.selected) ? this.selected :
             u.isBool(this.owner.area_options.selected) ? this.owner.area_options.selected : false;
     };
     p.isSelectable = function () {
@@ -2061,7 +2061,7 @@ A jQuery plugin to enhance image maps.
         me.keys = u.split(keys);
 
     };
-    
+
     m.MapArea.prototype.coords = function () {
         return this.originalCoords;
     };
@@ -2069,7 +2069,7 @@ A jQuery plugin to enhance image maps.
     m.MapArea.prototype.effectiveOptions = function(mode) {
         var i,ad,m=this.owner,
             opts=u.updateProps({},m.area_options);
-        
+
         for (i=this.keys.length-1;i>=0;i--) {
             ad = m.getDataForKey(this.keys[i]);
             u.updateProps(opts,
@@ -2078,7 +2078,7 @@ A jQuery plugin to enhance image maps.
                 { alt_image: this.owner.altImage(mode) });
         }
         return opts;
-        
+
     };
 
 
@@ -2489,10 +2489,10 @@ A jQuery plugin to enhance image maps.
 
         md.cancelClear=true;
         if (md.activeToolTipID === this.areaId) {
-        
+
             return;
         }
-        
+
         if (typeof template === 'string') {
             container = $(template);
         } else {
