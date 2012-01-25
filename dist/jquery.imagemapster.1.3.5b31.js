@@ -60,7 +60,6 @@ A jQuery plugin to enhance image maps.
             fillColor: '000000',
             fillColorMask: 'FFFFFF',
             fillOpacity: 0.5,
-            highlight: null,
             stroke: false,
             strokeColor: 'ff0000',
             strokeOpacity: 1,
@@ -69,6 +68,7 @@ A jQuery plugin to enhance image maps.
             alt_image: null // used internally
         },
         defaults: {
+            highlight: null,     // let device type determine highlighting
             wrapClass: null,
             wrapCss: null,
             onGetList: null,
@@ -815,7 +815,7 @@ A jQuery plugin to enhance image maps.
                 return;
             }
             if (!u.isBool($.mapster.defaults.highlight)) {
-                m.render_defaults.highlight = !m.isTouch;
+                m.defaults.highlight = !m.isTouch;
             }
 
             $.extend(m.defaults, m.render_defaults,m.shared_defaults);
@@ -906,8 +906,8 @@ A jQuery plugin to enhance image maps.
         // first get area options. Then override fade for selecting, and finally merge in the "select" effect options.
 
         $.each(areaData.areas(), function (i,e) {
-        
-            var opts = e.effectiveRenderOptions(mode);
+
+            var opts = this.effectiveRenderOptions(mode);
             opts.isMask = opts.isMask || (e.nohref && md.options.noHrefIsMask);
             //if (!u.isBool(opts.staticState)) {
                 me.addShape(e, opts);
@@ -1241,7 +1241,7 @@ A jQuery plugin to enhance image maps.
                 }
                 me.clearEffects(true);
 
-                ar.highlight(!opts.highlight);
+                ar.highlight(!me.options.highlight);
 
                 if (me.options.showToolTip) {
                     $.each(arData,function() {
@@ -2063,20 +2063,21 @@ A jQuery plugin to enhance image maps.
         return this.originalCoords;
     };
     // get effective options for a specific area - can be result of more than one key
-    m.MapArea.prototype.effectiveRenderOptions = function(mode) {
+    m.MapArea.prototype.effectiveOptions = function(mode) {
         var i,ad,m=this.owner,
             opts=u.updateProps({},m.area_options);
 
         for (i=this.keys.length-1;i>=0;i--) {
             ad = m.getDataForKey(this.keys[i]);
             u.updateProps(opts,
-                           ad.effectiveRenderOptions(mode),
+                           ad.options,
                            ad.options["render_" + mode],
                 { alt_image: this.owner.altImage(mode) });
         }
         return opts;
 
     };
+
 
 } (jQuery));
 /* areacorners.js

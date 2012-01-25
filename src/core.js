@@ -50,7 +50,7 @@ A jQuery plugin to enhance image maps.
     };
 
     $.mapster = {
-        version: "1.2.5b30",
+        version: "1.2.5b31",
         render_defaults: {
             fade: false,
             fadeDuration: 150,
@@ -60,6 +60,7 @@ A jQuery plugin to enhance image maps.
             fillColor: '000000',
             fillColorMask: 'FFFFFF',
             fillOpacity: 0.5,
+            highlight: null,
             stroke: false,
             strokeColor: 'ff0000',
             strokeOpacity: 1,
@@ -68,7 +69,6 @@ A jQuery plugin to enhance image maps.
             alt_image: null // used internally
         },
         defaults: {
-            highlight: null,     // let device type determine highlighting
             wrapClass: null,
             wrapCss: null,
             onGetList: null,
@@ -363,7 +363,7 @@ A jQuery plugin to enhance image maps.
     //    args: 'args'
     //
     //}
-    // name: name of method
+    // name: name of method (required)
     // args: arguments to re-call with
     // Iterates through all the objects passed, and determines whether it's an area or an image, and calls the appropriate
     // callback for each. If anything is returned from that callback, the process is stopped and that data return. Otherwise,
@@ -371,12 +371,12 @@ A jQuery plugin to enhance image maps.
     var m = $.mapster;
     m.Method = function (that, func_map, func_area, opts) {
         var me = this;
+        me.name = opts.name;
         me.output = that;
         me.input = that;
         me.first = opts.first || false;
-        me.args = opts.args ? Array.prototype.slice.call(opts.args, 0) : null;
+        me.args = opts.args ? Array.prototype.slice.call(opts.args, 0) : [];
         me.key = opts.key;
-        me.name = opts.name;
         me.func_map = func_map;
         me.func_area = func_area;
         //$.extend(me, opts);
@@ -385,13 +385,12 @@ A jQuery plugin to enhance image maps.
     m.Method.prototype.go = function () {
         var i,  data, ar, len, result, src = this.input,
                 area_list = [],
-                me = this,
-                args = me.args || [];
+                me = this;
         len = src.length;
         for (i = 0; i < len; i++) {
             data = $.mapster.getMapData(src[i]);
             if (data) {
-                if (m.queueCommand(data, this.input, this.name, args)) {
+                if (m.queueCommand(data, me.input, me.name, me.args)) {
                     if (this.first) {
                         result = '';
                     }
@@ -403,7 +402,7 @@ A jQuery plugin to enhance image maps.
                         area_list.push(ar);
                     }
                 } else {
-                    result = this.func_map.apply(data, args || []);
+                    result = this.func_map.apply(data, me.args);
                 }
                 if (this.first || typeof result !== 'undefined') {
                     break;
@@ -412,7 +411,7 @@ A jQuery plugin to enhance image maps.
         }
         // if there were areas, call the area function for each unique group
         $(area_list).each(function () {
-            result = me.func_area.apply(this, args);
+            result = me.func_area.apply(this, me.args);
         });
 
         if (typeof result !== 'undefined') {
@@ -816,7 +815,7 @@ A jQuery plugin to enhance image maps.
                 return;
             }
             if (!u.isBool($.mapster.defaults.highlight)) {
-                m.defaults.highlight = !m.isTouch;
+                m.render_defaults.highlight = !m.isTouch;
             }
 
             $.extend(m.defaults, m.render_defaults,m.shared_defaults);

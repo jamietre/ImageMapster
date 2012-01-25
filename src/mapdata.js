@@ -43,7 +43,7 @@
                 }
                 me.clearEffects(true);
 
-                ar.highlight(!me.options.highlight);
+                ar.highlight(!opts.highlight);
 
                 if (me.options.showToolTip) {
                     $.each(arData,function() {

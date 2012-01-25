@@ -179,20 +179,19 @@
         return this.originalCoords;
     };
     // get effective options for a specific area - can be result of more than one key
-    m.MapArea.prototype.effectiveOptions = function(mode) {
+    m.MapArea.prototype.effectiveRenderOptions = function(mode) {
         var i,ad,m=this.owner,
             opts=u.updateProps({},m.area_options);
 
         for (i=this.keys.length-1;i>=0;i--) {
             ad = m.getDataForKey(this.keys[i]);
             u.updateProps(opts,
-                           ad.options,
+                           ad.effectiveRenderOptions(mode),
                            ad.options["render_" + mode],
                 { alt_image: this.owner.altImage(mode) });
         }
         return opts;
 
     };
-
 
 } (jQuery));
