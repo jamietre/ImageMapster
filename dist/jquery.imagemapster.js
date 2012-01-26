@@ -50,7 +50,7 @@ A jQuery plugin to enhance image maps.
     };
 
     $.mapster = {
-        version: "1.2.5b31",
+        version: "1.2.5b32",
         render_defaults: {
             fade: false,
             fadeDuration: 150,
@@ -1785,7 +1785,7 @@ A jQuery plugin to enhance image maps.
             // images[0] is the original image with map, images[1] is the copy/background that is visible
 
             u.setOpacity(me.image, 0);
-            u.setOpacity(me.images[1]);
+            u.setOpacity(me.images[1],1);
 
             me.setAreaOptions(opts.areas);
 

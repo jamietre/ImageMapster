@@ -587,7 +587,7 @@
             // images[0] is the original image with map, images[1] is the copy/background that is visible
 
             u.setOpacity(me.image, 0);
-            u.setOpacity(me.images[1]);
+            u.setOpacity(me.images[1],1);
 
             me.setAreaOptions(opts.areas);
 
