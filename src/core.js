@@ -50,7 +50,7 @@ A jQuery plugin to enhance image maps.
     };
 
     $.mapster = {
-        version: "1.2.5b32",
+        version: "1.2.5b33",
         render_defaults: {
             fade: false,
             fadeDuration: 150,

@@ -149,7 +149,7 @@
         // start calculation at the same time as effect
         me.scaleInfo = u.getScaleInfo(me.scaleInfo.realWidth, me.scaleInfo.realHeight, width, height);
         $.each(me.data, function (i, e) {
-            $.each(e.areas, function (i, e) {
+            $.each(e.areas(), function (i, e) {
                 e.resize();
             });
         });
