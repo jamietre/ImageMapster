@@ -76,7 +76,7 @@
         if (me.scaleInfo.width === width && me.scaleInfo.height === height) {
             return;
         }
-        highlightId = me._highlightId;
+        highlightId = me.highlightId;
 
         function sizeCanvas(canvas, w, h) {
             if ($.mapster.hasCanvas) {

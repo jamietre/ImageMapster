@@ -16,6 +16,7 @@
         //this._effectiveOptions = null;
     };
     p = m.AreaData.prototype;
+
     p.areas = function() {
         var i,result=[];
         for (i=0;i<this.areasXref.length;i++) {
@@ -58,6 +59,13 @@
         return u.isBool(this.effectiveOptions().staticState) ? false :
                     (u.isBool(this.owner.options.staticState) ? false : this.effectiveOptions().isDeselectable);
     };
+    p.isNotRendered = function() {
+        var area = $(this.area);
+        return area.attr('nohref') || 
+            !area.attr('href') || 
+            this.effectiveOptions().isMask;
+            
+    };
     //    p.setTemporaryOption = function (options) {
     //        this.tempOptions = options;
     //    };
@@ -87,11 +95,11 @@
     p.changeState = function (state_type, state) {
         if ($.isFunction(this.owner.options.onStateChange)) {
             this.owner.options.onStateChange.call(this.owner.image,
-                    {
-                        key: this.key,
-                        state: state_type,
-                        selected: state
-                    });
+                {
+                    key: this.key,
+                    state: state_type,
+                    selected: state
+                });
         }
     };
     // highlight this area, no render causes it to happen internally only
@@ -100,7 +108,7 @@
         if (!noRender) {
             o.graphics.addShapeGroup(this, "highlight");
         }
-        o.setHighlightID(this.areaId);
+        o.setHighlightId(this.areaId);
         this.changeState('highlight', true);
     };
     // select this area. if "callEvent" is true then the state change event will be called. (This method can be used

@@ -6,10 +6,39 @@
     var p, m = $.mapster, u = m.utils;
     m.MapData = function (image, options) {
         var me = this;
-        this.index = -1;                 // index of this in map_cache - so we have an ID to use for wraper div
+        
+        function queueMouseEvent(delay,area,callback) {
+            //var eventId = "id"+area.areaId;
+            function cbFinal(areaId) {
+                if (me.currentAreaId!==areaId && me.highlightId>=0) {
+                    callback();
+                }
+            }
+            if (me.activeAreaEvent) {
+                    window.clearTimeout(me.activeAreaEvent);
+            }
+            if (delay<0) {
+                return;
+            }
 
+            if (area.owner.resizing || delay) {
+                me.activeAreaEvent = window.setTimeout((function() {
+                            return function(area) {
+                            queueMouseEvent(0,area,callback);
+                        };
+                    }(area)),
+                    delay || 100);
+            } else {
+                 cbFinal(area.areaId);
+            }
+        }
+        
+        this.index = -1;                 // index of this in map_cache - so we have an ID to use for wraper div
+        this.currentAreaId=-1;
+        //this.legacyAreaId=-1;            // area ID that was previously active, but still retains effects.
         this.image = image;              // (Image)  main map image
         this.options = options;          // {}       options passed buy user
+        this.activeAreaEvent=null;
         this.area_options = u.updateProps({}, // default options for any MapArea
             m.area_defaults,
             options);
@@ -30,18 +59,24 @@
                 ar=arData.length ? arData[0] : null,
                 opts;
 
-            if (ar && !ar.owner.resizing) {
+            // mouseover events are ignored entirely while resizing, though we do care about mouseout events
+            // and must queue the action to keep things clean.
 
-                opts = ar.effectiveOptions();
+            if (!ar || ar.isNotRendered() || ar.owner.resizing) {
+                return;
+            }
 
-                me.inArea = true;
-                if (!$.mapster.hasCanvas) {
-                    this.blur();
-                }
-                if (me.currentAreaId === ar.areaId) {
-                    return;
-                }
-                me.clearEffects(true);
+            opts = ar.effectiveOptions();
+
+            me.inArea = true;
+            if (!$.mapster.hasCanvas) {
+                this.blur();
+            }
+            if (me.currentAreaId === ar.areaId) {
+                return;
+            }
+            if (me.highlightId !== ar.areaId) {
+                me.clearEffects();
 
                 ar.highlight(!opts.highlight);
 
@@ -52,27 +87,41 @@
                         }
                     });
                 }
-                me.currentAreaId = ar.areaId;
-
-
-                if ($.isFunction(me.options.onMouseover)) {
-                    me.options.onMouseover.call(this,
-                    {
-                        e: e,
-                        options: opts,
-                        key: ar.key,
-                        selected: ar.isSelected()
-                    });
-                }
             }
+            me.currentAreaId = ar.areaId;
+
+            if ($.isFunction(me.options.onMouseover)) {
+                me.options.onMouseover.call(this,
+                {
+                    e: e,
+                    options: opts,
+                    key: ar.key,
+                    selected: ar.isSelected()
+                });
+            }
+        
         };
+
         this.mouseout = function (e) {
-            var key,
-                    ar = me.getDataForArea(this),
+            var key, newArea,ar = me.getDataForArea(this),
                     opts = me.options;
-            if (ar && !ar.owner.resizing) {
-                me.inArea = false;
-                me.clearEffects(false);
+
+            
+            if (me.currentAreaId<0 || !ar) {
+                return;
+            }
+
+            newArea=me.getDataForArea(e.relatedTarget);
+            if (newArea === ar) {
+                return;
+            }
+            //me.legacyAreaId = me.currentAreaId;
+            
+            me.currentAreaId = -1;
+            ar.area=null;
+            
+            queueMouseEvent(opts.mouseoutDelay,ar,function() {
+                me.clearEffects();
 
                 if ($.isFunction(opts.onMouseout)) {
                     opts.onMouseout.call(this,
@@ -83,16 +132,14 @@
                         selected: ar.isSelected()
                     });
                 }
-            }
+            });
+            
         };
-
+        
         this.clearEffects = function (force) {
             var opts = me.options;
-
-            if ((me.currentAreaId < 0 || force !== true) && me.inArea) {
-                return;
-            }
-
+            
+            //me.legacyAreaId=-1;
             me.ensureNoHighlight();
 
             if (opts.toolTipClose && $.inArray('area-mouseout', opts.toolTipClose) >= 0 && this.activeToolTip) {
@@ -104,7 +151,6 @@
                     me.cancelClear=false;
                 },50);
             }
-            me.currentAreaId = -1;
         };
         this.click = function (e) {
             var selected, list, list_target, newSelectionState, canChangeState,
@@ -160,6 +206,7 @@
                     });
                 }
             }
+
             clickArea(ar);
 
         };
@@ -187,7 +234,7 @@
 
         // private members
         this._xref = {};               // (int)      xref of mapKeys to data[]
-        this._highlightId = -1;        // (int)      the currently highlighted element.
+        this.highlightId = -1;        // (int)      the currently highlighted element.
         this.currentAreaId = -1;
         this._tooltip_events = [];     // {}         info on events we bound to a tooltip container, so we can properly unbind them
         this.scaleInfo = null;         // {}         info about the image size, scaling, defaults
@@ -328,34 +375,30 @@
         return result;
     };
     // Locate MapArea data from an HTML area
-    p.getAllDataForArea = function (area) {
-        var i,ar, result=[],
+    p.getAllDataForArea = function (area,atMost) {
+        var i,ar, result,
             me=this,
             key = $(area).attr(this.options.mapKey);
 
         if (key) {
+            result=[];
             key = u.split(key);
-        }
-        for (i=0;i<key.length;i++) {
-            ar = me.data[me._idFromKey(key[i])];
-            // set the actual area moused over/selected
-            // TODO: this is a brittle model for capturing which specific area - if this method was not used,
-            // ar.area could have old data. fix this.
-            result.push(ar);
-        }
 
+            for (i=0;i<(atMost || key.length);i++) {
+                ar = me.data[me._idFromKey(key[i])];
+                ar.area=area.length ? area[0]:area;
+                // set the actual area moused over/selected
+                // TODO: this is a brittle model for capturing which specific area - if this method was not used,
+                // ar.area could have old data. fix this.
+                result.push(ar);
+            }
+        }
 
         return result;
     };
     p.getDataForArea = function(area) {
-        var data = this.getAllDataForArea(area);
-        if (data.length) {
-            data[0].area = area.length?area[0]:area;
-            return data[0];
-        } else {
-            data.area = null;
-            return null;
-        }
+        var ar=this.getAllDataForArea(area,1); 
+        return ar ? ar[0] || null : null;
     };
     p.getDataForKey = function (key) {
         return this.data[this._idFromKey(key)];
@@ -372,15 +415,15 @@
     // remove highlight if present, raise event
     p.ensureNoHighlight = function () {
         var ar;
-        if (this._highlightId >= 0) {
+        if (this.highlightId >= 0) {
             this.graphics.clearHighlight();
-            ar = this.data[this._highlightId];
+            ar = this.data[this.highlightId];
             ar.changeState('highlight', false);
-            this._highlightId = -1;
+            this.setHighlightId(-1);
         }
     };
-    p.setHighlightID = function (id) {
-        this._highlightId = id;
+    p.setHighlightId = function(id) {
+        this.highlightId = id;
     };
     p.clearSelections = function () {
         this.graphics.removeSelections();

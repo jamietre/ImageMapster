@@ -1208,8 +1208,8 @@ A jQuery plugin to enhance image maps.
         
         function queueMouseEvent(delay,area,callback) {
             //var eventId = "id"+area.areaId;
-            function cbFinal(areaId) {
-                if (me.currentAreaId!==areaId && me.highlightId>=0) {
+            function cbFinal() {
+                if (me.currentAreaId!==area.areaId && me.highlightId>=0) {
                     callback();
                 }
             }
@@ -1221,14 +1221,11 @@ A jQuery plugin to enhance image maps.
             }
 
             if (area.owner.resizing || delay) {
-                me.activeAreaEvent = window.setTimeout((function() {
-                            return function(area) {
-                            queueMouseEvent(0,area,callback);
-                        };
-                    }(area)),
-                    delay || 100);
+                me.activeAreaEvent = window.setTimeout(function() {
+                    queueMouseEvent(0,area,callback);
+                    },delay || 100);
             } else {
-                 cbFinal(area.areaId);
+                 cbFinal();
             }
         }
         
@@ -1315,9 +1312,7 @@ A jQuery plugin to enhance image maps.
                 return;
             }
             //me.legacyAreaId = me.currentAreaId;
-            
             me.currentAreaId = -1;
-            ar.area=null;
             
             queueMouseEvent(opts.mouseoutDelay,ar,function() {
                 me.clearEffects();
@@ -1332,7 +1327,6 @@ A jQuery plugin to enhance image maps.
                     });
                 }
             });
-            
         };
         
         this.clearEffects = function (force) {
@@ -1405,7 +1399,9 @@ A jQuery plugin to enhance image maps.
                     });
                 }
             }
-
+            if (ar.areaId !== me.highlightId) {
+                me.ensureNoHighlight();
+            }
             clickArea(ar);
 
         };
@@ -1574,7 +1570,7 @@ A jQuery plugin to enhance image maps.
         return result;
     };
     // Locate MapArea data from an HTML area
-    p.getAllDataForArea = function (area,atMost) {
+    p.getAllDataForArea = function (area) {
         var i,ar, result,
             me=this,
             key = $(area).attr(this.options.mapKey);
@@ -1583,9 +1579,8 @@ A jQuery plugin to enhance image maps.
             result=[];
             key = u.split(key);
 
-            for (i=0;i<(atMost || key.length);i++) {
+            for (i=0;i<key.length;i++) {
                 ar = me.data[me._idFromKey(key[i])];
-                ar.area=area.length ? area[0]:area;
                 // set the actual area moused over/selected
                 // TODO: this is a brittle model for capturing which specific area - if this method was not used,
                 // ar.area could have old data. fix this.
@@ -1596,8 +1591,17 @@ A jQuery plugin to enhance image maps.
         return result;
     };
     p.getDataForArea = function(area) {
-        var ar=this.getAllDataForArea(area,1); 
-        return ar ? ar[0] || null : null;
+        var data = this.getAllDataForArea(area);
+        if (data) {
+            if (data.length) {
+                data[0].area = area.length?area[0]:area;
+                return data[0];
+            } else {
+                data.area = null;
+                return null;
+            }
+        }
+        return null;
     };
     p.getDataForKey = function (key) {
         return this.data[this._idFromKey(key)];
