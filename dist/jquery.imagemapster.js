@@ -50,7 +50,7 @@ A jQuery plugin to enhance image maps.
     };
 
     $.mapster = {
-        version: "1.2.5b36",
+        version: "1.2.5b37",
         render_defaults: {
             fade: false,
             fadeDuration: 150,
@@ -1325,51 +1325,35 @@ A jQuery plugin to enhance image maps.
             me.currentAreaId = -1;
             ar.area=null;
             
-            queueMouseEvent(opts.mouseoutDelay,ar,function() {
-                me.clearEffects();
-
-                if ($.isFunction(opts.onMouseout)) {
-                    opts.onMouseout.call(this,
-                    {
-                        e: e,
-                        options: opts,
-                        key: key,
-                        selected: ar.isSelected()
-                    });
-                }
-            });
+            queueMouseEvent(opts.mouseoutDelay,ar,me.clearEffects);
+            
+            if ($.isFunction(opts.onMouseout)) {
+                opts.onMouseout.call(this,
+                {
+                    e: e,
+                    options: opts,
+                    key: key,
+                    selected: ar.isSelected()
+                });
+            }
             
         };
         
-        this.clearEffects = function (force) {
+        this.clearEffects = function () {
             var opts = me.options;
             
             //me.legacyAreaId=-1;
             me.ensureNoHighlight();
 
-            if (opts.toolTipClose && $.inArray('area-mouseout', opts.toolTipClose) >= 0 && this.activeToolTip) {
-                me.cancelClear=false;
-                window.setTimeout(function() {
-                    if (!me.cancelClear) {
-                        me.clearTooltip();
-                    }
-                    me.cancelClear=false;
-                },50);
+            if (opts.toolTipClose && $.inArray('area-mouseout', opts.toolTipClose) >= 0 && me.activeToolTip) {
+                me.clearTooltip();
             }
         };
         this.click = function (e) {
-            var selected, list, list_target, newSelectionState, canChangeState,
+            var selected, list, list_target, newSelectionState, canChangeState, cbResult, target,
                     that = this,
                     ar = me.getDataForArea(this),
                     opts = me.options;
-
-            e.preventDefault();
-            if (!ar || ar.owner.resizing) { return; }
-            if (!$.mapster.hasCanvas) {
-                this.blur();
-            }
-
-            opts = me.options;
             function clickArea(ar) {
                 var areaOpts;
                 canChangeState = (ar.isSelectable() &&
@@ -1382,15 +1366,23 @@ A jQuery plugin to enhance image maps.
 
                 list_target = m.getBoundList(opts, ar.key);
                 if ($.isFunction(opts.onClick)) {
-                    if (false === opts.onClick.call(that,
+                    cbResult= opts.onClick.call(that,
                     {
                         e: e,
                         listTarget: list_target,
                         key: ar.key,
                         selected: newSelectionState
-                    })) {
-                        return;
-                    }
+                    });
+                    if (u.isBool(cbResult)) {
+                        if (!cbResult) {
+                            return false;
+                        }
+                        target = $(ar.area).attr('href');
+                        if (target!=='#') {
+                            window.location.href=target;
+                            return false;
+                        }
+                     }
                 }
 
                 if (canChangeState) {
@@ -1411,9 +1403,16 @@ A jQuery plugin to enhance image maps.
                     });
                 }
             }
-
-            clickArea(ar);
-
+            
+            e.preventDefault();
+            if (ar && !ar.owner.resizing) { 
+                if (!$.mapster.hasCanvas) {
+                    this.blur();
+                }
+                opts = me.options;
+                clickArea(ar);
+            }
+           
         };
         this.graphics = new m.Graphics(this);
 
@@ -2509,7 +2508,7 @@ A jQuery plugin to enhance image maps.
     });
     m.MapData.prototype.clearTooltip = function () {
         if (this.activeToolTip) {
-            this.activeToolTip.remove();
+            this.activeToolTip.stop().remove();
             this.activeToolTip = null;
             this.activeToolTipID = -1;
         }

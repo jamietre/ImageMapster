@@ -19,7 +19,7 @@
     });
     m.MapData.prototype.clearTooltip = function () {
         if (this.activeToolTip) {
-            this.activeToolTip.remove();
+            this.activeToolTip.stop().remove();
             this.activeToolTip = null;
             this.activeToolTipID = -1;
         }
