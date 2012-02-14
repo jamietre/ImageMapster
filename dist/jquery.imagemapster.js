@@ -50,7 +50,7 @@ A jQuery plugin to enhance image maps.
     };
 
     $.mapster = {
-        version: "1.2.5b35",
+        version: "1.2.5b36",
         render_defaults: {
             fade: false,
             fadeDuration: 150,
@@ -166,7 +166,11 @@ A jQuery plugin to enhance image maps.
             },
             setOpacity: function (e, opacity) {
                 if (!$.mapster.hasCanvas) {
-                    e.style.filter = "Alpha(opacity=" + String(opacity * 100) + ")";
+                    var el = $(e);
+                    el.children().add(el).each(function() {
+                    //el.children().each(function() {
+                        this.style.filter = 'Alpha(opacity=' + String(opacity * 100) + ');';
+                    });
                 } else {
                     e.style.opacity = opacity;
                 }
@@ -942,14 +946,14 @@ A jQuery plugin to enhance image maps.
 
         me._addShapeGroupImpl(areaData, mode);
         me.render();
-
         if (opts.fade) {
-            u.fader(canvas, 0, 1, opts.fadeDuration);
+           u.fader(canvas,0, (me.hasCanvas ? 1 : opts.fillOpacity), opts.fadeDuration);
         }
-
+        
     };
     // configure remaining prototype methods for ie or canvas-supporting browser
     m.initGraphics = function(hasCanvas) {
+        p.hasCanvas = hasCanvas;
         if (hasCanvas) {
             p.hex_to_decimal = function (hex) {
                 return Math.max(0, Math.min(parseInt(hex, 16), 255));
@@ -1113,6 +1117,7 @@ A jQuery plugin to enhance image maps.
                 $(map_data.base_canvas).show();
                 $(canvas_temp).remove();
             };
+
         } else {
             p.renderShape = function (mapArea, options, cssclass) {
                 var me = this, stroke, e, t_fill, el_name, el_class, template, c = mapArea.coords();
@@ -1193,6 +1198,7 @@ A jQuery plugin to enhance image maps.
             p.refreshSelections = function () {
                 return null;
             };
+
         }
     };
     m.initGraphics(m.hasCanvas);

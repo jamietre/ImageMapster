@@ -50,7 +50,7 @@ A jQuery plugin to enhance image maps.
     };
 
     $.mapster = {
-        version: "1.2.5b35",
+        version: "1.2.5b36",
         render_defaults: {
             fade: false,
             fadeDuration: 150,
@@ -166,7 +166,11 @@ A jQuery plugin to enhance image maps.
             },
             setOpacity: function (e, opacity) {
                 if (!$.mapster.hasCanvas) {
-                    e.style.filter = "Alpha(opacity=" + String(opacity * 100) + ")";
+                    var el = $(e);
+                    el.children().add(el).each(function() {
+                    //el.children().each(function() {
+                        this.style.filter = 'Alpha(opacity=' + String(opacity * 100) + ');';
+                    });
                 } else {
                     e.style.opacity = opacity;
                 }
