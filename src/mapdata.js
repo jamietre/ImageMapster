@@ -15,7 +15,8 @@
                 }
             }
             if (me.activeAreaEvent) {
-                    window.clearTimeout(me.activeAreaEvent);
+                window.clearTimeout(me.activeAreaEvent);
+                me.activeAreaEvent=0;
             }
             if (delay<0) {
                 return;
@@ -23,7 +24,7 @@
 
             if (area.owner.resizing || delay) {
                 me.activeAreaEvent = window.setTimeout((function() {
-                            return function(area) {
+                            return function() {
                             queueMouseEvent(0,area,callback);
                         };
                     }(area)),
@@ -68,7 +69,6 @@
 
             opts = ar.effectiveOptions();
 
-            me.inArea = true;
             if (!$.mapster.hasCanvas) {
                 this.blur();
             }
@@ -245,8 +245,6 @@
         //                width: width,
         //                height: height,
         //                ratio: width / height
-        this.inArea = false;
-
     };
     p.state = function () {
         return {
