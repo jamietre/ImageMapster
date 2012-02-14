@@ -582,6 +582,7 @@
 
                 if (default_group) {
                     $area.attr('data-mapster-key', key);
+                    mapArea.keys=[key];
                 }
             }
 

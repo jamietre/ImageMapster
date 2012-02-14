@@ -50,7 +50,7 @@ A jQuery plugin to enhance image maps.
     };
 
     $.mapster = {
-        version: "1.2.5b37",
+        version: "1.2.5b38",
         render_defaults: {
             fade: false,
             fadeDuration: 150,
@@ -1787,6 +1787,7 @@ A jQuery plugin to enhance image maps.
 
                 if (default_group) {
                     $area.attr('data-mapster-key', key);
+                    mapArea.keys=[key];
                 }
             }
 
