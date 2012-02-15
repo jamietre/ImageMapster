@@ -32,7 +32,7 @@ A jQuery plugin to enhance image maps.
 /// January 19, 2011
 */
 
-/*jslint eqeqeq: false */
+/*jslint eqeqeq: false, laxbreak: true, evil: true */
 /*global jQuery: true, Zepto: true */
 
 
@@ -50,7 +50,7 @@ A jQuery plugin to enhance image maps.
     };
 
     $.mapster = {
-        version: "1.2.5b38",
+        version: "1.2.5b39",
         render_defaults: {
             fade: false,
             fadeDuration: 150,
@@ -910,9 +910,10 @@ A jQuery plugin to enhance image maps.
 
         // first get area options. Then override fade for selecting, and finally merge in the "select" effect options.
 
+        
         $.each(areaData.areas(), function (i,e) {
         
-            var opts = e.effectiveRenderOptions(mode);
+            var opts = areaData.effectiveRenderOptions(mode);
             opts.isMask = opts.isMask || (e.nohref && md.options.noHrefIsMask);
             //if (!u.isBool(opts.staticState)) {
                 me.addShape(e, opts);
@@ -2002,7 +2003,6 @@ A jQuery plugin to enhance image maps.
     //        this.tempOptions = options;
     //    };
     p.effectiveOptions = function (override_options) {
-        //if (!this._effectiveOptions) {
         //TODO this isSelectable should cascade already this seems redundant
         var opts = u.updateProps({},
                 this.owner.area_options,
@@ -2012,8 +2012,6 @@ A jQuery plugin to enhance image maps.
             );
         opts.selected = this.isSelected();
         return opts;
-        //}
-        //return this._effectiveOptions;
     };
     p.effectiveRenderOptions = function (mode, override_options) {
         var allOpts = this.effectiveOptions(override_options),
@@ -2023,6 +2021,7 @@ A jQuery plugin to enhance image maps.
             { alt_image: this.owner.altImage(mode) });
         return opts;
     };
+
     // Fire callback on area state change
     p.changeState = function (state_type, state) {
         if ($.isFunction(this.owner.options.onStateChange)) {
@@ -2119,7 +2118,7 @@ A jQuery plugin to enhance image maps.
         return this.originalCoords;
     };
     // get effective options for a specific area - can be result of more than one key
-    m.MapArea.prototype.effectiveRenderOptions = function(mode) {
+    m.MapArea.prototype.effectiveRenderOptions = function(mode,keys) {
         var i,ad,m=this.owner,
             opts=u.updateProps({},m.area_options);
 

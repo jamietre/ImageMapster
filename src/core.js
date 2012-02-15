@@ -32,7 +32,7 @@ A jQuery plugin to enhance image maps.
 /// January 19, 2011
 */
 
-/*jslint eqeqeq: false */
+/*jslint eqeqeq: false, laxbreak: true, evil: true */
 /*global jQuery: true, Zepto: true */
 
 
@@ -50,7 +50,7 @@ A jQuery plugin to enhance image maps.
     };
 
     $.mapster = {
-        version: "1.2.5b38",
+        version: "1.2.5b39",
         render_defaults: {
             fade: false,
             fadeDuration: 150,

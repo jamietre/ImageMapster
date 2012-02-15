@@ -1,0 +1,37 @@
+TODO
+
+The handling of area groups is problematic - at rendering time, the engine has no knowledge of the context that a specific
+area is being used in. That is, it doesn't know wherher it should be using group-level options of area-specific options.
+
+Instead of binding groups up front, keep the following references/objects
+
+AreaGroup (old AreaData object)
+Area (old MapArea object)
+
+When rendering, obtain options directly instead of preloading them into an AreaGroup.
+
+AreaGroup: contains a list of Areas
+Area: contains "keys" property
+
+When highlighting an Area, get its group key as the first of its keys, then highlight the AreaGroup for that key
+
+When highlighting each Area in an AreaGroup, build options for the group. There's no such thing as area-specific options.
+
+The whole process of merging options is jacked and needs to be refeactored. Ensure only optoins that matter are passed with "effectiveOptions" for starters.
+
+---
+
+areas can be members of multiple groups.
+options are associated with groups, not areas
+rendering should get options based on the group that was targeted, not the area 
+    (or, the default group, if it was highlighted from UI or activated from an area element).
+
+
+Update documentation:
+   rebind 2nd parameter (replace all options)
+   Group
+
+Fix alt image handling:
+   alt-images do not work when applied as an area-specific option. We need to make 
+   alt-image processing dynamic (when the image is set) so this works as well
+   as changing this option on the fly.

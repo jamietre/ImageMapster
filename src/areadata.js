@@ -70,7 +70,6 @@
     //        this.tempOptions = options;
     //    };
     p.effectiveOptions = function (override_options) {
-        //if (!this._effectiveOptions) {
         //TODO this isSelectable should cascade already this seems redundant
         var opts = u.updateProps({},
                 this.owner.area_options,
@@ -80,8 +79,6 @@
             );
         opts.selected = this.isSelected();
         return opts;
-        //}
-        //return this._effectiveOptions;
     };
     p.effectiveRenderOptions = function (mode, override_options) {
         var allOpts = this.effectiveOptions(override_options),
@@ -91,6 +88,7 @@
             { alt_image: this.owner.altImage(mode) });
         return opts;
     };
+
     // Fire callback on area state change
     p.changeState = function (state_type, state) {
         if ($.isFunction(this.owner.options.onStateChange)) {
@@ -187,7 +185,7 @@
         return this.originalCoords;
     };
     // get effective options for a specific area - can be result of more than one key
-    m.MapArea.prototype.effectiveRenderOptions = function(mode) {
+    m.MapArea.prototype.effectiveRenderOptions = function(mode,keys) {
         var i,ad,m=this.owner,
             opts=u.updateProps({},m.area_options);
 
