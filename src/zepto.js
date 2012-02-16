@@ -90,11 +90,11 @@ if (window.Zepto) {
             return this[name.toLowerCase()]();
            };
         });
-        $.fn.position = function (i,e) {
-            var el = e.elOrEmpty(); 
+        $.fn.position = $.fn.position ||  function () {
+            var el = this.elOrEmpty(); 
             return {
-                left: e.left,
-                top: e.top
+                left: this.left,
+                top: this.top
             };
         };
         $.browser = {};
