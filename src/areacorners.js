@@ -32,11 +32,11 @@
         }
         // try to figure out the best place for the tooltip
         if (width && height) {
-            $([[bestMaxX - width, minY - height], [bestMinX, minY - height],
+            $.each([[bestMaxX - width, minY - height], [bestMinX, minY - height],
                              [minX - width, bestMaxY - height], [minX - width, bestMinY],
                              [bestMaxY - height, maxX], [bestMinY, maxX],
                              [bestMaxX - width, maxY], [bestMinX, maxY]
-                      ]).each(function (i, e) {
+                      ],function (i, e) {
                           if (e[0] > 0 && e[1] > 0) {
                               nest = e;
                               return false;

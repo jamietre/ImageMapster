@@ -78,6 +78,9 @@
         md.activeToolTip = tooltip;
         md.activeToolTipID = this.areaId;
 
+        u.setOpacity(tooltip[0], 0);
+        tooltip.show();
+
         corners = u.areaCorners(fromCoords,
                         tooltip.outerWidth(true),
                         tooltip.outerHeight(true));
@@ -99,11 +102,9 @@
         //md.bindTooltipClose('img-mouseout', 'mouseout', $(md.image));
 
         if (md.options.toolTipFade) {
-            u.setOpacity(tooltip[0], 0);
-            tooltip.show();
             u.fader(tooltip[0], 0, 1, opts.fadeDuration);
         } else {
-            tooltip.show();
+            u.setOpacity(tooltip[0], 1);
         }
 
         //"this" will be null unless they passed something to forArea

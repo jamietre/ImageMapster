@@ -81,9 +81,9 @@
                 ar.highlight(!opts.highlight);
 
                 if (me.options.showToolTip) {
-                    $.each(arData,function() {
-                        if (this.effectiveOptions().toolTip) {
-                            this.showTooltip();
+                    $.each(arData,function(i,e) {
+                        if (e.effectiveOptions().toolTip) {
+                            e.showTooltip();
                         }
                     });
                 }
@@ -324,7 +324,7 @@
             return;
         }
         // check to see if every image has already been loaded
-        $.each(me.images, function (i, e) {
+        $.each(me.images, function (i,e) {
             if (!u.isImageLoaded(e)) {
                 alreadyLoaded = false;
                 return false;
@@ -364,9 +364,9 @@
     // getting all selected keys - return comma-separated string
     p.getSelected = function () {
         var result = '';
-        $.each(this.data, function (i, e) {
+        $.each(this.data, function (i,e) {
             if (e.isSelected()) {
-                result += (result ? ',' : '') + e.key;
+                result += (result ? ',' : '') + this.key;
             }
         });
         return result;
@@ -424,7 +424,7 @@
     };
     p.clearSelections = function () {
         this.graphics.removeSelections();
-        $.each(this.data, function (i, e) {
+        $.each(this.data, function (i,e) {
             e.selected = false;
         });
     };
@@ -705,8 +705,8 @@
         }
         // release refs
 
-        $.each(this.images, function (i) {
-            if (me.images[i] !== this.image) {
+        $.each(this.images, function (i,e) {
+            if (me.images[i] !== e.image) {
                 me.images[i] = null;
             }
         });

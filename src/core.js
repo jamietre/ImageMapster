@@ -50,8 +50,10 @@ A jQuery plugin to enhance image maps.
     };
 
     $.mapster = {
-        version: "1.2.5b39",
+        version: "1.2.4.040",
         render_defaults: {
+            isSelectable: true,
+            isDeselectable: true,
             fade: false,
             fadeDuration: 150,
             altImage: null,
@@ -97,9 +99,7 @@ A jQuery plugin to enhance image maps.
             render_highlight: { fade: true },
             render_select: { fade: false },
             staticState: null,
-            selected: null,
-            isSelectable: true,
-            isDeselectable: true
+            selected: null
         },
         area_defaults:
         {
@@ -122,8 +122,8 @@ A jQuery plugin to enhance image maps.
             this.hooks[name]=(this.hooks[name]||[]).push(callback);
         },
         callHooks: function(name,context) {
-            $.each(this.hooks[name]||[],function() {
-                this.apply(context);
+            $.each(this.hooks[name]||[],function(i,e) {
+                e.apply(context);
             });
         },
         utils: {
@@ -167,9 +167,9 @@ A jQuery plugin to enhance image maps.
             setOpacity: function (e, opacity) {
                 if (!$.mapster.hasCanvas) {
                     var el = $(e);
-                    el.children().add(el).each(function() {
+                    el.children().add(el).each(function(i,e) {
                     //el.children().each(function() {
-                        this.style.filter = 'Alpha(opacity=' + String(opacity * 100) + ');';
+                        e.style.filter = 'Alpha(opacity=' + String(opacity * 100) + ');';
                     });
                 } else {
                     e.style.opacity = opacity;
@@ -189,20 +189,20 @@ A jQuery plugin to enhance image maps.
                 });
                 //}
 
-                $.each(Array.prototype.slice.call(arguments, 1), function (i, obj) {
-                    $.each(obj || {}, function (prop, val) {
+                $.each(Array.prototype.slice.call(arguments, 1), function (i, src) {
+                    $.each(src || {}, function (prop) {
                         if (!onlyProps || $.inArray(prop, onlyProps) >= 0) {
-                            var p = obj[prop];
-                            if (typeof p !== 'undefined') {
-                                if ($.isPlainObject(p)) {
-                                    // not recursive - only copies 1 level of subobjects, and always merges
-                                    target[prop] = $.extend(target[prop] || {}, p);
-                                } else if (p && p.constructor === Array) {
-                                    target[prop] = p.slice(0);
-                                } else {
-                                    target[prop] = obj[prop];
-                                }
+                            var p = src[prop];
+
+                            if ($.isPlainObject(p)) {
+                                // not recursive - only copies 1 level of subobjects, and always merges
+                                target[prop] = $.extend(target[prop] || {}, p);
+                            } else if (p && p.constructor === Array) {
+                                target[prop] = p.slice(0);
+                            } else if (typeof p !== 'undefined') {
+                                target[prop] = src[prop];
                             }
+
                         }
                     });
                 });
@@ -286,11 +286,11 @@ A jQuery plugin to enhance image maps.
                 return null;
             }
             var index, key, result = $(), list = key_list.split(',');
-            opts.boundList.each(function () {
+            opts.boundList.each(function (i,e) {
                 for (index = 0; index < list.length; index++) {
                     key = list[index];
-                    if ($(this).is('[' + opts.listKey + '="' + key + '"]')) {
-                        result = result.add(this);
+                    if ($(e).is('[' + opts.listKey + '="' + key + '"]')) {
+                        result = result.add(e);
                     }
                 }
             });
@@ -301,16 +301,16 @@ A jQuery plugin to enhance image maps.
         // returns the matching elements from the bound list for the first area passed (normally only one should be passed, but
         // a list can be passed
         setBoundListProperties: function (opts, target, selected) {
-            target.each(function () {
+            target.each(function (i,e) {
                 if (opts.listSelectedClass) {
                     if (selected) {
-                        $(this).addClass(opts.listSelectedClass);
+                        $(e).addClass(opts.listSelectedClass);
                     } else {
-                        $(this).removeClass(opts.listSelectedClass);
+                        $(e).removeClass(opts.listSelectedClass);
                     }
                 }
                 if (opts.listSelectedAttribute) {
-                    $(this).attr(opts.listSelectedAttribute, selected);
+                    $(e).attr(opts.listSelectedAttribute, selected);
                 }
             });
         },
@@ -415,8 +415,8 @@ A jQuery plugin to enhance image maps.
             }
         }
         // if there were areas, call the area function for each unique group
-        $(area_list).each(function () {
-            result = me.func_area.apply(this, me.args);
+        $(area_list).each(function (i,e) {
+            result = me.func_area.apply(e, me.args);
         });
 
         if (typeof result !== 'undefined') {
@@ -564,15 +564,15 @@ A jQuery plugin to enhance image maps.
 
             do_set_bound = u.isBool(set_bound) ? set_bound : true;
 
-            this.each(function () {
+            this.each(function (i,e) {
                 var ar;
-                map_data = m.getMapData(this);
+                map_data = m.getMapData(e);
                 if (!map_data) {
                     return true; // continue
                 }
                 key_list = '';
-                if ($(this).is('img')) {
-                    if (m.queueCommand(map_data, $(this), 'set', [selected, key, do_set_bound])) {
+                if ($(e).is('img')) {
+                    if (m.queueCommand(map_data, $(e), 'set', [selected, key, do_set_bound])) {
                         return true;
                     }
                     if (key instanceof Array) {
@@ -585,8 +585,8 @@ A jQuery plugin to enhance image maps.
                     }
 
                     if (key_list) {
-                        $.each(u.split(key_list), function (i, e) {
-                            setSelection(map_data.getDataForKey(e.toString()));
+                        $.each(u.split(key_list), function (i,key) {
+                            setSelection(map_data.getDataForKey(key.toString()));
                         });
                         if (!selected) {
                             map_data.removeSelectionFinish();
@@ -594,10 +594,10 @@ A jQuery plugin to enhance image maps.
                     }
 
                 } else {
-                    parent = $(this).parent()[0];
+                    parent = $(e).parent()[0];
                     // it is possible for areas from different mapsters to be passed, make sure we're on the right one.
                     if (lastParent && parent !== lastParent) {
-                        map_data = m.getMapData(this);
+                        map_data = m.getMapData(e);
                         if (!map_data) {
                             return true;
                         }
@@ -605,11 +605,11 @@ A jQuery plugin to enhance image maps.
                     }
                     lastParent = parent;
 
-                    if (m.queueCommand(map_data, $(this), 'set', [selected, key, do_set_bound])) {
+                    if (m.queueCommand(map_data, $(e), 'set', [selected, key, do_set_bound])) {
                         return true;
                     }
 
-                    ar = map_data.getDataForArea(this);
+                    ar = map_data.getDataForArea(e);
 
                     if ($.inArray(ar, area_list) < 0) {
                         area_list.push(ar);
@@ -649,8 +649,8 @@ A jQuery plugin to enhance image maps.
                 function () {
                     if (replaceOptions) {
                         this.options = u.updateProps({}, m.defaults, options);
-                        $.each(this.data,function() {
-                            this.options={};
+                        $.each(this.data,function(i,e) {
+                            e.options={};
                         });
                     }
 
@@ -739,9 +739,9 @@ A jQuery plugin to enhance image maps.
         // do not queue this function
         me.state = function () {
             var md, result = null;
-            $(this).each(function () {
-                if (this.nodeName === 'IMG') {
-                    md = m.getMapData(this);
+            $(this).each(function (i,e) {
+                if (e.nodeName === 'IMG') {
+                    md = m.getMapData(e);
                     if (md) {
                         result = md.state();
                     }
@@ -754,16 +754,16 @@ A jQuery plugin to enhance image maps.
         me.bind = function (options) {
             var opts = u.updateProps({}, m.defaults, options);
 
-            return this.each(function () {
+            return this.each(function (i,e) {
                 var img, map, usemap, map_data;
 
                 // save ref to this image even if we can't access it yet. commands will be queued
-                img = $(this);
+                img = $(e);
 
                 // sorry - your image must have border:0, things are too unpredictable otherwise.
                 img.css('border', 0);
 
-                map_data = m.getMapData(this);
+                map_data = m.getMapData(e);
                 // if already bound completely, do a total rebind
                 if (map_data) {
                     me.unbind.apply(img);
@@ -843,9 +843,9 @@ A jQuery plugin to enhance image maps.
             // for safe load option
             $(window).bind('load', function () {
                 m.windowLoaded = true;
-                $(m.map_cache).each(function () {
-                    if (!this.complete && this.isReadyToBind()) {
-                        this.initialize();
+                $(m.map_cache).each(function (i,e) {
+                    if (!e.complete && e.isReadyToBind()) {
+                        e.initialize();
                     }
                 });
             });

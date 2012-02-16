@@ -4,11 +4,16 @@
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
 <title>Untitled Document</title>
 
-<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.6.1/jquery.js"></script>
+
 <!--
+<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.6.1/jquery.js"></script>
+-->
 <script type="text/javascript" src="../../zepto/src/zepto.js"></script>
 <script type="text/javascript" src="../../zepto/src/event.js"></script>
--->
+<script type="text/javascript" src="../../zepto/src/fx.js"></script>
+<script type="text/javascript" src="../src/zepto.js"></script>
+
+
 <!--
 <script type="text/javascript" src="../dist/jquery.imagemapster.js"></script>
 -->
@@ -156,9 +161,6 @@ div.input
         (function ($) {
             if ($) {
                 $.fn.prop = $.fn.attr;
-                $.fn.animate = function (target) {
-                    $.fn.css(target);
-                };
             }
         } (jQuery));
     }
@@ -204,17 +206,17 @@ div.input
             listSelectedAttribute: 'checked',
             sortList: "asc",
             onGetList: addCheckBoxes,
-            onClick: function (e) {
-                styleCheckbox(e.selected, e.listTarget);
-                if (!utils.isScrolledIntoView(e.listTarget, false, $statelist)) {
-                    utils.centerOn($statelist, e.listTarget);
-                }
+            //onClick: function (e) {
+            //    styleCheckbox(e.selected, e.listTarget);
+            //    if (!utils.isScrolledIntoView(e.listTarget, false, $statelist)) {
+            //        utils.centerOn($statelist, e.listTarget);
+            //    }
                 //if (e.key==='OH') {
                 //    $usamap.mapster('zoom','OH');
                 //     return false;
                 //}
-                return true;
-            },
+             //   return true;
+            //},
             onConfigured: mapsterConfigured,
             showToolTip: false,
             toolTipClose: ["area-mouseout"],

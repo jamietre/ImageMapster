@@ -53,11 +53,11 @@
     };
     p.isSelectable = function () {
         return u.isBool(this.effectiveOptions().staticState) ? false :
-                    (u.isBool(this.owner.options.staticState) ? false : this.effectiveOptions().isSelectable);
+                    (u.isBool(this.owner.options.staticState) ? false : u.boolOrDefault(this.effectiveOptions().isSelectable,true));
     };
     p.isDeselectable = function () {
         return u.isBool(this.effectiveOptions().staticState) ? false :
-                    (u.isBool(this.owner.options.staticState) ? false : this.effectiveOptions().isDeselectable);
+                    (u.isBool(this.owner.options.staticState) ? false : u.boolOrDefault(this.effectiveOptions().isDeselectable,true));
     };
     p.isNotRendered = function() {
         var area = $(this.area);
