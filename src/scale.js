@@ -41,9 +41,9 @@
         function getSize() {
             if (!realH) {
                 realH = this.height;
-                realW = this.width;
-                callback(me.getScaleInfo(realW, realH, width, height));
+                realW = this.width;    
             }
+            callback(me.getScaleInfo(realW, realH, width, height));
         }
         if (scale) {
             imgCopy = new Image();
@@ -55,6 +55,7 @@
         } else {
             realH = height;
             realW = width;
+            getSize();
         }
     };
     // options: duration = animation time (zero = no animation)
