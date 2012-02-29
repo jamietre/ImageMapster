@@ -15,3 +15,4 @@ If you run it without SharpLinter installed, it will still create a useable "jqu
 The other batch file, <code>make2.bat</code>, is what I use myself to build it before pushing out updates. It works more or less the same as <code>make.bat</code> but uses yet another custom tool instead of "copy" to avoid occasional text encoding issues. You don't have "SharpBatcher" so don't bother trying to use it, this is just in the repository for my own convenience.
 
 Any of these should work fine if you want to rebuild the script from the source files, with minor variations of what comments will be included in the minified version. (SharpLinter includes only the first comment block; uglifier includes all comments before code begins).
+
