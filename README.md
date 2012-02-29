@@ -33,7 +33,7 @@ Source repository: https://github.com/jamietre/ImageMapster
 
  Usage and Options
 
-[[Overview]]
+*Overview*
 
 Basic usage and options. Generally speaking, you just apply ImageMapster to a jQuery object containing images. They must be associated with an imagemap via the `usemap` tag. ImageMapster can support multiple simultaneous image maps. If you apply it to a jQuery object with several images, they will all use the same options provided. 
 
@@ -71,8 +71,14 @@ Please see github repository for complete documentation.
 
 ## Zepto Compatibility
 
-Include the module "zepto.cs" before any others and this will work with Zepto.
+Yes, but you need to use the "jquery.imagemapster.zepto.js" build. This patches a few holes in Zepto that ImageMapster needs. It is safe to use the zepto version with jQuery.
 
 ## Build instructions
 
-"rake"
+"rake" or "make"
+
+## Markdown
+
+If you use windows and Markdown, this is awesome.
+
+http://markdownpad.com/
