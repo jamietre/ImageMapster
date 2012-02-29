@@ -6,15 +6,15 @@
 
 if (window.Zepto) {
     jQuery = Zepto;
-    
+
     (function ($) {
         var hasOwn = Object.prototype.hasOwnProperty;
-       
+
         $.css=function( elem, name ) {
-            
+
             return getComputedStyle(elem,name);
         };
-        
+
         $.trim = function (str) {
             return str.replace(/^\s+/, '').replace(/\s+$/, '');
         };
@@ -31,7 +31,7 @@ if (window.Zepto) {
         $.isWindow = function(obj) {
                 return obj && typeof obj === "object" && "setInterval" in obj;
        };
-       
+
         $.isPlainObject= function( obj ) {
             // Must be an Object.
             // Because of IE, we also have to check the presence of the constructor property.
@@ -91,7 +91,7 @@ if (window.Zepto) {
            };
         });
         $.fn.position = $.fn.position ||  function () {
-            var el = this.elOrEmpty(); 
+            var el = this.elOrEmpty();
             return {
                 left: this.left,
                 top: this.top

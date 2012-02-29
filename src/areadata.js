@@ -61,10 +61,10 @@
     };
     p.isNotRendered = function() {
         var area = $(this.area);
-        return area.attr('nohref') || 
-            !area.attr('href') || 
+        return area.attr('nohref') ||
+            !area.attr('href') ||
             this.effectiveOptions().isMask;
-            
+
     };
     //    p.setTemporaryOption = function (options) {
     //        this.tempOptions = options;

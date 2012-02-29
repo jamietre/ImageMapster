@@ -49,9 +49,9 @@
 
         // first get area options. Then override fade for selecting, and finally merge in the "select" effect options.
 
-        
+
         $.each(areaData.areas(), function (i,e) {
-        
+
             //var opts = e.effectiveRenderOptions(mode);
             opts.isMask = opts.isMask || (e.nohref && md.options.noHrefIsMask);
             //if (!u.isBool(opts.staticState)) {
@@ -89,7 +89,7 @@
         if (opts.fade) {
            u.fader(canvas,0, (me.hasCanvas ? 1 : opts.fillOpacity), opts.fadeDuration);
         }
-        
+
     };
     // configure remaining prototype methods for ie or canvas-supporting browser
     m.initGraphics = function(hasCanvas) {

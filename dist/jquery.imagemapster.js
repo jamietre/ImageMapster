@@ -1,4 +1,4 @@
-/* ImageMapster
+﻿/* ImageMapster
    Version: see $.mapster.version
 
 Copyright 2011 James Treworgy
@@ -911,9 +911,9 @@ A jQuery plugin to enhance image maps.
 
         // first get area options. Then override fade for selecting, and finally merge in the "select" effect options.
 
-        
+
         $.each(areaData.areas(), function (i,e) {
-        
+
             //var opts = e.effectiveRenderOptions(mode);
             opts.isMask = opts.isMask || (e.nohref && md.options.noHrefIsMask);
             //if (!u.isBool(opts.staticState)) {
@@ -951,7 +951,7 @@ A jQuery plugin to enhance image maps.
         if (opts.fade) {
            u.fader(canvas,0, (me.hasCanvas ? 1 : opts.fillOpacity), opts.fadeDuration);
         }
-        
+
     };
     // configure remaining prototype methods for ie or canvas-supporting browser
     m.initGraphics = function(hasCanvas) {
@@ -1213,7 +1213,7 @@ A jQuery plugin to enhance image maps.
     var p, m = $.mapster, u = m.utils;
     m.MapData = function (image, options) {
         var me = this;
-        
+
         function queueMouseEvent(delay,area,callback) {
             //var eventId = "id"+area.areaId;
             function cbFinal(areaId) {
@@ -1240,7 +1240,7 @@ A jQuery plugin to enhance image maps.
                  cbFinal(area.areaId);
             }
         }
-        
+
         this.index = -1;                 // index of this in map_cache - so we have an ID to use for wraper div
         this.currentAreaId=-1;
         //this.legacyAreaId=-1;            // area ID that was previously active, but still retains effects.
@@ -1306,14 +1306,14 @@ A jQuery plugin to enhance image maps.
                     selected: ar.isSelected()
                 });
             }
-        
+
         };
 
         this.mouseout = function (e) {
             var key, newArea,ar = me.getDataForArea(this),
                     opts = me.options;
 
-            
+
             if (me.currentAreaId<0 || !ar) {
                 return;
             }
@@ -1323,12 +1323,12 @@ A jQuery plugin to enhance image maps.
                 return;
             }
             //me.legacyAreaId = me.currentAreaId;
-            
+
             me.currentAreaId = -1;
             ar.area=null;
-            
+
             queueMouseEvent(opts.mouseoutDelay,ar,me.clearEffects);
-            
+
             if ($.isFunction(opts.onMouseout)) {
                 opts.onMouseout.call(this,
                 {
@@ -1338,12 +1338,12 @@ A jQuery plugin to enhance image maps.
                     selected: ar.isSelected()
                 });
             }
-            
+
         };
-        
+
         this.clearEffects = function () {
             var opts = me.options;
-            
+
             //me.legacyAreaId=-1;
             me.ensureNoHighlight();
 
@@ -1405,16 +1405,16 @@ A jQuery plugin to enhance image maps.
                     });
                 }
             }
-            
+
             e.preventDefault();
-            if (ar && !ar.owner.resizing) { 
+            if (ar && !ar.owner.resizing) {
                 if (!$.mapster.hasCanvas) {
                     this.blur();
                 }
                 opts = me.options;
                 clickArea(ar);
             }
-           
+
         };
         this.graphics = new m.Graphics(this);
 
@@ -1601,7 +1601,7 @@ A jQuery plugin to enhance image maps.
         return result;
     };
     p.getDataForArea = function(area) {
-        var ar=this.getAllDataForArea(area,1); 
+        var ar=this.getAllDataForArea(area,1);
         return ar ? ar[0] || null : null;
     };
     p.getDataForKey = function (key) {
@@ -1995,10 +1995,10 @@ A jQuery plugin to enhance image maps.
     };
     p.isNotRendered = function() {
         var area = $(this.area);
-        return area.attr('nohref') || 
-            !area.attr('href') || 
+        return area.attr('nohref') ||
+            !area.attr('href') ||
             this.effectiveOptions().isMask;
-            
+
     };
     //    p.setTemporaryOption = function (options) {
     //        this.tempOptions = options;
