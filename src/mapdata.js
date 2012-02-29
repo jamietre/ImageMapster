@@ -517,163 +517,163 @@
         sel = ($.browser.msie && $.browser.version <= 7) ? 'area' :
                     (default_group ? 'area[coords]' : 'area[' + opts.mapKey + ']');
         areas = $(me.map).find(sel);
+        
+        // me.images[1] is the copy of the original image. It should be loaded & at its native size now.
 
-        u.scaleMap(me.image, opts.scaleMap, function (scaleInfo) {
-            scale = me.scaleInfo = scaleInfo;
-            for (i = areas.length - 1; i >= 0; i--) {
-                area_id = 0;
-                area = areas[i];
-                $area = $(area);
+        me.scaleInfo = scale = u.scaleMap(img,me.images[1], opts.scaleMap);
+        for (i = areas.length - 1; i >= 0; i--) {
+            area_id = 0;
+            area = areas[i];
+            $area = $(area);
 
-                // skip areas with no coords - selector broken for older ie
-                if (!area.coords) {
-                    continue;
+            // skip areas with no coords - selector broken for older ie
+            if (!area.coords) {
+                continue;
+            }
+
+            curKey = default_group ? '' : area.getAttribute(opts.mapKey);
+
+            // conditions for which the area will be bound to mouse events
+            // only bind to areas that don't have nohref. ie 6&7 cannot detect the presence of nohref, so we have to also not bind if href is missing.
+
+            mapArea = new m.MapArea(me, area,
+                default_group || !curKey ? '' : curKey);
+            keys = mapArea.keys; // converted to an array by mapArea
+
+            me.mapAreas.push(mapArea);
+            mapAreaId=me.mapAreas.length-1;
+
+            // Iterate through each mapKey assigned to this area
+            for (j = keys.length - 1; j >= 0; j--) {
+                key = keys[j];
+
+                if (opts.mapValue) {
+                    group_value = $area.attr(opts.mapValue);
                 }
-
-                curKey = default_group ? '' : area.getAttribute(opts.mapKey);
-
-                // conditions for which the area will be bound to mouse events
-                // only bind to areas that don't have nohref. ie 6&7 cannot detect the presence of nohref, so we have to also not bind if href is missing.
-
-                mapArea = new m.MapArea(me, area,
-                    default_group || !curKey ? '' : curKey);
-                keys = mapArea.keys; // converted to an array by mapArea
-
-                me.mapAreas.push(mapArea);
-                mapAreaId=me.mapAreas.length-1;
-
-                // Iterate through each mapKey assigned to this area
-                for (j = keys.length - 1; j >= 0; j--) {
-                    key = keys[j];
-
-                    if (opts.mapValue) {
-                        group_value = $area.attr(opts.mapValue);
-                    }
-                    if (default_group) {
-                        // set an attribute so we can refer to the area by index from the DOM object if no key
-                        area_id = addAreaData(me.data.length, group_value);
-                        dataItem = me.data[area_id];
-                        dataItem.key = key = area_id.toString();
-                    }
-                    else {
-                        area_id = me._xref[key];
-                        if (area_id >= 0) {
-                            dataItem = me.data[area_id];
-                            if (group_value && !me.data[area_id].value) {
-                                dataItem.value = group_value;
-                            }
-                        }
-                        else {
-                            area_id = addAreaData(key, group_value);
-                            dataItem = me.data[area_id];
-                        }
-                    }
-                    mapArea.areaDataXref.push(area_id);
-                    dataItem.areasXref.push(mapAreaId);
-                }
-
-                if (!mapArea.nohref) {
-                    $area.bind('mouseover.mapster', me.mouseover)
-                                .bind('mouseout.mapster', me.mouseout)
-                                .bind('click.mapster', me.click)
-                                .bind('mousedown.mapster', me.mousedown);
-                }
-                // Create a key if none was assigned by the user
-
                 if (default_group) {
-                    $area.attr('data-mapster-key', key);
-                    mapArea.keys=[key];
+                    // set an attribute so we can refer to the area by index from the DOM object if no key
+                    area_id = addAreaData(me.data.length, group_value);
+                    dataItem = me.data[area_id];
+                    dataItem.key = key = area_id.toString();
                 }
-            }
-
-            // now that we have processed all the areas, set css for wrapper, scale map if needed
-
-            css = {
-                display: 'block',
-                position: 'relative',
-                padding: 0,
-                width: scale.width,
-                height: scale.height
-            };
-            if (opts.wrapCss) {
-                $.extend(css, opts.wrapCss);
-
-            }
-            // if we were rebinding with an existing wrapper, the image will aready be in it
-            if (img.parent()[0] !== me.wrapper[0]) {
-
-                img.before(me.wrapper);
-            }
-
-            wrap.css(css);
-
-            // move all generated images into the wrapper for easy removal later
-
-            for (i = 1; i < me.images.length; i++) {
-                wrap.append(me.images[i]);
-            }
-            // seems that some browsers want to show stuff while being added to the DOM
-            $(me.images.slice(1)).hide();
-
-            img.css(m.canvas_style);
-            me.images[1].style.cssText = me.image.style.cssText;
-
-            wrap.append(me.images[1])
-                        .append(base_canvas)
-                        .append(overlay_canvas)
-                        .append(img);
-
-
-
-            // images[0] is the original image with map, images[1] is the copy/background that is visible
-
-            u.setOpacity(me.image, 0);
-            u.setOpacity(me.images[1],1);
-
-            me.setAreaOptions(opts.areas);
-
-            if (opts.isSelectable && opts.onGetList) {
-                sorted_list = me.data.slice(0);
-                if (opts.sortList) {
-                    if (opts.sortList === "desc") {
-                        sort_func = function (a, b) {
-                            return a === b ? 0 : (a > b ? -1 : 1);
-                        };
+                else {
+                    area_id = me._xref[key];
+                    if (area_id >= 0) {
+                        dataItem = me.data[area_id];
+                        if (group_value && !me.data[area_id].value) {
+                            dataItem.value = group_value;
+                        }
                     }
                     else {
-                        sort_func = function (a, b) {
-                            return a === b ? 0 : (a < b ? -1 : 1);
-                        };
+                        area_id = addAreaData(key, group_value);
+                        dataItem = me.data[area_id];
                     }
+                }
+                mapArea.areaDataXref.push(area_id);
+                dataItem.areasXref.push(mapAreaId);
+            }
 
-                    sorted_list.sort(function (a, b) {
-                        a = a.value;
-                        b = b.value;
-                        return sort_func(a, b);
-                    });
+            if (!mapArea.nohref) {
+                $area.bind('mouseover.mapster', me.mouseover)
+                            .bind('mouseout.mapster', me.mouseout)
+                            .bind('click.mapster', me.click)
+                            .bind('mousedown.mapster', me.mousedown);
+            }
+            // Create a key if none was assigned by the user
+
+            if (default_group) {
+                $area.attr('data-mapster-key', key);
+                mapArea.keys=[key];
+            }
+        }
+
+        // now that we have processed all the areas, set css for wrapper, scale map if needed
+
+        css = {
+            display: 'block',
+            position: 'relative',
+            padding: 0,
+            width: scale.width,
+            height: scale.height
+        };
+        if (opts.wrapCss) {
+            $.extend(css, opts.wrapCss);
+
+        }
+        // if we were rebinding with an existing wrapper, the image will aready be in it
+        if (img.parent()[0] !== me.wrapper[0]) {
+
+            img.before(me.wrapper);
+        }
+
+        wrap.css(css);
+
+        // move all generated images into the wrapper for easy removal later
+
+        for (i = 1; i < me.images.length; i++) {
+            wrap.append(me.images[i]);
+        }
+        // seems that some browsers want to show stuff while being added to the DOM
+        $(me.images.slice(1)).hide();
+
+        img.css(m.canvas_style);
+        me.images[1].style.cssText = me.image.style.cssText;
+
+        wrap.append(me.images[1])
+                    .append(base_canvas)
+                    .append(overlay_canvas)
+                    .append(img);
+
+
+
+        // images[0] is the original image with map, images[1] is the copy/background that is visible
+
+        u.setOpacity(me.image, 0);
+        u.setOpacity(me.images[1],1);
+
+        me.setAreaOptions(opts.areas);
+
+        if (opts.isSelectable && opts.onGetList) {
+            sorted_list = me.data.slice(0);
+            if (opts.sortList) {
+                if (opts.sortList === "desc") {
+                    sort_func = function (a, b) {
+                        return a === b ? 0 : (a > b ? -1 : 1);
+                    };
+                }
+                else {
+                    sort_func = function (a, b) {
+                        return a === b ? 0 : (a < b ? -1 : 1);
+                    };
                 }
 
-                me.options.boundList = opts.onGetList.call(me.image, sorted_list);
-            }
-            // TODO listenToList
-            //            if (opts.listenToList && opts.nitG) {
-            //                opts.nitG.bind('click.mapster', event_hooks[map_data.hooks_index].listclick_hook);
-            //            }
-
-            // populate areas from config options
-            me.redrawSelections();
-
-            // process queued commands
-            if (me.commands.length) {
-                $.each(me.commands, function (i, e) {
-                    m.impl[e.command].apply(e.that, e.args);
+                sorted_list.sort(function (a, b) {
+                    a = a.value;
+                    b = b.value;
+                    return sort_func(a, b);
                 });
-                me.commands = [];
             }
-            if (opts.onConfigured && typeof opts.onConfigured === 'function') {
-                opts.onConfigured.call(img, true);
-            }
-        });
+
+            me.options.boundList = opts.onGetList.call(me.image, sorted_list);
+        }
+        // TODO listenToList
+        //            if (opts.listenToList && opts.nitG) {
+        //                opts.nitG.bind('click.mapster', event_hooks[map_data.hooks_index].listclick_hook);
+        //            }
+
+        // populate areas from config options
+        me.redrawSelections();
+
+        // process queued commands
+        if (me.commands.length) {
+            $.each(me.commands, function (i, e) {
+                m.impl[e.command].apply(e.that, e.args);
+            });
+            me.commands = [];
+        }
+        if (opts.onConfigured && typeof opts.onConfigured === 'function') {
+            opts.onConfigured.call(img, true);
+        }
     };
     p.clearEvents = function () {
         $(this.map).find('area')

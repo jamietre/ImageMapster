@@ -4,16 +4,25 @@
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
 <title>Untitled Document</title>
 
-<ignore type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.js"></script>
+<!-- Uncomment to test with excanvas -->
+<!--
+<script type="text/javascript" src="excanvas.min.js"></script>
+-->
 
+<!-- Uncomment below to test with Zepto.
 Note: testing with Zepto requires patching event.js to permit calling bound event handlers directly, e.g. $(obj).mouseover()
+-->
 
-<ignore type="text/javascript" src="excanvas.min.js"></ignore>
+<!--
+<script type="text/javascript" src="../src/zepto.min.js"></script>
 <script type="text/javascript" src="../../zepto/src/zepto.js"></script>
 <script type="text/javascript" src="../../zepto/patched/event.js"></script>
 <script type="text/javascript" src="../../zepto/src/fx.js"></script>
+-->
 
-<!--
+<!-- Begin source test includes -->
+<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.js"></script>
+
 <script type="text/javascript" src="../src/core.js"></script>
 <script type="text/javascript" src="../src/graphics.js"></script>
 <script type="text/javascript" src="../src/mapdata.js"></script>
@@ -21,14 +30,19 @@ Note: testing with Zepto requires patching event.js to permit calling bound even
 <script type="text/javascript" src="../src/areacorners.js"></script>
 <script type="text/javascript" src="../src/scale.js"></script>
 <script type="text/javascript" src="../src/tooltip.js"></script>
+<!-- End source test includes -->
+
+<!-- Other options -- test with build, test with minified -->
+
+<!--
+<script type="text/javascript" src="../dist/jquery.imagemapster.min.js"></script>
+<script type="text/javascript" src="../dist/jquery.imagemapster.js"></script>
 -->
 
-<script type="text/javascript" src="../src/zepto.min.js"></script>
-<ignore type="text/javascript" src="../dist/jquery.imagemapster.min.js"></script>
-<script type="text/javascript" src="../dist/jquery.imagemapster.js"></script>
-
+<!-- These are always included -->
 <script type="text/javascript" src="simple-test.js"></script>
 <script type="text/javascript" src="jquery.imagemapster.tests.js"></script>
+<!-- end includes -->
 
 <style type="text/css">
 h1

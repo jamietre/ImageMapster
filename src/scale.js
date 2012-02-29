@@ -30,33 +30,17 @@
         };
     };
     // Scale a set of AREAs, return old data as an array of objects
-    m.utils.scaleMap = function (image, scale, callback) {
-        var imgCopy, realH, realW, width, height, img = $(image),
-                me = this;
-        if (!img.length) { return; }
-
+    m.utils.scaleMap = function (image, imageRaw, scale) {
+        var  realH, realW, width, height, 
+            img = $(image),
+            imgRaw = $(imageRaw);
+                
         width = img.width();
         height = img.height();
+        realW= imgRaw.width();
+        realH = imgRaw.height();
 
-        function getSize() {
-            if (!realH) {
-                realH = this.height;
-                realW = this.width;    
-            }
-            callback(me.getScaleInfo(realW, realH, width, height));
-        }
-        if (scale) {
-            imgCopy = new Image();
-            imgCopy.onload = getSize;
-            imgCopy.src = image.src;
-            if (imgCopy.width && imgCopy.height) {
-                getSize.call(imgCopy);
-            }
-        } else {
-            realH = height;
-            realW = width;
-            getSize();
-        }
+        return this.getScaleInfo(realW, realH, width, height);
     };
     // options: duration = animation time (zero = no animation)
     // force: supercede any existing animation

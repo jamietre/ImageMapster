@@ -106,7 +106,7 @@
 
             p.renderShape = function (context, mapArea, offset) {
                 var i,
-                    c = mapArea.coords(null, offset);
+                    c = mapArea.coords(null,offset);
 
                 switch (mapArea.shape) {
                     case 'rect':

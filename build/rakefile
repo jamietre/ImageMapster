@@ -18,7 +18,19 @@ MAPSTER_COMPONENTS = [
   'tooltip'
 ]
 
-task :default => [:clean, :concat, :dist]
+
+MAPSTER_ZEPTO_COMPONENTS = [
+  'zepto',
+  'core',
+  'graphics',
+  'mapdata',
+  'areadata',
+  'areacorners',
+  'scale',
+  'tooltip'
+]
+
+task :default => [:clean, :concat, :concatzepto, :dist]
 
 desc "Clean the distribution directory."
 task :clean do
@@ -54,6 +66,25 @@ task :concat, [:addons] => :whitespace do |task, args|
   end
 
   File.open(File.join(MAPSTER_DIST, 'jquery.imagemapster.js'), 'w') do |f|
+    f.puts files.map { |component|
+      File.read File.join(MAPSTER_SRC, "#{component}.js")
+    }
+  end
+end
+
+desc "Concatenate source files to build jquery.imagemapster.zepto.js"
+task :concatzepto, [:addons] => :whitespace do |task, args|
+  # colon-separated arguments such as `concat[foo:bar:-baz]` specify
+  # which components to add or exclude, depending on if it starts with "-"
+  add, exclude = args[:addons].to_s.split(':').partition {|c| c !~ /^-/ }
+  exclude.each {|c| c.sub!('-', '') }
+  files = (MAPSTER_ZEPTO_COMPONENTS | add) - exclude
+
+  unless files == MAPSTER_ZEPTO_COMPONENTS
+    puts "Building jquery.imagemapster.zepto.js by including: #{files.join(', ')}"
+  end
+
+  File.open(File.join(MAPSTER_DIST, 'jquery.imagemapster.zepto.js'), 'w') do |f|
     f.puts files.map { |component|
       File.read File.join(MAPSTER_SRC, "#{component}.js")
     }
@@ -97,6 +128,8 @@ end
 desc "Generates a minified version for distribution, using UglifyJS."
 task :dist do
   src, target = File.join(MAPSTER_DIST,'jquery.imagemapster.js'), File.join(MAPSTER_DIST,'jquery.imagemapster.min.js')
+  uglifyjs src, target
+  src, target = File.join(MAPSTER_DIST,'jquery.imagemapster.zepto.js'), File.join(MAPSTER_DIST,'jquery.imagemapster.zepto.min.js')
   uglifyjs src, target
   process_minified src, target
 end

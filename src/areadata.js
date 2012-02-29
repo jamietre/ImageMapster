@@ -25,10 +25,10 @@
         return result;
     };
     // return all coordinates for all areas
-    p.coords = function (percent, offset) {
+    p.coords = function(offset) {
         var coords = [];
         $.each(this.areas(), function (i, el) {
-            coords = coords.concat(el.coords(percent, offset));
+            coords = coords.concat(el.coords(offset));
         });
         return coords;
     };
@@ -181,8 +181,10 @@
 
     };
 
-    m.MapArea.prototype.coords = function () {
-        return this.originalCoords;
+    m.MapArea.prototype.coords = function (offset) {
+        return $.map(this.originalCoords,function(e) {
+            return offset ? e : e+offset;
+        });
     };
     // get effective options for a specific area - can be result of more than one key
     m.MapArea.prototype.effectiveRenderOptions = function(mode,keys) {

@@ -50,7 +50,7 @@ A jQuery plugin to enhance image maps.
     };
 
     $.mapster = {
-        version: "1.2.4.041",
+        version: "1.2.4.042",
         render_defaults: {
             isSelectable: true,
             isDeselectable: true,
@@ -151,13 +151,14 @@ A jQuery plugin to enhance image maps.
             },
             asArray: function (obj) {
                 return obj.constructor === Array ?
-                    obj : this.split(obj, ',');
+                    obj : this.split(obj);
             },
             // clean split: no padding or empty elements
-            split: function (text) {
-                var i, arr = text.split(',');
+            split: function (text,cb) {
+                var i,el, arr = text.split(',');
                 for (i = arr.length - 1; i >= 0; i--) {
-                    arr[i] = $.trim(arr[i]);
+                    el = $.trim(arr[i]);
+                    arr[i] = cb ? cb(el):el;
                     if (!arr[i]) {
                         arr = arr.splice(i, 1);
                     }
@@ -285,7 +286,7 @@ A jQuery plugin to enhance image maps.
             if (!opts.boundList) {
                 return null;
             }
-            var index, key, result = $(), list = key_list.split(',');
+            var index, key, result = $(), list = $.mapster.utils.split(key_list);
             opts.boundList.each(function (i,e) {
                 for (index = 0; index < list.length; index++) {
                     key = list[index];

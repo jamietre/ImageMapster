@@ -41,7 +41,7 @@
     };
     // Show tooltip adjacent to DOM element "area"
     m.AreaData.prototype.showTooltip = function () {
-        var tooltip, left, top, tooltipCss, corners, fromCoords, container,
+        var tooltip, left, top, tooltipCss, corners, areaSrc, container,
                         opts = this.effectiveOptions(),
                         md = this.owner,
                         baseOpts = md.options,
@@ -63,15 +63,6 @@
 
         tooltip = container.html(opts.toolTip).hide();
 
-        if (this.area) {
-            fromCoords = u.split(this.area.coords, ',');
-        } else {
-            fromCoords = [];
-            $.each(this.areas(), function (i,e) {
-                fromCoords = fromCoords.concat(e.coords());
-            });
-        }
-
         md.clearTooltip();
 
         $(md.image).after(tooltip);
@@ -80,10 +71,16 @@
 
         u.setOpacity(tooltip[0], 0);
         tooltip.show();
+        areaSrc = this.area ? 
+            [this.area] :
+            $.map(this.areas(),
+                function(e) {
+                    return e.area;
+                });
+        corners = u.areaCorners(areaSrc,
+                                tooltip.outerWidth(true),
+                                tooltip.outerHeight(true));
 
-        corners = u.areaCorners(fromCoords,
-                        tooltip.outerWidth(true),
-                        tooltip.outerHeight(true));
         // Try to upper-left align it first, if that doesn't work, change the parameters
 
         left = corners.tt[0];
