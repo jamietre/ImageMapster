@@ -220,8 +220,9 @@ mapster_tests = function (options) {
         }
         map.mapster('unbind');
 
+        var oldHasCanvas = $.mapster.hasCanvas;
         if (disableCanvas) {
-            $.mapster.initGraphics(false);
+            $.mapster.hasCanvas=false;
         }
         map = $('img').mapster(map_options);
 
@@ -393,7 +394,7 @@ mapster_tests = function (options) {
         ut.assertEq($('#test_elements *').length, domCount, "# elements in DOM is the same.");
 
         if (disableCanvas) {
-            $.mapster.initGraphics($.mapster.hasCanvas);
+            $.mapster.hasCanvas=oldHasCanvas;
         }
         
     };
@@ -410,7 +411,10 @@ mapster_tests = function (options) {
     // we can just observe the elements that have been added
     
     var renderingTests = function (ut, disableCanvas) {
-        $.mapster.initGraphics(false);
+        var oldHasCanvas = $.mapster.hasCanvas;
+        $.mapster.hasCanvas=false;
+        $.mapster.initGraphics();
+        
         //var u = $.mapster.utils;
         var opts = {
             mapKey: 'state',
@@ -489,7 +493,8 @@ mapster_tests = function (options) {
 
         
         // restore graphics object to normal state for this type of browses
-        $.mapster.initGraphics($.mapster.hasCanvas);
+        $.mapster.hasCanvas = oldHasCanvas;
+        $.mapster.initGraphics();
         map.mapster('unbind');
     };
 
