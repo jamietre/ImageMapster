@@ -150,6 +150,7 @@ A jQuery plugin to enhance image maps.
                     constr.apply(me,args);
                 };
                 Subclass.prototype = new BaseClass();
+                Subclass.prototype.constructor=Subclass;
                 return Subclass;
             },
             asArray: function (obj) {
