@@ -153,7 +153,7 @@ A jQuery plugin to enhance image maps.
     };
 
     $.mapster = {
-        version: "1.2.4.042",
+        version: "1.2.4.043",
         render_defaults: {
             isSelectable: true,
             isDeselectable: true,
@@ -977,7 +977,6 @@ A jQuery plugin to enhance image maps.
         // 3) call add_shape_to for each shape or mask, 4) call render() to finish
 
         var me = this;
-        me.hasCanvas=false;
         me.active = false;
         me.canvas = null;
         me.width = 0;
@@ -1053,14 +1052,13 @@ A jQuery plugin to enhance image maps.
         me._addShapeGroupImpl(areaData, mode);
         me.render();
         if (opts.fade) {
-           u.fader(canvas,0, (me.hasCanvas ? 1 : opts.fillOpacity), opts.fadeDuration);
+           u.fader(canvas,0, (m.hasCanvas ? 1 : opts.fillOpacity), opts.fadeDuration);
         }
 
     };
     // configure remaining prototype methods for ie or canvas-supporting browser
-    m.initGraphics = function(hasCanvas) {
-        p.hasCanvas = hasCanvas;
-        if (hasCanvas) {
+    m.initGraphics = function() {
+        if (m.hasCanvas) {
             p.hex_to_decimal = function (hex) {
                 return Math.max(0, Math.min(parseInt(hex, 16), 255));
             };
@@ -1307,7 +1305,7 @@ A jQuery plugin to enhance image maps.
 
         }
     };
-    m.initGraphics(m.hasCanvas);
+    m.initGraphics();
 } (jQuery));
 /* mapdata.js
    the MapData object, repesents an instance of a single bound imagemap
@@ -2104,9 +2102,8 @@ A jQuery plugin to enhance image maps.
             this.effectiveOptions().isMask;
 
     };
-    //    p.setTemporaryOption = function (options) {
-    //        this.tempOptions = options;
-    //    };
+
+    
     p.effectiveOptions = function (override_options) {
         //TODO this isSelectable should cascade already this seems redundant
         var opts = u.updateProps({},
@@ -2118,12 +2115,17 @@ A jQuery plugin to enhance image maps.
         opts.selected = this.isSelected();
         return opts;
     };
+    // Return the options effective for this area for a "render" or "highlight" mode. This should get the default options,
+    // merge in the areas-specific options, and then the mode-specific options.
+    
     p.effectiveRenderOptions = function (mode, override_options) {
         var allOpts = this.effectiveOptions(override_options),
             opts = u.updateProps({},
-            allOpts,
-            allOpts["render_" + mode],
-            { alt_image: this.owner.altImage(mode) });
+                allOpts,
+                allOpts["render_" + mode],
+                { 
+                    alt_image: this.owner.altImage(mode) 
+                });
         return opts;
     };
 
@@ -2224,7 +2226,12 @@ A jQuery plugin to enhance image maps.
             return offset ? e : e+offset;
         });
     };
-    // get effective options for a specific area - can be result of more than one key
+    // Get effective options for a specific area. Because areas can be part of multiple groups, this is problematic
+    // and I have not found a perfect solution yet. When highlighting an area by mouseover, the options should reflect
+    // the primary group. When highlighting by association, they should reflect the other area's primary group. Right
+    // now this function has no knowledge of context though, so attempting to define different sets of options for 
+    // areas depending on group context will not work as expected.
+    
     m.MapArea.prototype.effectiveRenderOptions = function(mode,keys) {
         var i,ad,m=this.owner,
             opts=u.updateProps({},m.area_options);

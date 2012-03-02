@@ -11,7 +11,6 @@
         // 3) call add_shape_to for each shape or mask, 4) call render() to finish
 
         var me = this;
-        me.hasCanvas=false;
         me.active = false;
         me.canvas = null;
         me.width = 0;
@@ -87,14 +86,13 @@
         me._addShapeGroupImpl(areaData, mode);
         me.render();
         if (opts.fade) {
-           u.fader(canvas,0, (me.hasCanvas ? 1 : opts.fillOpacity), opts.fadeDuration);
+           u.fader(canvas,0, (m.hasCanvas ? 1 : opts.fillOpacity), opts.fadeDuration);
         }
 
     };
     // configure remaining prototype methods for ie or canvas-supporting browser
-    m.initGraphics = function(hasCanvas) {
-        p.hasCanvas = hasCanvas;
-        if (hasCanvas) {
+    m.initGraphics = function() {
+        if (m.hasCanvas) {
             p.hex_to_decimal = function (hex) {
                 return Math.max(0, Math.min(parseInt(hex, 16), 255));
             };
@@ -341,5 +339,5 @@
 
         }
     };
-    m.initGraphics(m.hasCanvas);
+    m.initGraphics();
 } (jQuery));
