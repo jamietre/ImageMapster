@@ -50,7 +50,7 @@ A jQuery plugin to enhance image maps.
     };
 
     $.mapster = {
-        version: "1.2.4.045",
+        version: "1.2.4.046",
         render_defaults: {
             isSelectable: true,
             isDeselectable: true,
@@ -139,14 +139,18 @@ A jQuery plugin to enhance image maps.
             // extends the constructor, returns a new object prototype. Does not refer to the
             // original constructor so is protected if the original object is altered. This way you
             // can "extend" an object by replacing it with its subclass.
-            subclass: function (Obj, constr) {
-                var proto = new Obj(),
-                    sub = function () {
-                        proto.constructor.apply(this, arguments);
-                        constr.apply(this, arguments);
+            subclass: function(BaseClass, constr) {
+                var Subclass=function() {
+                    var me=this, 
+                        args=Array.prototype.slice.call(arguments,0);
+                    me.base = BaseClass.prototype;
+                    me.base.init = function() {
+                        BaseClass.prototype.constructor.apply(me,args);
                     };
-                sub.prototype = proto.constructor.prototype;
-                return sub;
+                    constr.apply(me,args);
+                };
+                Subclass.prototype = new BaseClass();
+                return Subclass;
             },
             asArray: function (obj) {
                 return obj.constructor === Array ?

@@ -144,6 +144,7 @@
 
     m.MapArea = u.subclass(m.MapArea, function () {
         //change the area tag data if needed
+        this.base.init();
         if (this.owner.scaleInfo.scale) {
             this.resize();
         }
