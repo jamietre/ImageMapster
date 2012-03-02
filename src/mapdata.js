@@ -423,10 +423,14 @@
         this.highlightId = id;
     };
     p.clearSelections = function () {
-        this.graphics.removeSelections();
+        //this.graphics.removeSelections();
         $.each(this.data, function (i,e) {
-            e.selected = false;
+            if (e.selected) {
+                e.removeSelection(true);
+             }
         });
+        this.removeSelectionFinish();
+        
     };
     // rebind based on new area options. This copies info from array "areas" into the data[area_id].area_options property.
     // it returns a list of all selected areas.
@@ -694,7 +698,7 @@
 
         // release refs to DOM elements
         $.each(this.data, function (i, e) {
-            e.reset(preserveState);
+            e.reset();
         });
         this.data = null;
         if (!preserveState) {

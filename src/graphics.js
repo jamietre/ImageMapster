@@ -131,7 +131,7 @@
                 context.closePath();
                 context.clip();
 
-                context.globalAlpha = options.altImageOpacity;
+                context.globalAlpha = options.altImageOpacity || options.fillOpacity;
 
                 context.drawImage(image, 0, 0, mapArea.owner.scaleInfo.width, mapArea.owner.scaleInfo.height);
             };

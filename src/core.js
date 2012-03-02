@@ -50,18 +50,17 @@ A jQuery plugin to enhance image maps.
     };
 
     $.mapster = {
-        version: "1.2.4.043",
+        version: "1.2.4.045",
         render_defaults: {
             isSelectable: true,
             isDeselectable: true,
             fade: false,
             fadeDuration: 150,
             altImage: null,
-            altImageOpacity: 0.7,
             fill: true,
             fillColor: '000000',
             fillColorMask: 'FFFFFF',
-            fillOpacity: 0.5,
+            fillOpacity: 0.7,
             highlight: null,
             stroke: false,
             strokeColor: 'ff0000',
@@ -473,10 +472,6 @@ A jQuery plugin to enhance image maps.
             merge_areas(map_data, options.areas);
             // refresh the area_option template
             u.updateProps(map_data.area_options, map_data.options);
-
-            $.each(map_data.data, function (i, e) {
-                e._effectiveOptions = null;
-            });
         }
 
         // Returns a comma-separated list of user-selected areas. "staticState" areas are not considered selected for the purposes of this method.

@@ -50,18 +50,17 @@ A jQuery plugin to enhance image maps.
     };
 
     $.mapster = {
-        version: "1.2.4.043",
+        version: "1.2.4.045",
         render_defaults: {
             isSelectable: true,
             isDeselectable: true,
             fade: false,
             fadeDuration: 150,
             altImage: null,
-            altImageOpacity: 0.7,
             fill: true,
             fillColor: '000000',
             fillColorMask: 'FFFFFF',
-            fillOpacity: 0.5,
+            fillOpacity: 0.7,
             highlight: null,
             stroke: false,
             strokeColor: 'ff0000',
@@ -473,10 +472,6 @@ A jQuery plugin to enhance image maps.
             merge_areas(map_data, options.areas);
             // refresh the area_option template
             u.updateProps(map_data.area_options, map_data.options);
-
-            $.each(map_data.data, function (i, e) {
-                e._effectiveOptions = null;
-            });
         }
 
         // Returns a comma-separated list of user-selected areas. "staticState" areas are not considered selected for the purposes of this method.
@@ -994,7 +989,7 @@ A jQuery plugin to enhance image maps.
                 context.closePath();
                 context.clip();
 
-                context.globalAlpha = options.altImageOpacity;
+                context.globalAlpha = options.altImageOpacity || options.fillOpacity;
 
                 context.drawImage(image, 0, 0, mapArea.owner.scaleInfo.width, mapArea.owner.scaleInfo.height);
             };
@@ -1630,10 +1625,14 @@ A jQuery plugin to enhance image maps.
         this.highlightId = id;
     };
     p.clearSelections = function () {
-        this.graphics.removeSelections();
+        //this.graphics.removeSelections();
         $.each(this.data, function (i,e) {
-            e.selected = false;
+            if (e.selected) {
+                e.removeSelection(true);
+             }
         });
+        this.removeSelectionFinish();
+        
     };
     // rebind based on new area options. This copies info from array "areas" into the data[area_id].area_options property.
     // it returns a list of all selected areas.
@@ -1901,7 +1900,7 @@ A jQuery plugin to enhance image maps.
 
         // release refs to DOM elements
         $.each(this.data, function (i, e) {
-            e.reset(preserveState);
+            e.reset();
         });
         this.data = null;
         if (!preserveState) {
@@ -1939,15 +1938,23 @@ A jQuery plugin to enhance image maps.
 (function ($) {
     var p, m = $.mapster, u = m.utils;
     m.AreaData = function (owner, key, value) {
-        this.owner = owner;
-        this.key = key || '';
-        this.areaId = -1;
-        this.value = value || '';
-        this.options = {};
-        this.selected = null;   // "null" means unchanged. Use "isSelected" method to just test true/false
-        this.areasXref = [];        // xref to MapArea objects
-        this.area = null;       // (temporary storage) - the actual area moused over
-        //this._effectiveOptions = null;
+        $.extend(this,{
+            owner: owner,
+            key: key || '',
+            areaId: -1,
+            value: value || '',
+            options:{},
+            // "null" means unchanged. Use "isSelected" method to just test true/false
+            selected: null,       
+            // xref to MapArea objects
+            areasXref: [],
+            // (temporary storage) - the actual area moused over
+            area: null,
+            // the last options used to render this. Cache so when re-drawing after a remove, changes in options won't
+            // break already selected things.
+            optsCache: null
+         });
+        
     };
     p = m.AreaData.prototype;
 
@@ -1966,13 +1973,12 @@ A jQuery plugin to enhance image maps.
         });
         return coords;
     };
-    p.reset = function (preserveState) {
+    p.reset = function () {
         $.each(this.areas(), function (i, e) {
-            e.reset(preserveState);
+            e.reset();
         });
         this.areasXref = [];
         this.options = null;
-        //this._effectiveOptions = null;
     };
     // Return the effective selected state of an area, incorporating staticState
     p.isSelectedOrStatic = function () {
@@ -2017,13 +2023,20 @@ A jQuery plugin to enhance image maps.
     // merge in the areas-specific options, and then the mode-specific options.
     
     p.effectiveRenderOptions = function (mode, override_options) {
-        var allOpts = this.effectiveOptions(override_options),
+        var allOpts,opts=this.optsCache;
+        
+        if (!opts || mode==='highlight') {
+            allOpts = this.effectiveOptions(override_options);
             opts = u.updateProps({},
                 allOpts,
                 allOpts["render_" + mode],
                 { 
                     alt_image: this.owner.altImage(mode) 
                 });
+            if (mode!=='highlight') {
+                this.optsCache=opts;
+            }
+        }
         return opts;
     };
 
@@ -2080,7 +2093,10 @@ A jQuery plugin to enhance image maps.
         //            }
         this.selected = false;
         this.changeState('select', false);
+        // release information about last area options when deselecting.
+        this.optsCache=null;
         this.owner.graphics.removeSelections(this.areaId);
+
         if (!partial) {
             this.owner.removeSelectionFinish();
         }
@@ -2116,9 +2132,12 @@ A jQuery plugin to enhance image maps.
         me.shape = areaEl.shape.toLowerCase();
         me.nohref = areaEl.nohref || !areaEl.href;
         me.keys = u.split(keys);
+        
 
     };
-
+    m.MapArea.prototype.reset = function() {
+        this.area=null;
+    };
     m.MapArea.prototype.coords = function (offset) {
         return $.map(this.originalCoords,function(e) {
             return offset ? e : e+offset;
@@ -2130,20 +2149,26 @@ A jQuery plugin to enhance image maps.
     // now this function has no knowledge of context though, so attempting to define different sets of options for 
     // areas depending on group context will not work as expected.
     
-    m.MapArea.prototype.effectiveRenderOptions = function(mode,keys) {
-        var i,ad,m=this.owner,
-            opts=u.updateProps({},m.area_options);
-
-        for (i=this.keys.length-1;i>=0;i--) {
-            ad = m.getDataForKey(this.keys[i]);
-            u.updateProps(opts,
-                           ad.effectiveRenderOptions(mode),
-                           ad.options["render_" + mode],
-                { alt_image: this.owner.altImage(mode) });
-        }
-        return opts;
-
-    };
+    // At this point this function is not used. I am leaving it here until we possibly have a better answer.
+    
+//     m.MapArea.prototype.effectiveRenderOptions_obsolete = function(mode,keys) {
+//         var i,ad,me=this,m=me.owner,opts;
+//        
+//         if (!me.lastOpts) {
+//            opts=u.updateProps({},m.area_options);
+// 
+//            for (i=this.keys.length-1;i>=0;i--) {
+//                ad = m.getDataForKey(this.keys[i]);
+//                u.updateProps(opts,
+//                               ad.effectiveRenderOptions(mode),
+//                               ad.options["render_" + mode],
+//                    { alt_image: this.owner.altImage(mode) });
+//            }
+//
+//           me.lastOpts=opts;
+//        }
+//        return me.lastOpts;
+//    };
 
 } (jQuery));
 /* areacorners.js

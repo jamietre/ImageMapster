@@ -5,19 +5,20 @@
 <title>Untitled Document</title>
 
 
-<!--
+
+
 <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.6.1/jquery.js"></script>
--->
+
+<!--
 <script type="text/javascript" src="../../zepto/src/zepto.js"></script>
 <script type="text/javascript" src="../../zepto/src/event.js"></script>
 <script type="text/javascript" src="../../zepto/src/fx.js"></script>
 <script type="text/javascript" src="../src/zepto.js"></script>
-
-
-<!--
-<script type="text/javascript" src="../dist/jquery.imagemapster.js"></script>
 -->
 
+<script type="text/javascript" src="../dist/jquery.imagemapster.js"></script>
+
+<!--
 <script type="text/javascript" src="../src/core.js"></script>
 <script type="text/javascript" src="../src/graphics.js"></script>
 <script type="text/javascript" src="../src/mapdata.js"></script>
@@ -25,6 +26,7 @@
 <script type="text/javascript" src="../src/areacorners.js"></script>
 <script type="text/javascript" src="../src/scale.js"></script>
 <script type="text/javascript" src="../src/tooltip.js"></script>
+-->
 
 <STYLE TYPE="text/css">
 
@@ -69,7 +71,10 @@ div.input
 
 
 <div id="map_demo" style="width:920px; height:1000px;">
-
+	<p><b>Disclaimer:</b> This demo is old and the code is stylistically bad and probably difficult to understand. I <b>strongly</b> recommend using the online demos at <a href="http://www.outsharked.com/imagemapster">the project web site</a>
+	as references for learning how to use imagemapster. I have kept this in the project mostly as a way to play with different options,
+	but the code is a poor example of style and I would not advise using it as a learning tool.
+	</p>
 	<div style="width:720px; border:0; overflow: hidden; float:left;">
 		<img style="width:720px;border:0;" id="usa_image" src="images/usa_map_720.png" usemap="#usa" >
 	</div>
@@ -79,8 +84,12 @@ div.input
 	<div>
 
 	<div style="clear:both;"></div>
+	<b>Using This Demonstration</b>
+	<ul><li>Change rendering options for highlight or select and click "update" to cause them to take effect.</li>
+	<li>If you change the "Highlight Fill" or "Selection Fill" option, the map and all other options will be reset. (As of version 1.2.4.043 the fill type can't be changed after the map is bound.)</li>
+	</ul>
        <p>Choose the style in which highlights will be rendered. For fill, "normal" uses solid color fills. The other options use an alternate image as the source of the fill.
-       "Alternate image" requires HTML5 canvas support. In browsers that do not support it, typically Internet Explorer < 9, "normal" will be used instead.</p>
+       "Alternate image" requires HTML5 canvas support. In browsers that do not support it, typically Internet Explorer < 9, it will always look the same as "normal."</p>
 
         Make changes to the options below and click here to update the map: <input id="update" type="submit" value="Update">
 
@@ -166,6 +175,7 @@ div.input
     }
 
     $(document).ready(function () {
+
         var $statelist, $usamap, ratio,
         mapsterConfigured = function () {
             // set html settings values
@@ -323,33 +333,45 @@ div.input
             	return item;
 
             }
-            function getHighlightOptions() {
-                var val = getSelected($("#highlight_style").find("option")).val();
+
+            function getFillOptions(el) {
                 var new_options,
-                state = !$usamap.mapster('get_options').highlightAltImage;
+					val = getSelected($(el).find("option")).val();
 
                 if (val > "0") {
                     new_options = {
 						altImage: 'images/usa_map_720_alt_' + val + '.jpg',
-						stroke: true,
-						altImageOpacity: 0.5
-                    }
+						stroke: true
+					}
                 } else {
                     new_options = {
 						altImage: null,
-						stroke: false,
-						altImageOpacity: null
+						stroke: false
                     }
                 }
-                options = $.extend({}, default_options);
-                options.render_select = new_options;
-                return options;
+                return new_options;
             }
-            $("#highlight_style").bind("change", function (e) {
-                e.preventDefault();
 
+            function getNewOptions() {
+                var options,
+                    render_highlight = getFillOptions($('#highlight_style')),
+                    render_select = getFillOptions($('#select_style'));
+
+                options = $.extend({},
+                	default_options,
+                	{
+                		render_select: render_select,
+	                	render_highlight: render_highlight
+                	});
+
+                return options;
+
+            }
+            $("#highlight_style, #select_style").bind("change", function (e) {
+                e.preventDefault();
                 $statelist.children().remove();
-                $usamap.mapster(getHighlightOptions());
+
+                $usamap.mapster(getNewOptions());
 
             });
             $("#update").click(function (e) {
@@ -378,7 +400,6 @@ div.input
 
                 if ($usamap.width() != width) {
                     var height = width / ratio;
-                    var hOpts = getHighlightOptions();
                     var keys = $usamap.mapster('get');
                     $usamap.mapster('resize', width, null, 1000);
                 } else {

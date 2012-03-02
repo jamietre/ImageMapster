@@ -5,15 +5,23 @@
 (function ($) {
     var p, m = $.mapster, u = m.utils;
     m.AreaData = function (owner, key, value) {
-        this.owner = owner;
-        this.key = key || '';
-        this.areaId = -1;
-        this.value = value || '';
-        this.options = {};
-        this.selected = null;   // "null" means unchanged. Use "isSelected" method to just test true/false
-        this.areasXref = [];        // xref to MapArea objects
-        this.area = null;       // (temporary storage) - the actual area moused over
-        //this._effectiveOptions = null;
+        $.extend(this,{
+            owner: owner,
+            key: key || '',
+            areaId: -1,
+            value: value || '',
+            options:{},
+            // "null" means unchanged. Use "isSelected" method to just test true/false
+            selected: null,       
+            // xref to MapArea objects
+            areasXref: [],
+            // (temporary storage) - the actual area moused over
+            area: null,
+            // the last options used to render this. Cache so when re-drawing after a remove, changes in options won't
+            // break already selected things.
+            optsCache: null
+         });
+        
     };
     p = m.AreaData.prototype;
 
@@ -32,13 +40,12 @@
         });
         return coords;
     };
-    p.reset = function (preserveState) {
+    p.reset = function () {
         $.each(this.areas(), function (i, e) {
-            e.reset(preserveState);
+            e.reset();
         });
         this.areasXref = [];
         this.options = null;
-        //this._effectiveOptions = null;
     };
     // Return the effective selected state of an area, incorporating staticState
     p.isSelectedOrStatic = function () {
@@ -83,13 +90,20 @@
     // merge in the areas-specific options, and then the mode-specific options.
     
     p.effectiveRenderOptions = function (mode, override_options) {
-        var allOpts = this.effectiveOptions(override_options),
+        var allOpts,opts=this.optsCache;
+        
+        if (!opts || mode==='highlight') {
+            allOpts = this.effectiveOptions(override_options);
             opts = u.updateProps({},
                 allOpts,
                 allOpts["render_" + mode],
                 { 
                     alt_image: this.owner.altImage(mode) 
                 });
+            if (mode!=='highlight') {
+                this.optsCache=opts;
+            }
+        }
         return opts;
     };
 
@@ -146,7 +160,10 @@
         //            }
         this.selected = false;
         this.changeState('select', false);
+        // release information about last area options when deselecting.
+        this.optsCache=null;
         this.owner.graphics.removeSelections(this.areaId);
+
         if (!partial) {
             this.owner.removeSelectionFinish();
         }
@@ -182,9 +199,12 @@
         me.shape = areaEl.shape.toLowerCase();
         me.nohref = areaEl.nohref || !areaEl.href;
         me.keys = u.split(keys);
+        
 
     };
-
+    m.MapArea.prototype.reset = function() {
+        this.area=null;
+    };
     m.MapArea.prototype.coords = function (offset) {
         return $.map(this.originalCoords,function(e) {
             return offset ? e : e+offset;
@@ -196,19 +216,25 @@
     // now this function has no knowledge of context though, so attempting to define different sets of options for 
     // areas depending on group context will not work as expected.
     
-    m.MapArea.prototype.effectiveRenderOptions = function(mode,keys) {
-        var i,ad,m=this.owner,
-            opts=u.updateProps({},m.area_options);
-
-        for (i=this.keys.length-1;i>=0;i--) {
-            ad = m.getDataForKey(this.keys[i]);
-            u.updateProps(opts,
-                           ad.effectiveRenderOptions(mode),
-                           ad.options["render_" + mode],
-                { alt_image: this.owner.altImage(mode) });
-        }
-        return opts;
-
-    };
+    // At this point this function is not used. I am leaving it here until we possibly have a better answer.
+    
+//     m.MapArea.prototype.effectiveRenderOptions_obsolete = function(mode,keys) {
+//         var i,ad,me=this,m=me.owner,opts;
+//        
+//         if (!me.lastOpts) {
+//            opts=u.updateProps({},m.area_options);
+// 
+//            for (i=this.keys.length-1;i>=0;i--) {
+//                ad = m.getDataForKey(this.keys[i]);
+//                u.updateProps(opts,
+//                               ad.effectiveRenderOptions(mode),
+//                               ad.options["render_" + mode],
+//                    { alt_image: this.owner.altImage(mode) });
+//            }
+//
+//           me.lastOpts=opts;
+//        }
+//        return me.lastOpts;
+//    };
 
 } (jQuery));
