@@ -50,7 +50,7 @@ A jQuery plugin to enhance image maps.
     };
 
     $.mapster = {
-        version: "1.2.4.046",
+        version: "1.2.4.047",
         render_defaults: {
             isSelectable: true,
             isDeselectable: true,
@@ -562,36 +562,38 @@ A jQuery plugin to enhance image maps.
                     }
                 }
             }
-
+            function addArea(ar) {
+               if ($.inArray(ar, area_list) < 0) {
+                    area_list.push(ar);
+                    key_list+=(key_list===''?'':',')+ar.key;
+                }
+            }
             do_set_bound = u.isBool(set_bound) ? set_bound : true;
 
             this.each(function (i,e) {
-                var ar;
+                var keys;
                 map_data = m.getMapData(e);
                 if (!map_data) {
                     return true; // continue
                 }
-                key_list = '';
+                keys = '';
                 if ($(e).is('img')) {
                     if (m.queueCommand(map_data, $(e), 'set', [selected, key, do_set_bound])) {
                         return true;
                     }
                     if (key instanceof Array) {
                         if (key.length) {
-                            key_list = key.join(",");
+                            keys = key.join(",");
                         }
                     }
                     else {
-                        key_list = key;
+                        keys = key;
                     }
 
-                    if (key_list) {
-                        $.each(u.split(key_list), function (i,key) {
-                            setSelection(map_data.getDataForKey(key.toString()));
+                    if (keys) {
+                        $.each(u.split(keys), function (i,key) {
+                            addArea(map_data.getDataForKey(key.toString()));
                         });
-                        if (!selected) {
-                            map_data.removeSelectionFinish();
-                        }
                     }
 
                 } else {
@@ -610,12 +612,7 @@ A jQuery plugin to enhance image maps.
                         return true;
                     }
 
-                    ar = map_data.getDataForArea(e);
-
-                    if ($.inArray(ar, area_list) < 0) {
-                        area_list.push(ar);
-                        key_list+=key_list===''?'':','+ar.key;
-                    }
+                    addArea(map_data.getDataForArea(e));
                 }
             });
             // set all areas collected from the loop
@@ -623,6 +620,9 @@ A jQuery plugin to enhance image maps.
             $.each(area_list, function (i, el) {
                 setSelection(el);
             });
+            if (!selected) {
+                map_data.removeSelectionFinish();
+            }
             if (do_set_bound && map_data.options.boundList) {
                 m.setBoundListProperties(map_data.options, m.getBoundList(map_data.options, key_list), selected);
             }
