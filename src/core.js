@@ -50,7 +50,7 @@ A jQuery plugin to enhance image maps.
     };
 
     $.mapster = {
-        version: "1.2.4.047",
+        version: "1.2.4.048",
         render_defaults: {
             isSelectable: true,
             isDeselectable: true,
@@ -546,9 +546,8 @@ A jQuery plugin to enhance image maps.
         // if set_bound is true, the bound list will also be updated. Default is true. If neither true nor false,
         // it will be toggled.
         me.set = function (selected, key, set_bound) {
-            var lastParent, parent, map_data, do_set_bound,
-                key_list,
-                area_list = []; // array of unique areas passed
+            var lastMap, map_data, do_set_bound,
+                key_list, area_list; // array of unique areas passed
 
             function setSelection(ar) {
                 if (ar) {
@@ -568,65 +567,69 @@ A jQuery plugin to enhance image maps.
                     key_list+=(key_list===''?'':',')+ar.key;
                 }
             }
+            // Clean up after a group that applied to the same map
+            function finishSetForMap(map_data) {
+                    $.each(area_list, function (i, el) {
+                        setSelection(el);
+                    });
+                    if (!selected) {
+                        map_data.removeSelectionFinish();
+                    }
+                    if (do_set_bound && map_data.options.boundList) {
+                        m.setBoundListProperties(map_data.options, m.getBoundList(map_data.options, key_list), selected);
+                }            
+            }
             do_set_bound = u.isBool(set_bound) ? set_bound : true;
 
+            // break out by maps first
             this.each(function (i,e) {
                 var keys;
                 map_data = m.getMapData(e);
-                if (!map_data) {
-                    return true; // continue
-                }
-                keys = '';
-                if ($(e).is('img')) {
-                    if (m.queueCommand(map_data, $(e), 'set', [selected, key, do_set_bound])) {
-                        return true;
+
+                if (map_data !== lastMap) {
+                    if (lastMap) {
+                       finishSetForMap(lastMap);
                     }
-                    if (key instanceof Array) {
-                        if (key.length) {
-                            keys = key.join(",");
+
+                    area_list = [];
+                    key_list='';
+                }
+                
+               if (map_data) {
+                    keys = '';
+                    if ($(e).is('img')) {
+                        if (!m.queueCommand(map_data, $(e), 'set', [selected, key, do_set_bound])) {
+                            if (key instanceof Array) {
+                                if (key.length) {
+                                    keys = key.join(",");
+                                }
+                            }
+                            else {
+                                keys = key;
+                            }
+
+                            if (keys) {
+                                $.each(u.split(keys), function (i,key) {
+                                    addArea(map_data.getDataForKey(key.toString()));
+                                    lastMap = map_data;
+                                });
+                            }
+                        }
+                    } else {
+                        if (!m.queueCommand(map_data, $(e), 'set', [selected, key, do_set_bound])) {
+                            addArea(map_data.getDataForArea(e));
+                            lastMap = map_data;
                         }
                     }
-                    else {
-                        keys = key;
-                    }
 
-                    if (keys) {
-                        $.each(u.split(keys), function (i,key) {
-                            addArea(map_data.getDataForKey(key.toString()));
-                        });
-                    }
-
-                } else {
-                    parent = $(e).parent()[0];
-                    // it is possible for areas from different mapsters to be passed, make sure we're on the right one.
-                    if (lastParent && parent !== lastParent) {
-                        map_data = m.getMapData(e);
-                        if (!map_data) {
-                            return true;
-                        }
-                        lastParent = parent;
-                    }
-                    lastParent = parent;
-
-                    if (m.queueCommand(map_data, $(e), 'set', [selected, key, do_set_bound])) {
-                        return true;
-                    }
-
-                    addArea(map_data.getDataForArea(e));
                 }
             });
-            // set all areas collected from the loop
-
-            $.each(area_list, function (i, el) {
-                setSelection(el);
-            });
-            if (!selected) {
-                map_data.removeSelectionFinish();
-            }
-            if (do_set_bound && map_data.options.boundList) {
-                m.setBoundListProperties(map_data.options, m.getBoundList(map_data.options, key_list), selected);
+            
+            if (map_data) {
+               finishSetForMap(map_data);
             }
 
+           
             return this;
         };
         me.unbind = function (preserveState) {
@@ -792,8 +795,8 @@ A jQuery plugin to enhance image maps.
                     map_data.map = map;
                     // add the actual main image
                     map_data.addImage(this);
-                    // will create a duplicate of the main image, which we use as a background
-                    map_data.addImage(null, this.src);
+                    // will create a duplicate of the main image, we need this to get raw size info
+                    map_data.addImage(null,this.src);
                     // add alt images
                     if ($.mapster.hasCanvas) {
                         map_data.addImage(null, opts.render_highlight.altImage || opts.altImage, "highlight");

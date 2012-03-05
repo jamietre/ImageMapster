@@ -153,7 +153,7 @@ A jQuery plugin to enhance image maps.
     };
 
     $.mapster = {
-        version: "1.2.4.047",
+        version: "1.2.4.048",
         render_defaults: {
             isSelectable: true,
             isDeselectable: true,
@@ -649,9 +649,8 @@ A jQuery plugin to enhance image maps.
         // if set_bound is true, the bound list will also be updated. Default is true. If neither true nor false,
         // it will be toggled.
         me.set = function (selected, key, set_bound) {
-            var lastParent, parent, map_data, do_set_bound,
-                key_list,
-                area_list = []; // array of unique areas passed
+            var lastMap, map_data, do_set_bound,
+                key_list, area_list; // array of unique areas passed
 
             function setSelection(ar) {
                 if (ar) {
@@ -671,65 +670,69 @@ A jQuery plugin to enhance image maps.
                     key_list+=(key_list===''?'':',')+ar.key;
                 }
             }
+            // Clean up after a group that applied to the same map
+            function finishSetForMap(map_data) {
+                    $.each(area_list, function (i, el) {
+                        setSelection(el);
+                    });
+                    if (!selected) {
+                        map_data.removeSelectionFinish();
+                    }
+                    if (do_set_bound && map_data.options.boundList) {
+                        m.setBoundListProperties(map_data.options, m.getBoundList(map_data.options, key_list), selected);
+                }            
+            }
             do_set_bound = u.isBool(set_bound) ? set_bound : true;
 
+            // break out by maps first
             this.each(function (i,e) {
                 var keys;
                 map_data = m.getMapData(e);
-                if (!map_data) {
-                    return true; // continue
-                }
-                keys = '';
-                if ($(e).is('img')) {
-                    if (m.queueCommand(map_data, $(e), 'set', [selected, key, do_set_bound])) {
-                        return true;
+
+                if (map_data !== lastMap) {
+                    if (lastMap) {
+                       finishSetForMap(lastMap);
                     }
-                    if (key instanceof Array) {
-                        if (key.length) {
-                            keys = key.join(",");
+
+                    area_list = [];
+                    key_list='';
+                }
+                
+               if (map_data) {
+                    keys = '';
+                    if ($(e).is('img')) {
+                        if (!m.queueCommand(map_data, $(e), 'set', [selected, key, do_set_bound])) {
+                            if (key instanceof Array) {
+                                if (key.length) {
+                                    keys = key.join(",");
+                                }
+                            }
+                            else {
+                                keys = key;
+                            }
+
+                            if (keys) {
+                                $.each(u.split(keys), function (i,key) {
+                                    addArea(map_data.getDataForKey(key.toString()));
+                                    lastMap = map_data;
+                                });
+                            }
+                        }
+                    } else {
+                        if (!m.queueCommand(map_data, $(e), 'set', [selected, key, do_set_bound])) {
+                            addArea(map_data.getDataForArea(e));
+                            lastMap = map_data;
                         }
                     }
-                    else {
-                        keys = key;
-                    }
 
-                    if (keys) {
-                        $.each(u.split(keys), function (i,key) {
-                            addArea(map_data.getDataForKey(key.toString()));
-                        });
-                    }
-
-                } else {
-                    parent = $(e).parent()[0];
-                    // it is possible for areas from different mapsters to be passed, make sure we're on the right one.
-                    if (lastParent && parent !== lastParent) {
-                        map_data = m.getMapData(e);
-                        if (!map_data) {
-                            return true;
-                        }
-                        lastParent = parent;
-                    }
-                    lastParent = parent;
-
-                    if (m.queueCommand(map_data, $(e), 'set', [selected, key, do_set_bound])) {
-                        return true;
-                    }
-
-                    addArea(map_data.getDataForArea(e));
                 }
             });
-            // set all areas collected from the loop
-
-            $.each(area_list, function (i, el) {
-                setSelection(el);
-            });
-            if (!selected) {
-                map_data.removeSelectionFinish();
-            }
-            if (do_set_bound && map_data.options.boundList) {
-                m.setBoundListProperties(map_data.options, m.getBoundList(map_data.options, key_list), selected);
+            
+            if (map_data) {
+               finishSetForMap(map_data);
             }
 
+           
             return this;
         };
         me.unbind = function (preserveState) {
@@ -895,8 +898,8 @@ A jQuery plugin to enhance image maps.
                     map_data.map = map;
                     // add the actual main image
                     map_data.addImage(this);
-                    // will create a duplicate of the main image, which we use as a background
-                    map_data.addImage(null, this.src);
+                    // will create a duplicate of the main image, we need this to get raw size info
+                    map_data.addImage(null,this.src);
                     // add alt images
                     if ($.mapster.hasCanvas) {
                         map_data.addImage(null, opts.render_highlight.altImage || opts.altImage, "highlight");
@@ -1361,8 +1364,13 @@ A jQuery plugin to enhance image maps.
         this.imgCssText = image.style.cssText || null;
 
         this.initializeDefaults();
+        
+        // Try to stop browsers from drawing their own outline
         this.mousedown = function (e) {
-            e.preventDefault();
+            e.preventDefault();            
+            if (!$.mapster.hasCanvas) {
+                this.blur();
+            }
         };
 
         this.mouseover = function (e) {
@@ -1379,9 +1387,6 @@ A jQuery plugin to enhance image maps.
 
             opts = ar.effectiveOptions();
 
-            if (!$.mapster.hasCanvas) {
-                this.blur();
-            }
             if (me.currentAreaId === ar.areaId) {
                 return;
             }
@@ -1685,7 +1690,7 @@ A jQuery plugin to enhance image maps.
     p.getAllDataForArea = function (area,atMost) {
         var i,ar, result,
             me=this,
-            key = $(area).attr(this.options.mapKey);
+            key = $(area).filter('area').attr(me.options.mapKey);
 
         if (key) {
             result=[];
@@ -1778,7 +1783,8 @@ A jQuery plugin to enhance image maps.
     };
     ///called when images are done loading
     p.initialize = function () {
-        var base_canvas, overlay_canvas, wrap, parentId, $area, area, css, sel, areas, i, j, keys, key, area_id, default_group, group_value, img,
+        var imgCopy, base_canvas, overlay_canvas, wrap, parentId, $area, area, css, sel, areas, i, j, keys, 
+            key, area_id, default_group, group_value, img,
                     sort_func, sorted_list, dataItem, mapArea, scale,  curKey, mapAreaId,
                     me = this,
                     opts = me.options;
@@ -1795,6 +1801,7 @@ A jQuery plugin to enhance image maps.
 
         me.complete = true;
         img = $(me.image);
+        
         parentId = img.parent().attr('id');
 
         // create a div wrapper only if there's not already a wrapper, otherwise, own it
@@ -1832,9 +1839,23 @@ A jQuery plugin to enhance image maps.
                     (default_group ? 'area[coords]' : 'area[' + opts.mapKey + ']');
         areas = $(me.map).find(sel);
         
-        // me.images[1] is the copy of the original image. It should be loaded & at its native size now.
+        // me.images[1] is the copy of the original image. It should be loaded & at its native size now so we can obtain the true
+        // width & height to see if we need to scale. We then 
 
         me.scaleInfo = scale = u.scaleMap(img,me.images[1], opts.scaleMap);
+        
+        // Now we got what we needed from the copy -clone from the original image again to make sure any other attributes are copied
+        imgCopy = $(me.images[0])
+            .clone()
+            .addClass('mapster_el')
+            .attr({id:null, usemap: null});
+            
+        $.each(["width","height","padding","border","margin"],function(i,e) {
+            imgCopy.css(e,img.css(e));
+        });
+        me.images[1]=imgCopy[0];
+        
+                    
         for (i = areas.length - 1; i >= 0; i--) {
             area_id = 0;
             area = areas[i];
@@ -1924,25 +1945,22 @@ A jQuery plugin to enhance image maps.
 
         // move all generated images into the wrapper for easy removal later
 
+        $(me.images.slice(2)).hide();
         for (i = 1; i < me.images.length; i++) {
             wrap.append(me.images[i]);
         }
-        // seems that some browsers want to show stuff while being added to the DOM
-        $(me.images.slice(1)).hide();
 
-        img.css(m.canvas_style);
-        me.images[1].style.cssText = me.image.style.cssText;
+        //me.images[1].style.cssText = me.image.style.cssText;
 
-        wrap.append(me.images[1])
-                    .append(base_canvas)
+        wrap.append(base_canvas)
                     .append(overlay_canvas)
-                    .append(img);
-
-
+                    .append(img.css(m.canvas_style));
 
         // images[0] is the original image with map, images[1] is the copy/background that is visible
 
-        u.setOpacity(me.image, 0);
+        u.setOpacity(me.images[0], 0);
+        $(me.images[1]).show();
+
         u.setOpacity(me.images[1],1);
 
         me.setAreaOptions(opts.areas);

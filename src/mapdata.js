@@ -51,8 +51,13 @@
         this.imgCssText = image.style.cssText || null;
 
         this.initializeDefaults();
+        
+        // Try to stop browsers from drawing their own outline
         this.mousedown = function (e) {
-            e.preventDefault();
+            e.preventDefault();            
+            if (!$.mapster.hasCanvas) {
+                this.blur();
+            }
         };
 
         this.mouseover = function (e) {
@@ -69,9 +74,6 @@
 
             opts = ar.effectiveOptions();
 
-            if (!$.mapster.hasCanvas) {
-                this.blur();
-            }
             if (me.currentAreaId === ar.areaId) {
                 return;
             }
@@ -375,7 +377,7 @@
     p.getAllDataForArea = function (area,atMost) {
         var i,ar, result,
             me=this,
-            key = $(area).attr(this.options.mapKey);
+            key = $(area).filter('area').attr(me.options.mapKey);
 
         if (key) {
             result=[];
@@ -468,7 +470,8 @@
     };
     ///called when images are done loading
     p.initialize = function () {
-        var base_canvas, overlay_canvas, wrap, parentId, $area, area, css, sel, areas, i, j, keys, key, area_id, default_group, group_value, img,
+        var imgCopy, base_canvas, overlay_canvas, wrap, parentId, $area, area, css, sel, areas, i, j, keys, 
+            key, area_id, default_group, group_value, img,
                     sort_func, sorted_list, dataItem, mapArea, scale,  curKey, mapAreaId,
                     me = this,
                     opts = me.options;
@@ -485,6 +488,7 @@
 
         me.complete = true;
         img = $(me.image);
+        
         parentId = img.parent().attr('id');
 
         // create a div wrapper only if there's not already a wrapper, otherwise, own it
@@ -522,9 +526,23 @@
                     (default_group ? 'area[coords]' : 'area[' + opts.mapKey + ']');
         areas = $(me.map).find(sel);
         
-        // me.images[1] is the copy of the original image. It should be loaded & at its native size now.
+        // me.images[1] is the copy of the original image. It should be loaded & at its native size now so we can obtain the true
+        // width & height to see if we need to scale. We then 
 
         me.scaleInfo = scale = u.scaleMap(img,me.images[1], opts.scaleMap);
+        
+        // Now we got what we needed from the copy -clone from the original image again to make sure any other attributes are copied
+        imgCopy = $(me.images[0])
+            .clone()
+            .addClass('mapster_el')
+            .attr({id:null, usemap: null});
+            
+        $.each(["width","height","padding","border","margin"],function(i,e) {
+            imgCopy.css(e,img.css(e));
+        });
+        me.images[1]=imgCopy[0];
+        
+                    
         for (i = areas.length - 1; i >= 0; i--) {
             area_id = 0;
             area = areas[i];
@@ -614,25 +632,22 @@
 
         // move all generated images into the wrapper for easy removal later
 
+        $(me.images.slice(2)).hide();
         for (i = 1; i < me.images.length; i++) {
             wrap.append(me.images[i]);
         }
-        // seems that some browsers want to show stuff while being added to the DOM
-        $(me.images.slice(1)).hide();
 
-        img.css(m.canvas_style);
-        me.images[1].style.cssText = me.image.style.cssText;
+        //me.images[1].style.cssText = me.image.style.cssText;
 
-        wrap.append(me.images[1])
-                    .append(base_canvas)
+        wrap.append(base_canvas)
                     .append(overlay_canvas)
-                    .append(img);
-
-
+                    .append(img.css(m.canvas_style));
 
         // images[0] is the original image with map, images[1] is the copy/background that is visible
 
-        u.setOpacity(me.image, 0);
+        u.setOpacity(me.images[0], 0);
+        $(me.images[1]).show();
+
         u.setOpacity(me.images[1],1);
 
         me.setAreaOptions(opts.areas);
