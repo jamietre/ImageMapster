@@ -1590,10 +1590,12 @@ A jQuery plugin to enhance image maps.
 
             for (i=0;i<(atMost || key.length);i++) {
                 ar = me.data[me._idFromKey(key[i])];
-                ar.area=area.length ? area[0]:area;
-                // set the actual area moused over/selected
-                // TODO: this is a brittle model for capturing which specific area - if this method was not used,
-                // ar.area could have old data. fix this.
+                if (ar){
+                	ar.area=$.isArray(area) ? area[0]:area;
+	                // set the actual area moused over/selected
+	                // TODO: this is a brittle model for capturing which specific area - if this method was not used,
+	                // ar.area could have old data. fix this.
+                }
                 result.push(ar);
             }
         }
