@@ -104,7 +104,7 @@
                 this.optsCache=opts;
             }
         }
-        return opts;
+        return $.extend({},opts);
     };
 
     // Fire callback on area state change

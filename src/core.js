@@ -343,7 +343,7 @@ A jQuery plugin to enhance image maps.
             if (!map_data) {
                 return false;
             }
-            if (!map_data.complete) {
+            if (!map_data.complete || map_data.currentAction) {
                 map_data.commands.push(
                 {
                     that: that,
@@ -391,6 +391,7 @@ A jQuery plugin to enhance image maps.
         me.func_area = func_area;
         //$.extend(me, opts);
         me.name = opts.name;
+        me.allowAsync = opts.allowAsync || false;
     };
     m.Method.prototype.go = function () {
         var i,  data, ar, len, result, src = this.input,
@@ -400,7 +401,7 @@ A jQuery plugin to enhance image maps.
         for (i = 0; i < len; i++) {
             data = $.mapster.getMapData(src[i]);
             if (data) {
-                if (m.queueCommand(data, me.input, me.name, me.args)) {
+                if (!me.allowAsync && m.queueCommand(data, me.input, me.name, me.args)) {
                     if (this.first) {
                         result = '';
                     }
@@ -698,6 +699,7 @@ A jQuery plugin to enhance image maps.
                     name: 'get_options',
                     args: arguments,
                     first: true,
+                    allowAsync: true,
                     key: key
                 }
             )).go();

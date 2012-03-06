@@ -446,7 +446,7 @@ A jQuery plugin to enhance image maps.
             if (!map_data) {
                 return false;
             }
-            if (!map_data.complete) {
+            if (!map_data.complete || map_data.currentAction) {
                 map_data.commands.push(
                 {
                     that: that,
@@ -494,6 +494,7 @@ A jQuery plugin to enhance image maps.
         me.func_area = func_area;
         //$.extend(me, opts);
         me.name = opts.name;
+        me.allowAsync = opts.allowAsync || false;
     };
     m.Method.prototype.go = function () {
         var i,  data, ar, len, result, src = this.input,
@@ -503,7 +504,7 @@ A jQuery plugin to enhance image maps.
         for (i = 0; i < len; i++) {
             data = $.mapster.getMapData(src[i]);
             if (data) {
-                if (m.queueCommand(data, me.input, me.name, me.args)) {
+                if (!me.allowAsync && m.queueCommand(data, me.input, me.name, me.args)) {
                     if (this.first) {
                         result = '';
                     }
@@ -801,6 +802,7 @@ A jQuery plugin to enhance image maps.
                     name: 'get_options',
                     args: arguments,
                     first: true,
+                    allowAsync: true,
                     key: key
                 }
             )).go();
@@ -1013,18 +1015,16 @@ A jQuery plugin to enhance image maps.
     p._addShapeGroupImpl = function (areaData, mode) {
         var me = this,
             md = me.map_data,
-            opts = areaData.effectiveRenderOptions(mode);
+            baseOpts = areaData.effectiveRenderOptions(mode);
 
         // first get area options. Then override fade for selecting, and finally merge in the "select" effect options.
 
 
         $.each(areaData.areas(), function (i,e) {
-
-            //var opts = e.effectiveRenderOptions(mode);
-            opts.isMask = opts.isMask || (e.nohref && md.options.noHrefIsMask);
-            //if (!u.isBool(opts.staticState)) {
-                me.addShape(e, opts);
-            //}
+            var opts = baseOpts;
+            
+            opts.isMask = baseOpts.isMask || (e.nohref && md.options.noHrefIsMask);
+            me.addShape(e, opts);
         });
 
     };
@@ -1335,7 +1335,7 @@ A jQuery plugin to enhance image maps.
                 return;
             }
 
-            if (area.owner.resizing || delay) {
+            if (area.owner.currentAction || delay) {
                 me.activeAreaEvent = window.setTimeout((function() {
                             return function() {
                             queueMouseEvent(0,area,callback);
@@ -1381,7 +1381,7 @@ A jQuery plugin to enhance image maps.
             // mouseover events are ignored entirely while resizing, though we do care about mouseout events
             // and must queue the action to keep things clean.
 
-            if (!ar || ar.isNotRendered() || ar.owner.resizing) {
+            if (!ar || ar.isNotRendered() || ar.owner.currentAction) {
                 return;
             }
 
@@ -1515,10 +1515,7 @@ A jQuery plugin to enhance image maps.
             }
 
             e.preventDefault();
-            if (ar && !ar.owner.resizing) {
-                if (!$.mapster.hasCanvas) {
-                    this.blur();
-                }
+            if (ar && !ar.owner.currentAction) {
                 opts = me.options;
                 clickArea(ar);
             }
@@ -1563,7 +1560,7 @@ A jQuery plugin to enhance image maps.
     p.state = function () {
         return {
             complete: this.complete,
-            resizing: this.resizing,
+            resizing: this.currentAction==='resizing',
             zoomed: this.zoomed,
             zoomedArea: this.zoomedArea,
             scaleInfo: this.scaleInfo
@@ -1995,16 +1992,19 @@ A jQuery plugin to enhance image maps.
 
         // populate areas from config options
         me.redrawSelections();
-
-        // process queued commands
-        if (me.commands.length) {
-            $.each(me.commands, function (i, e) {
-                m.impl[e.command].apply(e.that, e.args);
-            });
-            me.commands = [];
-        }
+        me.processCommandQueue();
+        
         if (opts.onConfigured && typeof opts.onConfigured === 'function') {
             opts.onConfigured.call(img, true);
+        }
+    };
+    p.processCommandQueue=function() {
+        
+        var cur,me=this;
+        while (!me.currentAction && me.commands.length) {
+            cur = me.commands[0];
+            me.commands.splice(0,1);
+            m.impl[cur.command].apply(cur.that, cur.args);
         }
     };
     p.clearEvents = function () {
@@ -2163,7 +2163,7 @@ A jQuery plugin to enhance image maps.
                 this.optsCache=opts;
             }
         }
-        return opts;
+        return $.extend({},opts);
     };
 
     // Fire callback on area state change
@@ -2432,6 +2432,41 @@ A jQuery plugin to enhance image maps.
     // css = any css to be applied to the wrapper
     m.MapData.prototype.resize = function (newWidth, newHeight, effectDuration) {
         var highlightId, ratio, width, height, duration, opts = {}, newsize, els, me = this;
+        
+        function sizeCanvas(canvas, w, h) {
+            if ($.mapster.hasCanvas) {
+                canvas.width = w;
+                canvas.height = h;
+            } else {
+                $(canvas).width(w);
+                $(canvas).height(h);
+            }
+        }
+
+        function finishResize() {
+            sizeCanvas(me.overlay_canvas, width, height);
+
+            // restore highlight state if it was highlighted before
+            if (opts.highlight && highlightId >= 0) {
+                var areaData = me.data[highlightId];
+                areaData.tempOptions = { fade: false };
+                me.getDataForKey(areaData.key).highlight();
+                areaData.tempOptions = null;
+            }
+            sizeCanvas(me.base_canvas, width, height);
+            
+            me.redrawSelections();
+            
+            me.currentAction = '';
+            
+            if ($.isFunction(opts.callback)) {
+                opts.callback();
+            }
+            
+            me.processCommandQueue();
+
+        }
+        
         if (typeof newWidth === 'object') {
             opts = newWidth;
         } else {
@@ -2448,35 +2483,7 @@ A jQuery plugin to enhance image maps.
         }
         highlightId = me.highlightId;
 
-        function sizeCanvas(canvas, w, h) {
-            if ($.mapster.hasCanvas) {
-                canvas.width = w;
-                canvas.height = h;
-            } else {
-                $(canvas).width(w);
-                $(canvas).height(h);
-            }
-        }
-        function finishResize() {
-            sizeCanvas(me.overlay_canvas, width, height);
-
-            // restore highlight state if it was highlighted before
-            if (opts.highlight) {
-                if (highlightId >= 0) {
-                    var areaData = me.data[highlightId];
-                    areaData.tempOptions = { fade: false };
-                    me.getDataForKey(areaData.key).highlight();
-                    areaData.tempOptions = null;
-                }
-            }
-            sizeCanvas(me.base_canvas, width, height);
-
-            me.redrawSelections();
-            me.resizing = false;
-            if ($.isFunction(opts.callback)) {
-                opts.callback();
-            }
-        }
+        
         if (!width) {
             ratio = height / me.scaleInfo.realHeight;
             width = Math.round(me.scaleInfo.realWidth * ratio);
@@ -2492,13 +2499,10 @@ A jQuery plugin to enhance image maps.
         }
         els = $(me.wrapper).find('.mapster_el');
 
-        if (me.resizing && opts.force) {
-            $(els).stop();
-            //(me.wrapper).stop();
-        }
-        me.resizing = true;
+      
 
         if (opts.duration) {
+            me.currentAction = 'resizing';
             els.each(function (i, e) {
                 $(e).animate(newsize, { duration: duration, complete: i===0 ? finishResize:null, easing: "linear" });
             });
@@ -2507,14 +2511,15 @@ A jQuery plugin to enhance image maps.
                 scrollLeft: opts.scrollLeft || 0,
                 scrollTop: opts.scrollTop || 0
             },
-                    { duration: duration, easing: "linear" });
+            { 
+                duration: duration,
+                easing: "linear" 
+            });
         } else {
             els.css(newsize);
             finishResize();
-            //                if (opts.css) {
-            //                    me.wrapper.css(opts.css);
-            //                }
         }
+        
         $(this.image).css(newsize);
         // start calculation at the same time as effect
         me.scaleInfo = u.getScaleInfo(me.scaleInfo.realWidth, me.scaleInfo.realHeight, width, height);
@@ -2523,7 +2528,6 @@ A jQuery plugin to enhance image maps.
                 e.resize();
             });
         });
-
     };
 
 
@@ -2557,11 +2561,12 @@ A jQuery plugin to enhance image maps.
     p.reset = function () {
         this.area.coords = this.coords(1).join(',');
     };
+    
     m.impl.resize = function (width, height, duration) {
         if (!width && !height) {
             return false;
         }
-        return (new m.Method(this,
+        var x= (new m.Method(this,
                 function () {
                     this.resize(width, height, duration);
                 },
@@ -2571,6 +2576,7 @@ A jQuery plugin to enhance image maps.
                     args: arguments
                 }
             )).go();
+        return x;
     };
 
     m.impl.zoom = function (key, opts) {

@@ -47,6 +47,41 @@
     // css = any css to be applied to the wrapper
     m.MapData.prototype.resize = function (newWidth, newHeight, effectDuration) {
         var highlightId, ratio, width, height, duration, opts = {}, newsize, els, me = this;
+        
+        function sizeCanvas(canvas, w, h) {
+            if ($.mapster.hasCanvas) {
+                canvas.width = w;
+                canvas.height = h;
+            } else {
+                $(canvas).width(w);
+                $(canvas).height(h);
+            }
+        }
+
+        function finishResize() {
+            sizeCanvas(me.overlay_canvas, width, height);
+
+            // restore highlight state if it was highlighted before
+            if (opts.highlight && highlightId >= 0) {
+                var areaData = me.data[highlightId];
+                areaData.tempOptions = { fade: false };
+                me.getDataForKey(areaData.key).highlight();
+                areaData.tempOptions = null;
+            }
+            sizeCanvas(me.base_canvas, width, height);
+            
+            me.redrawSelections();
+            
+            me.currentAction = '';
+            
+            if ($.isFunction(opts.callback)) {
+                opts.callback();
+            }
+            
+            me.processCommandQueue();
+
+        }
+        
         if (typeof newWidth === 'object') {
             opts = newWidth;
         } else {
@@ -63,35 +98,7 @@
         }
         highlightId = me.highlightId;
 
-        function sizeCanvas(canvas, w, h) {
-            if ($.mapster.hasCanvas) {
-                canvas.width = w;
-                canvas.height = h;
-            } else {
-                $(canvas).width(w);
-                $(canvas).height(h);
-            }
-        }
-        function finishResize() {
-            sizeCanvas(me.overlay_canvas, width, height);
-
-            // restore highlight state if it was highlighted before
-            if (opts.highlight) {
-                if (highlightId >= 0) {
-                    var areaData = me.data[highlightId];
-                    areaData.tempOptions = { fade: false };
-                    me.getDataForKey(areaData.key).highlight();
-                    areaData.tempOptions = null;
-                }
-            }
-            sizeCanvas(me.base_canvas, width, height);
-
-            me.redrawSelections();
-            me.resizing = false;
-            if ($.isFunction(opts.callback)) {
-                opts.callback();
-            }
-        }
+        
         if (!width) {
             ratio = height / me.scaleInfo.realHeight;
             width = Math.round(me.scaleInfo.realWidth * ratio);
@@ -107,13 +114,10 @@
         }
         els = $(me.wrapper).find('.mapster_el');
 
-        if (me.resizing && opts.force) {
-            $(els).stop();
-            //(me.wrapper).stop();
-        }
-        me.resizing = true;
+      
 
         if (opts.duration) {
+            me.currentAction = 'resizing';
             els.each(function (i, e) {
                 $(e).animate(newsize, { duration: duration, complete: i===0 ? finishResize:null, easing: "linear" });
             });
@@ -122,14 +126,15 @@
                 scrollLeft: opts.scrollLeft || 0,
                 scrollTop: opts.scrollTop || 0
             },
-                    { duration: duration, easing: "linear" });
+            { 
+                duration: duration,
+                easing: "linear" 
+            });
         } else {
             els.css(newsize);
             finishResize();
-            //                if (opts.css) {
-            //                    me.wrapper.css(opts.css);
-            //                }
         }
+        
         $(this.image).css(newsize);
         // start calculation at the same time as effect
         me.scaleInfo = u.getScaleInfo(me.scaleInfo.realWidth, me.scaleInfo.realHeight, width, height);
@@ -138,7 +143,6 @@
                 e.resize();
             });
         });
-
     };
 
 
@@ -172,11 +176,12 @@
     p.reset = function () {
         this.area.coords = this.coords(1).join(',');
     };
+    
     m.impl.resize = function (width, height, duration) {
         if (!width && !height) {
             return false;
         }
-        return (new m.Method(this,
+        var x= (new m.Method(this,
                 function () {
                     this.resize(width, height, duration);
                 },
@@ -186,6 +191,7 @@
                     args: arguments
                 }
             )).go();
+        return x;
     };
 
     m.impl.zoom = function (key, opts) {

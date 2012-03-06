@@ -22,7 +22,7 @@
                 return;
             }
 
-            if (area.owner.resizing || delay) {
+            if (area.owner.currentAction || delay) {
                 me.activeAreaEvent = window.setTimeout((function() {
                             return function() {
                             queueMouseEvent(0,area,callback);
@@ -68,7 +68,7 @@
             // mouseover events are ignored entirely while resizing, though we do care about mouseout events
             // and must queue the action to keep things clean.
 
-            if (!ar || ar.isNotRendered() || ar.owner.resizing) {
+            if (!ar || ar.isNotRendered() || ar.owner.currentAction) {
                 return;
             }
 
@@ -202,10 +202,7 @@
             }
 
             e.preventDefault();
-            if (ar && !ar.owner.resizing) {
-                if (!$.mapster.hasCanvas) {
-                    this.blur();
-                }
+            if (ar && !ar.owner.currentAction) {
                 opts = me.options;
                 clickArea(ar);
             }
@@ -250,7 +247,7 @@
     p.state = function () {
         return {
             complete: this.complete,
-            resizing: this.resizing,
+            resizing: this.currentAction==='resizing',
             zoomed: this.zoomed,
             zoomedArea: this.zoomedArea,
             scaleInfo: this.scaleInfo
@@ -682,16 +679,19 @@
 
         // populate areas from config options
         me.redrawSelections();
-
-        // process queued commands
-        if (me.commands.length) {
-            $.each(me.commands, function (i, e) {
-                m.impl[e.command].apply(e.that, e.args);
-            });
-            me.commands = [];
-        }
+        me.processCommandQueue();
+        
         if (opts.onConfigured && typeof opts.onConfigured === 'function') {
             opts.onConfigured.call(img, true);
+        }
+    };
+    p.processCommandQueue=function() {
+        
+        var cur,me=this;
+        while (!me.currentAction && me.commands.length) {
+            cur = me.commands[0];
+            me.commands.splice(0,1);
+            m.impl[cur.command].apply(cur.that, cur.args);
         }
     };
     p.clearEvents = function () {
