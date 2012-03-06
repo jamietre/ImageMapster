@@ -153,7 +153,7 @@ A jQuery plugin to enhance image maps.
     };
 
     $.mapster = {
-        version: "1.2.4.048",
+        version: "1.2.4.049",
         render_defaults: {
             isSelectable: true,
             isDeselectable: true,
