@@ -151,6 +151,7 @@
                     that = this,
                     ar = me.getDataForArea(this),
                     opts = me.options;
+
             function clickArea(ar) {
                 var areaOpts;
                 canChangeState = (ar.isSelectable() &&
@@ -200,8 +201,12 @@
                     });
                 }
             }
-
             e.preventDefault();
+            if (opts.clickNavigate && ar.href) {
+                window.location.href=ar.href;
+                return;
+            }
+
             if (ar && !ar.owner.currentAction) {
                 opts = me.options;
                 clickArea(ar);
@@ -243,6 +248,10 @@
         //                width: width,
         //                height: height,
         //                ratio: width / height
+    };
+
+    p.isActive = function() {
+        return !this.complete || this.currentAction;
     };
     p.state = function () {
         return {
@@ -370,7 +379,8 @@
         });
         return result;
     };
-    // Locate MapArea data from an HTML area
+    // Locate MapArea data from an HTML area. atMost limits it to x keys.
+    // Usually you would be using 1 to just get the primary key areas
     p.getAllDataForArea = function (area,atMost) {
         var i,ar, result,
             me=this,
@@ -398,6 +408,26 @@
     };
     p.getDataForKey = function (key) {
         return this.data[this._idFromKey(key)];
+    };
+    // Return the primary keys associated with an area group. If this is a primary key, it will be returned.
+    p.getKeysForGroup = function(key) {
+        var ar=this.getDataForKey(key);
+        
+        return !ar ? '':
+            ar.isPrimary ? 
+                ar.key :
+                this.getPrimaryKeysForMapAreas(ar.areas()).join(',');
+    };
+    // given an array of MapArea object, return an array of its unique primary  keys
+    p.getPrimaryKeysForMapAreas=function(areas)
+    {
+        var keys=[];
+        $.each(areas,function(i,e) {
+            if ($.inArray(e.keys[0],keys)<0) {
+                keys.push(e.keys[0]);
+            }
+        });
+        return keys;
     };
     p.getData = function (obj) {
         if (typeof obj === 'string') {
@@ -467,7 +497,7 @@
     };
     ///called when images are done loading
     p.initialize = function () {
-        var imgCopy, base_canvas, overlay_canvas, wrap, parentId, $area, area, css, sel, areas, i, j, keys, 
+        var href,imgCopy, base_canvas, overlay_canvas, wrap, parentId, $area, area, css, sel, areas, i, j, keys, 
             key, area_id, default_group, group_value, img,
                     sort_func, sorted_list, dataItem, mapArea, scale,  curKey, mapAreaId,
                     me = this,
@@ -586,17 +616,24 @@
                     else {
                         area_id = addAreaData(key, group_value);
                         dataItem = me.data[area_id];
+                        dataItem.isPrimary=j===0;
                     }
                 }
                 mapArea.areaDataXref.push(area_id);
                 dataItem.areasXref.push(mapAreaId);
             }
 
+            href=$area.attr('href');
+            if (href && href!=='#' && !dataItem.href)
+            {
+                dataItem.href=href;
+            }
+
             if (!mapArea.nohref) {
                 $area.bind('mouseover.mapster', me.mouseover)
-                            .bind('mouseout.mapster', me.mouseout)
-                            .bind('click.mapster', me.click)
-                            .bind('mousedown.mapster', me.mousedown);
+                    .bind('mouseout.mapster', me.mouseout)
+                    .bind('click.mapster', me.click)
+                    .bind('mousedown.mapster', me.mousedown);
             }
             // Create a key if none was assigned by the user
 

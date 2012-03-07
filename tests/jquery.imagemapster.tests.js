@@ -342,13 +342,14 @@ mapster_tests = function (options) {
         $('area[state="MI"]').first().click();
         ut.assertEq(map.mapster('get', 'MI'), true, "Cannot deselect single selected item with isDeselectable=false");
 
-        $('area[state="RI"]').first().click();
-        ut.assertEq(map.mapster('get'), 'RI', "New single state selected");
+        $('area[state="UT"]').first().click();
+        
+        ut.assertEq(map.mapster('get'), 'UT', "New single state selected");
 
         map.mapster('rebind', { singleSelect: false, isDeselectable: true, areas: [{ key: 'ME', isDeselectable: false}] });
 
-        $('area[state="RI"]').first().click();
-        ut.assertEq(map.mapster('get', 'RI'), false, "Was able to deselect item after removing singleSelect");
+        $('area[state="UT"]').first().click();
+        ut.assertEq(map.mapster('get', 'UT'), false, "Was able to deselect item after removing singleSelect");
 
         map.mapster('set', true, "CA,HI,ME");
 
@@ -480,7 +481,9 @@ mapster_tests = function (options) {
         polys = ctr.find('var').children();
         vmlPath = getVmls(polys);
 
-        ut.assertEq(94,polys.length,'Correct # of shapes found on initial rendering for TX staticState=true');
+        // Note: was 94. With the New England groups, some areas get selected twice, so it's now 116
+
+        ut.assertEq(116,polys.length,'Correct # of shapes found on initial rendering for TX staticState=true');
 
         delete opts.selected;
         opts.staticState=true;
@@ -489,7 +492,7 @@ mapster_tests = function (options) {
         ctr = $('#mapster_wrap_0');
         polys = ctr.find('var').children();
         vmlPath = getVmls(polys);
-        ut.assertEq(94,polys.length,'Correct # of shapes found on initial rendering for TX staticState=true');
+        ut.assertEq(116,polys.length,'Correct # of shapes found on initial rendering for TX staticState=true');
 
         
         // restore graphics object to normal state for this type of browses
@@ -498,8 +501,36 @@ mapster_tests = function (options) {
         map.mapster('unbind');
     };
 
-    map_test.addTest("Rendering Tests", renderingTests);
+    //var resizeTests = function (ut) {
+    //
+    //};
 
+    
+    map_test.addTest("Rendering Tests", renderingTests);
+    //map_test.addTest("Rendering Tests", resizeTests);
+
+    map_test.addTest("Keys",function(ut) {
+        var map = $('img').mapster(map_options);
+
+        var keys=map.mapster('keys','TX');
+        ut.assertEq('TX',keys,"Got primary key for something with only one key");
+
+        keys=map.mapster('keys','ME');
+        ut.assertEq('ME',keys,"Got primary key for something with multiple keys");
+
+        keys=map.mapster('keys','new-england');
+        ut.assertCsvElementsEq('ME,VT,NH,CT,RI,MA',keys,"Got primary key for something with multiple keys");
+        
+        keys=map.mapster('keys','new-england',true);
+        ut.assertCsvElementsEq('ME,VT,NH,CT,RI,MA,new-england,really-cold',keys,"Got primary key for something with multiple keys");
+
+        keys = $('area[state="HI"]').mapster('keys');
+        ut.assertEq('HI',keys,"Got primary key from an area");
+
+        var areas = $('area[state="HI"],area[state*="new-england"]');
+        keys = areas.mapster('keys');
+        ut.assertCsvElementsEq('HI,ME,VT,NH,CT,RI,MA',keys,"Got primary key for something with multiple keys");
+    });
 
     map_test.addTest("Event/Tooltip Tests", function (ut) {
         var map = $('img').mapster(map_options);

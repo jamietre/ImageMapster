@@ -153,7 +153,7 @@ A jQuery plugin to enhance image maps.
     };
 
     $.mapster = {
-        version: "1.2.4.049",
+        version: "1.2.4.050",
         render_defaults: {
             isSelectable: true,
             isDeselectable: true,
@@ -173,6 +173,7 @@ A jQuery plugin to enhance image maps.
             alt_image: null // used internally
         },
         defaults: {
+            clickNavigate: false,
             wrapClass: null,
             wrapCss: null,
             onGetList: null,
@@ -437,7 +438,7 @@ A jQuery plugin to enhance image maps.
                 this.utils.indexOfProp(this.map_cache, 'image', img) : -1;
         },
         getMapData: function (obj) {
-            var index = this.getMapDataIndex(obj);
+            var index = this.getMapDataIndex(obj.length ? obj[0]:obj);
             if (index >= 0) {
                 return index >= 0 ? this.map_cache[index] : null;
             }
@@ -582,9 +583,22 @@ A jQuery plugin to enhance image maps.
             // refresh the area_option template
             u.updateProps(map_data.area_options, map_data.options);
         }
-
+        // Most methods use the "Method" object which handles figuring out whether it's an image or area called and
+        // parsing key parameters. The constructor wants:
+        // this, the jQuery object
+        // a function that is called when an image was passed (with a this context of the MapData)
+        // a function that is called when an area was passed (with a this context of the AreaData)
+        // options: first = true means only the first member of a jQuery object is handled
+        //          key = the key parameters passed
+        //          defaultReturn: a value to return other than the jQuery object (if its not chainable)
+        //          args: the arguments
         // Returns a comma-separated list of user-selected areas. "staticState" areas are not considered selected for the purposes of this method.
         me.get = function (key) {
+            var md = m.getMapData(this);
+            if (!(md && md.complete)) {
+                return '';
+            }
+
             return (new m.Method(this,
                 function () {
                     // map_data return
@@ -597,6 +611,7 @@ A jQuery plugin to enhance image maps.
                     args: arguments,
                     key: key,
                     first: true,
+                    allowAsync: true,
                     defaultReturn: ''
                 }
             )).go();
@@ -622,7 +637,7 @@ A jQuery plugin to enhance image maps.
         //  $(img).mapster('highlight',false) -- remove highlight
         me.highlight = function (key) {
             return (new m.Method(this,
-                function (selected) {
+                function () {
                     if (key === false) {
                         this.ensureNoHighlight();
                     } else {
@@ -639,6 +654,55 @@ A jQuery plugin to enhance image maps.
                     first: true
                 }
             )).go();
+        };
+        // Return the primary keys for an area or group key.
+        // $(area).mapster('key')
+        // includes all keys (not just primary keys)
+        // $(area).mapster('key',true)
+        // $(img).mapster('key','group-key')
+
+        // $(img).mapster('key','group-key', true)
+        me.keys = function(key,all) {
+            var keyList=[], 
+                md = m.getMapData(this);
+            
+            function addUniqueKeys(ad) {
+                var areas,keys=[];
+                if (!all) {
+                    keys.push(ad.key);
+                } else {
+                    areas=ad.areas();
+                    $.each(areas,function(i,e) {
+                        keys=keys.concat(e.keys);
+                    });
+                }
+                $.each(keys,function(i,e) {
+                    if ($.inArray(e,keyList)<0) {
+                        keyList.push(e);                         
+                    }
+                });
+            }
+
+            if (!(md  && md.complete)) {
+                return '';
+            }
+            if (typeof key === 'string') {
+                if (all) {
+                    addUniqueKeys(md.getDataForKey(key));
+                } else {
+                    keyList=[md.getKeysForGroup(key)];
+                }
+            } else {
+                all = key;
+                this.each(function(i,e) {
+                    if (e.nodeName==='AREA') {
+                        addUniqueKeys(md.getDataForArea(e));
+                    }
+                });
+            }
+            return keyList.join(',');
+        
+
         };
         me.select = function () {
             me.set.call(this, true);
@@ -666,21 +730,21 @@ A jQuery plugin to enhance image maps.
                 }
             }
             function addArea(ar) {
-               if ($.inArray(ar, area_list) < 0) {
+               if (ar && $.inArray(ar, area_list) < 0) {
                     area_list.push(ar);
                     key_list+=(key_list===''?'':',')+ar.key;
                 }
             }
             // Clean up after a group that applied to the same map
             function finishSetForMap(map_data) {
-                    $.each(area_list, function (i, el) {
-                        setSelection(el);
-                    });
-                    if (!selected) {
-                        map_data.removeSelectionFinish();
-                    }
-                    if (do_set_bound && map_data.options.boundList) {
-                        m.setBoundListProperties(map_data.options, m.getBoundList(map_data.options, key_list), selected);
+                $.each(area_list, function (i, el) {
+                    setSelection(el);
+                });
+                if (!selected) {
+                    map_data.removeSelectionFinish();
+                }
+                if (do_set_bound && map_data.options.boundList) {
+                    m.setBoundListProperties(map_data.options, m.getBoundList(map_data.options, key_list), selected);
                 }            
             }
             do_set_bound = u.isBool(set_bound) ? set_bound : true;
@@ -1464,6 +1528,7 @@ A jQuery plugin to enhance image maps.
                     that = this,
                     ar = me.getDataForArea(this),
                     opts = me.options;
+
             function clickArea(ar) {
                 var areaOpts;
                 canChangeState = (ar.isSelectable() &&
@@ -1513,8 +1578,12 @@ A jQuery plugin to enhance image maps.
                     });
                 }
             }
-
             e.preventDefault();
+            if (opts.clickNavigate && ar.href) {
+                window.location.href=ar.href;
+                return;
+            }
+
             if (ar && !ar.owner.currentAction) {
                 opts = me.options;
                 clickArea(ar);
@@ -1556,6 +1625,10 @@ A jQuery plugin to enhance image maps.
         //                width: width,
         //                height: height,
         //                ratio: width / height
+    };
+
+    p.isActive = function() {
+        return !this.complete || this.currentAction;
     };
     p.state = function () {
         return {
@@ -1683,7 +1756,8 @@ A jQuery plugin to enhance image maps.
         });
         return result;
     };
-    // Locate MapArea data from an HTML area
+    // Locate MapArea data from an HTML area. atMost limits it to x keys.
+    // Usually you would be using 1 to just get the primary key areas
     p.getAllDataForArea = function (area,atMost) {
         var i,ar, result,
             me=this,
@@ -1711,6 +1785,26 @@ A jQuery plugin to enhance image maps.
     };
     p.getDataForKey = function (key) {
         return this.data[this._idFromKey(key)];
+    };
+    // Return the primary keys associated with an area group. If this is a primary key, it will be returned.
+    p.getKeysForGroup = function(key) {
+        var ar=this.getDataForKey(key);
+        
+        return !ar ? '':
+            ar.isPrimary ? 
+                ar.key :
+                this.getPrimaryKeysForMapAreas(ar.areas()).join(',');
+    };
+    // given an array of MapArea object, return an array of its unique primary  keys
+    p.getPrimaryKeysForMapAreas=function(areas)
+    {
+        var keys=[];
+        $.each(areas,function(i,e) {
+            if ($.inArray(e.keys[0],keys)<0) {
+                keys.push(e.keys[0]);
+            }
+        });
+        return keys;
     };
     p.getData = function (obj) {
         if (typeof obj === 'string') {
@@ -1780,7 +1874,7 @@ A jQuery plugin to enhance image maps.
     };
     ///called when images are done loading
     p.initialize = function () {
-        var imgCopy, base_canvas, overlay_canvas, wrap, parentId, $area, area, css, sel, areas, i, j, keys, 
+        var href,imgCopy, base_canvas, overlay_canvas, wrap, parentId, $area, area, css, sel, areas, i, j, keys, 
             key, area_id, default_group, group_value, img,
                     sort_func, sorted_list, dataItem, mapArea, scale,  curKey, mapAreaId,
                     me = this,
@@ -1899,17 +1993,24 @@ A jQuery plugin to enhance image maps.
                     else {
                         area_id = addAreaData(key, group_value);
                         dataItem = me.data[area_id];
+                        dataItem.isPrimary=j===0;
                     }
                 }
                 mapArea.areaDataXref.push(area_id);
                 dataItem.areasXref.push(mapAreaId);
             }
 
+            href=$area.attr('href');
+            if (href && href!=='#' && !dataItem.href)
+            {
+                dataItem.href=href;
+            }
+
             if (!mapArea.nohref) {
                 $area.bind('mouseover.mapster', me.mouseover)
-                            .bind('mouseout.mapster', me.mouseout)
-                            .bind('click.mapster', me.click)
-                            .bind('mousedown.mapster', me.mousedown);
+                    .bind('mouseout.mapster', me.mouseout)
+                    .bind('click.mapster', me.click)
+                    .bind('mousedown.mapster', me.mousedown);
             }
             // Create a key if none was assigned by the user
 
@@ -2065,22 +2166,24 @@ A jQuery plugin to enhance image maps.
     var p, m = $.mapster, u = m.utils;
     m.AreaData = function (owner, key, value) {
         $.extend(this,{
-            owner: owner,
+            owner: owner, 
             key: key || '',
+            // means this represents the first key in a list of keys (it's the area group that gets highlighted on mouseover)
+            isPrimary: true,
             areaId: -1,
+            href: '',
             value: value || '',
             options:{},
-            // "null" means unchanged. Use "isSelected" method to just test true/false
+            // "null" means unchanged. Use "isSelected" method to just test true/false 
             selected: null,       
             // xref to MapArea objects
             areasXref: [],
             // (temporary storage) - the actual area moused over
             area: null,
             // the last options used to render this. Cache so when re-drawing after a remove, changes in options won't
-            // break already selected things.
+            // break already selected things. 
             optsCache: null
          });
-        
     };
     p = m.AreaData.prototype;
 

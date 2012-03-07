@@ -6,22 +6,24 @@
     var p, m = $.mapster, u = m.utils;
     m.AreaData = function (owner, key, value) {
         $.extend(this,{
-            owner: owner,
+            owner: owner, 
             key: key || '',
+            // means this represents the first key in a list of keys (it's the area group that gets highlighted on mouseover)
+            isPrimary: true,
             areaId: -1,
+            href: '',
             value: value || '',
             options:{},
-            // "null" means unchanged. Use "isSelected" method to just test true/false
+            // "null" means unchanged. Use "isSelected" method to just test true/false 
             selected: null,       
             // xref to MapArea objects
             areasXref: [],
             // (temporary storage) - the actual area moused over
             area: null,
             // the last options used to render this. Cache so when re-drawing after a remove, changes in options won't
-            // break already selected things.
+            // break already selected things. 
             optsCache: null
          });
-        
     };
     p = m.AreaData.prototype;
 

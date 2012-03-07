@@ -1,11 +1,33 @@
 /*
-A dead simple javascript testing framework
-
+simpletest
+requires when: https://github.com/cujojs/when
+1.0.2 add when
 1.0.1 added assertIsTruthy, propsNotEqual
-V1.0James Treworgy
 
-This code is in the public domain
 */
+
+/*
+API:
+
+test = new Test(name);
+test.addTest(function(ut) {
+    // get a callback that has at most 5 seconds to execute. the 2nd parameter means do not allow
+    // another test to begin concurrently
+    
+    var cb = ut.callback(function(data) {
+        return data.something=somevalue;
+    },5,false);
+
+    // runs someMethod with a callback.
+    
+    ut.assertAsync(someMethod(cb));
+    
+    
+});
+
+*/
+
+
 
 function Test(options) {
     this.tests = [];
@@ -25,113 +47,111 @@ function Test(options) {
         return (d.getTime()-this.time);
     };
 }
-
-Test.prototype.addError = function (err,test,passed) {
-    var msg = passed ? "Passed" : "<b>Failed</b>";
-    this.output.append('<span>' + msg + ' test ' + this._test_count + ': ' + err + ' in test "' + test + '"</span><br>');
-    if (!passed) {
-        this._fail_count++;
-    }
-};
-Test.prototype.startTest = function() {
-    if (this.timer) {
-        this.timerStart();
-    }
-    this._test_count++;
-};
-Test.prototype.runTest = function(test,compare) {
-    var iterations = this.iterations || 1;
-    for (var i=0;i<iterations;i++) {
-        if (typeof test==='function') {
-            test=test();
+Test.prototype = {
+    constructor: Test,
+    addError:function (err,test,passed) {
+        var msg = passed ? "Passed" : "<b>Failed</b>";
+        this.output.append('<span>' + msg + ' test ' + this._test_count + ': ' + err + ' in test "' + test + '"</span><br>');
+        if (!passed) {
+            this._fail_count++;
         }
-        compare(test);
-    }
-};
-Test.prototype.endTest = function(err,description) {
-    var passed=false;
-    if (this.timer) {
-        var time = this.timerEnd();
+    },
+    startTest: function() {
+        if (this.timer) {
+            this.timerStart();
+        }
+        this._test_count++;
+    },
+    runTest: function(test,compare) {
+        var i, iterations = this.iterations || 1;
+        for ( i=0;i<iterations;i++) {
+            if (typeof test==='function') {
+                test=test();
+            }
+            compare(test);
+        }
+    },
+    endTest: function(err,description) {
+        var time,passed=false;
+        if (this.timer) {
+            time = this.timerEnd();
+            if (!err) {
+               err="success";
+               passed=true;
+            }
+            err = "(" + time + " ms) " + err;
+        }
+        if (err) {
+            this.addError(err,description,passed);   
+        }
+    },
+    addTest: function (name, test) {
+        var testData = {
+            name: name,
+            test: test
+        };
+        this.tests.push(testData);
+    },
+    _arrayEq: function(arr1,arr2) {
+        var e, err;
+            if (!(arr1.length && (arr1.length>-1))) {
+            err='Test case has no length property';
+        }
+        if (!(arr2.length && (arr2.length>-1))) {
+            err='Expected value has no length property';
+        }
+        if (!err && arr1.length !== arr2.length) {
+            err='Arrays different length (test: ' + arr1.length + ', expected: ' + arr2.length;
+        }
         if (!err) {
-           err="success";
-           passed=true;
-        }
-        err = "(" + time + " ms) " + err;
-    }
-    if (err) {
-        this.addError(err,description,passed);   
-    }
-
-};
-Test.prototype.addTest = function (name, test) {
-    var testData = {
-        name: name,
-        test: test
-    };
-    this.tests.push(testData);
-};
-Test.prototype._arrayEq = function(arr1,arr2) {
-    var err;
-        if (!(arr1.length && (arr1.length>-1))) {
-        err='Test case has no length property';
-    }
-    if (!(arr2.length && (arr2.length>-1))) {
-        err='Expected value has no length property';
-    }
-    if (!err && arr1.length !== arr2.length) {
-        err='Arrays different length (test: ' + arr1.length + ', expected: ' + arr2.length;
-    }
-    if (!err) {
-        for (var e=0;e<arr1.length;e++) {
-            if (arr1[e]!==arr2[e]) {
-                err="Arrays not equal starting at element " + e +".";
-                break;
+            for ( e=0;e<arr1.length;e++) {
+                if (arr1[e]!==arr2[e]) {
+                    err="Arrays not equal starting at element " + e +".";
+                    break;
+                }
             }
         }
-    }
     
-    return err;
+        return err;
+    },
+    assertEq: function (testcase, expected, description) {
+        var err ;
+        this.startTest();
+        this.runTest(testcase,function (testcase) {
+            if (typeof testcase !== typeof expected) {
+                err = 'Test case type "' + typeof testcase + '" != expected type "' + typeof expected + '"';
+            }
+        
+            if (!err && testcase !== expected) {
+                err = '"' + testcase + '" != "' + expected + '"';
+            }
+        });
+        this.endTest(err,description);
+    },
+    assertNotEq: function(testcase,expected,description,test) {
+        var err;
+        this.startTest();
+        this.runTest(testcase,function (testcase) {
+            if (typeof testcase === typeof expected &&
+                testcase === expected) {
+                err = '"' + testcase + '" === "' + expected + '"';
+             }
+        });
+        this.endTest(err,description);
+    },
+    assertIsTruthy: function(testcase,description,test) {
+        var err;
+        this.startTest();
+        this.runTest(testcase,function(testcase) {
+            if (!testcase) {
+                err = 'Test case object of type "' + typeof testcase + '" is not truthy.';
+            }
+        });
+        this.endTest(err,description);
 
-};
-Test.prototype.assertEq = function (testcase, expected, description) {
-    var err ;
-    this.startTest();
-    this.runTest(testcase,function (testcase) {
-        if (typeof testcase !== typeof expected) {
-            err = 'Test case type "' + typeof testcase + '" != expected type "' + typeof expected + '"';
-        }
-    
-        if (!err && testcase !== expected) {
-            err = '"' + testcase + '" != "' + expected + '"';
-        }
-    });
-    this.endTest(err,description);
-};
-
-Test.prototype.assertNotEq = function(testcase,expected,description,test) {
-    var err;
-    this.startTest();
-    this.runTest(testcase,function (testcase) {
-        if (typeof testcase === typeof expected &&
-            testcase === expected) {
-            err = '"' + testcase + '" === "' + expected + '"';
-         }
-    });
-    this.endTest(err,description);
-};
-Test.prototype.assertIsTruthy = function(testcase,description,test) {
-    var err;
-    this.startTest();
-    this.runTest(testcase,function(testcase) {
-        if (!testcase) {
-            err = 'Test case object of type "' + typeof testcase + '" is not truthy.';
-        }
-    });
-    this.endTest(err,description);
-
-};
-// test that object properties (shallow) match. The last parameter is used by the overload.
-Test.prototype.assertPropsEq = function(testcase,expected,description,test, notEqual) {
+    },
+    // test that object properties (shallow) match. The last parameter is used by the overload.
+    assertPropsEq: function(testcase,expected,description,test, notEqual) {
         var me=this,err;
         function compare(t1,t2, t1name, t2name) {
         if (t1 && t1!==t2) {
@@ -179,12 +199,12 @@ Test.prototype.assertPropsEq = function(testcase,expected,description,test, notE
     }
     });
     this.endTest(err,description);
-};
-Test.prototype.assertPropsNotEq = function(testcase,expected,description,test) {
+},
+assertPropsNotEq: function(testcase,expected,description,test) {
     this.assertPropsEq(testcase,expected,description,test,true);
 
-};
-Test.prototype.assertArrayEq = function(testcase, expected, description,test) {
+},
+assertArrayEq: function(testcase, expected, description,test) {
     var err,me;
     me=this;
     this.startTest();
@@ -193,9 +213,9 @@ Test.prototype.assertArrayEq = function(testcase, expected, description,test) {
     });
     this.endTest(err,description);
 
-};
+},
 // sorts first
-Test.prototype.assertArrayElementsEq = function(testcase, expected, description,test) {
+assertArrayElementsEq: function(testcase, expected, description,test) {
     var me=this,err,arr1, arr2;
     this.startTest();
     this.runTest(testcase,function (testcase) {
@@ -206,8 +226,8 @@ Test.prototype.assertArrayElementsEq = function(testcase, expected, description,
         err = me._arrayEq(arr1,arr2);
     });
     this.endTest(err,description);
-};
-Test.prototype.assertCsvElementsEq = function(testcase, expected, description,test) {
+},
+assertCsvElementsEq: function(testcase, expected, description,test) {
     var err,arr1, arr2,me;
     me=this;
     this.startTest();
@@ -223,8 +243,8 @@ Test.prototype.assertCsvElementsEq = function(testcase, expected, description,te
         }
     });
     this.endTest(err,description);
-};
-Test.prototype.assertInstanceOf = function(testcase, expected, description) {
+},
+assertInstanceOf: function(testcase, expected, description) {
     var err,
         test = eval("testcase instanceof " + expected);
     this.startTest();
@@ -234,10 +254,10 @@ Test.prototype.assertInstanceOf = function(testcase, expected, description) {
     }
     });
     this.endTest(err,description);
-};
+},
 
 // run all tests if no name provided
-Test.prototype.run = function (test) {
+run: function (test) {
     var i,cur,started = false, me=this;
     function startTest(test) {
         if (!started) {
@@ -280,4 +300,5 @@ Test.prototype.run = function (test) {
     
     this.output.append('<hr /');
 
+}
 };
