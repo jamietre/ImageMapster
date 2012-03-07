@@ -54,15 +54,39 @@ Programatically select elements from the image map. The programmatic selection/d
 
     $('area').mapster('deselect');
 
-**set**: select or deselect an element
+**set**: select or deselect an element. If `selected` is true, the area is selected, if false, it is deselected.
 
     $('area').mapster('set',selected);
 
-Select or deselect alements from jQuery objects wrapping "area" tags on the map based on truthiness of selected.
+You can also select or deselect areas using a their `mapKey`. This is an attribute on each area in your HTML that identifies it. You define a mapKey using a configuration option: `mapKey: 'data-key'`.
 
-    $('img').mapster('set',selected,'key');
+If two areas share the same value for the `mapKey` they will be automatically grouped together when activated. You can also use the values of the mapKey to select areas from code.
 
-Select or deselect alements in the mapster bound to the image using a key (as identified with option *listKey*
+MapKeys can contain more than one value. The first value always defines groups when you mouse over. Other values can be used to create logical groups. For example:
+
+    <img id="usamap" src="map.jpeg" usemap="#usa">
+    <map name="usa">
+		<area data-key="maine,new-england,really-cold" shape="poly" coords="...">
+		<area data-key="new-hampshire,new-england,really-cold" shape="poly" coords="...">
+		<area data-key="vermont,new-england,really-cold" shape="poly" coords="...">
+		<area data-key="connecticut,new-england" shape="poly" coords="...">
+		<area data-key="rhode-island,new-england" shape="poly" coords="...">
+		<area data-key="massachusetts,new-england" shape="poly" coords="...">
+		<!-- more states... -->
+    </map>
+
+    $('#usamap').mapster( { mapKey: 'data-key' } );
+
+Mousing over each state would cause just that state to be higlighted. However, because you've added additional groups, you can use those to select sets from code
+
+    // select all New England states
+    $('img').mapster('set',true,'new-england');
+
+    // select just Maine, New Hampshire & Vermont
+    $('img').mapster('set',true,'really-cold');
+
+
+Select or deselect elements in the mapster bound to the image using a key (as identified with option *listKey*
 
 ----
 ## Options
@@ -75,7 +99,9 @@ Yes, but you need to use the "jquery.imagemapster.zepto.js" build. This patches 
 
 ## Build instructions
 
-"rake" or "make"
+The source code is broken into several modules to make management easier and to make it possible to create feature-targeted builds. A rakefile is included that creates and minifies the two release builds (with and without Zepto support):
+
+`rake`
 
 ## Markdown
 

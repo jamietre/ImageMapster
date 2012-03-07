@@ -62,8 +62,7 @@
 
         this.mouseover = function (e) {
             var arData = me.getAllDataForArea(this),
-                ar=arData.length ? arData[0] : null,
-                opts;
+                ar=arData.length ? arData[0] : null;
 
             // mouseover events are ignored entirely while resizing, though we do care about mouseout events
             // and must queue the action to keep things clean.
@@ -72,15 +71,13 @@
                 return;
             }
 
-            opts = ar.effectiveOptions();
-
             if (me.currentAreaId === ar.areaId) {
                 return;
             }
             if (me.highlightId !== ar.areaId) {
                 me.clearEffects();
 
-                ar.highlight(!opts.highlight);
+                ar.highlight();
 
                 if (me.options.showToolTip) {
                     $.each(arData,function(i,e) {
@@ -96,7 +93,7 @@
                 me.options.onMouseover.call(this,
                 {
                     e: e,
-                    options: opts,
+                    options:ar.effectiveOptions(),
                     key: ar.key,
                     selected: ar.isSelected()
                 });

@@ -41,28 +41,33 @@
     p.createVisibleCanvas = function (img) {
         return $(this.createCanvasFor(img)).addClass('mapster_el').css(m.canvas_style)[0];
     };
-    p._addShapeGroupImpl = function (areaData, mode) {
+    p._addShapeGroupImpl = function (areaData, mode,options) {
         var me = this,
             md = me.map_data,
-            baseOpts = areaData.effectiveRenderOptions(mode);
+            isMask = options.isMask;
 
         // first get area options. Then override fade for selecting, and finally merge in the "select" effect options.
-
+        // copy baseOpts
 
         $.each(areaData.areas(), function (i,e) {
-            var opts = baseOpts;
-            
-            opts.isMask = baseOpts.isMask || (e.nohref && md.options.noHrefIsMask);
-            me.addShape(e, opts);
+            options.isMask = isMask || (e.nohref && md.options.noHrefIsMask);
+            me.addShape(e, options);
         });
+        // it's faster just to manipulate the passed options isMask property and restore it, than to copy the object
+        // each time
+        options.isMask=isMask;
 
     };
-    p.addShapeGroup = function (areaData, mode) {
+    p.addShapeGroup = function (areaData, mode,options) {
         // render includeKeys first - because they could be masks
         var me = this,
             list, name, canvas,
             map_data = this.map_data,
             opts = areaData.effectiveRenderOptions(mode);
+
+        if (options) {
+             $.extend(opts,options);
+        }
 
         if (mode === 'select') {
             name = "static_" + areaData.areaId.toString();
@@ -77,11 +82,11 @@
             list = u.split(opts.includeKeys);
             $.each(list, function (i,e) {
                 var areaData = map_data.getDataForKey(e.toString());
-                me._addShapeGroupImpl(areaData, mode);
+                me._addShapeGroupImpl(areaData, mode,opts);
             });
         }
 
-        me._addShapeGroupImpl(areaData, mode);
+        me._addShapeGroupImpl(areaData, mode,opts);
         me.render();
         if (opts.fade) {
            u.fader(canvas,0, (m.hasCanvas ? 1 : opts.fillOpacity), opts.fadeDuration);

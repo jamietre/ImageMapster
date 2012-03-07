@@ -50,7 +50,7 @@ A jQuery plugin to enhance image maps.
     };
 
     $.mapster = {
-        version: "1.2.4.050",
+        version: "1.2.4.051",
         render_defaults: {
             isSelectable: true,
             isDeselectable: true,
@@ -610,19 +610,19 @@ A jQuery plugin to enhance image maps.
         // Select or unselect areas identified by key -- a string, a csv string, or array of strings.
         // if set_bound is true, the bound list will also be updated. Default is true. If neither true nor false,
         // it will be toggled.
-        me.set = function (selected, key, set_bound) {
-            var lastMap, map_data, do_set_bound,
+        me.set = function (selected, key, options) {
+            var lastMap, map_data, 
                 key_list, area_list; // array of unique areas passed
 
             function setSelection(ar) {
                 if (ar) {
                     switch (selected) {
                         case true:
-                            ar.addSelection(); break;
+                            ar.addSelection(options); break;
                         case false:
                             ar.removeSelection(true); break;
                         default:
-                            ar.toggleSelection(); break;
+                            ar.toggleSelection(options); break;
                     }
                 }
             }
@@ -640,13 +640,11 @@ A jQuery plugin to enhance image maps.
                 if (!selected) {
                     map_data.removeSelectionFinish();
                 }
-                if (do_set_bound && map_data.options.boundList) {
+                if (map_data.options.boundList) {
                     m.setBoundListProperties(map_data.options, m.getBoundList(map_data.options, key_list), selected);
                 }            
             }
-            do_set_bound = u.isBool(set_bound) ? set_bound : true;
 
-            // break out by maps first
             this.each(function (i,e) {
                 var keys;
                 map_data = m.getMapData(e);
@@ -663,7 +661,7 @@ A jQuery plugin to enhance image maps.
                if (map_data) {
                     keys = '';
                     if ($(e).is('img')) {
-                        if (!m.queueCommand(map_data, $(e), 'set', [selected, key, do_set_bound])) {
+                        if (!m.queueCommand(map_data, $(e), 'set', [selected, key, options])) {
                             if (key instanceof Array) {
                                 if (key.length) {
                                     keys = key.join(",");
@@ -681,7 +679,7 @@ A jQuery plugin to enhance image maps.
                             }
                         }
                     } else {
-                        if (!m.queueCommand(map_data, $(e), 'set', [selected, key, do_set_bound])) {
+                        if (!m.queueCommand(map_data, $(e), 'set', [selected, key, options])) {
                             addArea(map_data.getDataForArea(e));
                             lastMap = map_data;
                         }

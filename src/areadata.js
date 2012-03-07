@@ -121,10 +121,10 @@
         }
     };
     // highlight this area, no render causes it to happen internally only
-    p.highlight = function (noRender) {
+    p.highlight = function (options) {
         var o = this.owner;
-        if (!noRender) {
-            o.graphics.addShapeGroup(this, "highlight");
+        if (this.effectiveOptions().highlight) {
+            o.graphics.addShapeGroup(this, "highlight",options);
         }
         o.setHighlightId(this.areaId);
         this.changeState('highlight', true);
@@ -134,7 +134,7 @@
     p.drawSelection = function () {
         this.owner.graphics.addShapeGroup(this, "select");
     };
-    p.addSelection = function () {
+    p.addSelection = function (options) {
         // need to add the new one first so that the double-opacity effect leaves the current one highlighted for singleSelect
         var o = this.owner;
         if (o.options.singleSelect) {
@@ -143,11 +143,14 @@
 
         // because areas can overlap - we can't depend on the selection state to tell us anything about the inner areas.
         // don't check if it's already selected
-        //if (!this.isSelected()) {
-        this.drawSelection();
-        this.selected = true;
-        this.changeState('select', true);
-        //}
+        if (!this.isSelected()) {
+            if (options) {
+                this.optsCache = $.extend(this.effectiveRenderOptions('select'),options);
+            }
+            this.drawSelection();
+            this.selected = true;
+            this.changeState('select', true);
+        }
 
         if (o.options.singleSelect) {
             o.graphics.refreshSelections();
@@ -166,19 +169,20 @@
         this.optsCache=null;
         this.owner.graphics.removeSelections(this.areaId);
 
+        // Complete selection removal process. This is separated because it's very inefficient to perform the whole
+        // process for multiple removals, as the canvas must be totally redrawn at the end of the process.ar.remove
         if (!partial) {
             this.owner.removeSelectionFinish();
         }
     };
-    // Complete selection removal process. This is separated because it's very inefficient to perform the whole
-    // process for multiple removals, as the canvas must be totally redrawn at the end of the process.ar.remove
 
-    p.toggleSelection = function (partial) {
+
+    p.toggleSelection = function (options) {
         if (!this.isSelected()) {
-            this.addSelection();
+            this.addSelection(options);
         }
         else {
-            this.removeSelection(partial);
+            this.removeSelection();
         }
         return this.isSelected();
     };

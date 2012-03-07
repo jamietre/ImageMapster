@@ -50,7 +50,7 @@ A jQuery plugin to enhance image maps.
     };
 
     $.mapster = {
-        version: "1.2.4.050",
+        version: "1.2.4.051",
         render_defaults: {
             isSelectable: true,
             isDeselectable: true,
@@ -610,19 +610,19 @@ A jQuery plugin to enhance image maps.
         // Select or unselect areas identified by key -- a string, a csv string, or array of strings.
         // if set_bound is true, the bound list will also be updated. Default is true. If neither true nor false,
         // it will be toggled.
-        me.set = function (selected, key, set_bound) {
-            var lastMap, map_data, do_set_bound,
+        me.set = function (selected, key, options) {
+            var lastMap, map_data, 
                 key_list, area_list; // array of unique areas passed
 
             function setSelection(ar) {
                 if (ar) {
                     switch (selected) {
                         case true:
-                            ar.addSelection(); break;
+                            ar.addSelection(options); break;
                         case false:
                             ar.removeSelection(true); break;
                         default:
-                            ar.toggleSelection(); break;
+                            ar.toggleSelection(options); break;
                     }
                 }
             }
@@ -640,13 +640,11 @@ A jQuery plugin to enhance image maps.
                 if (!selected) {
                     map_data.removeSelectionFinish();
                 }
-                if (do_set_bound && map_data.options.boundList) {
+                if (map_data.options.boundList) {
                     m.setBoundListProperties(map_data.options, m.getBoundList(map_data.options, key_list), selected);
                 }            
             }
-            do_set_bound = u.isBool(set_bound) ? set_bound : true;
 
-            // break out by maps first
             this.each(function (i,e) {
                 var keys;
                 map_data = m.getMapData(e);
@@ -663,7 +661,7 @@ A jQuery plugin to enhance image maps.
                if (map_data) {
                     keys = '';
                     if ($(e).is('img')) {
-                        if (!m.queueCommand(map_data, $(e), 'set', [selected, key, do_set_bound])) {
+                        if (!m.queueCommand(map_data, $(e), 'set', [selected, key, options])) {
                             if (key instanceof Array) {
                                 if (key.length) {
                                     keys = key.join(",");
@@ -681,7 +679,7 @@ A jQuery plugin to enhance image maps.
                             }
                         }
                     } else {
-                        if (!m.queueCommand(map_data, $(e), 'set', [selected, key, do_set_bound])) {
+                        if (!m.queueCommand(map_data, $(e), 'set', [selected, key, options])) {
                             addArea(map_data.getDataForArea(e));
                             lastMap = map_data;
                         }
@@ -973,28 +971,33 @@ A jQuery plugin to enhance image maps.
     p.createVisibleCanvas = function (img) {
         return $(this.createCanvasFor(img)).addClass('mapster_el').css(m.canvas_style)[0];
     };
-    p._addShapeGroupImpl = function (areaData, mode) {
+    p._addShapeGroupImpl = function (areaData, mode,options) {
         var me = this,
             md = me.map_data,
-            baseOpts = areaData.effectiveRenderOptions(mode);
+            isMask = options.isMask;
 
         // first get area options. Then override fade for selecting, and finally merge in the "select" effect options.
-
+        // copy baseOpts
 
         $.each(areaData.areas(), function (i,e) {
-            var opts = baseOpts;
-            
-            opts.isMask = baseOpts.isMask || (e.nohref && md.options.noHrefIsMask);
-            me.addShape(e, opts);
+            options.isMask = isMask || (e.nohref && md.options.noHrefIsMask);
+            me.addShape(e, options);
         });
+        // it's faster just to manipulate the passed options isMask property and restore it, than to copy the object
+        // each time
+        options.isMask=isMask;
 
     };
-    p.addShapeGroup = function (areaData, mode) {
+    p.addShapeGroup = function (areaData, mode,options) {
         // render includeKeys first - because they could be masks
         var me = this,
             list, name, canvas,
             map_data = this.map_data,
             opts = areaData.effectiveRenderOptions(mode);
+
+        if (options) {
+             $.extend(opts,options);
+        }
 
         if (mode === 'select') {
             name = "static_" + areaData.areaId.toString();
@@ -1009,11 +1012,11 @@ A jQuery plugin to enhance image maps.
             list = u.split(opts.includeKeys);
             $.each(list, function (i,e) {
                 var areaData = map_data.getDataForKey(e.toString());
-                me._addShapeGroupImpl(areaData, mode);
+                me._addShapeGroupImpl(areaData, mode,opts);
             });
         }
 
-        me._addShapeGroupImpl(areaData, mode);
+        me._addShapeGroupImpl(areaData, mode,opts);
         me.render();
         if (opts.fade) {
            u.fader(canvas,0, (m.hasCanvas ? 1 : opts.fillOpacity), opts.fadeDuration);
@@ -1336,8 +1339,7 @@ A jQuery plugin to enhance image maps.
 
         this.mouseover = function (e) {
             var arData = me.getAllDataForArea(this),
-                ar=arData.length ? arData[0] : null,
-                opts;
+                ar=arData.length ? arData[0] : null;
 
             // mouseover events are ignored entirely while resizing, though we do care about mouseout events
             // and must queue the action to keep things clean.
@@ -1346,15 +1348,13 @@ A jQuery plugin to enhance image maps.
                 return;
             }
 
-            opts = ar.effectiveOptions();
-
             if (me.currentAreaId === ar.areaId) {
                 return;
             }
             if (me.highlightId !== ar.areaId) {
                 me.clearEffects();
 
-                ar.highlight(!opts.highlight);
+                ar.highlight();
 
                 if (me.options.showToolTip) {
                     $.each(arData,function(i,e) {
@@ -1370,7 +1370,7 @@ A jQuery plugin to enhance image maps.
                 me.options.onMouseover.call(this,
                 {
                     e: e,
-                    options: opts,
+                    options:ar.effectiveOptions(),
                     key: ar.key,
                     selected: ar.isSelected()
                 });
@@ -2178,10 +2178,10 @@ A jQuery plugin to enhance image maps.
         }
     };
     // highlight this area, no render causes it to happen internally only
-    p.highlight = function (noRender) {
+    p.highlight = function (options) {
         var o = this.owner;
-        if (!noRender) {
-            o.graphics.addShapeGroup(this, "highlight");
+        if (this.effectiveOptions().highlight) {
+            o.graphics.addShapeGroup(this, "highlight",options);
         }
         o.setHighlightId(this.areaId);
         this.changeState('highlight', true);
@@ -2191,7 +2191,7 @@ A jQuery plugin to enhance image maps.
     p.drawSelection = function () {
         this.owner.graphics.addShapeGroup(this, "select");
     };
-    p.addSelection = function () {
+    p.addSelection = function (options) {
         // need to add the new one first so that the double-opacity effect leaves the current one highlighted for singleSelect
         var o = this.owner;
         if (o.options.singleSelect) {
@@ -2200,11 +2200,14 @@ A jQuery plugin to enhance image maps.
 
         // because areas can overlap - we can't depend on the selection state to tell us anything about the inner areas.
         // don't check if it's already selected
-        //if (!this.isSelected()) {
-        this.drawSelection();
-        this.selected = true;
-        this.changeState('select', true);
-        //}
+        if (!this.isSelected()) {
+            if (options) {
+                this.optsCache = $.extend(this.effectiveRenderOptions('select'),options);
+            }
+            this.drawSelection();
+            this.selected = true;
+            this.changeState('select', true);
+        }
 
         if (o.options.singleSelect) {
             o.graphics.refreshSelections();
@@ -2223,19 +2226,20 @@ A jQuery plugin to enhance image maps.
         this.optsCache=null;
         this.owner.graphics.removeSelections(this.areaId);
 
+        // Complete selection removal process. This is separated because it's very inefficient to perform the whole
+        // process for multiple removals, as the canvas must be totally redrawn at the end of the process.ar.remove
         if (!partial) {
             this.owner.removeSelectionFinish();
         }
     };
-    // Complete selection removal process. This is separated because it's very inefficient to perform the whole
-    // process for multiple removals, as the canvas must be totally redrawn at the end of the process.ar.remove
 
-    p.toggleSelection = function (partial) {
+
+    p.toggleSelection = function (options) {
         if (!this.isSelected()) {
-            this.addSelection();
+            this.addSelection(options);
         }
         else {
-            this.removeSelection(partial);
+            this.removeSelection();
         }
         return this.isSelected();
     };
