@@ -60,6 +60,8 @@ Programatically select elements from the image map. The programmatic selection/d
 
 You can also select or deselect areas using a their `mapKey`. This is an attribute on each area in your HTML that identifies it. You define a mapKey using a configuration option: `mapKey: 'data-key'`.
 
+    $('img').mapster('set',true,'key1,key2');
+
 If two areas share the same value for the `mapKey` they will be automatically grouped together when activated. You can also use the values of the mapKey to select areas from code.
 
 MapKeys can contain more than one value. The first value always defines groups when you mouse over. Other values can be used to create logical groups. For example:
@@ -77,7 +79,7 @@ MapKeys can contain more than one value. The first value always defines groups w
 
     $('#usamap').mapster( { mapKey: 'data-key' } );
 
-Mousing over each state would cause just that state to be higlighted. However, because you've added additional groups, you can use those to select sets from code
+Mousing over each state would cause just that state to be higlighted. You can also select other logical groups from code code:
 
     // select all New England states
     $('img').mapster('set',true,'new-england');
@@ -85,8 +87,10 @@ Mousing over each state would cause just that state to be higlighted. However, b
     // select just Maine, New Hampshire & Vermont
     $('img').mapster('set',true,'really-cold');
 
+Groups created this way are *independent* of the primary group. If you select "new-england" from code, you can't unselect just "MA" by clicking on it. You would have to unselect "new-england" from code. 
 
-Select or deselect elements in the mapster bound to the image using a key (as identified with option *listKey*
+To simply indentify a set of areas to turn on or off, but not treat them as a logical group, you can use CSS classes and select areas directly, or use the <code>keys</code> option to identify the primary keys associated with a group (see documentation).
+
 
 ----
 ## Options
