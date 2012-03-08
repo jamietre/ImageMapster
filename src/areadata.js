@@ -148,6 +148,9 @@
                 this.optsCache = $.extend(this.effectiveRenderOptions('select'),options);
             }
             this.drawSelection();
+            if (options) {
+                this.optsCache=null;
+            }
             this.selected = true;
             this.changeState('select', true);
         }

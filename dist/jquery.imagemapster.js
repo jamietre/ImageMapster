@@ -32,7 +32,7 @@ A jQuery plugin to enhance image maps.
 /// January 19, 2011
 */
 
-/*jslint eqeqeq: false, laxbreak: true, evil: true */
+/*jslint laxbreak: true, evil: true */
 /*global jQuery: true, Zepto: true */
 
 
@@ -50,7 +50,7 @@ A jQuery plugin to enhance image maps.
     };
 
     $.mapster = {
-        version: "1.2.4.052",
+        version: "1.2.4.053",
         render_defaults: {
             isSelectable: true,
             isDeselectable: true,
@@ -618,18 +618,18 @@ A jQuery plugin to enhance image maps.
         // if set_bound is true, the bound list will also be updated. Default is true. If neither true nor false,
         // it will be toggled.
         me.set = function (selected, key, options) {
-            var lastMap, map_data, 
+            var lastMap, map_data, opts=options,
                 key_list, area_list; // array of unique areas passed
 
             function setSelection(ar) {
                 if (ar) {
                     switch (selected) {
                         case true:
-                            ar.addSelection(options); break;
+                            ar.addSelection(opts); break;
                         case false:
                             ar.removeSelection(true); break;
                         default:
-                            ar.toggleSelection(options); break;
+                            ar.toggleSelection(opts); break;
                     }
                 }
             }
@@ -652,7 +652,7 @@ A jQuery plugin to enhance image maps.
                 }            
             }
 
-            this.each(function (i,e) {
+            this.filter('img,area').each(function (i,e) {
                 var keys;
                 map_data = m.getMapData(e);
 
@@ -667,8 +667,8 @@ A jQuery plugin to enhance image maps.
                 
                if (map_data) {
                     keys = '';
-                    if ($(e).is('img')) {
-                        if (!m.queueCommand(map_data, $(e), 'set', [selected, key, options])) {
+                    if (e.nodeName.toUpperCase()==='IMG') {
+                        if (!m.queueCommand(map_data, $(e), 'set', [selected, key, opts])) {
                             if (key instanceof Array) {
                                 if (key.length) {
                                     keys = key.join(",");
@@ -686,12 +686,13 @@ A jQuery plugin to enhance image maps.
                             }
                         }
                     } else {
-                        if (!m.queueCommand(map_data, $(e), 'set', [selected, key, options])) {
+                        opts=key;
+                        if (!m.queueCommand(map_data, $(e), 'set', [selected, opts])) {
                             addArea(map_data.getDataForArea(e));
                             lastMap = map_data;
                         }
+                    
                     }
-
                 }
             });
             
@@ -1333,7 +1334,7 @@ A jQuery plugin to enhance image maps.
             m.area_defaults,
             options);
 
-        this.bindTries = options.configTimeout / 200;
+        this.bindTries = options.configTimeout / 50;
 
         // save the initial style of the image for unbinding. This is problematic, chrome duplicates styles when assigning, and
         // cssText is apparently not universally supported. Need to do something more robust to make unbinding work universally.
@@ -2232,6 +2233,9 @@ A jQuery plugin to enhance image maps.
                 this.optsCache = $.extend(this.effectiveRenderOptions('select'),options);
             }
             this.drawSelection();
+            if (options) {
+                this.optsCache=null;
+            }
             this.selected = true;
             this.changeState('select', true);
         }

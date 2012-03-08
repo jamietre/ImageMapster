@@ -44,7 +44,7 @@
             m.area_defaults,
             options);
 
-        this.bindTries = options.configTimeout / 200;
+        this.bindTries = options.configTimeout / 50;
 
         // save the initial style of the image for unbinding. This is problematic, chrome duplicates styles when assigning, and
         // cssText is apparently not universally supported. Need to do something more robust to make unbinding work universally.
