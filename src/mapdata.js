@@ -319,9 +319,20 @@
     // Wait until all images are loaded then call initialize. This is difficult because browsers are incosistent about
     // how or if "onload" works and in how one can actually detect if an image is already loaded. Try to check first,
     // then bind onload event, and finally use a timer to keep checking.
-    p.bindImages = function (retry) {
-        var alreadyLoaded = true,
-                    me = this;
+    
+    // the "first" parameter means this was the first time it was called
+
+    p.bindImages = function (first) {
+        var i,img,
+            me = this,
+            loaded=true,
+            retry=function() {
+                me.bindImages.call(me);
+            },
+            error=function(e) {
+                window.clearTimeout(me.imgTimeout);
+                me.imageLoadError(e);
+            };
 
         me.imagesAdded = true;
 
@@ -329,32 +340,36 @@
             return;
         }
         // check to see if every image has already been loaded
-        $.each(me.images, function (i,e) {
-            if (!u.isImageLoaded(e)) {
-                alreadyLoaded = false;
-                return false;
+        i=me.images.length;
+        while (i-->0) {
+            img = me.images[i];
+            if (!u.isImageLoaded(img)) {
+                loaded=false;
+                if (first) {
+                    img.onload=retry;
+                    img.onerror=error;
+                    break;
+                }
             }
-        });
-        me.imagesLoaded = alreadyLoaded;
+        }
+        me.imagesLoaded=loaded;
 
         if (me.isReadyToBind()) {
             me.initialize();
             return;
         }
 
-        //            for (i = 0; i < me.images.length; i++) {
-        //                whenLoaded(me.images[i], onLoad);
-        //            }
-
         // to account for failure of onLoad to fire in rare situations
         if (me.bindTries-- > 0) {
-            window.setTimeout(function () {
-                me.bindImages(true);
-            }, 200);
+            this.imgTimeout=window.setTimeout(retry, 50);
         } else {
-            throw ("Images never seemed to finish loading.");
+            error();
         }
-
+    };
+    p.imageLoadError=function(e) {
+        var err = e ? 'The image ' + e.target.src + ' failed to load.' : 
+        'The images never seemed to finish loading. This could be because of interference from a plugin.';
+        throw (err);
     };
     p.altImage = function (mode) {
         return this.images[this.altImagesXref[mode]];

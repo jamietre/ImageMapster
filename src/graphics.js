@@ -82,13 +82,18 @@
             list = u.split(opts.includeKeys);
             $.each(list, function (i,e) {
                 var areaData = map_data.getDataForKey(e.toString());
-                me._addShapeGroupImpl(areaData, mode,opts);
+                me._addShapeGroupImpl(areaData, mode,areaData.effectiveRenderOptions(mode));
             });
         }
 
         me._addShapeGroupImpl(areaData, mode,opts);
         me.render();
         if (opts.fade) {
+           //if (m.hasCanvas)
+           //{
+           //     u.setOpacity(canvas.find('.mapster_mask'),1);
+           //}
+
            u.fader(canvas,0, (m.hasCanvas ? 1 : opts.fillOpacity), opts.fadeDuration);
         }
 

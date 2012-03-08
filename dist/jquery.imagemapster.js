@@ -50,7 +50,7 @@ A jQuery plugin to enhance image maps.
     };
 
     $.mapster = {
-        version: "1.2.4.051",
+        version: "1.2.4.052",
         render_defaults: {
             isSelectable: true,
             isDeselectable: true,
@@ -173,10 +173,12 @@ A jQuery plugin to enhance image maps.
             setOpacity: function (e, opacity) {
                 if (!$.mapster.hasCanvas) {
                     var el = $(e);
-                    el.children().add(el).each(function(i,e) {
-                    //el.children().each(function() {
-                        e.style.filter = 'Alpha(opacity=' + String(opacity * 100) + ');';
-                    });
+                    el.children()
+                        .add(el)
+                        .not('.mapster_mask')
+                        .each(function(i,e) {
+                            e.style.filter = 'Alpha(opacity=' + String(opacity * 100) + ');';
+                        });
                 } else {
                     e.style.opacity = opacity;
                 }
@@ -246,6 +248,8 @@ A jQuery plugin to enhance image maps.
                 }
             },
             isImageLoaded: function (img) {
+                
+                var jqImg;
                 if (typeof img.complete !== 'undefined' && !img.complete) {
                     return false;
                 }
@@ -253,7 +257,10 @@ A jQuery plugin to enhance image maps.
                                     (img.naturalWidth === 0 || img.naturalHeight === 0)) {
                     return false;
                 }
-                return true;
+                // final test because some Chrome extensions seem to delay the availability of the image in the DOM making
+                // jquery return zero even though it's loaded
+                jqImg=$(img);
+                return !!(jqImg.width() && jqImg.height());
             },
             fader: (function () {
                 var elements = {},
@@ -866,7 +873,7 @@ A jQuery plugin to enhance image maps.
                         map_data.addImage(null, opts.render_highlight.altImage || opts.altImage, "highlight");
                         map_data.addImage(null, opts.render_select.altImage || opts.altImage, "select");
                     }
-                    map_data.bindImages();
+                    map_data.bindImages(true);
                 }
             });
         };
@@ -1012,13 +1019,18 @@ A jQuery plugin to enhance image maps.
             list = u.split(opts.includeKeys);
             $.each(list, function (i,e) {
                 var areaData = map_data.getDataForKey(e.toString());
-                me._addShapeGroupImpl(areaData, mode,opts);
+                me._addShapeGroupImpl(areaData, mode,areaData.effectiveRenderOptions(mode));
             });
         }
 
         me._addShapeGroupImpl(areaData, mode,opts);
         me.render();
         if (opts.fade) {
+           //if (m.hasCanvas)
+           //{
+           //     u.setOpacity(canvas.find('.mapster_mask'),1);
+           //}
+
            u.fader(canvas,0, (m.hasCanvas ? 1 : opts.fillOpacity), opts.fadeDuration);
         }
 
@@ -1596,9 +1608,20 @@ A jQuery plugin to enhance image maps.
     // Wait until all images are loaded then call initialize. This is difficult because browsers are incosistent about
     // how or if "onload" works and in how one can actually detect if an image is already loaded. Try to check first,
     // then bind onload event, and finally use a timer to keep checking.
-    p.bindImages = function (retry) {
-        var alreadyLoaded = true,
-                    me = this;
+    
+    // the "first" parameter means this was the first time it was called
+
+    p.bindImages = function (first) {
+        var i,img,
+            me = this,
+            loaded=true,
+            retry=function() {
+                me.bindImages.call(me);
+            },
+            error=function(e) {
+                window.clearTimeout(me.imgTimeout);
+                me.imageLoadError(e);
+            };
 
         me.imagesAdded = true;
 
@@ -1606,32 +1629,36 @@ A jQuery plugin to enhance image maps.
             return;
         }
         // check to see if every image has already been loaded
-        $.each(me.images, function (i,e) {
-            if (!u.isImageLoaded(e)) {
-                alreadyLoaded = false;
-                return false;
+        i=me.images.length;
+        while (i-->0) {
+            img = me.images[i];
+            if (!u.isImageLoaded(img)) {
+                loaded=false;
+                if (first) {
+                    img.onload=retry;
+                    img.onerror=error;
+                    break;
+                }
             }
-        });
-        me.imagesLoaded = alreadyLoaded;
+        }
+        me.imagesLoaded=loaded;
 
         if (me.isReadyToBind()) {
             me.initialize();
             return;
         }
 
-        //            for (i = 0; i < me.images.length; i++) {
-        //                whenLoaded(me.images[i], onLoad);
-        //            }
-
         // to account for failure of onLoad to fire in rare situations
         if (me.bindTries-- > 0) {
-            window.setTimeout(function () {
-                me.bindImages(true);
-            }, 200);
+            this.imgTimeout=window.setTimeout(retry, 50);
         } else {
-            throw ("Images never seemed to finish loading.");
+            error();
         }
-
+    };
+    p.imageLoadError=function(e) {
+        var err = e ? 'The image ' + e.target.src + ' failed to load.' : 
+        'The images never seemed to finish loading. This could be because of interference from a plugin.';
+        throw (err);
     };
     p.altImage = function (mode) {
         return this.images[this.altImagesXref[mode]];
@@ -2399,37 +2426,43 @@ A jQuery plugin to enhance image maps.
 (function ($) {
     var m = $.mapster, u = m.utils, p = m.MapArea.prototype;
 
-    m.utils.getScaleInfo = function (realW, realH, width, height) {
+    m.utils.getScaleInfo = function (actual, eff) {
         var pct;
-        if (!width && !height) {
+        if (!eff) {
             pct = 1;
         } else {
-            pct = width / realW || height / realH;
+            pct = eff.width / actual.width || eff.height / actual.height;
             // make sure a float error doesn't muck us up
             if (pct > 0.98 && pct < 1.02) { pct = 1; }
         }
         return {
             scale: (pct !== 1),
             scalePct: pct,
-            realWidth: realW,
-            realHeight: realH,
-            width: width,
-            height: height,
-            ratio: width / height
+            realWidth: actual.width,
+            realHeight: actual.height,
+            width: eff.width,
+            height: eff.height,
+            ratio: eff.width / eff.height
         };
     };
     // Scale a set of AREAs, return old data as an array of objects
     m.utils.scaleMap = function (image, imageRaw, scale) {
-        var  realH, realW, width, height, 
-            img = $(image),
-            imgRaw = $(imageRaw);
-                
-        width = img.width();
-        height = img.height();
-        realW= imgRaw.width();
-        realH = imgRaw.height();
+        
+        // stunningly, jQuery width can return zero even as width does not, seems to happen only
+        // with adBlock or maybe other plugins. These must interfere with onload events somehow.
 
-        return this.getScaleInfo(realW, realH, width, height);
+        function size(image) {
+            var img=$(image),
+            s= { 
+                width: img.width(),
+                height: img.height()
+            };
+            if (!(s.width && s.height)) {
+                throw("Another script, such as an extension, appears to be interfering with image loading. Please let us know about this.");
+            }
+            return s;
+        }
+        return this.getScaleInfo(size(imageRaw),size(image));
     };
     // options: duration = animation time (zero = no animation)
     // force: supercede any existing animation
@@ -2526,7 +2559,14 @@ A jQuery plugin to enhance image maps.
         
         $(this.image).css(newsize);
         // start calculation at the same time as effect
-        me.scaleInfo = u.getScaleInfo(me.scaleInfo.realWidth, me.scaleInfo.realHeight, width, height);
+        me.scaleInfo = u.getScaleInfo({ 
+                width: me.scaleInfo.realWidth,
+                height: me.scaleInfo.realHeight
+            }, 
+            {
+                width: width,
+                height: height
+            });
         $.each(me.data, function (i, e) {
             $.each(e.areas(), function (i, e) {
                 e.resize();

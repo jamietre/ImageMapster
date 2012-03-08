@@ -10,37 +10,43 @@
 (function ($) {
     var m = $.mapster, u = m.utils, p = m.MapArea.prototype;
 
-    m.utils.getScaleInfo = function (realW, realH, width, height) {
+    m.utils.getScaleInfo = function (actual, eff) {
         var pct;
-        if (!width && !height) {
+        if (!eff) {
             pct = 1;
         } else {
-            pct = width / realW || height / realH;
+            pct = eff.width / actual.width || eff.height / actual.height;
             // make sure a float error doesn't muck us up
             if (pct > 0.98 && pct < 1.02) { pct = 1; }
         }
         return {
             scale: (pct !== 1),
             scalePct: pct,
-            realWidth: realW,
-            realHeight: realH,
-            width: width,
-            height: height,
-            ratio: width / height
+            realWidth: actual.width,
+            realHeight: actual.height,
+            width: eff.width,
+            height: eff.height,
+            ratio: eff.width / eff.height
         };
     };
     // Scale a set of AREAs, return old data as an array of objects
     m.utils.scaleMap = function (image, imageRaw, scale) {
-        var  realH, realW, width, height, 
-            img = $(image),
-            imgRaw = $(imageRaw);
-                
-        width = img.width();
-        height = img.height();
-        realW= imgRaw.width();
-        realH = imgRaw.height();
+        
+        // stunningly, jQuery width can return zero even as width does not, seems to happen only
+        // with adBlock or maybe other plugins. These must interfere with onload events somehow.
 
-        return this.getScaleInfo(realW, realH, width, height);
+        function size(image) {
+            var img=$(image),
+            s= { 
+                width: img.width(),
+                height: img.height()
+            };
+            if (!(s.width && s.height)) {
+                throw("Another script, such as an extension, appears to be interfering with image loading. Please let us know about this.");
+            }
+            return s;
+        }
+        return this.getScaleInfo(size(imageRaw),size(image));
     };
     // options: duration = animation time (zero = no animation)
     // force: supercede any existing animation
@@ -137,7 +143,14 @@
         
         $(this.image).css(newsize);
         // start calculation at the same time as effect
-        me.scaleInfo = u.getScaleInfo(me.scaleInfo.realWidth, me.scaleInfo.realHeight, width, height);
+        me.scaleInfo = u.getScaleInfo({ 
+                width: me.scaleInfo.realWidth,
+                height: me.scaleInfo.realHeight
+            }, 
+            {
+                width: width,
+                height: height
+            });
         $.each(me.data, function (i, e) {
             $.each(e.areas(), function (i, e) {
                 e.resize();

@@ -50,7 +50,7 @@ A jQuery plugin to enhance image maps.
     };
 
     $.mapster = {
-        version: "1.2.4.051",
+        version: "1.2.4.052",
         render_defaults: {
             isSelectable: true,
             isDeselectable: true,
@@ -173,10 +173,12 @@ A jQuery plugin to enhance image maps.
             setOpacity: function (e, opacity) {
                 if (!$.mapster.hasCanvas) {
                     var el = $(e);
-                    el.children().add(el).each(function(i,e) {
-                    //el.children().each(function() {
-                        e.style.filter = 'Alpha(opacity=' + String(opacity * 100) + ');';
-                    });
+                    el.children()
+                        .add(el)
+                        .not('.mapster_mask')
+                        .each(function(i,e) {
+                            e.style.filter = 'Alpha(opacity=' + String(opacity * 100) + ');';
+                        });
                 } else {
                     e.style.opacity = opacity;
                 }
@@ -246,6 +248,8 @@ A jQuery plugin to enhance image maps.
                 }
             },
             isImageLoaded: function (img) {
+                
+                var jqImg;
                 if (typeof img.complete !== 'undefined' && !img.complete) {
                     return false;
                 }
@@ -253,7 +257,10 @@ A jQuery plugin to enhance image maps.
                                     (img.naturalWidth === 0 || img.naturalHeight === 0)) {
                     return false;
                 }
-                return true;
+                // final test because some Chrome extensions seem to delay the availability of the image in the DOM making
+                // jquery return zero even though it's loaded
+                jqImg=$(img);
+                return !!(jqImg.width() && jqImg.height());
             },
             fader: (function () {
                 var elements = {},
@@ -866,7 +873,7 @@ A jQuery plugin to enhance image maps.
                         map_data.addImage(null, opts.render_highlight.altImage || opts.altImage, "highlight");
                         map_data.addImage(null, opts.render_select.altImage || opts.altImage, "select");
                     }
-                    map_data.bindImages();
+                    map_data.bindImages(true);
                 }
             });
         };
