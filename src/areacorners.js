@@ -64,7 +64,7 @@
             found=false;
             $.each([[bestMaxX - width, minY - height], [bestMinX, minY - height],
                              [minX - width, bestMaxY - height], [minX - width, bestMinY],
-                             [bestMaxY - height, maxX], [bestMinY, maxX],
+                             [maxX,bestMaxY - height], [ maxX,bestMinY],
                              [bestMaxX - width, maxY], [bestMinX, maxY]
                       ],function (i, e) {
                           if (!found && (e[0] > 0 && e[1] > 0)) {

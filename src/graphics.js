@@ -233,14 +233,8 @@
             };
 
             // create a canvas mimicing dimensions of an existing element
-            p.createCanvasFor = function (element) {
-                var el = $(element),
-                                    w = el.width() || el[0].width,
-                                    h = el.height() || el[0].height,
-                                    c = $('<canvas width="' + w + '" height="' + h + '"></canvas>')[0];
-
-                //c.getContext("2d").clearRect(0, 0, w, h);
-                return c;
+            p.createCanvasFor = function (el) {
+                return $('<canvas width="' + u.imgWidth(el) + '" height="' + u.imgHeight(el) + '"></canvas>')[0];
             };
             p.clearHighlight = function () {
                 var c = this.map_data.overlay_canvas;
@@ -323,11 +317,12 @@
                 return this.canvas;
             };
 
-            p.createCanvasFor = function (element) {
-                var el = $(element),
-                                w = el.width(),
-                                h = el.height();
-                return $('<var width="' + w + '" height="' + h + '" style="zoom:1;overflow:hidden;display:block;width:' + w + 'px;height:' + h + 'px;"></var>')[0];
+            p.createCanvasFor = function (el) {
+                var w = u.imgWidth(el),
+                    h = u.imgHeight(el);
+                return $('<var width="' + w + '" height="' + h 
+                    + '" style="zoom:1;overflow:hidden;display:block;width:' 
+                    + w + 'px;height:' + h + 'px;"></var>')[0];
             };
 
             p.clearHighlight = function () {

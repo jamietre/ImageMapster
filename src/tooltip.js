@@ -41,7 +41,7 @@
     };
     // Show tooltip adjacent to DOM element "area"
     m.AreaData.prototype.showTooltip = function () {
-        var tooltip, left, top, tooltipCss, corners, areaSrc, container,
+        var offset, tooltip, tooltipCss, corners, areaSrc, container,
                         opts = this.effectiveOptions(),
                         md = this.owner,
                         baseOpts = md.options,
@@ -65,7 +65,9 @@
 
         md.clearTooltip();
 
-        $(md.image).after(tooltip);
+        //$(md.image).after(tooltip);
+        $('body').append(tooltip);
+
         md.activeToolTip = tooltip;
         md.activeToolTipID = this.areaId;
 
@@ -83,15 +85,18 @@
 
         // Try to upper-left align it first, if that doesn't work, change the parameters
 
-        left = corners.tt[0];
-        top = corners.tt[1];
+        offset = $(md.image).offset();
+        tooltipCss = { 
+            "left":  offset.left+corners.tt[0] + "px",
+            "top": offset.top+corners.tt[1] + "px"
+        };
 
-        tooltipCss = { "left": left + "px", "top": top + "px" };
-
-        if (!tooltip.css("z-index") || tooltip.css("z-index") === "auto") {
-            tooltipCss["z-index"] = "2000";
+        if (parseInt(tooltip.css("z-index"),10)===0 
+            || tooltip.css("z-index") === "auto") {
+            tooltipCss["z-index"] = 9999;
         }
-        tooltip.css(tooltipCss).addClass('mapster_tooltip');
+        tooltip.css(tooltipCss)
+            .addClass('mapster_tooltip');
 
         md.bindTooltipClose('area-click', 'click', $(md.map));
         md.bindTooltipClose('tooltip-click', 'click', tooltip);

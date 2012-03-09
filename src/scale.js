@@ -36,10 +36,9 @@
         // with adBlock or maybe other plugins. These must interfere with onload events somehow.
 
         function size(image) {
-            var img=$(image),
-            s= { 
-                width: img.width(),
-                height: img.height()
+            var s= { 
+                width: u.imgWidth(image),
+                height: u.imgHeight(image)
             };
             if (!(s.width && s.height)) {
                 throw("Another script, such as an extension, appears to be interfering with image loading. Please let us know about this.");

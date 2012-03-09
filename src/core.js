@@ -50,7 +50,7 @@ A jQuery plugin to enhance image maps.
     };
 
     $.mapster = {
-        version: "1.2.4.053",
+        version: "1.2.4.055",
         render_defaults: {
             isSelectable: true,
             isDeselectable: true,
@@ -127,7 +127,6 @@ A jQuery plugin to enhance image maps.
             });
         },
         utils: {
-
             //            extend: function (target, sources, deep) {
             //                var i,u=this;
             //                $.extend.call(null, [target].concat(sources));
@@ -248,19 +247,11 @@ A jQuery plugin to enhance image maps.
                 }
             },
             isImageLoaded: function (img) {
-                
-                var jqImg;
                 if (typeof img.complete !== 'undefined' && !img.complete) {
                     return false;
                 }
-                if (typeof img.naturalWidth !== 'undefined' &&
-                                    (img.naturalWidth === 0 || img.naturalHeight === 0)) {
-                    return false;
-                }
-                // final test because some Chrome extensions seem to delay the availability of the image in the DOM making
-                // jquery return zero even though it's loaded
-                jqImg=$(img);
-                return !!(jqImg.width() && jqImg.height());
+
+                return !!this.imgWidth(img);
             },
             fader: (function () {
                 var elements = {},
@@ -387,6 +378,15 @@ A jQuery plugin to enhance image maps.
     // callback for each. If anything is returned from that callback, the process is stopped and that data return. Otherwise,
     // the object itself is returned.
     var m = $.mapster;
+    
+    // jQuery's width() and height() are broken on IE9 in some situations. This tries everything. 
+    $.each(["width","height"],function(i,e) {
+        var capProp = e.substr(0,1).toUpperCase() + e.substr(1);
+        m.utils["img"+capProp]=function(img) {
+                return $(img)[e]() || img[e] || img["natural"+capProp] || img["client"+capProp] || img["offset"+capProp];
+            };
+    });    
+
     m.Method = function (that, func_map, func_area, opts) {
         var me = this;
         me.name = opts.name;

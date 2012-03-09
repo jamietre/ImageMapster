@@ -153,7 +153,7 @@ A jQuery plugin to enhance image maps.
     };
 
     $.mapster = {
-        version: "1.2.4.053",
+        version: "1.2.4.055",
         render_defaults: {
             isSelectable: true,
             isDeselectable: true,
@@ -230,7 +230,6 @@ A jQuery plugin to enhance image maps.
             });
         },
         utils: {
-
             //            extend: function (target, sources, deep) {
             //                var i,u=this;
             //                $.extend.call(null, [target].concat(sources));
@@ -351,19 +350,11 @@ A jQuery plugin to enhance image maps.
                 }
             },
             isImageLoaded: function (img) {
-                
-                var jqImg;
                 if (typeof img.complete !== 'undefined' && !img.complete) {
                     return false;
                 }
-                if (typeof img.naturalWidth !== 'undefined' &&
-                                    (img.naturalWidth === 0 || img.naturalHeight === 0)) {
-                    return false;
-                }
-                // final test because some Chrome extensions seem to delay the availability of the image in the DOM making
-                // jquery return zero even though it's loaded
-                jqImg=$(img);
-                return !!(jqImg.width() && jqImg.height());
+
+                return !!this.imgWidth(img);
             },
             fader: (function () {
                 var elements = {},
@@ -490,6 +481,15 @@ A jQuery plugin to enhance image maps.
     // callback for each. If anything is returned from that callback, the process is stopped and that data return. Otherwise,
     // the object itself is returned.
     var m = $.mapster;
+    
+    // jQuery's width() and height() are broken on IE9 in some situations. This tries everything. 
+    $.each(["width","height"],function(i,e) {
+        var capProp = e.substr(0,1).toUpperCase() + e.substr(1);
+        m.utils["img"+capProp]=function(img) {
+                return $(img)[e]() || img[e] || img["natural"+capProp] || img["client"+capProp] || img["offset"+capProp];
+            };
+    });    
+
     m.Method = function (that, func_map, func_area, opts) {
         var me = this;
         me.name = opts.name;
@@ -1274,14 +1274,8 @@ A jQuery plugin to enhance image maps.
             };
 
             // create a canvas mimicing dimensions of an existing element
-            p.createCanvasFor = function (element) {
-                var el = $(element),
-                                    w = el.width() || el[0].width,
-                                    h = el.height() || el[0].height,
-                                    c = $('<canvas width="' + w + '" height="' + h + '"></canvas>')[0];
-
-                //c.getContext("2d").clearRect(0, 0, w, h);
-                return c;
+            p.createCanvasFor = function (el) {
+                return $('<canvas width="' + u.imgWidth(el) + '" height="' + u.imgHeight(el) + '"></canvas>')[0];
             };
             p.clearHighlight = function () {
                 var c = this.map_data.overlay_canvas;
@@ -1364,11 +1358,12 @@ A jQuery plugin to enhance image maps.
                 return this.canvas;
             };
 
-            p.createCanvasFor = function (element) {
-                var el = $(element),
-                                w = el.width(),
-                                h = el.height();
-                return $('<var width="' + w + '" height="' + h + '" style="zoom:1;overflow:hidden;display:block;width:' + w + 'px;height:' + h + 'px;"></var>')[0];
+            p.createCanvasFor = function (el) {
+                var w = u.imgWidth(el),
+                    h = u.imgHeight(el);
+                return $('<var width="' + w + '" height="' + h 
+                    + '" style="zoom:1;overflow:hidden;display:block;width:' 
+                    + w + 'px;height:' + h + 'px;"></var>')[0];
             };
 
             p.clearHighlight = function () {
@@ -1961,7 +1956,7 @@ A jQuery plugin to enhance image maps.
         // me.images[1] is the copy of the original image. It should be loaded & at its native size now so we can obtain the true
         // width & height to see if we need to scale. We then 
 
-        me.scaleInfo = scale = u.scaleMap(img,me.images[1], opts.scaleMap);
+        me.scaleInfo = scale = u.scaleMap(me.images[0],me.images[1], opts.scaleMap);
         
         // Now we got what we needed from the copy -clone from the original image again to make sure any other attributes are copied
         imgCopy = $(me.images[0])
@@ -2501,7 +2496,7 @@ A jQuery plugin to enhance image maps.
             found=false;
             $.each([[bestMaxX - width, minY - height], [bestMinX, minY - height],
                              [minX - width, bestMaxY - height], [minX - width, bestMinY],
-                             [bestMaxY - height, maxX], [bestMinY, maxX],
+                             [maxX,bestMaxY - height], [ maxX,bestMinY],
                              [bestMaxX - width, maxY], [bestMinX, maxY]
                       ],function (i, e) {
                           if (!found && (e[0] > 0 && e[1] > 0)) {
@@ -2559,10 +2554,9 @@ A jQuery plugin to enhance image maps.
         // with adBlock or maybe other plugins. These must interfere with onload events somehow.
 
         function size(image) {
-            var img=$(image),
-            s= { 
-                width: img.width(),
-                height: img.height()
+            var s= { 
+                width: u.imgWidth(image),
+                height: u.imgHeight(image)
             };
             if (!(s.width && s.height)) {
                 throw("Another script, such as an extension, appears to be interfering with image loading. Please let us know about this.");
@@ -2870,7 +2864,7 @@ A jQuery plugin to enhance image maps.
     };
     // Show tooltip adjacent to DOM element "area"
     m.AreaData.prototype.showTooltip = function () {
-        var tooltip, left, top, tooltipCss, corners, areaSrc, container,
+        var offset, tooltip, tooltipCss, corners, areaSrc, container,
                         opts = this.effectiveOptions(),
                         md = this.owner,
                         baseOpts = md.options,
@@ -2894,7 +2888,9 @@ A jQuery plugin to enhance image maps.
 
         md.clearTooltip();
 
-        $(md.image).after(tooltip);
+        //$(md.image).after(tooltip);
+        $('body').append(tooltip);
+
         md.activeToolTip = tooltip;
         md.activeToolTipID = this.areaId;
 
@@ -2912,15 +2908,18 @@ A jQuery plugin to enhance image maps.
 
         // Try to upper-left align it first, if that doesn't work, change the parameters
 
-        left = corners.tt[0];
-        top = corners.tt[1];
+        offset = $(md.image).offset();
+        tooltipCss = { 
+            "left":  offset.left+corners.tt[0] + "px",
+            "top": offset.top+corners.tt[1] + "px"
+        };
 
-        tooltipCss = { "left": left + "px", "top": top + "px" };
-
-        if (!tooltip.css("z-index") || tooltip.css("z-index") === "auto") {
-            tooltipCss["z-index"] = "2000";
+        if (parseInt(tooltip.css("z-index"),10)===0 
+            || tooltip.css("z-index") === "auto") {
+            tooltipCss["z-index"] = 9999;
         }
-        tooltip.css(tooltipCss).addClass('mapster_tooltip');
+        tooltip.css(tooltipCss)
+            .addClass('mapster_tooltip');
 
         md.bindTooltipClose('area-click', 'click', $(md.map));
         md.bindTooltipClose('tooltip-click', 'click', tooltip);
