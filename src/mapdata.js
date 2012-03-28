@@ -34,24 +34,17 @@
             }
         }
 
-        this.index = -1;                 // index of this in map_cache - so we have an ID to use for wraper div
-        this.currentAreaId=-1;
-        //this.legacyAreaId=-1;            // area ID that was previously active, but still retains effects.
-        this.image = image;              // (Image)  main map image
-        this.options = options;          // {}       options passed buy user
-        this.activeAreaEvent=null;
-        this.area_options = u.updateProps({}, // default options for any MapArea
-            m.area_defaults,
-            options);
 
-        this.bindTries = options.configTimeout / 50;
+   
+        this.image = image;              // (Image)  main map image
 
         // save the initial style of the image for unbinding. This is problematic, chrome duplicates styles when assigning, and
         // cssText is apparently not universally supported. Need to do something more robust to make unbinding work universally.
         this.imgCssText = image.style.cssText || null;
 
         this.initializeDefaults();
-        
+        this.configureOptions(options);
+
         // Try to stop browsers from drawing their own outline
         this.mousedown = function (e) {
             e.preventDefault();            
@@ -214,6 +207,15 @@
 
     };
     p = m.MapData.prototype;
+    p.configureOptions=function(options) {
+        // this is done here instead of the consturc
+        this.area_options = u.updateProps({}, // default options for any MapArea
+            m.area_defaults,
+            options);
+        this.options = options;          // {}       options passed buy user
+
+        this.bindTries = options.configTimeout / 50;
+    };
     p.initializeDefaults = function () {
         this.images = [];               // (Image)  all images associated with this map. this will include a "copy" of the main one
         this.imageSources = [];         // (string) src for each image
@@ -229,10 +231,7 @@
         this.commands = [];            // {}        commands that were run before configuration was completed (b/c images weren't loaded)
         this.data = [];                // MapData[] area groups
         this.mapAreas = [];            // MapArea[] list. AreaData entities contain refs to this array, so options are stored with each.
-        this.originalAreaData = [];    // ref of all coord data from areas as bound, indexed by auto-generated id during "initialize"
 
-
-        // private members
         this._xref = {};               // (int)      xref of mapKeys to data[]
         this.highlightId = -1;        // (int)      the currently highlighted element.
         this.currentAreaId = -1;
@@ -245,6 +244,14 @@
         //                width: width,
         //                height: height,
         //                ratio: width / height
+
+        this.index = -1;                 // index of this in map_cache - so we have an ID to use for wraper div
+        this.currentAreaId=-1;
+        //this.legacyAreaId=-1;            // area ID that was previously active, but still retains effects.
+        this.activeAreaEvent=null;
+
+
+
     };
 
     p.isActive = function() {
@@ -509,17 +516,10 @@
     };
     ///called when images are done loading
     p.initialize = function () {
-        var href,imgCopy, base_canvas, overlay_canvas, wrap, parentId, $area, area, css, sel, areas, i, j, keys, 
-            key, area_id, default_group, group_value, img,
-                    sort_func, sorted_list, dataItem, mapArea, scale,  curKey, mapAreaId,
+        var imgCopy, base_canvas, overlay_canvas, wrap, parentId, css, i,
+            img,sort_func, sorted_list,  scale,  
                     me = this,
                     opts = me.options;
-
-        function addAreaData(key, value) {
-            var dataItem = new m.AreaData(me, key, value);
-            dataItem.areaId = me._xref[key] = me.data.push(dataItem) - 1;
-            return dataItem.areaId;
-        }
 
         if (me.complete) {
             return;
@@ -554,17 +554,6 @@
         me.base_canvas = base_canvas;
         me.overlay_canvas = overlay_canvas;
 
-        me._xref = {};
-        me.data = [];
-
-        default_group = !opts.mapKey;
-        if (default_group) {
-            opts.mapKey = 'data-mapster-key';
-        }
-        sel = ($.browser.msie && $.browser.version <= 7) ? 'area' :
-                    (default_group ? 'area[coords]' : 'area[' + opts.mapKey + ']');
-        areas = $(me.map).find(sel);
-        
         // me.images[1] is the copy of the original image. It should be loaded & at its native size now so we can obtain the true
         // width & height to see if we need to scale. We then 
 
@@ -580,11 +569,111 @@
             imgCopy.css(e,img.css(e));
         });
         me.images[1]=imgCopy[0];
+
+        me.buildDataset();
+
+        // now that we have processed all the areas, set css for wrapper, scale map if needed
+
+        css = {
+            display: 'block',
+            position: 'relative',
+            padding: 0,
+            width: scale.width,
+            height: scale.height
+        };
+
+        if (opts.wrapCss) {
+            $.extend(css, opts.wrapCss);
+        }
+        // if we were rebinding with an existing wrapper, the image will aready be in it
+        if (img.parent()[0] !== me.wrapper[0]) {
+
+            img.before(me.wrapper);
+        }
+
+        wrap.css(css);
+
+        // move all generated images into the wrapper for easy removal later
+
+        $(me.images.slice(2)).hide();
+        for (i = 1; i < me.images.length; i++) {
+            wrap.append(me.images[i]);
+        }
+
+        //me.images[1].style.cssText = me.image.style.cssText;
+
+        wrap.append(base_canvas)
+                    .append(overlay_canvas)
+                    .append(img.css(m.canvas_style));
+
+        // images[0] is the original image with map, images[1] is the copy/background that is visible
+
+        u.setOpacity(me.images[0], 0);
+        $(me.images[1]).show();
+
+        u.setOpacity(me.images[1],1);
+
+        if (opts.isSelectable && opts.onGetList) {
+            sorted_list = me.data.slice(0);
+            if (opts.sortList) {
+                if (opts.sortList === "desc") {
+                    sort_func = function (a, b) {
+                        return a === b ? 0 : (a > b ? -1 : 1);
+                    };
+                }
+                else {
+                    sort_func = function (a, b) {
+                        return a === b ? 0 : (a < b ? -1 : 1);
+                    };
+                }
+
+                sorted_list.sort(function (a, b) {
+                    a = a.value;
+                    b = b.value;
+                    return sort_func(a, b);
+                });
+            }
+
+            me.options.boundList = opts.onGetList.call(me.image, sorted_list);
+        }
+
+        me.processCommandQueue();
         
+        if (opts.onConfigured && typeof opts.onConfigured === 'function') {
+            opts.onConfigured.call(img, true);
+        }
+    };
+
+    // when rebind is true, the MapArea data will not be rebuilt.
+    p.buildDataset=function(rebind) {
+        var sel,areas,j,area_id,$area,area,curKey,mapArea,key,keys,mapAreaId,group_value,dataItem,href,
+            me=this,
+            opts=me.options,
+            default_group;
+
+        function addAreaData(key, value) {
+            var dataItem = new m.AreaData(me, key, value);
+            dataItem.areaId = me._xref[key] = me.data.push(dataItem) - 1;
+            return dataItem.areaId;
+        }
+
+        me._xref = {};
+        me.data = [];
+        if (!rebind) {
+            me.mapAreas=[];
+        }
+
+        default_group = !opts.mapKey;
+        if (default_group) {
+            opts.mapKey = 'data-mapster-key';
+        }
+        sel = ($.browser.msie && $.browser.version <= 7) ? 'area' :
+                    (default_group ? 'area[coords]' : 'area[' + opts.mapKey + ']');
+        areas = $(me.map).find(sel).unbind('.mapster');
                     
-        for (i = areas.length - 1; i >= 0; i--) {
+        for (mapAreaId = 0;mapAreaId<areas.length; mapAreaId++) {
             area_id = 0;
-            area = areas[i];
+            area = areas[mapAreaId];
             $area = $(area);
 
             // skip areas with no coords - selector broken for older ie
@@ -593,16 +682,21 @@
             }
 
             curKey = default_group ? '' : area.getAttribute(opts.mapKey);
+            //curKey = default_group || !curKey ? '' : curKey;
 
             // conditions for which the area will be bound to mouse events
             // only bind to areas that don't have nohref. ie 6&7 cannot detect the presence of nohref, so we have to also not bind if href is missing.
 
-            mapArea = new m.MapArea(me, area,
-                default_group || !curKey ? '' : curKey);
+            if (rebind) {
+                mapArea = me.mapAreas[$area.data('mapster')-1];
+                mapArea.configure(curKey);
+            } else {
+                mapArea = new m.MapArea(me, area,curKey);
+                me.mapAreas.push(mapArea);
+            }
+
             keys = mapArea.keys; // converted to an array by mapArea
 
-            me.mapAreas.push(mapArea);
-            mapAreaId=me.mapAreas.length-1;
 
             // Iterate through each mapKey assigned to this area
             for (j = keys.length - 1; j >= 0; j--) {
@@ -653,86 +747,20 @@
                 $area.attr('data-mapster-key', key);
                 mapArea.keys=[key];
             }
+            // store an ID with each area. 
+            $area.data("mapster", mapAreaId+1);
         }
 
-        // now that we have processed all the areas, set css for wrapper, scale map if needed
-
-        css = {
-            display: 'block',
-            position: 'relative',
-            padding: 0,
-            width: scale.width,
-            height: scale.height
-        };
-        if (opts.wrapCss) {
-            $.extend(css, opts.wrapCss);
-
-        }
-        // if we were rebinding with an existing wrapper, the image will aready be in it
-        if (img.parent()[0] !== me.wrapper[0]) {
-
-            img.before(me.wrapper);
-        }
-
-        wrap.css(css);
-
-        // move all generated images into the wrapper for easy removal later
-
-        $(me.images.slice(2)).hide();
-        for (i = 1; i < me.images.length; i++) {
-            wrap.append(me.images[i]);
-        }
-
-        //me.images[1].style.cssText = me.image.style.cssText;
-
-        wrap.append(base_canvas)
-                    .append(overlay_canvas)
-                    .append(img.css(m.canvas_style));
-
-        // images[0] is the original image with map, images[1] is the copy/background that is visible
-
-        u.setOpacity(me.images[0], 0);
-        $(me.images[1]).show();
-
-        u.setOpacity(me.images[1],1);
-
-        me.setAreaOptions(opts.areas);
-
-        if (opts.isSelectable && opts.onGetList) {
-            sorted_list = me.data.slice(0);
-            if (opts.sortList) {
-                if (opts.sortList === "desc") {
-                    sort_func = function (a, b) {
-                        return a === b ? 0 : (a > b ? -1 : 1);
-                    };
-                }
-                else {
-                    sort_func = function (a, b) {
-                        return a === b ? 0 : (a < b ? -1 : 1);
-                    };
-                }
-
-                sorted_list.sort(function (a, b) {
-                    a = a.value;
-                    b = b.value;
-                    return sort_func(a, b);
-                });
-            }
-
-            me.options.boundList = opts.onGetList.call(me.image, sorted_list);
-        }
+       
         // TODO listenToList
         //            if (opts.listenToList && opts.nitG) {
         //                opts.nitG.bind('click.mapster', event_hooks[map_data.hooks_index].listclick_hook);
         //            }
 
         // populate areas from config options
+        me.setAreaOptions(opts.areas);
         me.redrawSelections();
-        me.processCommandQueue();
-        
-        if (opts.onConfigured && typeof opts.onConfigured === 'function') {
-            opts.onConfigured.call(img, true);
-        }
+
     };
     p.processCommandQueue=function() {
         

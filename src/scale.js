@@ -86,17 +86,36 @@
             me.processCommandQueue();
 
         }
+        function resizeMap() {
+            $(me.image).css(newsize);
+            // start calculation at the same time as effect
+            me.scaleInfo = u.getScaleInfo({ 
+                    width: me.scaleInfo.realWidth,
+                    height: me.scaleInfo.realHeight
+                }, 
+                {
+                    width: width,
+                    height: height
+                });
+            $.each(me.data, function (i, e) {
+                $.each(e.areas(), function (i, e) {
+                    e.resize();
+                });
+            });
+
+
+        }
         
         if (typeof newWidth === 'object') {
             opts = newWidth;
         } else {
             opts.width = newWidth;
             opts.height = newHeight;
-            opts.duration = effectDuration;
+            opts.duration = effectDuration || 0;
         }
         width = opts.width;
         height = opts.height;
-        duration = opts.duration || 1000;
+        duration = opts.duration;
 
         if (me.scaleInfo.width === width && me.scaleInfo.height === height) {
             return;
@@ -121,7 +140,7 @@
 
       
 
-        if (opts.duration) {
+        if (duration) {
             me.currentAction = 'resizing';
             els.each(function (i, e) {
                 $(e).animate(newsize, { duration: duration, complete: i===0 ? finishResize:null, easing: "linear" });
@@ -135,26 +154,12 @@
                 duration: duration,
                 easing: "linear" 
             });
+            resizeMap();
         } else {
             els.css(newsize);
             finishResize();
+            resizeMap();
         }
-        
-        $(this.image).css(newsize);
-        // start calculation at the same time as effect
-        me.scaleInfo = u.getScaleInfo({ 
-                width: me.scaleInfo.realWidth,
-                height: me.scaleInfo.realHeight
-            }, 
-            {
-                width: width,
-                height: height
-            });
-        $.each(me.data, function (i, e) {
-            $.each(e.areas(), function (i, e) {
-                e.resize();
-            });
-        });
     };
 
 

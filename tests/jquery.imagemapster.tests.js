@@ -330,15 +330,15 @@ mapster_tests = function (options) {
         ut.assertEq(map.mapster('get', 'WA'), false, "Can deselect staticState=true' area with 'set'");
 
         // test rebind
-        map.mapster('rebind', { singleSelect: true });
-        ut.assertCsvElementsEq(map.mapster('get'), 'OR,AZ,TX,MT,OH,ME,HI', "Rebind with singleSelect preserved selections");
-
-
+        var newOpts = map.mapster('get_options');
+        newOpts.singleSelect = true;
+        map.mapster('rebind', newOpts);
+        ut.assertCsvElementsEq(map.mapster('get'), 'TX,AK', "Rebind with singleSelect reverted to original state");
 
         map.mapster('set', true, "MI");
         ut.assertEq(map.mapster('get'), 'MI', "Single select worked.");
 
-        map.mapster('rebind', { isDeselectable: false });
+        map.mapster('set_options', { isDeselectable: false });
         $('area[state="MI"]').first().click();
         ut.assertEq(map.mapster('get', 'MI'), true, "Cannot deselect single selected item with isDeselectable=false");
 
@@ -346,7 +346,7 @@ mapster_tests = function (options) {
         
         ut.assertEq(map.mapster('get'), 'UT', "New single state selected");
 
-        map.mapster('rebind', { singleSelect: false, isDeselectable: true, areas: [{ key: 'ME', isDeselectable: false}] });
+        map.mapster('set_options', { singleSelect: false, isDeselectable: true, areas: [{ key: 'ME', isDeselectable: false}] });
 
         $('area[state="UT"]').first().click();
         ut.assertEq(map.mapster('get', 'UT'), false, "Was able to deselect item after removing singleSelect");

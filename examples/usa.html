@@ -16,9 +16,10 @@
 <script type="text/javascript" src="../src/zepto.js"></script>
 -->
 
-<script type="text/javascript" src="../dist/jquery.imagemapster.js"></script>
-
 <!--
+<script type="text/javascript" src="../dist/jquery.imagemapster.js"></script>
+-->
+
 <script type="text/javascript" src="../src/core.js"></script>
 <script type="text/javascript" src="../src/graphics.js"></script>
 <script type="text/javascript" src="../src/mapdata.js"></script>
@@ -26,7 +27,7 @@
 <script type="text/javascript" src="../src/areacorners.js"></script>
 <script type="text/javascript" src="../src/scale.js"></script>
 <script type="text/javascript" src="../src/tooltip.js"></script>
--->
+
 
 <STYLE TYPE="text/css">
 
@@ -329,8 +330,8 @@ div.input
             			return false;
             		}
 
-            	});
-            	return item;
+                });
+                return item;
 
             }
 
@@ -342,12 +343,12 @@ div.input
                     new_options = {
 						altImage: 'images/usa_map_720_alt_' + val + '.jpg',
 						stroke: true
-					}
+					};
                 } else {
                     new_options = {
 						altImage: null,
 						stroke: false
-                    }
+                    };
                 }
                 return new_options;
             }
@@ -399,8 +400,6 @@ div.input
                 var width = parseInt($('#img_width').val(), 10);
 
                 if ($usamap.width() != width) {
-                    var height = width / ratio;
-                    var keys = $usamap.mapster('get');
                     $usamap.mapster('resize', width, null, 1000);
                 } else {
                     $usamap.mapster('set_options', newOpts);

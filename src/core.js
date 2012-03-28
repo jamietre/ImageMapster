@@ -50,7 +50,7 @@ A jQuery plugin to enhance image maps.
     };
 
     $.mapster = {
-        version: "1.2.4.055",
+        version: "1.2.4.057",
         render_defaults: {
             isSelectable: true,
             isDeselectable: true,
@@ -89,7 +89,7 @@ A jQuery plugin to enhance image maps.
             onStateChange: null,
             boundList: null,
             onConfigured: null,
-            configTimeout: 10000,
+            configTimeout: 30000,
             noHrefIsMask: true,
             scaleMap: true,
             safeLoad: false,
@@ -160,11 +160,12 @@ A jQuery plugin to enhance image maps.
             // clean split: no padding or empty elements
             split: function (text,cb) {
                 var i,el, arr = text.split(',');
-                for (i = arr.length - 1; i >= 0; i--) {
+                for (i = 0; i < arr.length; i++) {
                     el = $.trim(arr[i]);
-                    arr[i] = cb ? cb(el):el;
-                    if (!arr[i]) {
-                        arr = arr.splice(i, 1);
+                    if (el==='') {
+                        arr.splice(i,1);
+                    } else {
+                        arr[i] = cb ? cb(el):el;
                     }
                 }
                 return arr;
@@ -719,20 +720,19 @@ A jQuery plugin to enhance image maps.
 
 
         // refresh options and update selection information.
-        me.rebind = function (options, replaceOptions) {
+        me.rebind = function (options) {
             return (new m.Method(this,
                 function () {
-                    if (replaceOptions) {
-                        this.options = u.updateProps({}, m.defaults, options);
-                        $.each(this.data,function(i,e) {
-                            e.options={};
-                        });
-                    }
-
-                    merge_options(this, options);
-                    this.setAreaOptions(options.areas || {});
-
-                    this.redrawSelections();
+                    //this.options = u.updateProps({}, m.defaults, options);
+                    // $.each(this.data,function(i,e) {
+                    //     e.options={};
+                    // });
+                    
+                    //this.setAreaOptions(options.areas || {});
+                    // remove all areas
+                    this.configureOptions(options);
+                    this.buildDataset(true);
+                    //this.redrawSelections();
                 },
                 null,
                 {

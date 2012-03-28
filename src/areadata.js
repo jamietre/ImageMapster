@@ -207,9 +207,10 @@
         me.length = me.originalCoords.length;
         me.shape = areaEl.shape.toLowerCase();
         me.nohref = areaEl.nohref || !areaEl.href;
-        me.keys = u.split(keys);
-        
-
+        me.configure(keys);
+    };
+    m.MapArea.prototype.configure=function(keys) {
+        this.keys = u.split(keys);
     };
     m.MapArea.prototype.reset = function() {
         this.area=null;
