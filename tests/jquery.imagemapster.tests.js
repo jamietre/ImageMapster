@@ -330,7 +330,7 @@ mapster_tests = function (options) {
         ut.assertEq(map.mapster('get', 'WA'), false, "Can deselect staticState=true' area with 'set'");
 
         // test rebind
-        var newOpts = map.mapster('get_options');
+        newOpts = map.mapster('get_options');
         newOpts.singleSelect = true;
         map.mapster('rebind', newOpts);
         ut.assertCsvElementsEq(map.mapster('get'), 'TX,AK', "Rebind with singleSelect reverted to original state");
@@ -665,7 +665,15 @@ mapster_tests = function (options) {
                     map.mapster('set', true, 'KS,KY');
                     opts_should_be = "AK,KY,TX,KS";
             
-                    ut.assertEq(map.mapster('get'), "", "(ok to fail if obfuscated) No options present when simulating non-ready image");
+                    var testname="Can't access get with non-ready image";
+                    try {
+                        map.mapster('get');
+                        ut.assertIsTruthy(false,testname);
+                    }
+                    catch(e) {
+                        ut.assertIsTruthy(true,testname);
+
+                    }
                     // simulate the timer callback, should simply run command queue instead of recreating b/c we set complete=false
                     map.mapster('test', 'if (typeof u !== "undefined") {u.isImageLoaded=u.old;}');
             

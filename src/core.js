@@ -50,7 +50,7 @@ A jQuery plugin to enhance image maps.
     };
 
     $.mapster = {
-        version: "1.2.4.057",
+        version: "1.2.4.058",
         render_defaults: {
             isSelectable: true,
             isDeselectable: true,
@@ -501,7 +501,7 @@ A jQuery plugin to enhance image maps.
         me.get = function (key) {
             var md = m.getMapData(this);
             if (!(md && md.complete)) {
-                return '';
+                throw("Can't access data until binding complete.");
             }
 
             return (new m.Method(this,
@@ -570,7 +570,12 @@ A jQuery plugin to enhance image maps.
         me.keys = function(key,all) {
             var keyList=[], 
                 md = m.getMapData(this);
-            
+
+            if (!(md && md.complete)) {
+                throw("Can't access data until binding complete.");
+            }
+
+
             function addUniqueKeys(ad) {
                 var areas,keys=[];
                 if (!all) {
@@ -723,15 +728,14 @@ A jQuery plugin to enhance image maps.
         me.rebind = function (options) {
             return (new m.Method(this,
                 function () {
-                    //this.options = u.updateProps({}, m.defaults, options);
-                    // $.each(this.data,function(i,e) {
-                    //     e.options={};
-                    // });
-                    
-                    //this.setAreaOptions(options.areas || {});
-                    // remove all areas
-                    this.configureOptions(options);
-                    this.buildDataset(true);
+                    var me=this;
+
+                    me.complete=false;
+                    me.configureOptions(options);
+                    me.bindImages(true,function() {
+                        me.buildDataset(true);
+                        me.complete=true;
+                    });
                     //this.redrawSelections();
                 },
                 null,
@@ -828,7 +832,6 @@ A jQuery plugin to enhance image maps.
         };
 
         me.bind = function (options) {
-            var opts = u.updateProps({}, m.defaults, options);
 
             return this.each(function (i,e) {
                 var img, map, usemap, map_data;
@@ -861,19 +864,10 @@ A jQuery plugin to enhance image maps.
                 }
 
                 if (!map_data) {
-                    map_data = new m.MapData(this, opts);
+                    map_data = new m.MapData(this, options);
 
                     map_data.index = addMap(map_data);
                     map_data.map = map;
-                    // add the actual main image
-                    map_data.addImage(this);
-                    // will create a duplicate of the main image, we need this to get raw size info
-                    map_data.addImage(null,this.src);
-                    // add alt images
-                    if ($.mapster.hasCanvas) {
-                        map_data.addImage(null, opts.render_highlight.altImage || opts.altImage, "highlight");
-                        map_data.addImage(null, opts.render_select.altImage || opts.altImage, "select");
-                    }
                     map_data.bindImages(true);
                 }
             });

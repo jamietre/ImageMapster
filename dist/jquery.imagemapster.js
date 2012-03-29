@@ -50,7 +50,7 @@ A jQuery plugin to enhance image maps.
     };
 
     $.mapster = {
-        version: "1.2.4.057",
+        version: "1.2.4.058",
         render_defaults: {
             isSelectable: true,
             isDeselectable: true,
@@ -501,7 +501,7 @@ A jQuery plugin to enhance image maps.
         me.get = function (key) {
             var md = m.getMapData(this);
             if (!(md && md.complete)) {
-                return '';
+                throw("Can't access data until binding complete.");
             }
 
             return (new m.Method(this,
@@ -570,7 +570,12 @@ A jQuery plugin to enhance image maps.
         me.keys = function(key,all) {
             var keyList=[], 
                 md = m.getMapData(this);
-            
+
+            if (!(md && md.complete)) {
+                throw("Can't access data until binding complete.");
+            }
+
+
             function addUniqueKeys(ad) {
                 var areas,keys=[];
                 if (!all) {
@@ -723,15 +728,14 @@ A jQuery plugin to enhance image maps.
         me.rebind = function (options) {
             return (new m.Method(this,
                 function () {
-                    //this.options = u.updateProps({}, m.defaults, options);
-                    // $.each(this.data,function(i,e) {
-                    //     e.options={};
-                    // });
-                    
-                    //this.setAreaOptions(options.areas || {});
-                    // remove all areas
-                    this.configureOptions(options);
-                    this.buildDataset(true);
+                    var me=this;
+
+                    me.complete=false;
+                    me.configureOptions(options);
+                    me.bindImages(true,function() {
+                        me.buildDataset(true);
+                        me.complete=true;
+                    });
                     //this.redrawSelections();
                 },
                 null,
@@ -828,7 +832,6 @@ A jQuery plugin to enhance image maps.
         };
 
         me.bind = function (options) {
-            var opts = u.updateProps({}, m.defaults, options);
 
             return this.each(function (i,e) {
                 var img, map, usemap, map_data;
@@ -861,19 +864,10 @@ A jQuery plugin to enhance image maps.
                 }
 
                 if (!map_data) {
-                    map_data = new m.MapData(this, opts);
+                    map_data = new m.MapData(this, options);
 
                     map_data.index = addMap(map_data);
                     map_data.map = map;
-                    // add the actual main image
-                    map_data.addImage(this);
-                    // will create a duplicate of the main image, we need this to get raw size info
-                    map_data.addImage(null,this.src);
-                    // add alt images
-                    if ($.mapster.hasCanvas) {
-                        map_data.addImage(null, opts.render_highlight.altImage || opts.altImage, "highlight");
-                        map_data.addImage(null, opts.render_select.altImage || opts.altImage, "select");
-                    }
                     map_data.bindImages(true);
                 }
             });
@@ -1496,46 +1490,31 @@ A jQuery plugin to enhance image maps.
         this.area_options = u.updateProps({}, // default options for any MapArea
             m.area_defaults,
             options);
-        this.options = options;          // {}       options passed buy user
-
-        this.bindTries = options.configTimeout / 50;
+        this.options= u.updateProps({}, m.defaults, options);
+        this.bindTries = this.options.configTimeout / 50;
     };
     p.initializeDefaults = function () {
-        this.images = [];               // (Image)  all images associated with this map. this will include a "copy" of the main one
-        this.imageSources = [];         // (string) src for each image
-        this.imageStatus = [];          // (bool)   the loaded status of each indexed image in images
-        this.altImagesXref = {};        // (int)    xref of "render_xxx" to this.images
-        this.map = null;                // ($)      the image map
-        this.base_canvas = null;       // (canvas|var)  where selections are rendered
-        this.overlay_canvas = null;    // (canvas|var)  where highlights are rendered
-
-        this.imagesAdded = false;      // (bool)    when all images have been added, we can now test for all being done loaded
-        this.imagesLoaded = false;     // (bool)    when all images have finished loading (config can proceed)
-        this.complete = false;         // (bool)    when configuration is complete
-        this.commands = [];            // {}        commands that were run before configuration was completed (b/c images weren't loaded)
-        this.data = [];                // MapData[] area groups
-        this.mapAreas = [];            // MapArea[] list. AreaData entities contain refs to this array, so options are stored with each.
-
-        this._xref = {};               // (int)      xref of mapKeys to data[]
-        this.highlightId = -1;        // (int)      the currently highlighted element.
-        this.currentAreaId = -1;
-        this._tooltip_events = [];     // {}         info on events we bound to a tooltip container, so we can properly unbind them
-        this.scaleInfo = null;         // {}         info about the image size, scaling, defaults
-        //                scale: (bool) image is scaled
-        //                scalePct: pct (perctage of scale)
-        //                realWidth: realW,
-        //                realHeight: realH,
-        //                width: width,
-        //                height: height,
-        //                ratio: width / height
-
-        this.index = -1;                 // index of this in map_cache - so we have an ID to use for wraper div
-        this.currentAreaId=-1;
-        //this.legacyAreaId=-1;            // area ID that was previously active, but still retains effects.
-        this.activeAreaEvent=null;
-
-
-
+        $.extend(this,{
+            images: [],               // (Image)  all images associated with this map. this will include a "copy" of the main one
+            imageSources: [],         // (string) src for each image
+            imageStatus: [],          // (bool)   the loaded status of each indexed image in images
+            altImagesXref: {},        // (int)    xref of "render_xxx" to this.images
+            map: null,                // ($)      the image map
+            base_canvas: null,       // (canvas|var)  where selections are rendered
+            overlay_canvas: null,    // (canvas|var)  where highlights are rendered
+            imagesLoaded: false,     // (bool)    when all images have finished loading (config can proceed)
+            complete: false,         // (bool)    when configuration is complete
+            commands: [],            // {}        commands that were run before configuration was completed (b/c images weren't loaded)
+            data: [],                // MapData[] area groups
+            mapAreas: [],            // MapArea[] list. AreaData entities contain refs to this array, so options are stored with each.
+            _xref: {},               // (int)      xref of mapKeys to data[]
+            highlightId: -1,        // (int)      the currently highlighted element.
+            currentAreaId: -1,
+            _tooltip_events: [],     // {}         info on events we bound to a tooltip container, so we can properly unbind them
+            scaleInfo: null,         // {}         info about the image size, scaling, defaults
+            index: -1,                 // index of this in map_cache - so we have an ID to use for wraper div
+            activeAreaEvent: null
+        });
     };
 
     p.isActive = function() {
@@ -1551,7 +1530,7 @@ A jQuery plugin to enhance image maps.
         };
     };
     p.isReadyToBind = function () {
-        return this.imagesAdded && this.imagesLoaded && (!this.options.safeLoad || m.windowLoaded);
+        return this.imagesLoaded && (!this.options.safeLoad || m.windowLoaded);
     };
     // bind a new image to a src, capturing load event. Return the new (or existing) image.
     p.addImage = function (img, src, altId) {
@@ -1613,23 +1592,47 @@ A jQuery plugin to enhance image maps.
     
     // the "first" parameter means this was the first time it was called
 
-    p.bindImages = function (first) {
+    p.bindImages = function (first,callback) {
         var i,img,
             me = this,
             loaded=true,
+            opts=me.options,
             retry=function() {
-                me.bindImages.call(me);
+                me.bindImages.call(me,false,callback);
             },
             error=function(e) {
                 window.clearTimeout(me.imgTimeout);
                 me.imageLoadError(e);
             };
 
-        me.imagesAdded = true;
+        if (first) {
+            me.complete=false;
+            me.imagesLoaded=false;
+            // reset the images if this is a rebind
+            if (me.images.length>2) {
+                me.images=me.images.slice(0,2);
+                me.imageSources=me.imageSources.slice(0,2);
+                me.imageStatus=me.imageStatus.slice(0,2);
+                me.altImagesXref={};
+            }
+            me.altImagesXref={};
+            if (me.images.length===0) {
+                // add the actual main image
+                me.addImage(me.image);
+                // will create a duplicate of the main image, we need this to get raw size info
+                me.addImage(null,me.image.src);
+            }
+            // add alt images
+            if ($.mapster.hasCanvas) {
+                me.addImage(null, opts.render_highlight.altImage || opts.altImage, "highlight");
+                me.addImage(null, opts.render_select.altImage || opts.altImage, "select");
+            }
+        }
 
-        if (me.complete) {
+        if (me.imagesLoaded) {
             return;
         }
+
         // check to see if every image has already been loaded
         i=me.images.length;
         while (i-->0) {
@@ -1646,7 +1649,11 @@ A jQuery plugin to enhance image maps.
         me.imagesLoaded=loaded;
 
         if (me.isReadyToBind()) {
-            me.initialize();
+            if (callback) {
+                callback();
+            } else {
+                me.initialize();
+            }
             return;
         }
 
@@ -1669,7 +1676,7 @@ A jQuery plugin to enhance image maps.
         return 'mapster_wrap_' + this.index;
     };
     p._idFromKey = function (key) {
-        return this.complete && typeof key === "string" && this._xref.hasOwnProperty(key) ?
+        return typeof key === "string" && this._xref.hasOwnProperty(key) ?
                     this._xref[key] : -1;
     };
     // getting all selected keys - return comma-separated string
@@ -1809,7 +1816,6 @@ A jQuery plugin to enhance image maps.
             return;
         }
 
-        me.complete = true;
         img = $(me.image);
         
         parentId = img.parent().attr('id');
@@ -1920,7 +1926,8 @@ A jQuery plugin to enhance image maps.
 
             me.options.boundList = opts.onGetList.call(me.image, sorted_list);
         }
-
+        
+        me.complete = true;
         me.processCommandQueue();
         
         if (opts.onConfigured && typeof opts.onConfigured === 'function') {
