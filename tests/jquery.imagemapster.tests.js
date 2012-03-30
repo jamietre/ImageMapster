@@ -649,7 +649,8 @@ mapster_tests = function (options) {
                     complete = false;
                     map = $("#usa_image");
                     //map.removeProp('complete')
-                    map.mapster('test', 'if (typeof u!=="undefined") {u.old=u.isImageLoaded;u.isImageLoaded=function(){return false;};}');
+                    map.mapster('test', 'var m=$.mapster.MapData.prototype; m.old=m.isImageLoaded;'
+                        +'m.isImageLoaded=function(){return false;}');
             
                     // TODO: Test fails in IE because onLoad fires immediately: this code results in isImageLoaded never being called.
                     //if ($file:///D:/VSProjects/jquery/imagemapster/tests/test.html < 0) {
@@ -675,7 +676,8 @@ mapster_tests = function (options) {
 
                     }
                     // simulate the timer callback, should simply run command queue instead of recreating b/c we set complete=false
-                    map.mapster('test', 'if (typeof u !== "undefined") {u.isImageLoaded=u.old;}');
+                    map.mapster('test', 'if (typeof $.mapster.MapData !== "undefined") '
+                        +'{$.mapster.MapData.prototype.isImageLoaded=$.mapster.MapData.prototype.old;}');
             
             });
             // really need to get a decent deferral structure set up for these tests

@@ -3,6 +3,7 @@
 */
 
 (function ($) {
+
     var p, m = $.mapster, u = m.utils;
     m.MapData = function (image, options) {
         var me = this;
@@ -308,6 +309,18 @@
         }
 
     };
+    // Checks status & updates if it's loaded
+    p.isImageLoaded= function (index) {
+        var img,me=this;
+        if (me.imageStatus[index]) { return true; }
+        img = me.images[index];
+        if (typeof img.complete !== 'undefined' && !img.complete) {
+            return false;
+        }
+
+        me.imageStatus[index]=!!u.imgWidth(img);
+        return me.imageStatus[index];
+    };
     // Wait until all images are loaded then call initialize. This is difficult because browsers are incosistent about
     // how or if "onload" works and in how one can actually detect if an image is already loaded. Try to check first,
     // then bind onload event, and finally use a timer to keep checking.
@@ -315,7 +328,7 @@
     // the "first" parameter means this was the first time it was called
 
     p.bindImages = function (first,callback) {
-        var i,img,
+        var i,
             me = this,
             loaded=true,
             opts=me.options,
@@ -359,18 +372,13 @@
         // check to see if every image has already been loaded
         i=me.images.length;
         while (i-->0) {
-            img = me.images[i];
-            if (!u.isImageLoaded(img)) {
+            if (!me.isImageLoaded(i)) {
                 loaded=false;
-                if (first) {
-                    img.onload=retry;
-                    img.onerror=error;
-                    break;
-                }
+                break;
             }
         }
         me.imagesLoaded=loaded;
-
+        
         if (me.isReadyToBind()) {
             if (callback) {
                 callback();
