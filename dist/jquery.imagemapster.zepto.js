@@ -153,7 +153,7 @@ A jQuery plugin to enhance image maps.
     };
 
     $.mapster = {
-        version: "1.2.4.058",
+        version: "1.2.4.059",
         render_defaults: {
             isSelectable: true,
             isDeselectable: true,
@@ -1710,6 +1710,7 @@ A jQuery plugin to enhance image maps.
 
         if (first) {
             me.complete=false;
+            me.triesLeft = me.bindTries;
             me.imagesLoaded=false;
             // reset the images if this is a rebind
             if (me.images.length>2) {
@@ -1761,7 +1762,7 @@ A jQuery plugin to enhance image maps.
         }
 
         // to account for failure of onLoad to fire in rare situations
-        if (me.bindTries-- > 0) {
+        if (me.triesLeft-- > 0) {
             this.imgTimeout=window.setTimeout(retry, 50);
         } else {
             error();

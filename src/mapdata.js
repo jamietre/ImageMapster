@@ -329,6 +329,7 @@
 
         if (first) {
             me.complete=false;
+            me.triesLeft = me.bindTries;
             me.imagesLoaded=false;
             // reset the images if this is a rebind
             if (me.images.length>2) {
@@ -380,7 +381,7 @@
         }
 
         // to account for failure of onLoad to fire in rare situations
-        if (me.bindTries-- > 0) {
+        if (me.triesLeft-- > 0) {
             this.imgTimeout=window.setTimeout(retry, 50);
         } else {
             error();
