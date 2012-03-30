@@ -37,8 +37,8 @@
 
         function size(image) {
             var s= { 
-                width: u.imgWidth(image),
-                height: u.imgHeight(image)
+                width: u.imgRWidth(image),
+                height: u.imgRHeight(image)
             };
             if (!(s.width && s.height)) {
                 throw("Another script, such as an extension, appears to be interfering with image loading. Please let us know about this.");

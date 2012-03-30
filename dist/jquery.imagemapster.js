@@ -377,8 +377,12 @@ A jQuery plugin to enhance image maps.
     $.each(["width","height"],function(i,e) {
         var capProp = e.substr(0,1).toUpperCase() + e.substr(1);
         m.utils["img"+capProp]=function(img) {
-                return $(img)[e]() || img[e] || img["natural"+capProp] || img["client"+capProp] || img["offset"+capProp];
-            };
+                return img[e] || img["natural"+capProp] || img["client"+capProp] || img["offset"+capProp];
+        };
+        // we need the version that checks jq width for getting the width, vs. detecting load
+        m.utils["imgR"+capProp]=function(img) {
+            return $(img)[e]() || m.utils["img"+capProp](img);
+        }
     });    
 
     m.Method = function (that, func_map, func_area, opts) {
@@ -1479,13 +1483,14 @@ A jQuery plugin to enhance image maps.
 
     };
     p = m.MapData.prototype;
+
     p.configureOptions=function(options) {
         // this is done here instead of the consturc
         this.area_options = u.updateProps({}, // default options for any MapArea
             m.area_defaults,
             options);
         this.options= u.updateProps({}, m.defaults, options);
-        this.bindTries = this.options.configTimeout / 50;
+        this.bindTries = this.options.configTimeout / 200;
     };
     p.initializeDefaults = function () {
         $.extend(this,{
@@ -1528,33 +1533,32 @@ A jQuery plugin to enhance image maps.
     };
     // bind a new image to a src, capturing load event. Return the new (or existing) image.
     p.addImage = function (img, src, altId) {
-        var index, image, source, me = this;
+        var image, source, me = this,
+        getImageIndex=function(img) {
+            return $.inArray(img, me.images);
+        },
 
-        // fires on image onLoad evetns, could mean everything is ready
-        function onLoad() {
-            if (me.complete) {
-                return;
-            }
+        // fires on image onLoad evens, could mean everything is ready
+        load=function() {
+            var index = getImageIndex(this);
+            if (index>=0) {
 
-            index = $.inArray(this, me.images);
-            if (index < 0) {
-                throw ("Unable to find ref to image '" + this.src + "'.");
+                me.imageStatus[index] = true;
+                if ($.inArray(false, me.imageStatus) < 0 &&
+                            (!me.options.safeLoad || m.windowLoaded)) {
+                    me.initialize();
+                }
             }
-
-            me.imageStatus[index] = true;
-            if ($.inArray(false, me.imageStatus) < 0 &&
-                        (!me.options.safeLoad || m.windowLoaded)) {
-                me.initialize();
-            }
-        }
-        function storeImage(image) {
+        },
+        storeImage=function(image) {
             var index = me.images.push(image) - 1;
             me.imageSources[index] = source;
             me.imageStatus[index] = false;
             if (altId) {
                 me.altImagesXref[altId] = index;
             }
-        }
+        };
+
         if (!img && !src) { return; }
 
         image = img;
@@ -1572,7 +1576,9 @@ A jQuery plugin to enhance image maps.
 
             $('body').append(image);
             storeImage(image);
-            $(image).bind('load.mapster', onLoad);
+            $(image).load(load).error(function(e) {
+                me.imageLoadError.call(me,e);
+            });
             $(image).attr('src', source);
 
         } else {
@@ -1585,6 +1591,7 @@ A jQuery plugin to enhance image maps.
         var img,me=this;
         if (me.imageStatus[index]) { return true; }
         img = me.images[index];
+        
         if (typeof img.complete !== 'undefined' && !img.complete) {
             return false;
         }
@@ -1605,11 +1612,8 @@ A jQuery plugin to enhance image maps.
             opts=me.options,
             retry=function() {
                 me.bindImages.call(me,false,callback);
-            },
-            error=function(e) {
-                window.clearTimeout(me.imgTimeout);
-                me.imageLoadError(e);
             };
+            
 
         if (first) {
             me.complete=false;
@@ -1649,26 +1653,27 @@ A jQuery plugin to enhance image maps.
             }
         }
         me.imagesLoaded=loaded;
-        
+
         if (me.isReadyToBind()) {
             if (callback) {
                 callback();
             } else {
                 me.initialize();
             }
-            return;
-        }
-
-        // to account for failure of onLoad to fire in rare situations
-        if (me.triesLeft-- > 0) {
-            this.imgTimeout=window.setTimeout(retry, 50);
         } else {
-            error();
+            // to account for failure of onLoad to fire in rare situations
+            if (me.triesLeft-- > 0) {
+                me.imgTimeout=window.setTimeout(retry, 200);
+            } else {
+                me.imageLoadError.call(me);
+            }
         }
     };
     p.imageLoadError=function(e) {
+        clearTimeout(this.imgTimeout);
+        this.triesLeft=0;
         var err = e ? 'The image ' + e.target.src + ' failed to load.' : 
-        'The images never seemed to finish loading. This could be because of interference from a plugin.';
+        'The images never seemed to finish loading. You may just need to increase the configTimeout if images could take a long time to load.';
         throw (err);
     };
     p.altImage = function (mode) {
@@ -1929,7 +1934,7 @@ A jQuery plugin to enhance image maps.
             me.options.boundList = opts.onGetList.call(me.image, sorted_list);
         }
         
-        me.complete = true;
+        me.complete=true;
         me.processCommandQueue();
         
         if (opts.onConfigured && typeof opts.onConfigured === 'function') {
@@ -2489,8 +2494,8 @@ A jQuery plugin to enhance image maps.
 
         function size(image) {
             var s= { 
-                width: u.imgWidth(image),
-                height: u.imgHeight(image)
+                width: u.imgRWidth(image),
+                height: u.imgRHeight(image)
             };
             if (!(s.width && s.height)) {
                 throw("Another script, such as an extension, appears to be interfering with image loading. Please let us know about this.");

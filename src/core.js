@@ -377,8 +377,12 @@ A jQuery plugin to enhance image maps.
     $.each(["width","height"],function(i,e) {
         var capProp = e.substr(0,1).toUpperCase() + e.substr(1);
         m.utils["img"+capProp]=function(img) {
-                return $(img)[e]() || img[e] || img["natural"+capProp] || img["client"+capProp] || img["offset"+capProp];
-            };
+                return img[e] || img["natural"+capProp] || img["client"+capProp] || img["offset"+capProp];
+        };
+        // we need the version that checks jq width for getting the width, vs. detecting load
+        m.utils["imgR"+capProp]=function(img) {
+            return $(img)[e]() || m.utils["img"+capProp](img);
+        }
     });    
 
     m.Method = function (that, func_map, func_area, opts) {
