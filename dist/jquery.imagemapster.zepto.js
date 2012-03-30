@@ -1428,10 +1428,10 @@ A jQuery plugin to enhance image maps.
 
         // Try to stop browsers from drawing their own outline
         this.mousedown = function (e) {
-            e.preventDefault();            
             if (!$.mapster.hasCanvas) {
                 this.blur();
             }
+             e.preventDefault();
         };
 
         this.mouseover = function (e) {
@@ -1572,7 +1572,7 @@ A jQuery plugin to enhance image maps.
                     });
                 }
             }
-            e.preventDefault();
+            me.mousedown.call(this,e);
             if (opts.clickNavigate && ar.href) {
                 window.location.href=ar.href;
                 return;
