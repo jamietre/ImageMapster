@@ -50,7 +50,7 @@ A jQuery plugin to enhance image maps.
     };
 
     $.mapster = {
-        version: "1.2.4.060",
+        version: "1.2.4.061",
         render_defaults: {
             isSelectable: true,
             isDeselectable: true,
@@ -2467,10 +2467,11 @@ A jQuery plugin to enhance image maps.
 (function ($) {
     var m = $.mapster, u = m.utils, p = m.MapArea.prototype;
 
-    m.utils.getScaleInfo = function (actual, eff) {
+    m.utils.getScaleInfo = function (eff, actual) {
         var pct;
-        if (!eff) {
+        if (!actual) {
             pct = 1;
+            actual=eff;
         } else {
             pct = eff.width / actual.width || eff.height / actual.height;
             // make sure a float error doesn't muck us up
@@ -2502,7 +2503,7 @@ A jQuery plugin to enhance image maps.
             }
             return s;
         }
-        return this.getScaleInfo(size(imageRaw),size(image));
+        return this.getScaleInfo(size(image),scale ? size(imageRaw) : null);
     };
     // options: duration = animation time (zero = no animation)
     // force: supercede any existing animation
@@ -2546,13 +2547,13 @@ A jQuery plugin to enhance image maps.
         function resizeMap() {
             $(me.image).css(newsize);
             // start calculation at the same time as effect
-            me.scaleInfo = u.getScaleInfo({ 
-                    width: me.scaleInfo.realWidth,
-                    height: me.scaleInfo.realHeight
-                }, 
-                {
+            me.scaleInfo = u.getScaleInfo({
                     width: width,
                     height: height
+                },
+                { 
+                    width: me.scaleInfo.realWidth,
+                    height: me.scaleInfo.realHeight
                 });
             $.each(me.data, function (i, e) {
                 $.each(e.areas(), function (i, e) {
