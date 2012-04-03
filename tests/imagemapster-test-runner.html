@@ -1,118 +1,135 @@
-<!DOCTYPE html >
-<html xmlns="http://www.w3.org/1999/xhtml">
+<html>
+
 <head>
-<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-<title>Untitled Document</title>
+    <title>ImageMapster Browser Test Runner</title>
 
-<!-- Uncomment to test with excanvas -->
-<!--
-<script type="text/javascript" src="excanvas.min.js"></script>
--->
+    <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.js"></script>
+    <script type="text/javascript" src="redist/iqtest-browser-default.js" ></script>
+    <script type="text/javascript" src="core.tests.js" ></script>
 
-<!-- Uncomment below to test with Zepto.
-Note: testing with Zepto requires patching event.js to permit calling bound event handlers directly, e.g. $(obj).mouseover()
--->
- 
-<!--
-<script type="text/javascript" src="../src/zepto.min.js"></script>
-<script type="text/javascript" src="../../zepto/src/zepto.js"></script>
-<script type="text/javascript" src="../../zepto/patched/event.js"></script>
-<script type="text/javascript" src="../../zepto/src/fx.js"></script>
--->
+</head>
+   
+<body>
+<script type="text/javascript">
+    /*jslint onevar: false */
+    /*global test, when, iqtest */
 
-<!-- Begin source test includes -->
-<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.js"></script>
+    var tests = this.tests || {};
 
+    $(document).ready(function () {
+      var allSel = 'input[type="checkbox"]',
+            checkedSel = 'input[type="checkbox"]:checked',
+             runCount = 0,
+            group = iqtest.writer($('#wrap'));
+        function enableTestLink() {
+            $('#startTest').toggle(!!$(checkedSel).length);
+        }
+        function bindUIEvents() {
+          
 
-<script type="text/javascript" src="../src/core.js"></script>
-<script type="text/javascript" src="../src/graphics.js"></script>
-<script type="text/javascript" src="../src/mapdata.js"></script>
-<script type="text/javascript" src="../src/areadata.js"></script>
-<script type="text/javascript" src="../src/areacorners.js"></script>
-<script type="text/javascript" src="../src/scale.js"></script>
-<script type="text/javascript" src="../src/tooltip.js"></script>
+            $(allSel).bind('change',function() {
+                enableTestLink();
+            });
+            $('#testSelectAll').bind('click',function(e)
+            {
+                var checked=$(checkedSel),
+                    all = $(allSel);
+                if (checked.length && checked.length===all.length){
+                    all.prop('checked',false);
+                } else {
+                    all.prop('checked',true);
+                }
+                enableTestLink();
+            });
+            $('#toggleTestImage').bind('click',function(e)
+            {
+                $('#testElements').toggle('fast');
+            });
 
-<!-- End source test includes -->
+            enableTestLink();
+        }
+       
+       
+        
+        bindUIEvents();
+        
+        $('#rerunTest').bind('click', function (e) {
+            group.run();
+        }).hide();
 
-<!-- Other options -- test with build, test with minified -->
+        $('#startTest').bind('click', function (e) {
+            var files,
+                stopped = false;
 
-<!--
-<script type="text/javascript" src="../dist/jquery.imagemapster.min.js"></script>
+            function error(message) {
+                $('#wrap').text(message);
+                stopped = true;
+            }
 
-<script type="text/javascript" src="../dist/jquery.imagemapster.js"></script>
--->
+            if (runCount > 0) {
+                $('#oldRuns').append($('<hr />Prior Test Run #' + runCount + '<hr />'))
+                .append($('#wrap').children());
+            }
+            runCount++;
 
-<!-- These are always included -->
-<script type="text/javascript" src="simple-test.js"></script>
-<script type="text/javascript" src="jquery.imagemapster.tests.js"></script>
-<!-- end includes -->
+            group.clear();
+
+            files= $('input[type="checkbox"]:checked');
+            files.each(function (i, e) {
+                // invoke the test method, and when it returns itself from the promise,
+                // add it to the group.
+                var promise, 
+                    testId = $(e).val();
+
+                if (!tests[testId]) {
+                    error("Couldn't find a test named '" + testId + "'");
+                    return;
+                }
+
+                group.add(promise);
+            });
+           
+            if (!stopped) {
+                group.run();
+                $('#rerunTest').show();
+            }
+        });
+    });
+
+     
+</script>
 
 <style type="text/css">
-h1
-{
-	font-size: 14px;
-	font-weight: bold;
-}
-h2
-{
-    font-size: 12px;
-    font-weight: bold;
-}
+    li {
+        list-style-type: none;
+        display: block;
+    }
 </style>
-</head>
 
-<body>
+<h1>ImageMapster Test Runner</h1> 
+<div>
+<b>Choose tests to run: </b> 
+    <a href="#" id="testSelectAll">select all</a>&nbsp;
+    <a href="#" id="startTest">run tests</a>&nbsp;&nbsp;
 
-    <script type="text/javascript">
+    <ul>
+        <li><input type="checkbox" value="core" /> core.js</li>
+        <li><input type="checkbox" value="mapdata" /> mapdata.js</li>
+    </ul>
 
-	    var oldForm;
-	    var output;
-        function run() {
-    	    //oldForm = $("#jtc-forms-testform").clone();
-    	    var opts = { title: "jQuery ImageMapster Tests", output: output, timer: $('#timer').is(':checked') }
-            var tests = mapster_tests(opts);
-            tests.run();
-        }
-        function reset() {
-    	    output.html("");
-        }
-        $(document).ready(function() {
-    	    output = $("#test_output");
-		    $("#run_test").click(function() {
-			    for (var i=0;i<$("#iterations").val();i++) {
-				    run();
-			    }
-		    });
-		    $("#reset").click(reset);
-	    });
+    <a href="#" id="rerunTest">rerun last group</a>
+</div>
 
-    </script>
+<div id="wrap" >
+</div>
+<div id="oldRuns">
+</div>
 
-    <div>
-        <h1>ImageMapster Tests</h1>
-        Run tests: <input type="button" id="run_test" value="Start"> Iterations: <input type="text" id="iterations" value="1"> &nbsp;&nbsp;
-        <input type="checkbox" id="timer"> Timer &nbsp;&nbsp;
-        <input type="button" id="reset" value="Reset">
-    </div>
+<a href="#" id="toggleTestImage">show/hide test image</a>
 
-
-    <hr>
-
-    <div style="clear:both;"></div>
-
-    <div id="test_elements">
-        <img id="usa_image" src="usa_map_720.png" width="720" height="445" usemap="#usa" >
-
-    </div>
-
-    <div style="clear:both;"></div>
-
-
-    <h1>Test Results</h1>
-    <div id="test_output"></div>
-
-
-    <map id="usa_image_map" name="usa">
+<div id="testElements" style="margin-top: 20px; border: 1px solid black; display: none;">
+    <img id="usa_image" src="usa_map_720.png" width="720" height="445" usemap="#usa" >
+<map id="usa_image_map" name="usa">
     <area href="#" state="ME,new-england,really-cold" full="Maine" shape="poly" coords="669,71,671,72,672,75,672,76,671,80,669,80,667,83,663,86,660,85,659,86,658,87,657,88,659,89,658,89,658,92,656,92,656,90,656,89,655,89,653,87,652,88,653,89,653,90,653,91,653,93,653,95,652,96,650,97,650,98,646,101,644,101,644,100,641,103,642,105,641,106,641,110,640,115,638,114,638,112,635,111,635,109,629,92,626,81,628,81,629,81,629,80,629,75,631,72,632,69,631,68,631,63,632,62,632,60,632,59,632,56,633,52,635,46,637,43,638,43,638,43,638,44,639,45,641,46,642,45,642,44,645,42,647,41,647,41,652,43,653,44,659,65,664,65,665,67,665,70,667,72,668,72,668,71,667,71,669,71">
     <area href="#" state="ME,new-england,really-cold" shape="poly" coords="654,92,655,92,656,92,656,94,655,95,654,92">
     <area href="#" state="ME,new-england,really-cold" shape="poly" coords="659,88,660,89,662,87,662,86,660,86,659,88">
@@ -214,5 +231,7 @@ h2
         <area href="#" state="KS" full="Kansas" shape="poly" coords="365,251,356,251,322,251,290,249,272,248,275,200,291,201,320,203,352,203,356,203,359,205,361,205,362,206,362,208,360,209,360,210,362,213,363,215,365,216,366,225,365,251">
         <area href="#" state="LA" full="Louisiana" shape="poly" coords="437,357,437,356,436,353,433,350,434,345,434,344,432,344,426,345,409,346,408,344,409,338,411,334,415,328,414,326,415,326,416,324,414,323,414,321,413,318,413,314,404,314,391,314,374,314,374,321,375,329,376,331,377,334,378,338,381,341,381,344,382,344,381,350,379,354,380,356,380,358,380,363,378,365,379,368,382,367,388,366,395,369,400,370,403,369,405,370,407,371,408,369,406,368,404,368,401,367,406,366,407,366,410,366,410,368,410,370,414,370,416,371,415,372,414,373,415,374,421,377,424,376,425,374,426,374,428,372,428,373,429,375,428,376,428,377,431,375,432,373,433,373,431,372,431,371,431,370,433,370,434,369,434,369,440,374,441,374,443,374,444,375,446,373,446,372,445,372,443,370,438,369,436,368,437,366,438,366,439,365,437,365,437,365,440,365,441,362,440,361,440,359,439,359,437,361,437,362,434,362,434,361,435,359,437,358,437,357">
     </map>
+</div>
 
-<body>
+</body>
+</html>

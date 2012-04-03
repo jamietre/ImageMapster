@@ -1,0 +1,1 @@
+I am in the process of revising the test suite. The old, working tests can be run from test.html.
