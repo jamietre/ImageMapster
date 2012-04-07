@@ -809,7 +809,7 @@ A jQuery plugin to enhance image maps.
                         e.selected = false;
                     });
 
-                    this.base_canvas = this.graphics.createVisibleCanvas(this.image);
+                    this.base_canvas = this.graphics.createVisibleCanvas(this);
                     $(this.image).before(this.base_canvas);
                 },
                 null,
@@ -970,8 +970,10 @@ A jQuery plugin to enhance image maps.
         var addto = options.isMask ? this.masks : this.shapes;
         addto.push({ mapArea: mapArea, options: options });
     };
-    p.createVisibleCanvas = function (img) {
-        return $(this.createCanvasFor(img)).addClass('mapster_el').css(m.canvas_style)[0];
+    p.createVisibleCanvas = function (md) {
+        return $(this.createCanvasFor(md))
+            .addClass('mapster_el')
+            .css(m.canvas_style)[0];
     };
     p._addShapeGroupImpl = function (areaData, mode,options) {
         var me = this,
@@ -1084,12 +1086,12 @@ A jQuery plugin to enhance image maps.
                 var maskCanvas, maskContext,
                             me = this,
                             hasMasks = me.masks.length,
-                            shapeCanvas = me.createCanvasFor(me.canvas),
+                            shapeCanvas = me.createCanvasFor(me.map_data),
                             shapeContext = shapeCanvas.getContext('2d'),
                             context = me.canvas.getContext('2d');
 
                 if (hasMasks) {
-                    maskCanvas = me.createCanvasFor(me.canvas);
+                    maskCanvas = me.createCanvasFor(me.map_data);
                     maskContext = maskCanvas.getContext('2d');
                     maskContext.clearRect(0, 0, maskCanvas.width, maskCanvas.height);
 
@@ -1165,8 +1167,8 @@ A jQuery plugin to enhance image maps.
             };
 
             // create a canvas mimicing dimensions of an existing element
-            p.createCanvasFor = function (el) {
-                return $('<canvas width="' + u.imgWidth(el) + '" height="' + u.imgHeight(el) + '"></canvas>')[0];
+            p.createCanvasFor = function (md) {
+                return $('<canvas width="' + md.scaleInfo.width + '" height="' +md.scaleInfo.height + '"></canvas>')[0];
             };
             p.clearHighlight = function () {
                 var c = this.map_data.overlay_canvas;
@@ -1181,7 +1183,7 @@ A jQuery plugin to enhance image maps.
                 // draw new base canvas, then swap with the old one to avoid flickering
                 canvas_temp = map_data.base_canvas;
 
-                map_data.base_canvas = this.createVisibleCanvas(map_data.image);
+                map_data.base_canvas = this.createVisibleCanvas(map_data);
                 $(map_data.base_canvas).hide();
                 $(canvas_temp).before(map_data.base_canvas);
 
@@ -1249,9 +1251,9 @@ A jQuery plugin to enhance image maps.
                 return this.canvas;
             };
 
-            p.createCanvasFor = function (el) {
-                var w = u.imgWidth(el),
-                    h = u.imgHeight(el);
+            p.createCanvasFor = function (md) {
+                var w = md.scaleInfo.width,
+                    h = md.scaleInfo.height;
                 return $('<var width="' + w + '" height="' + h 
                     + '" style="zoom:1;overflow:hidden;display:block;width:' 
                     + w + 'px;height:' + h + 'px;"></var>')[0];
@@ -1851,17 +1853,19 @@ A jQuery plugin to enhance image maps.
             }
         }
         me.wrapper = wrap;
-
-        base_canvas = me.graphics.createVisibleCanvas(me.image);
-        overlay_canvas = me.graphics.createVisibleCanvas(me.image);
-
-        me.base_canvas = base_canvas;
-        me.overlay_canvas = overlay_canvas;
-
+        
         // me.images[1] is the copy of the original image. It should be loaded & at its native size now so we can obtain the true
         // width & height to see if we need to scale. We then 
 
         me.scaleInfo = scale = u.scaleMap(me.images[0],me.images[1], opts.scaleMap);
+        
+        base_canvas = me.graphics.createVisibleCanvas(me);
+        overlay_canvas = me.graphics.createVisibleCanvas(me);
+
+        me.base_canvas = base_canvas;
+        me.overlay_canvas = overlay_canvas;
+
+     
         
         // Now we got what we needed from the copy -clone from the original image again to make sure any other attributes are copied
         imgCopy = $(me.images[0])
@@ -2786,7 +2790,7 @@ A jQuery plugin to enhance image maps.
         'border-radius: 6px 6px 6px 6px;"></div>',
         showToolTip: false,
         toolTipFade: true,
-        toolTipClose: ['area-mouseout'],
+        toolTipClose: ['area-mouseout','image-mouseout'],
         onShowToolTip: null,
         onCreateTooltip: null
     });
@@ -2803,15 +2807,21 @@ A jQuery plugin to enhance image maps.
             e.object.unbind(e.event);
         });
     };
-   m.MapData.prototype.bindTooltipClose = function (option, event, obj) {
+    // if callback is passed, it will be used as the event handler and a "true" response closes the tooltip
+   m.MapData.prototype.bindTooltipClose = function (option, event, obj, callback) {
         var event_name = event + '.mapster-tooltip', me = this;
         if ($.inArray(option, this.options.toolTipClose) >= 0) {
-            obj.unbind(event_name).bind(event_name, function () {
-                me.clearTooltip();
-            });
+            obj.unbind(event_name)
+                .bind(event_name, function (e) {
+                    if (!callback || callback(e)) {
+                        me.clearTooltip();
+                    }
+                });
             this._tooltip_events.push(
             {
-                object: obj, event: event_name
+                object: obj, 
+                event: event_name,
+                callback: callback
             });
         }
     };
@@ -2841,7 +2851,6 @@ A jQuery plugin to enhance image maps.
 
         md.clearTooltip();
 
-        //$(md.image).after(tooltip);
         $('body').append(tooltip);
 
         md.activeToolTip = tooltip;
@@ -2877,7 +2886,9 @@ A jQuery plugin to enhance image maps.
         md.bindTooltipClose('area-click', 'click', $(md.map));
         md.bindTooltipClose('tooltip-click', 'click', tooltip);
         // not working properly- closes too soon sometimes
-        //md.bindTooltipClose('img-mouseout', 'mouseout', $(md.image));
+        md.bindTooltipClose('image-mouseout', 'mouseout', $(md.image), function(e) {
+            return (e.relatedTarget.nodeName!=='area');
+        });
 
         if (md.options.toolTipFade) {
             u.fader(tooltip[0], 0, 1, opts.fadeDuration);

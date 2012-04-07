@@ -573,17 +573,19 @@
             }
         }
         me.wrapper = wrap;
-
-        base_canvas = me.graphics.createVisibleCanvas(me.image);
-        overlay_canvas = me.graphics.createVisibleCanvas(me.image);
-
-        me.base_canvas = base_canvas;
-        me.overlay_canvas = overlay_canvas;
-
+        
         // me.images[1] is the copy of the original image. It should be loaded & at its native size now so we can obtain the true
         // width & height to see if we need to scale. We then 
 
         me.scaleInfo = scale = u.scaleMap(me.images[0],me.images[1], opts.scaleMap);
+        
+        base_canvas = me.graphics.createVisibleCanvas(me);
+        overlay_canvas = me.graphics.createVisibleCanvas(me);
+
+        me.base_canvas = base_canvas;
+        me.overlay_canvas = overlay_canvas;
+
+     
         
         // Now we got what we needed from the copy -clone from the original image again to make sure any other attributes are copied
         imgCopy = $(me.images[0])

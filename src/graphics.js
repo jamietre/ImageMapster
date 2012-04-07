@@ -38,8 +38,10 @@
         var addto = options.isMask ? this.masks : this.shapes;
         addto.push({ mapArea: mapArea, options: options });
     };
-    p.createVisibleCanvas = function (img) {
-        return $(this.createCanvasFor(img)).addClass('mapster_el').css(m.canvas_style)[0];
+    p.createVisibleCanvas = function (md) {
+        return $(this.createCanvasFor(md))
+            .addClass('mapster_el')
+            .css(m.canvas_style)[0];
     };
     p._addShapeGroupImpl = function (areaData, mode,options) {
         var me = this,
@@ -152,12 +154,12 @@
                 var maskCanvas, maskContext,
                             me = this,
                             hasMasks = me.masks.length,
-                            shapeCanvas = me.createCanvasFor(me.canvas),
+                            shapeCanvas = me.createCanvasFor(me.map_data),
                             shapeContext = shapeCanvas.getContext('2d'),
                             context = me.canvas.getContext('2d');
 
                 if (hasMasks) {
-                    maskCanvas = me.createCanvasFor(me.canvas);
+                    maskCanvas = me.createCanvasFor(me.map_data);
                     maskContext = maskCanvas.getContext('2d');
                     maskContext.clearRect(0, 0, maskCanvas.width, maskCanvas.height);
 
@@ -233,8 +235,8 @@
             };
 
             // create a canvas mimicing dimensions of an existing element
-            p.createCanvasFor = function (el) {
-                return $('<canvas width="' + u.imgWidth(el) + '" height="' + u.imgHeight(el) + '"></canvas>')[0];
+            p.createCanvasFor = function (md) {
+                return $('<canvas width="' + md.scaleInfo.width + '" height="' +md.scaleInfo.height + '"></canvas>')[0];
             };
             p.clearHighlight = function () {
                 var c = this.map_data.overlay_canvas;
@@ -249,7 +251,7 @@
                 // draw new base canvas, then swap with the old one to avoid flickering
                 canvas_temp = map_data.base_canvas;
 
-                map_data.base_canvas = this.createVisibleCanvas(map_data.image);
+                map_data.base_canvas = this.createVisibleCanvas(map_data);
                 $(map_data.base_canvas).hide();
                 $(canvas_temp).before(map_data.base_canvas);
 
@@ -317,9 +319,9 @@
                 return this.canvas;
             };
 
-            p.createCanvasFor = function (el) {
-                var w = u.imgWidth(el),
-                    h = u.imgHeight(el);
+            p.createCanvasFor = function (md) {
+                var w = md.scaleInfo.width,
+                    h = md.scaleInfo.height;
                 return $('<var width="' + w + '" height="' + h 
                     + '" style="zoom:1;overflow:hidden;display:block;width:' 
                     + w + 'px;height:' + h + 'px;"></var>')[0];

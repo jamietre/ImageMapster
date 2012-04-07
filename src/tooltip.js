@@ -10,7 +10,7 @@
         'border-radius: 6px 6px 6px 6px;"></div>',
         showToolTip: false,
         toolTipFade: true,
-        toolTipClose: ['area-mouseout'],
+        toolTipClose: ['area-mouseout','image-mouseout'],
         onShowToolTip: null,
         onCreateTooltip: null
     });
@@ -27,15 +27,21 @@
             e.object.unbind(e.event);
         });
     };
-   m.MapData.prototype.bindTooltipClose = function (option, event, obj) {
+    // if callback is passed, it will be used as the event handler and a "true" response closes the tooltip
+   m.MapData.prototype.bindTooltipClose = function (option, event, obj, callback) {
         var event_name = event + '.mapster-tooltip', me = this;
         if ($.inArray(option, this.options.toolTipClose) >= 0) {
-            obj.unbind(event_name).bind(event_name, function () {
-                me.clearTooltip();
-            });
+            obj.unbind(event_name)
+                .bind(event_name, function (e) {
+                    if (!callback || callback(e)) {
+                        me.clearTooltip();
+                    }
+                });
             this._tooltip_events.push(
             {
-                object: obj, event: event_name
+                object: obj, 
+                event: event_name,
+                callback: callback
             });
         }
     };
@@ -65,7 +71,6 @@
 
         md.clearTooltip();
 
-        //$(md.image).after(tooltip);
         $('body').append(tooltip);
 
         md.activeToolTip = tooltip;
@@ -101,7 +106,9 @@
         md.bindTooltipClose('area-click', 'click', $(md.map));
         md.bindTooltipClose('tooltip-click', 'click', tooltip);
         // not working properly- closes too soon sometimes
-        //md.bindTooltipClose('img-mouseout', 'mouseout', $(md.image));
+        md.bindTooltipClose('image-mouseout', 'mouseout', $(md.image), function(e) {
+            return (e.relatedTarget.nodeName!=='area');
+        });
 
         if (md.options.toolTipFade) {
             u.fader(tooltip[0], 0, 1, opts.fadeDuration);

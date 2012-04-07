@@ -809,7 +809,7 @@ A jQuery plugin to enhance image maps.
                         e.selected = false;
                     });
 
-                    this.base_canvas = this.graphics.createVisibleCanvas(this.image);
+                    this.base_canvas = this.graphics.createVisibleCanvas(this);
                     $(this.image).before(this.base_canvas);
                 },
                 null,
