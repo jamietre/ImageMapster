@@ -33,7 +33,7 @@
         if ($.inArray(option, this.options.toolTipClose) >= 0) {
             obj.unbind(event_name)
                 .bind(event_name, function (e) {
-                    if (!callback || callback(e)) {
+                    if (!callback || callback.call(this,e)) {
                         me.clearTooltip();
                     }
                 });
@@ -107,7 +107,7 @@
         md.bindTooltipClose('tooltip-click', 'click', tooltip);
         // not working properly- closes too soon sometimes
         md.bindTooltipClose('image-mouseout', 'mouseout', $(md.image), function(e) {
-            return (e.relatedTarget.nodeName!=='area');
+            return (e.relatedTarget.nodeName!=='AREA' && e.relatedTarget!==this);
         });
 
         if (md.options.toolTipFade) {

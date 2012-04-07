@@ -153,7 +153,7 @@ A jQuery plugin to enhance image maps.
     };
 
     $.mapster = {
-        version: "1.2.4.062",
+        version: "1.2.4.063",
         render_defaults: {
             isSelectable: true,
             isDeselectable: true,
@@ -2916,7 +2916,7 @@ A jQuery plugin to enhance image maps.
         if ($.inArray(option, this.options.toolTipClose) >= 0) {
             obj.unbind(event_name)
                 .bind(event_name, function (e) {
-                    if (!callback || callback(e)) {
+                    if (!callback || callback.call(this,e)) {
                         me.clearTooltip();
                     }
                 });
@@ -2990,7 +2990,7 @@ A jQuery plugin to enhance image maps.
         md.bindTooltipClose('tooltip-click', 'click', tooltip);
         // not working properly- closes too soon sometimes
         md.bindTooltipClose('image-mouseout', 'mouseout', $(md.image), function(e) {
-            return (e.relatedTarget.nodeName!=='area');
+            return (e.relatedTarget.nodeName!=='AREA' && e.relatedTarget!==this);
         });
 
         if (md.options.toolTipFade) {
