@@ -50,7 +50,7 @@ A jQuery plugin to enhance image maps.
     };
 
     $.mapster = {
-        version: "1.2.4.061",
+        version: "1.2.4.062",
         render_defaults: {
             isSelectable: true,
             isDeselectable: true,
@@ -376,13 +376,16 @@ A jQuery plugin to enhance image maps.
     // jQuery's width() and height() are broken on IE9 in some situations. This tries everything. 
     $.each(["width","height"],function(i,e) {
         var capProp = e.substr(0,1).toUpperCase() + e.substr(1);
-        m.utils["img"+capProp]=function(img) {
-                return img[e] || img["natural"+capProp] || img["client"+capProp] || img["offset"+capProp];
+        // when jqwidth parm is passed, it also checks the jQuery width()/height() property
+        // the issue is that jQUery width() can report a valid size before the image is loaded in some browsers
+        // without it, we can read zero even when image is loaded in other browsers if its not visible
+        // we must still check because stuff like adblock can temporarily block it
+        // what a goddamn headache
+        m.utils["img"+capProp]=function(img,jqwidth) {
+                return (jqwidth ? $(img)[e]() : 0) || 
+                    img[e] || img["natural"+capProp] || img["client"+capProp] || img["offset"+capProp];
         };
-        // we need the version that checks jq width for getting the width, vs. detecting load
-        m.utils["imgR"+capProp]=function(img) {
-            return $(img)[e]() || m.utils["img"+capProp](img);
-        };
+     
     });    
 
     m.Method = function (that, func_map, func_area, opts) {
@@ -1588,16 +1591,20 @@ A jQuery plugin to enhance image maps.
     };
     // Checks status & updates if it's loaded
     p.isImageLoaded= function (index) {
-        var img,me=this;
+        var status,img,me=this;
         if (me.imageStatus[index]) { return true; }
         img = me.images[index];
         
-        if (typeof img.complete !== 'undefined' && !img.complete) {
-            return false;
+        if (typeof img.complete !== 'undefined') {
+            status=img.complete;
+        } else {
+            status=!!u.imgWidth(img);
         }
+        // if complete passes, the image is loaded, but may STILL not be available because of stuff like adblock.
+        // make sure it is.
 
-        me.imageStatus[index]=!!u.imgWidth(img);
-        return me.imageStatus[index];
+        me.imageStatus[index]=status;
+        return status;
     };
     // Wait until all images are loaded then call initialize. This is difficult because browsers are incosistent about
     // how or if "onload" works and in how one can actually detect if an image is already loaded. Try to check first,
@@ -1978,9 +1985,15 @@ A jQuery plugin to enhance image maps.
             if (!area.coords) {
                 continue;
             }
+            // Create a key if none was assigned by the user
 
-            curKey = default_group ? '' : area.getAttribute(opts.mapKey);
-            //curKey = default_group || !curKey ? '' : curKey;
+            if (default_group) {
+                 curKey=String(mapAreaId);
+                $area.attr('data-mapster-key', curKey);
+               
+            } else {
+                curKey = area.getAttribute(opts.mapKey);
+            }
 
             // conditions for which the area will be bound to mouse events
             // only bind to areas that don't have nohref. ie 6&7 cannot detect the presence of nohref, so we have to also not bind if href is missing.
@@ -2039,12 +2052,7 @@ A jQuery plugin to enhance image maps.
                     .bind('click.mapster', me.click)
                     .bind('mousedown.mapster', me.mousedown);
             }
-            // Create a key if none was assigned by the user
 
-            if (default_group) {
-                $area.attr('data-mapster-key', key);
-                mapArea.keys=[key];
-            }
             // store an ID with each area. 
             $area.data("mapster", mapAreaId+1);
         }
@@ -2495,8 +2503,8 @@ A jQuery plugin to enhance image maps.
 
         function size(image) {
             var s= { 
-                width: u.imgRWidth(image),
-                height: u.imgRHeight(image)
+                width: u.imgWidth(image,true),
+                height: u.imgHeight(image,true)
             };
             if (!(s.width && s.height)) {
                 throw("Another script, such as an extension, appears to be interfering with image loading. Please let us know about this.");

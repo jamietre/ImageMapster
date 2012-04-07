@@ -50,7 +50,7 @@ A jQuery plugin to enhance image maps.
     };
 
     $.mapster = {
-        version: "1.2.4.061",
+        version: "1.2.4.062",
         render_defaults: {
             isSelectable: true,
             isDeselectable: true,
@@ -376,13 +376,16 @@ A jQuery plugin to enhance image maps.
     // jQuery's width() and height() are broken on IE9 in some situations. This tries everything. 
     $.each(["width","height"],function(i,e) {
         var capProp = e.substr(0,1).toUpperCase() + e.substr(1);
-        m.utils["img"+capProp]=function(img) {
-                return img[e] || img["natural"+capProp] || img["client"+capProp] || img["offset"+capProp];
+        // when jqwidth parm is passed, it also checks the jQuery width()/height() property
+        // the issue is that jQUery width() can report a valid size before the image is loaded in some browsers
+        // without it, we can read zero even when image is loaded in other browsers if its not visible
+        // we must still check because stuff like adblock can temporarily block it
+        // what a goddamn headache
+        m.utils["img"+capProp]=function(img,jqwidth) {
+                return (jqwidth ? $(img)[e]() : 0) || 
+                    img[e] || img["natural"+capProp] || img["client"+capProp] || img["offset"+capProp];
         };
-        // we need the version that checks jq width for getting the width, vs. detecting load
-        m.utils["imgR"+capProp]=function(img) {
-            return $(img)[e]() || m.utils["img"+capProp](img);
-        };
+     
     });    
 
     m.Method = function (that, func_map, func_area, opts) {

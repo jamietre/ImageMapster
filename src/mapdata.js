@@ -313,16 +313,20 @@
     };
     // Checks status & updates if it's loaded
     p.isImageLoaded= function (index) {
-        var img,me=this;
+        var status,img,me=this;
         if (me.imageStatus[index]) { return true; }
         img = me.images[index];
         
-        if (typeof img.complete !== 'undefined' && !img.complete) {
-            return false;
+        if (typeof img.complete !== 'undefined') {
+            status=img.complete;
+        } else {
+            status=!!u.imgWidth(img);
         }
+        // if complete passes, the image is loaded, but may STILL not be available because of stuff like adblock.
+        // make sure it is.
 
-        me.imageStatus[index]=!!u.imgWidth(img);
-        return me.imageStatus[index];
+        me.imageStatus[index]=status;
+        return status;
     };
     // Wait until all images are loaded then call initialize. This is difficult because browsers are incosistent about
     // how or if "onload" works and in how one can actually detect if an image is already loaded. Try to check first,
@@ -703,9 +707,15 @@
             if (!area.coords) {
                 continue;
             }
+            // Create a key if none was assigned by the user
 
-            curKey = default_group ? '' : area.getAttribute(opts.mapKey);
-            //curKey = default_group || !curKey ? '' : curKey;
+            if (default_group) {
+                 curKey=String(mapAreaId);
+                $area.attr('data-mapster-key', curKey);
+               
+            } else {
+                curKey = area.getAttribute(opts.mapKey);
+            }
 
             // conditions for which the area will be bound to mouse events
             // only bind to areas that don't have nohref. ie 6&7 cannot detect the presence of nohref, so we have to also not bind if href is missing.
@@ -764,12 +774,7 @@
                     .bind('click.mapster', me.click)
                     .bind('mousedown.mapster', me.mousedown);
             }
-            // Create a key if none was assigned by the user
 
-            if (default_group) {
-                $area.attr('data-mapster-key', key);
-                mapArea.keys=[key];
-            }
             // store an ID with each area. 
             $area.data("mapster", mapAreaId+1);
         }
