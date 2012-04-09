@@ -50,7 +50,7 @@ A jQuery plugin to enhance image maps.
     };
 
     $.mapster = {
-        version: "1.2.4.063",
+        version: "1.2.4.065",
         render_defaults: {
             isSelectable: true,
             isDeselectable: true,
@@ -246,6 +246,14 @@ A jQuery plugin to enhance image maps.
                 if ($.isFunction(obj)) {
                     obj.call(that, args);
                 }
+            },
+            size: function(image) {
+                var u=$.mapster.utils;
+                return { 
+                    width: u.imgWidth(image,true),
+                    height: u.imgHeight(image,true),
+                    complete: function() { return !!this.height && !!this.width;}
+                };
             },
             fader: (function () {
                 var elements = {},
@@ -1823,7 +1831,7 @@ A jQuery plugin to enhance image maps.
     };
     ///called when images are done loading
     p.initialize = function () {
-        var imgCopy, base_canvas, overlay_canvas, wrap, parentId, css, i,
+        var imgCopy, base_canvas, overlay_canvas, wrap, parentId, css, i,size,
             img,sort_func, sorted_list,  scale,  
                     me = this,
                     opts = me.options;
@@ -1855,7 +1863,9 @@ A jQuery plugin to enhance image maps.
         me.wrapper = wrap;
         
         // me.images[1] is the copy of the original image. It should be loaded & at its native size now so we can obtain the true
-        // width & height to see if we need to scale. We then 
+        // width & height. This is needed to scale the imagemap if not being shown at its native size. It is also needed purely
+        // to finish binding in case the original image was not visible. It can be impossible in some browsers to obtain the
+        // native size of a hidden image.
 
         me.scaleInfo = scale = u.scaleMap(me.images[0],me.images[1], opts.scaleMap);
         
@@ -1865,19 +1875,20 @@ A jQuery plugin to enhance image maps.
         me.base_canvas = base_canvas;
         me.overlay_canvas = overlay_canvas;
 
-     
-        
         // Now we got what we needed from the copy -clone from the original image again to make sure any other attributes are copied
-        imgCopy = $(me.images[0])
-            .clone()
+        imgCopy = $(me.images[1])
             .addClass('mapster_el')
+            .addClass($(me.images[0]).attr('class'))
             .attr({id:null, usemap: null});
             
-        $.each(["width","height","padding","border","margin"],function(i,e) {
-            imgCopy.css(e,img.css(e));
-        });
-        me.images[1]=imgCopy[0];
-
+        size=u.size(me.images[0]);
+        if (size.complete) {
+            imgCopy.css({
+                width: size.width,
+                height: size.height
+            });
+        }
+ 
         me.buildDataset();
 
         // now that we have processed all the areas, set css for wrapper, scale map if needed
@@ -2505,17 +2516,15 @@ A jQuery plugin to enhance image maps.
         // stunningly, jQuery width can return zero even as width does not, seems to happen only
         // with adBlock or maybe other plugins. These must interfere with onload events somehow.
 
-        function size(image) {
-            var s= { 
-                width: u.imgWidth(image,true),
-                height: u.imgHeight(image,true)
-            };
-            if (!(s.width && s.height)) {
-                throw("Another script, such as an extension, appears to be interfering with image loading. Please let us know about this.");
-            }
-            return s;
+
+        var vis=u.size(image),raw=u.size(imageRaw);
+        if (!raw.complete) {
+            throw("Another script, such as an extension, appears to be interfering with image loading. Please let us know about this.");
         }
-        return this.getScaleInfo(size(image),scale ? size(imageRaw) : null);
+        if (!vis.complete) {
+            vis=raw;
+        }
+        return this.getScaleInfo(vis, scale ? raw : null);
     };
     // options: duration = animation time (zero = no animation)
     // force: supercede any existing animation

@@ -36,17 +36,15 @@
         // stunningly, jQuery width can return zero even as width does not, seems to happen only
         // with adBlock or maybe other plugins. These must interfere with onload events somehow.
 
-        function size(image) {
-            var s= { 
-                width: u.imgWidth(image,true),
-                height: u.imgHeight(image,true)
-            };
-            if (!(s.width && s.height)) {
-                throw("Another script, such as an extension, appears to be interfering with image loading. Please let us know about this.");
-            }
-            return s;
+
+        var vis=u.size(image),raw=u.size(imageRaw);
+        if (!raw.complete) {
+            throw("Another script, such as an extension, appears to be interfering with image loading. Please let us know about this.");
         }
-        return this.getScaleInfo(size(image),scale ? size(imageRaw) : null);
+        if (!vis.complete) {
+            vis=raw;
+        }
+        return this.getScaleInfo(vis, scale ? raw : null);
     };
     // options: duration = animation time (zero = no animation)
     // force: supercede any existing animation

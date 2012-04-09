@@ -543,7 +543,7 @@
     };
     ///called when images are done loading
     p.initialize = function () {
-        var imgCopy, base_canvas, overlay_canvas, wrap, parentId, css, i,
+        var imgCopy, base_canvas, overlay_canvas, wrap, parentId, css, i,size,
             img,sort_func, sorted_list,  scale,  
                     me = this,
                     opts = me.options;
@@ -575,7 +575,9 @@
         me.wrapper = wrap;
         
         // me.images[1] is the copy of the original image. It should be loaded & at its native size now so we can obtain the true
-        // width & height to see if we need to scale. We then 
+        // width & height. This is needed to scale the imagemap if not being shown at its native size. It is also needed purely
+        // to finish binding in case the original image was not visible. It can be impossible in some browsers to obtain the
+        // native size of a hidden image.
 
         me.scaleInfo = scale = u.scaleMap(me.images[0],me.images[1], opts.scaleMap);
         
@@ -585,19 +587,20 @@
         me.base_canvas = base_canvas;
         me.overlay_canvas = overlay_canvas;
 
-     
-        
         // Now we got what we needed from the copy -clone from the original image again to make sure any other attributes are copied
-        imgCopy = $(me.images[0])
-            .clone()
+        imgCopy = $(me.images[1])
             .addClass('mapster_el')
+            .addClass($(me.images[0]).attr('class'))
             .attr({id:null, usemap: null});
             
-        $.each(["width","height","padding","border","margin"],function(i,e) {
-            imgCopy.css(e,img.css(e));
-        });
-        me.images[1]=imgCopy[0];
-
+        size=u.size(me.images[0]);
+        if (size.complete) {
+            imgCopy.css({
+                width: size.width,
+                height: size.height
+            });
+        }
+ 
         me.buildDataset();
 
         // now that we have processed all the areas, set css for wrapper, scale map if needed
