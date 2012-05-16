@@ -99,105 +99,105 @@ mapster_tests = function (options) {
             ]
         };
 
-    map_test.addTest("Mapster Utility Function Tests", function (ut) {
+    // map_test.addTest("Mapster Utility Function Tests", function (ut) {
 
-        var result;
-        var u = $.mapster.utils;
+    //     var result;
+    //     var u = $.mapster.utils;
 
-        ut.assertEq(function () {
-            return u.isBool(true);
-        },
-        true, "isTrueFalse returns true=true");
+    //     ut.assertEq(function () {
+    //         return u.isBool(true);
+    //     },
+    //     true, "isTrueFalse returns true=true");
 
-        ut.assertEq(function () {
-            return u.isBool(false);
-        },
-         true, "isBool returns false=true");
+    //     ut.assertEq(function () {
+    //         return u.isBool(false);
+    //     },
+    //      true, "isBool returns false=true");
 
-        ut.assertEq(function () { return u.isBool(null); },
-            false, "isBool returns null=false");
+    //     ut.assertEq(function () { return u.isBool(null); },
+    //         false, "isBool returns null=false");
 
-        ut.assertEq(u.boolOrDefault(true), true, "boolOrDefault(true) returns true");
-        ut.assertEq(u.boolOrDefault(false), false, "boolOrDefault(false) returns false");
-        ut.assertEq(u.boolOrDefault("something"), false, "boolOrDefault('something') (a truthy value) returns false");
-        ut.assertEq(u.boolOrDefault(null), false, "boolOrDefault(null) (a falsy value)  returns false");
-        ut.assertEq(u.boolOrDefault(true, "foo"), true, "boolOrDefault(true) with default value returns true");
-        ut.assertEq(u.boolOrDefault(false, "foo"), false, "boolOrDefault(false) with default value returns false");
-        ut.assertEq(u.boolOrDefault("something", "foo"), "foo", "boolOrDefault('something') (a falsy value) with default value returns default");
-        ut.assertEq(u.boolOrDefault(undefined, "foo"), "foo", "boolOrDefault(undefined) (a falsy value) with default value returns default");
+    //     ut.assertEq(u.boolOrDefault(true), true, "boolOrDefault(true) returns true");
+    //     ut.assertEq(u.boolOrDefault(false), false, "boolOrDefault(false) returns false");
+    //     ut.assertEq(u.boolOrDefault("something"), false, "boolOrDefault('something') (a truthy value) returns false");
+    //     ut.assertEq(u.boolOrDefault(null), false, "boolOrDefault(null) (a falsy value)  returns false");
+    //     ut.assertEq(u.boolOrDefault(true, "foo"), true, "boolOrDefault(true) with default value returns true");
+    //     ut.assertEq(u.boolOrDefault(false, "foo"), false, "boolOrDefault(false) with default value returns false");
+    //     ut.assertEq(u.boolOrDefault("something", "foo"), "foo", "boolOrDefault('something') (a falsy value) with default value returns default");
+    //     ut.assertEq(u.boolOrDefault(undefined, "foo"), "foo", "boolOrDefault(undefined) (a falsy value) with default value returns default");
 
-        var obj = { a: "a", b: "b" };
-        var otherObj = { a: "a2", b: "b2", c: "c" };
-        var arrObj = { a: [1, 2], b: { a: "a2", b: "b2"} };
+    //     var obj = { a: "a", b: "b" };
+    //     var otherObj = { a: "a2", b: "b2", c: "c" };
+    //     var arrObj = { a: [1, 2], b: { a: "a2", b: "b2"} };
 
-        result = u.updateProps({}, arrObj);
-        ut.assertArrayEq([1, 2], result.a, "Array copied as array");
+    //     result = u.updateProps({}, arrObj);
+    //     ut.assertArrayEq([1, 2], result.a, "Array copied as array");
 
-        result = u.updateProps(obj, otherObj);
+    //     result = u.updateProps(obj, otherObj);
 
-        ut.assertPropsEq(result, { a: "a2", b: "b2" }, "Merge with extra properties - no add");
-        // input object should be affected
-        ut.assertPropsEq(obj, { a: "a2", b: "b2" }, "Test input object following merge matches output");
+    //     ut.assertPropsEq(result, { a: "a2", b: "b2" }, "Merge with extra properties - no add");
+    //     // input object should be affected
+    //     ut.assertPropsEq(obj, { a: "a2", b: "b2" }, "Test input object following merge matches output");
 
-        result = u.updateProps(otherObj, obj, otherObj);
-        ut.assertPropsEq(result, { a: "a2", b: "b2", c: "c" }, "Merge with extra properties - add");
+    //     result = u.updateProps(otherObj, obj, otherObj);
+    //     ut.assertPropsEq(result, { a: "a2", b: "b2", c: "c" }, "Merge with extra properties - add");
 
-        otherObj = { a: "a3" };
-        result = u.updateProps(obj, otherObj);
+    //     otherObj = { a: "a3" };
+    //     result = u.updateProps(obj, otherObj);
 
-        // ut.assertPropsEq(function () { return u.updateProps(result, otherObj); }, { a: "a3", b: "b2", c: "c" }, "Merge with missing properties");
+    //     // ut.assertPropsEq(function () { return u.updateProps(result, otherObj); }, { a: "a3", b: "b2", c: "c" }, "Merge with missing properties");
 
-        // test several at once
-        obj = { a: "unchanged-a", b: "unchanged-b" };
-        otherObj = { b: "b4" };
-        var otherObj2 = { a: "a4" };
+    //     // test several at once
+    //     obj = { a: "unchanged-a", b: "unchanged-b" };
+    //     otherObj = { b: "b4" };
+    //     var otherObj2 = { a: "a4" };
 
-        ut.assertPropsEq(u.updateProps(obj, otherObj, otherObj2), { a: "a4", b: "b4" }, "Merge with mutiple inputs");
+    //     ut.assertPropsEq(u.updateProps(obj, otherObj, otherObj2), { a: "a4", b: "b4" }, "Merge with mutiple inputs");
 
-        var templateObj = { p1: "prop1", p2: "prop2" };
-        otherObj = { p1: "newProp1", p3: "prop3", p4: "prop4" };
+    //     var templateObj = { p1: "prop1", p2: "prop2" };
+    //     otherObj = { p1: "newProp1", p3: "prop3", p4: "prop4" };
 
-        ut.assertPropsEq(u.updateProps({}, templateObj, otherObj), { p1: "newProp1", p2: "prop2" }, "Template works.");
+    //     ut.assertPropsEq(u.updateProps({}, templateObj, otherObj), { p1: "newProp1", p2: "prop2" }, "Template works.");
 
-        var expectedResult = { p1: "newProp1", p2: "prop2", p4: "prop4" };
-        //ut.assertPropsEq(u.updateProps({},templateObj, otherObj, ), expectedResult, "Ignore works.");
+    //     var expectedResult = { p1: "newProp1", p2: "prop2", p4: "prop4" };
+    //     //ut.assertPropsEq(u.updateProps({},templateObj, otherObj, ), expectedResult, "Ignore works.");
 
-        templateObj.p3 = { subp1: "subprop1", subp2: "subprop2" };
-        templateObj.p4 = null;
+    //     templateObj.p3 = { subp1: "subprop1", subp2: "subprop2" };
+    //     templateObj.p4 = null;
 
-        result = { };
-        expectedResult.p3 = otherObj.p3;
+    //     result = { };
+    //     expectedResult.p3 = otherObj.p3;
 
-        u.updateProps(result, templateObj, otherObj);
-        ut.assertPropsEq(result, expectedResult, "Copying a sub-object - start");
+    //     u.updateProps(result, templateObj, otherObj);
+    //     ut.assertPropsEq(result, expectedResult, "Copying a sub-object - start");
 
-        delete otherObj.p3;
-        result.p3 = { existing: "bar" };
+    //     delete otherObj.p3;
+    //     result.p3 = { existing: "bar" };
 
-        expectedResult.p3 = templateObj.p3;
-        expectedResult.p3.existing = "bar";
+    //     expectedResult.p3 = templateObj.p3;
+    //     expectedResult.p3.existing = "bar";
 
-        u.updateProps(result, templateObj, otherObj);
-        ut.assertPropsEq(result, expectedResult, "Deep works");
+    //     u.updateProps(result, templateObj, otherObj);
+    //     ut.assertPropsEq(result, expectedResult, "Deep works");
 
-        // test indexOfProp
+    //     // test indexOfProp
 
-        obj = { test: "test" };
-        var arr = [{ name: "test1", value: "value1" }, { name: "test2", value: "value2" }, { name: "test3", value: obj}];
+    //     obj = { test: "test" };
+    //     var arr = [{ name: "test1", value: "value1" }, { name: "test2", value: "value2" }, { name: "test3", value: obj}];
 
-        var index = u.indexOfProp(arr, "name", "test2");
-        ut.assertEq(index, 1, "arrayIndexOfProp returns correct value for string");
-        index = u.indexOfProp(arr, "value", obj);
-        ut.assertEq(index, 2, "arrayIndexOfProp returns correct value for object & last element");
-        index = u.indexOfProp(arr, "name", "test1");
-        ut.assertEq(index, 0, "arrayIndexOfProp returns correct value for first element");
-        index = u.indexOfProp(arr, "foo", "bar");
-        ut.assertEq(index, -1, "Missing property handled correctly");
-        index = u.indexOfProp(arr, "name", "bar");
-        ut.assertEq(index, -1, "Missing property value handled correctly");
+    //     var index = u.indexOfProp(arr, "name", "test2");
+    //     ut.assertEq(index, 1, "arrayIndexOfProp returns correct value for string");
+    //     index = u.indexOfProp(arr, "value", obj);
+    //     ut.assertEq(index, 2, "arrayIndexOfProp returns correct value for object & last element");
+    //     index = u.indexOfProp(arr, "name", "test1");
+    //     ut.assertEq(index, 0, "arrayIndexOfProp returns correct value for first element");
+    //     index = u.indexOfProp(arr, "foo", "bar");
+    //     ut.assertEq(index, -1, "Missing property handled correctly");
+    //     index = u.indexOfProp(arr, "name", "bar");
+    //     ut.assertEq(index, -1, "Missing property value handled correctly");
 
 
-    });
+    // });
 
 
     var basicTests = function (ut, disableCanvas) {
