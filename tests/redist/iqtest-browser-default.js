@@ -112,12 +112,17 @@ define(function() {
             checkCallbacks(arguments);
 
             var nextValue;
-            //try {
+            if (!when.debug) {
+                try {
+                    nextValue = callback && callback(value);
+                    return promise(nextValue === undef ? value : nextValue);
+                } catch(e) {
+                    return rejected(e);
+                }
+            } else {
                 nextValue = callback && callback(value);
                 return promise(nextValue === undef ? value : nextValue);
-            //} catch(e) {
-            //    return rejected(e);
-            //}
+            }
         };
 
         // Not frozen because this should never be exposed
@@ -141,7 +146,19 @@ define(function() {
             checkCallbacks(arguments);
 
             var nextValue;
-            //try {
+            if (!when.debug) {
+                try {
+                    if(errback) {
+                        nextValue = errback(reason);
+                        return promise(nextValue === undef ? reason : nextValue)
+                    }
+
+                    return rejected(reason);
+
+                } catch(e) {
+                    return rejected(e);
+                }
+            } else {
                 if(errback) {
                     nextValue = errback(reason);
                     return promise(nextValue === undef ? reason : nextValue)
@@ -149,9 +166,7 @@ define(function() {
 
                 return rejected(reason);
 
-            //} catch(e) {
-                return rejected(e);
-            //}
+            }
         };
 
         // Not frozen because this should never be exposed
@@ -728,6 +743,9 @@ define(function() {
 
     when.chain     = chain;
 
+    // when true, will not trap errors
+
+    when.debug     = false;
     return when;
 });
 })(typeof define == 'function'
@@ -1924,27 +1942,27 @@ if (typeof module != "undefined") {
 }());
 /* common.utils.js: a core framework library of utilities and polyfills.
    
-   This adds utility functions into a namespace u.
+This adds utility functions into a namespace u.
 
-   Standard polyfills are automatically added to their prototypes. The following nonstandard prototype
-   changes are made:
+Standard polyfills are automatically added to their prototypes. The following nonstandard prototype
+changes are made:
         
-        String.format
-        String.split with trim option
-        Array.contains
-        Array.first
+String.format
+String.split with trim option
+Array.contains
+Array.first
 
-   You can remove the call to u.polyfill to prevent the nonstandard changes.
+You can remove the call to u.polyfill to prevent the nonstandard changes.
 
-   Version 1.0
-   James Treworgy
+Version 1.0
+James Treworgy
 */
 
 /*global define, require, module */
-/*jslint curly: false */
+/*jslint curly: false, expr: true */
 (function (define) {
     define(function () {
-        var u,nativeSplit=String.prototype.split;
+        var u;
 
         /* General puropose functions */
 
@@ -1972,6 +1990,8 @@ if (typeof module != "undefined") {
         function forEach(cb, trim) {
             var coll = this,
                 i, val;
+            if (!coll) return;
+
             if (isString(coll)) {
                 coll = coll.split(',');
             }
@@ -2001,13 +2021,13 @@ if (typeof module != "undefined") {
                 arguments[0] :
                 arguments;
             return this.replace(/\{(\d+)\}/g, function (match, number) {
-                var num = parseInt(number,10);
+                var num = parseInt(number, 10);
                 return !isUndefined(args[num])
                     ? String(args[num])
                     : match;
             });
         }
-        
+
         // a split function that trims its results. any 'true' bool parameter will be interpreted as a flag to trim
         function stringSplit(delimiter, trimResults) {
             var result = [],
@@ -2018,7 +2038,7 @@ if (typeof module != "undefined") {
                     isBool(trimResults) ?
                         trimResults : false;
 
-            forEach.call(nativeSplit.call(this,delim || ','), function (i, e) {
+            forEach.call(String.prototype.split.call(this, delim || ','), function (i, e) {
                 result.push(trim ? stringTrim(e) : e);
             });
             return result;
@@ -2051,10 +2071,10 @@ if (typeof module != "undefined") {
 
         // return the first element where filter returns true
         function arrayFirst(filter) {
-            var i,undef;
-            
+            var i, undef;
+
             if (!filter) {
-                return this.length>0 ? this[0] : undef;
+                return this.length > 0 ? this[0] : undef;
             }
 
             for (i = 0; i < this.length; i++) {
@@ -2182,7 +2202,7 @@ if (typeof module != "undefined") {
             // usual each, if you happen to pass a string, it will split it on commas.
             // it will always trim string values in an array.
             each: function (coll, cb) {
-                return forEach.call(coll, cb);
+                coll && forEach.call(coll, cb);
             },
             donothing: function () { },
             // add nonstandard polyfills
@@ -2192,11 +2212,6 @@ if (typeof module != "undefined") {
                 Array.prototype.first = arrayFirst;
 
                 String.prototype.format = format;
-
-                // always replace split, ours is better
-                if (String.prototype.split !== stringSplit) {
-                    String.prototype.split = stringSplit;
-                }
             }
 
         };
@@ -2257,21 +2272,19 @@ MIT License
 (function(define) {
 
 define(['./iqtest'], function(u,when,when_timeout, iq_asserts, buster_asserts, utils) {
-    var Test, TestGroup, Assert,
+    var iqtestApi,Test, TestGroup, Assert,
     // default values for TestGroup
     groupDefaults = {
 
-        // a description of the test
+        // an id or name
         name: "test-group", 
 
+        // detailed desription of the test
         desc: "Unnamed Test Group",
         
          // when true, will not trap errors in the test itself.
         debug: false,
-        
-        // passed assertions should be show in any output (normally, only the results of each test are shown)
-        showPassed: false,
-        
+        timeout: 10,        
         // functions to run on setup or teardown
         setup: null,
         teardown: null
@@ -2282,8 +2295,7 @@ define(['./iqtest'], function(u,when,when_timeout, iq_asserts, buster_asserts, u
         name: "test",
         desc: "Unnamed Test",
         func: null,
-        showPassed: false,
-        timeoutSeconds: 10,
+        timeout: 10,
         // there is a test-specific debug option so that currently running tests will remain
         // in non-debug mode after another one fails
         debug: false
@@ -2341,6 +2353,7 @@ define(['./iqtest'], function(u,when,when_timeout, iq_asserts, buster_asserts, u
             // has special handling - the actual asserion doesn't know if it was given a promise, only the output.
             // the queue funciton must verify
             resolves: function(obj,message) {
+                u.expectOpts(arguments,1);
                 return {
                     passed: typeof obj !== 'undefined',
                     err: u.formatAssert(message,'The object {0} did {not}resolve',String(obj))
@@ -2448,8 +2461,157 @@ define(['./iqtest'], function(u,when,when_timeout, iq_asserts, buster_asserts, u
             obj[method].apply(this,u.toArray(arguments,2));
         }
     }
+    // create a new prototype from arbitrary arguments
 
-    /* Test objects */
+    function construct(constructor, args) {
+        function F() {
+            return constructor.apply(this, args);
+        }
+        F.prototype = constructor.prototype;
+        return new F();
+    }
+    /* Functions for the TestGroup prototype */
+
+    function groupAddTest(test) {
+        var hasDesc, func, description, 
+            testData,
+            me=this;
+
+        function addTest(test) {
+            me.tests.push(test);
+            test.group=me;
+            test.id = me.tests.length;
+        }
+        if (test.constructor === TestGroup) {
+            u.each(test.tests,function(i,e) {
+               addTest(e);
+            });
+        } else if (test.constructor === Test) {
+            addTest(test);
+        } else if (typeof test === 'string') {
+            description = arguments[1];
+            func = arguments[2];
+            hasDesc = !!func;
+            testData = {
+                name: test,
+                desc: hasDesc ? description : '',
+                func: hasDesc ? func : description,
+                debug: me.debug,
+                timeout: me.timeout
+            };
+            addTest(new Test(testData));
+        }
+        return me;
+    }
+
+    // function must be called with a context of 
+    function testFinished(group,test) {
+        var groupResult;
+
+        if (test.promise!==test._lastPromise) {
+            test._lastPromise=test.promise;
+            test._lastPromise.then(function() {
+                testFinished(group,test);
+            },function(err) {
+                test.testerror(err,true);
+                testFinished(group,test);
+            });
+            return;
+        }
+        if (!u.isBool(test.passed)) {
+            test.passed = (test.count===test.countPassed);
+        }
+        test._allPass &= test.passed;
+        
+        test.doWriterEvent("testEnd",u.filterProps(test,"count,passed"));
+
+        doEvent.call(test,test,"teardown");
+
+        // see if all tests have been resolved
+
+        groupResult=true;
+        u.each(group.tests,function(i,e) {
+            if (!u.isBool(e.passed)) {
+                groupResult=null;
+                return false;
+            } else {
+                if (!e.passed) {
+                    groupResult=false;
+                }
+            }
+        });
+
+        if (u.isBool(groupResult)) {
+            group.passed = groupResult;
+            group.doWriterEvent("groupEnd");
+            doEvent.call(this,this,"teardown");
+            group.promise.resolve();
+        }
+    }
+
+
+    function groupRun() {
+        var me=this;
+
+        doEvent.call(this,this,"setup");
+
+        this.reset();
+        u.each(me.tests,function(i,test) {
+            test.reset();
+        });
+
+        this.doWriterEvent("groupStart",u.filterProps(me,"name,desc"));
+                
+        u.each(me.tests,function(i,test) {
+            var assert=u.extend({},test.assert,{test: test}),
+                refute = u.extend({},test.refute,{test: test});
+
+            doEvent.call(test,test,"setup");
+            test.doWriterEvent("testStart",u.filterProps(test,"name"));
+
+            if (test.debug) {
+                test.func.call(test,assert,refute);
+            } else {
+                try {
+                     test.func.call(test,assert,refute);
+                }
+                catch(err)
+                {
+                    test.testerror(u.format("An error occurred in your test code: {0}",err),true);
+                }
+            }
+
+            // wait for everything to finish by binding to the last promise, and deferring each time
+            // it changes as a result of a callback or something.
+            // this is really quite nasty, I have not figured out a better way to do it yet
+
+            test._lastPromise=test.promise;
+            test._allPass=true;
+
+            // bind to the last promise in the chain. The finishing function will detect if 
+            // anything else has been added.
+
+            test.promise.then(function() {
+                testFinished(me,test);
+            },function(err) {
+                test.testerror(err,true);
+                testFinished(me,test);
+            });
+        });
+        return this;
+    }
+    // call function "event" that is a member of each element in activeWriters, with args
+    // should be called with the sender event context
+    function doWriterEvent(event,args) {
+        var me = this;
+        u.each(this.group.writers,function(i,e) {
+            var target = e[event];
+            if (u.isFunction(target)) {
+                target.apply(e,[me].concat(args));
+            }
+        });
+
+    }
 
     TestGroup = function (name, desc, options) {
         initialize();
@@ -2467,6 +2629,20 @@ define(['./iqtest'], function(u,when,when_timeout, iq_asserts, buster_asserts, u
         u.extend(this,
             u.extend(null,groupDefaults,opts,true)
         );
+
+        // active ouput writers
+        this.writers=[];
+
+        // private methods
+
+        this.doEvent = doEvent;
+        
+        // uniform interface for both tests & groups for accessing the group & event emitter
+        this.group = this;
+        this.doWriterEvent = function() {
+            doWriterEvent.apply(this,u.toArray(arguments));
+        };
+
         this.clear();
     };
 
@@ -2474,130 +2650,14 @@ define(['./iqtest'], function(u,when,when_timeout, iq_asserts, buster_asserts, u
         constructor: TestGroup,
         // Add a new test to this group. This can be a Test object, or a 
         // add: function(name [,description],func)
-        add: function(test) {
-            var hasDesc, func, description, 
-                testData,
-                me=this;
-
-            function addTest(test) {
-                me.tests.push(test);
-                test.group=me;
-                test.id = me.tests.length;
-            }
-            if (test.constructor === TestGroup) {
-                u.each(test.tests,function(i,e) {
-                   addTest(e);
-                });
-            } else if (test.constructor === Test) {
-                addTest(test);
-            } else if (typeof test === 'string') {
-                description = arguments[1];
-                func = arguments[2];
-                hasDesc = !!func;
-                testData = {
-                    name: test,
-                    desc: hasDesc ? description : '',
-                    func: hasDesc ? func : description,
-                    debug: me.debug,
-                    showPassed: me.showPassed
-                };
-                addTest(new Test(testData));
-            }
-            return me;
-        },
+        add: groupAddTest,
         // run the tests that have been added to this test group
-        run: function () {
-            var finishFunc,
-                me=this;
-
-            doEvent.call(this,this,"setup");
-
-            u.each(me.tests,function(i,test) {
-                test.reset();
-            });
-
-            u.event(me.groupStart,me,u.filterProps(me,"name,desc"));
-            
-            u.each(me.tests,function(i,test) {
-                var assert=u.extend({},test.assert,{test: test}),
-                refute = u.extend({},test.refute,{test: test});
-
-                doEvent.call(test,test,"setup");
-                u.event(test.testStart,test,u.filterProps(test,"name"));
-
-                if (test.debug) {
-                    test.func.call(test,assert,refute);
-                } else {
-                    try {
-                         test.func.call(test,assert,refute);
-                    }
-                    catch(err)
-                    {
-                        test.testerror(u.format("An error occurred in your test code: {0}",err),true);
-                    }
-                }
-
-                // wait for everything to finish by binding to the last promise, and deferring each time
-                // it changes as a result of a callback or something.
-
-                test._lastPromise=test.promise;
-                test._allPass=true;
-
-                finishFunc=function(test) {
-                    if (test.promise!==test._lastPromise) {
-                        test._lastPromise=test.promise;
-                        test._lastPromise.then(function() {
-                            finishFunc(test);
-                        },function(err) {
-                            test.testerror(err,true);
-                            finishFunc(test);
-                        });
-                        return;
-                    }
-                    if (!u.isBool(test.passed)) {
-                        test.passed = (test.count===test.countPassed);
-                    }
-                    test._allPass &= test.passed;
-                    
-                    u.event(test.testEnd,test,u.filterProps(test,"count,passed"));
-                    doEvent.call(test,test,"teardown");
-
-                    if (test===me.tests[me.tests.length-1]){
-                        if (u.isBool(test.passed)) {
-                            me.passed=test._allPass;
-                        }
-                        u.event(me.groupEnd,me,u.filterProps(test,"passed"));
-                        doEvent.call(this,this,"teardown");
-                    }
-                };
-                test.promise.then(function() {
-                    finishFunc(test);
-                },function(err) {
-                    test.testerror(err,true);
-                    finishFunc(test);
-                });
-            });
-        },
-        then: function(name,func) {
-            //TODO broken
-            if (u.isFunction(name)) {
-                // treat as a regular promise "then"
-                this.promise =this.promise.then.apply(this.promise,u.toArray(arguments));
-                return this;
-            } else {
-                // treat as a new test
-                // starting a new group with "this" treats it as options and will copy the config
-                var group = new TestGroup(this);
-
-                this.promise = this.promise.then(function() {
-                    group.test(name,func);
-                    return group;
-                },
-                function() {
-                    alert('debug: failback called on a group');
-                });
-                return group;
-            }
+        // return the group object, which is also a promise that resolves when 
+        // the group is finished running.
+        run: groupRun,
+        // a promise that resolves when a "run" operation finishes 
+        then: function() {
+            return this.promise.then.apply(this,u.toArray(arguments));
         },
         configure: function(options) {
             if (typeof options === 'string') {
@@ -2618,6 +2678,19 @@ define(['./iqtest'], function(u,when,when_timeout, iq_asserts, buster_asserts, u
             this.reset();
             return this;
         },
+        // activate a named writer
+        writer: function(id /*,writer-args*/) {
+            var w,
+                proto = iqtestApi.writers[id];
+            if (!proto) {
+                throw("There is no output writer with id '{0}'".format(w));
+            }
+
+            w=construct(proto,u.toArray(arguments,1));
+            w.owner=this;
+            this.writers.push(w);
+            return this;
+        },
         // events
         groupStart: u.donothing,
         groupEnd: u.donothing
@@ -2632,7 +2705,11 @@ define(['./iqtest'], function(u,when,when_timeout, iq_asserts, buster_asserts, u
         u.extend(me, options, true);
         me.id=null;
         me.group=null;
-        me.reset();
+        me.clear();
+
+        this.doWriterEvent = function() {
+            doWriterEvent.apply(this,u.toArray(arguments));
+        };
     };
 
     Test.prototype =  {
@@ -2646,9 +2723,7 @@ define(['./iqtest'], function(u,when,when_timeout, iq_asserts, buster_asserts, u
                 results: [],
                 count: 0,
                 countPassed: 0,
-                countFailed: 0,
-                // count to stop at when debugging is enabled
-                debugCount: -1,   
+                countFailed: 0,                
                 nextThen: [],
                 cbPromise: null,
                 resolver: null,
@@ -2656,21 +2731,36 @@ define(['./iqtest'], function(u,when,when_timeout, iq_asserts, buster_asserts, u
                 passed: null
 
             });
+
             // resolve immediately to start the chain when the first thing is added
             this.promise.resolve();
+        },
+        clear: function() {
+            this.setDebug(false);
+        },
+        setDebug: function(active,count) {
+            this.debug=u.isBool(active) ? active : true;
+            when.debug = this.debug;
+            if (active) {
+                if (typeof count==='number') {
+                    this.debugCount= count;
+                }
+            } else {
+                this.debugCount=-1;
+            }
         },
         nextIsProblemAssertion: function() {
             return this.debug && !this.stopped && this.debugCount>=0 
                 && this.debugCount === this.count-1;
         },
-        timeout: function(seconds) {
+        timeoutOnce: function(seconds) {
             var me=this,
-                originalTimeout = me.timeoutSeconds;
+                originalTimeout = me.timeout;
             me.then(function() {
-                me.timeoutSeconds = seconds;
+                me.timeout = seconds;
             });
             me.afterNext(function() {
-                me.timeoutSeconds = originalTimeout;
+                me.timeout = originalTimeout;
             });
         },
         // set options for this test 
@@ -2691,26 +2781,37 @@ define(['./iqtest'], function(u,when,when_timeout, iq_asserts, buster_asserts, u
                     // stop logging all the inevitable timeouts.
                     me.testerror(err,false);
                 },
-                oldPromise = me.promise,
-                newPromise = when.defer();
+                prev = me.promise,
+                next = when.defer();
             
-            newPromise.then(function(){
+            me.promise = next;
+            prev.then(function(val) {
+
                 try {
                     if (me.nextIsProblemAssertion()) {
                         // the next event is the one causing you trouble
                         debugger;
                     }
-                    callback();
+                    callback(val);
                 }
                 catch(err){
                     me.testerror("An error occurred during a 'then' clause of an assertion: "+String(err),true);
                 }
-            }
-                ,errback);
-            me.promise = newPromise;
-            when.chain(oldPromise,newPromise);           
+            },errback);
+
+            
+            when.chain(prev,next);           
 
             return me;
+        },
+        chain: function(callback,errback) {
+            var next = when.defer(),
+                prev = this.promise;
+
+            this.promise = next.promise;
+            prev.then(callback,errback || this.testerror);
+            when.chain(prev,next);
+            return this;
         },
         //TODO
         afterNext: function(callback,errback) {
@@ -2718,10 +2819,12 @@ define(['./iqtest'], function(u,when,when_timeout, iq_asserts, buster_asserts, u
         },
         startTest: function (info) {
             this.count++;
-            u.event(this.itemStart,this,u.extend({},info,
+            // cache the active assertion data
+            this.assertionInfo = u.extend({},info,
             {
                 count: this.count
-            }));
+            });
+            this.doWriterEvent("itemStart",this.assertionInfo);
             this.itemRunning=true;
         },
         endTest: function (result) {
@@ -2738,7 +2841,7 @@ define(['./iqtest'], function(u,when,when_timeout, iq_asserts, buster_asserts, u
                 this.countPassed++;
             }
             this.itemRunning=false;
-            u.event(this.itemEnd,this,output);
+            this.doWriterEvent("itemEnd",output);
         },
         // queue a test that returns true or false
         // will wrap it & pass on to queueTest
@@ -2806,11 +2909,14 @@ define(['./iqtest'], function(u,when,when_timeout, iq_asserts, buster_asserts, u
             }
 
             // special case - must check argument for "resolves"
+
             if (assertionName==='resolves' && !when.isPromise(args[0])) {
                 throw("The argument passed to 'resolves' was not a promise.");
             }
 
-            // wait for any promises or callbacks
+            // check all the arguments to this assertion for promises or callbacks; if any are found,
+            // add to our list of things to do before resolving this assertion.
+
             u.each(args,function(i,arg) {
 
                 // wait for any promises
@@ -2830,31 +2936,27 @@ define(['./iqtest'], function(u,when,when_timeout, iq_asserts, buster_asserts, u
 
             });
 
-
-
-            // notify event handlers
-            // do not replace current promise - this should not be blocking
-
-            me.then(function() {
-
+            // queue a promise that will emit events when the test has started.
+           
+            this.chain(function() {
                 me.startTest({
                     desc: assertMessage(assertion,args),
                     assertion: assertion
                 });
             });
+            
 
-            // wait for everything async that's going on
+            // if there are pending promises, then wait for all those events (in addition to the last promise)
+            // before resolving. Add a timeout on top of it if necessary.
 
             if (pending.length) {
                 pending.push(me.promise);
                 
-                 me.promise = me.timeoutSeconds ? 
-                    when_timeout(deferred.promise,me.timeoutSeconds*1000):
+                me.promise = me.timeout ? 
+                    when_timeout(deferred.promise,me.timeout*1000):
                     deferred.promise;
 
-                //me.promise = deferred.promise;
                 when.chain(when.all(pending),deferred);
-                
             } 
 
 
@@ -2873,10 +2975,12 @@ define(['./iqtest'], function(u,when,when_timeout, iq_asserts, buster_asserts, u
                 }
             },function reject(err) {
                 if (me.itemRunning) {
-                    me.endTest({ passed: false,
-                        desc: String(err)
+                    me.endTest({ 
+                        passed: false,
+                        err: String(err)
                     });
                 }
+                next.reject("The test was stopped because an assertion failed.");
             });
 
 
@@ -2907,7 +3011,7 @@ define(['./iqtest'], function(u,when,when_timeout, iq_asserts, buster_asserts, u
                         // Continue execution to try the assertion again
                         module.apply(null, args);  
                     } else {
-                        this.debug=true;
+                        this.setDebug();
                         err.message = (err.message || err.type) + ". Debugging has been enabled.";
                     }
                 }
@@ -2921,26 +3025,27 @@ define(['./iqtest'], function(u,when,when_timeout, iq_asserts, buster_asserts, u
             this.endTest(result);
             return result.passed;
         },
+        /// add the current test results as properties to the object passed in 
         addResult: function (result) {
 
             var output = u.extend({}, result),
-                    msg = output.passed ?
+                    passfail = output.passed ?
                      "passed" :
                      "failed";
 
             // "Test #[1] [assertEq] [passed|failed] [with result "message"] [in test "test"]
 
             output.count = this.count;
-
-            output.fulltext = u.format('Test #{0} {1}{2}{3}',
+            output.fulltext = u.format('Test #{0} {1} {2} {3}{4}',
                     this.count,
-                    msg,
+                    this.assertionInfo.assertion,
+                    passfail,
                     output.passed ? 
                         '' : 
                         ': ' + result.err,
-                    result.desc ? 
-                        u.format(' in test "{0}"', result.desc) 
-                        : ''
+                    
+                    u.format(' in test "{0}"', this.assertionInfo.desc) 
+                        
                     );
 
             this.results.push(output);
@@ -2955,16 +3060,15 @@ define(['./iqtest'], function(u,when,when_timeout, iq_asserts, buster_asserts, u
             if (me.stopped) {
                 return;
             }
-            me.debugCount = me.count;
             me.stopped=true;
             me.passed=false;
             
-            u.event(me.log,me.group,
+            this.doWriterEvent("testLog",
                 u.format('{0}. {1}',String(err),
                     debug ? 'Debugging is enabled if you start again.' : '' ));
 
             if (debug) {
-                me.debug=true;
+                me.setDebug(true,me.count);
             }
             
 
@@ -2972,7 +3076,7 @@ define(['./iqtest'], function(u,when,when_timeout, iq_asserts, buster_asserts, u
         // create a callback that the next assert will wait for, optionally expiring.
         callback: function(target,timeout) {
             var me=this,
-                t = timeout || me.timeoutSeconds,
+                t = timeout || me.timeout,
                 deferred = when.defer();
 
             // if no timeout is specified, the actual function is already wrapped by a timeout so not needed
@@ -3005,28 +3109,56 @@ define(['./iqtest'], function(u,when,when_timeout, iq_asserts, buster_asserts, u
                 deferred.resolve(value);
             };
         },
+        /*creates a promise bound to the resolution of a callback, and adds it to the
+            assertion queue. usage (note "callback" parameter)
+          
+            this.when(function(callback) {
+                doSomething(arg1,arg2,callback)
+            }).then(function(response) {
+                a.equals(expected,response)
+            });
+
+            
+
+        */
+        when: function(func,timeout) {
+            var t=timeout || this.timeout,
+                next = when.defer(),
+                last = this.promise;
+            
+
+            this.promise = t ? when_timeout(next, t*1000) : next;
+
+            last.then(function() {
+                func.call(this,next.resolve);
+            });
+
+            return this;
+
+        },
         // return a promise from a function that has a callback parameter
         backpromise: function(func,callback,timeout) {
             var defer=when.defer(),
                 me=this,
-                t=timeout || me.timeoutSeconds,
+                t=timeout || me.timeout,
                 cb=function() {
                     var value;
-                    if (me.debug) {
-                        value=callback.apply(this,u.toArray(arguments));
-                    } else {
-                        try
-                        {
+                    if (callback) {
+                        if (me.debug) {
                             value=callback.apply(this,u.toArray(arguments));
-                        }
-                        catch(err)
-                        {
-                            me.testerror("An error occurred in your backpromise() callback: "+err,true);
-                            defer.reject(value);
-                            return;
+                        } else {
+                            try
+                            {
+                                value=callback.apply(this,u.toArray(arguments));
+                            }
+                            catch(err)
+                            {
+                                me.testerror("An error occurred in your backpromise() callback: "+err,true);
+                                defer.reject(value);
+                                return;
+                            }
                         }
                     }
-
                     defer.resolve(value);
                 };
             
@@ -3047,17 +3179,13 @@ define(['./iqtest'], function(u,when,when_timeout, iq_asserts, buster_asserts, u
 
             
             return t ? when_timeout(defer, t*1000) : defer;
-        },
-        testStart: u.donothing,
-        testEnd: u.donothing,
-        itemStart: u.donothing,  
-        itemEnd: u.donothing,
-        log: u.donothing
+        }
+
     };
 
     // PUBLIC API
 
-    return {
+    iqtestApi =  {
         // Create & return a new test group and configure with the options passed
         create: function(name,desc,options) {
             var group = new TestGroup(name,desc,options);
@@ -3070,6 +3198,9 @@ define(['./iqtest'], function(u,when,when_timeout, iq_asserts, buster_asserts, u
         extend: function(assertions) {
             iq_asserts.push(assertions);
         },
+        // library of available writers; each should be a prototype that can be instantiated and exposing the
+        // correct api (see html implementation)
+        writers: {},
         impl: {
             TestGroup: TestGroup,
             Test: Test,
@@ -3077,6 +3208,7 @@ define(['./iqtest'], function(u,when,when_timeout, iq_asserts, buster_asserts, u
             utility: u
         }
     };
+    return iqtestApi;
 });
 }(typeof define === 'function'
     ? define
@@ -3097,7 +3229,10 @@ define(['./iqtest'], function(u,when,when_timeout, iq_asserts, buster_asserts, u
     }
 )); /*
 Assertions for IQ Test (other than buster)
-This doesn't actually require iqtest, so it can be included before or after.
+This requires iqtest to use its utility methods so must be included afterwards
+
+Each assertion should throw an error when called with no args: "Expected 1 argument[s]"
+This is necessary for iqtest to determine the position of the "message" argument
  */
 
 /*jslint eqeqeq:false */
@@ -3163,15 +3298,7 @@ define(function(iqtest) {
             actualArr=actual, 
             expectedArr=expected;
 
-        // // map each "own" property value to an array, which we can then compare directly.
-        // function objToArray(obj)
-        // {
-        //     var arr=[];
-        //     u.each(obj,function(i,el) {
-        //         arr.push(el);
-        //     });
-        //     return arr;
-        // }
+
         // return first index at which arrays differ
         function arraysEqual(obj1,obj2) {
             for (var i=0;i<obj1.length;i++) {
@@ -3191,7 +3318,7 @@ define(function(iqtest) {
             });
         }
 
-        u.expectOpts(2);
+        u.expectOpts(arguments,2);
 
         if (typeof actual !== typeof expected) {
             reason = u.format('the objects are {not}different types (expected is {0}, actual is {1})',typeof expected, typeof actual);
@@ -3234,6 +3361,7 @@ define(function(iqtest) {
     }
     /// compare only value-typed properties
     function valuePropertiesEqual(expected,actual,message) {
+        u.expectOpts(arguments,2);
         return propertiesEqual(expected,actual,message,true);
     }
 
@@ -3262,135 +3390,196 @@ define(function(iqtest) {
 
 
 /*
-	A harness for iqtest
+	An HTML output writer for iqtest
 
 	Uses options on the TestGroup:
 	groupTemplate: {name} = group name
 	testTemplate: {name} = test name, {desc} = simple failure description
 	itemTemplate: {fulltext} 
 
+	This should append itself to iqtest.writers.xxx
+
 */
-/*global iqtest */
+/*global iqtest, when */
+/*jslint smarttabs:true  */
 
 (function(iqtest) {
-	var u = iqtest.impl.utility, 
-		tpl = {
-			group:'<pre><h1>Starting test group "<iq-name></iq-name>": <iq-groupresult></iq-groupresult></h1>'+
+	var u = iqtest.impl.utility,
+		options = {
+			group:'<pre><h1>Starting test group "<span class="test-name"></span>": <span class="test-groupstatus"></span></h1>'+
 				'<div><div></div></div></pre>',
-			testStart: '<h2>Starting test "<iq-name></iq-name>": <iq-testresult></iq-testresult></h2><div></div>',
-			testEnd: '<h3><iq-count></iq-count> assertions passed.</h3>',
-			itemStart: '<span style="color: blue;font-style: italic;">#<iq-count></iq-count>: '
-					+'<iq-assertion></iq-assertion> "<iq-desc></iq-desc>"....</span><br/>',
-			itemEnd: '<span><iq-fulltext></iq-fulltext></span><br/>',
-			resultSuccess: '<span style="color:green"><iq-resulttext></iq-resulttext></span>',
-			resultFail:'<span style="color:red"><iq-resulttext></iq-resulttext></span>',
-			log: '<span style="color:purple"><iq-message></iq-message></span><br/>'
+			testStart: '<h2>Starting test "<span class="test-name"></span>": <span class="test-teststatus"></span></h2><div></div>',
+			testEnd: '<h3><span class="test-count"></span> assertions passed.</h3>',
+			itemStart: '<span style="color: blue;font-style: italic;">#<span class="test-number"></span>: '
+					+'<span class="test-assertion"></span> "<span class="test-message"></span>"....</span><br/>',
+			itemEnd: '<span class="test-failmessage"></span><br/>',
+			log: '<span style="color:purple"><span class="test-logmessage"></span><br/>',
+			// the following are just formats 
+			resultSuccess: '<span style="color:green"></span>',
+			resultFail:'<span style="color:red"></span>',
+			showPassed: false
+			
 		};
 	
-	iqtest.templates=tpl;
-
-
-	u.tmpReplace=function(el,obj){
-		u.each(obj,function(i,e) {
-			if (typeof e === 'string' || typeof e === 'number') {
-				var replaceEl = el.find('iq-'+i.toLowerCase());
-				replaceEl.replaceWith(	
-					u.format('<span>{0}</span>',e)
-				);
-				
+	// replace every element in "el" containing class "test-*" with the value of properties "*"
+	function tmpReplace(el,obj){
+		var sel,replaceEl,prop;
+		for (prop in obj) {
+			if (obj.hasOwnProperty(prop)) {
+				sel = '.test-'+prop.toLowerCase();
+				replaceEl = $(sel,el);
+				if (!replaceEl.length) {
+					replaceEl=$(el).filter(sel);
+				}
+				replaceEl.empty().append(obj[prop]);				
 			}
-		});
+		}
 		return el;
-	};
-	function getResultOutput(passed) {
-		var tmpl = passed ? tpl.resultSuccess: tpl.resultFail;
-		return u.tmpReplace($(tmpl),{resulttext: passed ? "Passed":"Failed"});
-
 	}
-	u.extend(iqtest.impl.TestGroup.prototype,
-	{
-		writer: function(el) {
-			var wrap = $(el);
-			//wrap.empty();
 
-			this.outputTarget = wrap;
-			return this;
-		},
-		groupStart: function(group) {
-			var groupWrapper = u.tmpReplace($(tpl.group).clone(),group);
-			this.outputTarget.append(groupWrapper);
-			// should be the innermost div
-			this.groupWrapper = groupWrapper;
-			this.target = groupWrapper.find('div:only-child:last');
+	function getResultOutput(passed) {
+		var tmpl = passed ? options.resultSuccess: options.resultFail;
+		
+		return $(tmpl).text(passed ? "Passed":"Failed");
+	}
 
-		},
-		groupEnd: function(group) {
-			var result = getResultOutput(group.passed);
-			this.groupWrapper.find('iq-groupresult').replaceWith(result);
-		},
-		render: function(el) {
-			this.outputTarget = el;
-			u.each(this.tests,function(i,test) {
-				test.render();
+	/* Implementation */
+
+	function groupStart(group) {
+		var groupWrapper = tmpReplace($(options.group).clone(),{
+			name: group.name,
+			groupstatus: "Running"
+		});
+
+		this.container.append(groupWrapper);
+		
+		// should be the innermost div
+		this.groupWrapper = groupWrapper;
+		this.groupContainer = groupWrapper.find('div:only-child:last');
+	}
+	function groupEnd(group) {
+		tmpReplace(this.groupWrapper,{
+			groupstatus: getResultOutput(group.passed)
+		});
+	}
+
+	function testStart(test) {
+			
+		var testData = this.getTestData(test.id),
+			content= tmpReplace($(options.testStart).clone(),{
+				name: test.name,
+				teststatus: "Running"
 			});
 
-		}
-	});
+		testData.testWrapper = content;
+		testData.testContainer = content.filter('div');
 
-	u.extend(iqtest.impl.Test.prototype,
+		this.groupContainer.append(content);
+	}
+
+	function testEnd(test) {
+		var testData = this.getTestData(test.id),
+			content = tmpReplace($(options.testEnd).clone(),{
+				count: test.count
+			});
+
+		testData.testContainer.append(content);
+		
+		tmpReplace(testData.testWrapper, {
+			teststatus: getResultOutput(test.passed)
+		});
+	}
+
+	function itemStart(test,testinfo)
 	{
-		testStart: function(test) {
-			
-			var content= u.tmpReplace($(tpl.testStart).clone(),test);
-			this.target = content.filter('div');
-			this.group.target.append(content);
-		},
-		testEnd: function(test) {
-			var result,
-				content = u.tmpReplace($(tpl.testEnd).clone(),test);
-			this.target.append(content);
-			
-			result = getResultOutput(test.passed);
-			this.target.find('iq-testresult').replaceWith(result);
-		},
-		itemStart: function(testinfo)
-		{
-			var tempItem= u.tmpReplace($(tpl.itemStart),testinfo);
-			this.itemTarget = tempItem;
-			this.target.append(tempItem);
-		},
-		itemEnd: function(response) {
-			// this can get called without itemStart (prob should create a different kind of event for errors but...)
+		var testData = this.getTestData(test.id),
+			tempItem= tmpReplace($(options.itemStart).clone(),{
+				number: testinfo.count,
+				assertion: testinfo.assertion,
+				message: testinfo.desc
+			});
 
-			if (response.passed) {
-				if (!this.showPassed) {
-					this.itemTarget.remove();
-				}
-			} else {
-				this.itemTarget.replaceWith(u.tmpReplace($(tpl.itemEnd).clone(),response));
+		testData.itemTarget = tempItem;
+		testData.testContainer.append(tempItem);
+	}
+	function itemEnd(test,response) {
+		// this can get called without itemStart (prob should create a different kind of event for errors but...)
+		var testData = this.getTestData(test.id);
+
+		if (response.passed) {
+			if (!options.showPassed) {
+				testData.itemTarget.remove();
 			}
-			this.itemTarget=null;
-			response.written=true;
-		},
-		log: function(message) {
-			this.target.append(u.tmpReplace($(tpl.log).clone(),{message: message}));
-		},
-		render: function() {
-			var me=this;
-
-			u.each(me.results,function(i,result) {
-				if (!result.written) {
-					u.event(this.group.itemEnd,this.group,result);
-				}
-			});
+		} else {
+			testData.itemTarget.replaceWith(tmpReplace($(options.itemEnd).clone(),{
+				failmessage: response.fulltext
+			}));
 		}
-	});
+		testData.itemTarget=null;
+		response.written=true;
+	}
+	function testLog(test,message) {
+		var testData = this.getTestData(test.id);
+		testData.testContainer.append(tmpReplace($(options.log).clone(),{
+			logmessage: message
+		}));
+	}
+	//	function render() {
+	//	var me=this;
+
+	//	u.each(me.results,function(i,result) {
+	//		if (!result.written) {
+	//		.event(this.group.itemEnd,this.group,result);
+	//	}
+	//	});
+	//	}
+
+	// ensure that errors don't ever cause a promise to fail. errors in the harness should always
+	// cause execution to stop.
+
+	function safeMethod(method) {
+		return function() {
+			var error;
+			try {
+				method.apply(this,u.toArray(arguments));
+			}
+			catch(err) {
+				when.debug=true;
+				throw error;
+			}
+		};
+	}
+	function HtmlWriter(container, opts) {
+		// when added to a TestGroup, the group should assign itself to owner
+		this.owner=null;
+		this.container=container;
+		this.tests={};
+
+		if (typeof opts==='object') {
+			$.extend(options,opts);
+		}
+	}
+
+	HtmlWriter.prototype = {
+		constructor: HtmlWriter,
+		groupStart: safeMethod(groupStart),
+		groupEnd: safeMethod(groupEnd),
+		testStart: safeMethod(testStart),
+		testEnd: safeMethod(testEnd),
+		itemStart: safeMethod(itemStart),
+		itemEnd: safeMethod(itemEnd),
+		testLog: safeMethod(testLog),
+		// internal api
+		getTestData: function(id) {
+			if (!this.tests[id]) {
+				this.tests[id]={};
+			}
+			return this.tests[id];
+		}
+	};
 
 
-	iqtest.writer =function (el) {
-         var group = new iqtest.impl.TestGroup();
-         group.writer(el);
-         return group;
-    };
+	iqtest.writers.html = HtmlWriter;
+
 }(iqtest));
 

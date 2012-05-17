@@ -91,12 +91,19 @@
         me._addShapeGroupImpl(areaData, mode,opts);
         me.render();
         if (opts.fade) {
-           //if (m.hasCanvas)
-           //{
-           //     u.setOpacity(canvas.find('.mapster_mask'),1);
-           //}
+            
+            // fading requires special handling for IE. We must access the fill elements directly. The fader also has to deal with 
+            // the "opacity" attribute (not css)
 
-           u.fader(canvas,0, (m.hasCanvas ? 1 : opts.fillOpacity), opts.fadeDuration);
+            u.fader(m.hasCanvas ? 
+                canvas : 
+                $(canvas).find('._fill').not('.mapster_mask'),
+            0,
+            m.hasCanvas ? 
+                1 : 
+                opts.fillOpacity,
+            opts.fadeDuration); 
+           
         }
 
     };
@@ -262,12 +269,23 @@
             };
 
         } else {
+            // special handling is needed for opacity in VML elements. jQuery CSS does not properly
+            // deal with "opacity" attribute of VML fills.
+            u.setOpacity = function(el,opacity) {         
+                $(el).each(function(i,e) {
+                    if (typeof e.opacity !=='undefined') {
+                       e.opacity=opacity;
+                    } else {
+                        $(e).css("opacity",opacity);
+                    }
+                });
+            };
             p.renderShape = function (mapArea, options, cssclass) {
                 var me = this, stroke, e, t_fill, el_name, el_class, template, c = mapArea.coords();
                 el_name = me.elementName ? 'name="' + me.elementName + '" ' : '';
                 el_class = cssclass ? 'class="' + cssclass + '" ' : '';
 
-                t_fill = '<v:fill color="#' + options.fillColor + '" opacity="' + (options.fill ? options.fillOpacity : 0) + '" /><v:stroke opacity="' + options.strokeOpacity + '"/>';
+                t_fill = '<v:fill color="#' + options.fillColor + '" class="_fill" opacity="' + (options.fill ? options.fillOpacity : 0) + '" /><v:stroke class="_fill" opacity="' + options.strokeOpacity + '"/>';
 
                 if (options.stroke) {
                     stroke = 'strokeweight=' + options.strokeWidth + ' stroked="t" strokecolor="#' + options.strokeColor + '"';

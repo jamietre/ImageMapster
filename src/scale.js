@@ -46,11 +46,13 @@
         }
         return this.getScaleInfo(vis, scale ? raw : null);
     };
+    
     // options: duration = animation time (zero = no animation)
-    // force: supercede any existing animation
-    // css = any css to be applied to the wrapper
-    m.MapData.prototype.resize = function (newWidth, newHeight, effectDuration) {
-        var highlightId, ratio, width, height, duration, opts = {}, newsize, els, me = this;
+    
+    m.MapData.prototype.resize = function (newWidth, newHeight, effectDuration, callback) {
+        var highlightId, ratio, width, height, duration, opts = {
+            callback: callback || effectDuration
+        }, newsize, els, me = this;
         
         function sizeCanvas(canvas, w, h) {
             if ($.mapster.hasCanvas) {
@@ -73,7 +75,6 @@
                 areaData.tempOptions = null;
             }
             sizeCanvas(me.base_canvas, width, height);
-            
             me.redrawSelections();
             
             me.currentAction = '';
@@ -135,7 +136,7 @@
         if (!$.mapster.hasCanvas) {
             $(me.base_canvas).children().remove();
         }
-        els = $(me.wrapper).find('.mapster_el');
+        els = $(me.wrapper).find('.mapster_el').add(me.wrapper);
 
       
 

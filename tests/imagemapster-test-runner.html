@@ -7,6 +7,7 @@
     <script type="text/javascript" src="redist/common.utils.1.0.js"></script>
     <script type="text/javascript" src="redist/iqtest-browser-default.js" ></script>
     <script type="text/javascript" src="core.tests.js" ></script>
+    <script type="text/javascript" src="resize.tests.js" ></script>
     <script type="text/javascript" src="migrated.tests.js" ></script>
     
 
@@ -23,19 +24,33 @@
 <body>
 <script type="text/javascript">
     /*jslint onevar: false */
-    /*global tests, when, iqtest */
+    /*global tests, when, iqtest,u */
 
     // the "tests" variable is created or populated by each included test.
 
     var allSel = 'input[type="checkbox"]',
         checkedSel = 'input[type="checkbox"]:checked',
         runCount = 0,
-        group = iqtest.writer($('#wrap'));
+        activeGroups=[];
 
     function enableTestLink() {
         $('#startTest').toggle(!!$(checkedSel).length);
     }
+    function runActiveGroups(nextIndex,lastIndex) {
+        var next = nextIndex || 0,
+            last = lastIndex || activeGroups.length-1,
+            cur = activeGroups[next];
 
+        cur.run().then(function() {
+            if (next<last) {
+                // use a timer to break the promise chain between test groups.
+                window.setTimeout(function() {
+                    runActiveGroups(next+1,last);
+                },50);
+            }
+        });
+
+    }
     function startTests() {
         var testGroups,
             stopped = false;
@@ -47,11 +62,12 @@
 
         if (runCount > 0) {
             $('#oldRuns').append($('<hr />Prior Test Run #' + runCount + '<hr />'))
-            .append($('#wrap').children());
+                .append($('#wrap').children());
+            
+            $('#wrap').empty();
         }
         runCount++;
-
-        group.clear();
+        activeGroups=[];
 
         testGroups= $('input[type="checkbox"]:checked');
         testGroups.each(function (i, e) {
@@ -68,13 +84,14 @@
                 error("Couldn't find a test named '" + testName + "'");
                 return;
             }
-            debugger;
-            cur.writer($('#wrap')).run();
-            //group.add(cur);
+            
+            activeGroups.push(cur);
+
         });
+
+        runActiveGroups();
        
         if (!stopped) {
-            //group.run();
             $('#rerunTest').show();
         }
 
@@ -111,19 +128,24 @@
         enableTestLink();
 
         $('#rerunTest').bind('click', function (e) {
-            group.run();
+            runActiveGroups();
         }).hide();
         
         $('#startTest').bind('click',startTests);
     }
 
+    function configureTests() {
+        tests.forEach(function(e) {
+            e.writer("html",$('#wrap'));
+        });
+       
+    }
     $(document).ready(function () {
 
         
-        group =iqtest.writer($('#wrap'));
-        
         buildCheckboxList();
         bindUIEvents();
+        configureTests();
 
     });
 
@@ -157,7 +179,7 @@
 <a href="#" id="toggleTestImage">show/hide test image</a>
 
 <div id="testElements" style="margin-top: 20px; border: 1px solid black; display: none;">
-    <img id="usa_image" src="usa_map_720.png" width="720" height="445" usemap="#usa" >
+    <img id="usa_image" src="images/usa_map_720.png" width="720" height="445" usemap="#usa" >
 <map id="usa_image_map" name="usa">
     <area href="#" state="ME,new-england,really-cold" full="Maine" shape="poly" coords="669,71,671,72,672,75,672,76,671,80,669,80,667,83,663,86,660,85,659,86,658,87,657,88,659,89,658,89,658,92,656,92,656,90,656,89,655,89,653,87,652,88,653,89,653,90,653,91,653,93,653,95,652,96,650,97,650,98,646,101,644,101,644,100,641,103,642,105,641,106,641,110,640,115,638,114,638,112,635,111,635,109,629,92,626,81,628,81,629,81,629,80,629,75,631,72,632,69,631,68,631,63,632,62,632,60,632,59,632,56,633,52,635,46,637,43,638,43,638,43,638,44,639,45,641,46,642,45,642,44,645,42,647,41,647,41,652,43,653,44,659,65,664,65,665,67,665,70,667,72,668,72,668,71,667,71,669,71">
     <area href="#" state="ME,new-england,really-cold" shape="poly" coords="654,92,655,92,656,92,656,94,655,95,654,92">

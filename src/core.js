@@ -50,7 +50,7 @@ A jQuery plugin to enhance image maps.
     };
 
     $.mapster = {
-        version: "1.2.4.065",
+        version: "1.2.4.066",
         render_defaults: {
             isSelectable: true,
             isDeselectable: true,
@@ -170,19 +170,6 @@ A jQuery plugin to enhance image maps.
                 }
                 return arr;
             },
-            setOpacity: function (e, opacity) {
-                if (!$.mapster.hasCanvas) {
-                    var el = $(e);
-                    el.children()
-                        .add(el)
-                        .not('.mapster_mask')
-                        .each(function(i,e) {
-                            e.style.filter = 'Alpha(opacity=' + String(opacity * 100) + ');';
-                        });
-                } else {
-                    e.style.opacity = opacity;
-                }
-            },
             // similar to $.extend but does not add properties (only updates), unless the
             // first argument is an empty object, then all properties will be copied
             updateProps: function (_target, _template) {
@@ -255,6 +242,16 @@ A jQuery plugin to enhance image maps.
                     complete: function() { return !!this.height && !!this.width;}
                 };
             },
+
+            // basic function to set the opacity of an element. 
+            // this gets monkey patched by the graphics module when running in IE6-8
+
+            setOpacity: function (el, opacity) {
+                el.style.opacity = opacity;
+            },
+
+            // fade "el" from opacity "op" to "endOp" over a period of time "duration"
+            
             fader: (function () {
                 var elements = {},
                         lastKey = 0,

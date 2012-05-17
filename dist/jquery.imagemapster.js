@@ -50,7 +50,7 @@ A jQuery plugin to enhance image maps.
     };
 
     $.mapster = {
-        version: "1.2.4.065",
+        version: "1.2.4.066",
         render_defaults: {
             isSelectable: true,
             isDeselectable: true,
@@ -170,19 +170,6 @@ A jQuery plugin to enhance image maps.
                 }
                 return arr;
             },
-            setOpacity: function (e, opacity) {
-                if (!$.mapster.hasCanvas) {
-                    var el = $(e);
-                    el.children()
-                        .add(el)
-                        .not('.mapster_mask')
-                        .each(function(i,e) {
-                            e.style.filter = 'Alpha(opacity=' + String(opacity * 100) + ');';
-                        });
-                } else {
-                    e.style.opacity = opacity;
-                }
-            },
             // similar to $.extend but does not add properties (only updates), unless the
             // first argument is an empty object, then all properties will be copied
             updateProps: function (_target, _template) {
@@ -255,6 +242,16 @@ A jQuery plugin to enhance image maps.
                     complete: function() { return !!this.height && !!this.width;}
                 };
             },
+
+            // basic function to set the opacity of an element. 
+            // this gets monkey patched by the graphics module when running in IE6-8
+
+            setOpacity: function (el, opacity) {
+                el.style.opacity = opacity;
+            },
+
+            // fade "el" from opacity "op" to "endOp" over a period of time "duration"
+            
             fader: (function () {
                 var elements = {},
                         lastKey = 0,
@@ -490,6 +487,7 @@ A jQuery plugin to enhance image maps.
         function merge_options(map_data, options) {
             var temp_opts = u.updateProps({}, options);
             delete temp_opts.areas;
+
             u.updateProps(map_data.options, temp_opts);
 
             merge_areas(map_data, options.areas);
@@ -1031,12 +1029,19 @@ A jQuery plugin to enhance image maps.
         me._addShapeGroupImpl(areaData, mode,opts);
         me.render();
         if (opts.fade) {
-           //if (m.hasCanvas)
-           //{
-           //     u.setOpacity(canvas.find('.mapster_mask'),1);
-           //}
+            
+            // fading requires special handling for IE. We must access the fill elements directly. The fader also has to deal with 
+            // the "opacity" attribute (not css)
 
-           u.fader(canvas,0, (m.hasCanvas ? 1 : opts.fillOpacity), opts.fadeDuration);
+            u.fader(m.hasCanvas ? 
+                canvas : 
+                $(canvas).find('._fill').not('.mapster_mask'),
+            0,
+            m.hasCanvas ? 
+                1 : 
+                opts.fillOpacity,
+            opts.fadeDuration); 
+           
         }
 
     };
@@ -1202,12 +1207,23 @@ A jQuery plugin to enhance image maps.
             };
 
         } else {
+            // special handling is needed for opacity in VML elements. jQuery CSS does not properly
+            // deal with "opacity" attribute of VML fills.
+            u.setOpacity = function(el,opacity) {         
+                $(el).each(function(i,e) {
+                    if (typeof e.opacity !=='undefined') {
+                       e.opacity=opacity;
+                    } else {
+                        $(e).css("opacity",opacity);
+                    }
+                });
+            };
             p.renderShape = function (mapArea, options, cssclass) {
                 var me = this, stroke, e, t_fill, el_name, el_class, template, c = mapArea.coords();
                 el_name = me.elementName ? 'name="' + me.elementName + '" ' : '';
                 el_class = cssclass ? 'class="' + cssclass + '" ' : '';
 
-                t_fill = '<v:fill color="#' + options.fillColor + '" opacity="' + (options.fill ? options.fillOpacity : 0) + '" /><v:stroke opacity="' + options.strokeOpacity + '"/>';
+                t_fill = '<v:fill color="#' + options.fillColor + '" class="_fill" opacity="' + (options.fill ? options.fillOpacity : 0) + '" /><v:stroke class="_fill" opacity="' + options.strokeOpacity + '"/>';
 
                 if (options.stroke) {
                     stroke = 'strokeweight=' + options.strokeWidth + ' stroked="t" strokecolor="#' + options.strokeColor + '"';
@@ -2553,7 +2569,6 @@ A jQuery plugin to enhance image maps.
                 areaData.tempOptions = null;
             }
             sizeCanvas(me.base_canvas, width, height);
-            
             me.redrawSelections();
             
             me.currentAction = '';
@@ -2615,7 +2630,7 @@ A jQuery plugin to enhance image maps.
         if (!$.mapster.hasCanvas) {
             $(me.base_canvas).children().remove();
         }
-        els = $(me.wrapper).find('.mapster_el');
+        els = $(me.wrapper).find('.mapster_el').add(me.wrapper);
 
       
 
@@ -2794,7 +2809,7 @@ A jQuery plugin to enhance image maps.
 (function ($) {
     var m = $.mapster, u = m.utils;
     $.extend(m.defaults, {
-        toolTipContainer: '<div class="mapster-tooltip" style="border: 2px solid black; background: #EEEEEE; position:absolute; width:160px; padding:4px; margin: 4px; -moz-box-shadow: 3px 3px 5px #535353; ' +
+        toolTipContainer: '<div style="border: 2px solid black; background: #EEEEEE; position:absolute; width:160px; padding:4px; margin: 4px; -moz-box-shadow: 3px 3px 5px #535353; ' +
         '-webkit-box-shadow: 3px 3px 5px #535353; box-shadow: 3px 3px 5px #535353; -moz-border-radius: 6px 6px 6px 6px; -webkit-border-radius: 6px; ' +
         'border-radius: 6px 6px 6px 6px;"></div>',
         showToolTip: false,
