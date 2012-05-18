@@ -2126,10 +2126,11 @@ James Treworgy
         }
 
         u = {
-            // when onlyInSource is true, properties will not be added - only updated
+            // when onlyInTarget is true, properties will not be added - only updated
             // passing a falsy value as the target results in a new object being created
-            // and onlyInTarget is irrelevant
-            extend: function (target) {
+            // and onlyInTarget is ignored (properties must be added to a new object)
+
+            extend: function (target /*[,onlyInTarget]*/) {
                 var prop, source, sources, i,
                 li = arguments.length,
                 lastBool = u.isBool(arguments[li - 1]),
@@ -2272,7 +2273,12 @@ MIT License
 (function(define) {
 
 define(['./iqtest'], function(u,when,when_timeout, iq_asserts, buster_asserts, utils) {
-    var iqtestApi,Test, TestGroup, Assert,
+    var options,iqtestApi,Test, TestGroup, Assert,
+    globalDefaults = {
+        setup: null,
+        teardown: null,
+        timeout: 10
+    },
     // default values for TestGroup
     groupDefaults = {
 
@@ -2284,7 +2290,8 @@ define(['./iqtest'], function(u,when,when_timeout, iq_asserts, buster_asserts, u
         
          // when true, will not trap errors in the test itself.
         debug: false,
-        timeout: 10,        
+        // timeout for function execution (null inherits)
+        timeout: null,
         // functions to run on setup or teardown
         setup: null,
         teardown: null
@@ -2295,7 +2302,7 @@ define(['./iqtest'], function(u,when,when_timeout, iq_asserts, buster_asserts, u
         name: "test",
         desc: "Unnamed Test",
         func: null,
-        timeout: 10,
+        timeout: null,
         // there is a test-specific debug option so that currently running tests will remain
         // in non-debug mode after another one fails
         debug: false
@@ -2427,7 +2434,7 @@ define(['./iqtest'], function(u,when,when_timeout, iq_asserts, buster_asserts, u
 
     // u needs to be imported from common.utils
 
-    $.extend(u, {
+    u.extend(u, {
         event: function(func,that,parm) {
             if (u.isFunction(func)) {
                 func.call(that,parm);
@@ -2460,6 +2467,22 @@ define(['./iqtest'], function(u,when,when_timeout, iq_asserts, buster_asserts, u
         if (obj[method]) {
             obj[method].apply(this,u.toArray(arguments,2));
         }
+    }
+    
+    // return a delegate to a function with the specified context
+    // if any additional arguments are passed when the func is actually called, they come first
+
+    function bind(context,func /*[,args]*/) {
+        var args=u.toArray(arguments,2);
+        return function() {
+            // "arguments" here is what the delegate was ultimately invoked with.
+            var finalArgs = u.toArray(arguments).concat(args);
+            if (finalArgs.length>0) {
+                func.apply(context,finalArgs);
+            } else {
+                func.call(context);
+            }
+        };
     }
     // create a new prototype from arbitrary arguments
 
@@ -2809,7 +2832,7 @@ define(['./iqtest'], function(u,when,when_timeout, iq_asserts, buster_asserts, u
                 prev = this.promise;
 
             this.promise = next.promise;
-            prev.then(callback,errback || this.testerror);
+            prev.then(callback,errback || bind(this,this.testerror));
             when.chain(prev,next);
             return this;
         },
@@ -3056,16 +3079,23 @@ define(['./iqtest'], function(u,when,when_timeout, iq_asserts, buster_asserts, u
         // when the debugging parm is true, will enable debugging for the group
         testerror: function(err, debug) {
             var me=this;
-            
-            if (me.stopped) {
-                return;
+            try {
+                
+                if (me.stopped) {
+                    return;
+                }
+                me.stopped=true;
+                me.passed=false;
+                
+                this.doWriterEvent("testLog",
+                    u.format('{0}. {1}',String(err),
+                        debug ? 'Debugging is enabled if you start again.' : '' ));
             }
-            me.stopped=true;
-            me.passed=false;
-            
-            this.doWriterEvent("testLog",
-                u.format('{0}. {1}',String(err),
-                    debug ? 'Debugging is enabled if you start again.' : '' ));
+            catch(e) {
+                // this is basically a fatal error. Not much else to do.
+                debugger;
+                 
+            }
 
             if (debug) {
                 me.setDebug(true,me.count);
@@ -3073,6 +3103,7 @@ define(['./iqtest'], function(u,when,when_timeout, iq_asserts, buster_asserts, u
             
 
         },
+
         // create a callback that the next assert will wait for, optionally expiring.
         callback: function(target,timeout) {
             var me=this,
@@ -3109,7 +3140,8 @@ define(['./iqtest'], function(u,when,when_timeout, iq_asserts, buster_asserts, u
                 deferred.resolve(value);
             };
         },
-        /*creates a promise bound to the resolution of a callback, and adds it to the
+        
+        /*  creates a promise bound to the resolution of a callback, and adds it to the
             assertion queue. usage (note "callback" parameter)
           
             this.when(function(callback) {
@@ -3117,24 +3149,51 @@ define(['./iqtest'], function(u,when,when_timeout, iq_asserts, buster_asserts, u
             }).then(function(response) {
                 a.equals(expected,response)
             });
-
-            
-
+        
         */
+
         when: function(func,timeout) {
-            var t=timeout || this.timeout,
+            var me=this,
+                t=timeout || me.timeout,
                 next = when.defer(),
-                last = this.promise;
+                last = me.promise;
             
 
-            this.promise = t ? when_timeout(next, t*1000) : next;
+            me.promise = t ? when_timeout(next, t*1000) : next;
+
+            // this promise will chain upon successful resolution of the callback to "next"
+            // however we still need a failure handler for "last" becase an error in "func"
+            // could cause it to never resolve. This is better than timing out.
 
             last.then(function() {
-                func.call(this,next.resolve);
+                func.call(me,next.resolve);
+            }).then(null,function(err) {
+                me.testerror("An error occured during a 'when' operand: " + String(err),true);
+                next.reject();
             });
 
-            return this;
+            return me;
+        },
 
+        // create a new deferred object (same as when.defer) and bind completion of the tests to its
+        // resolution
+
+        defer: function(callback,timeout) {
+            var me = this,
+                next = when.defer(),
+                t = timeout || me.timeout;
+            
+            // just replace the active promise -- there is no dependency on the prior
+            // promise because user code is responsible for resolving this promise.
+
+            me.promise = t ? when_timeout(next, t*1000) : next;
+
+            if (callback) {
+                // we don't need to bind an error handler to the callback because this is now
+                // the last promise on the chain.
+                next.then(callback);
+            }
+            return next;
         },
         // return a promise from a function that has a callback parameter
         backpromise: function(func,callback,timeout) {
@@ -3183,21 +3242,35 @@ define(['./iqtest'], function(u,when,when_timeout, iq_asserts, buster_asserts, u
 
     };
 
+    // Global configuration
+
+    options = u.extend({},globalDefaults);
+
     // PUBLIC API
 
     iqtestApi =  {
         // Create & return a new test group and configure with the options passed
-        create: function(name,desc,options) {
-            var group = new TestGroup(name,desc,options);
+        create: function(name,desc,groupOpts) {
+            var finalOpts = u.extend({
+                timeout: options.timeout,
+                setup: options.setup,
+                teardown: options.teardown
+            },groupOpts);
+
+            var group = new TestGroup(name,desc,finalOpts);
             return group;
         },
-
         add: function () {
             return this.add.apply(this,u.toArray(arguments));
         },
         extend: function(assertions) {
             iq_asserts.push(assertions);
         },
+        // configure global options.
+        configure: function(newOpts) {
+            u.extend(options,newOpts,true);
+        },
+        options: options,
         // library of available writers; each should be a prototype that can be instantiated and exposing the
         // correct api (see html implementation)
         writers: {},
@@ -3217,7 +3290,7 @@ define(['./iqtest'], function(u,when,when_timeout, iq_asserts, buster_asserts, u
             module.exports = factory(require('./when'),
                 require('./timeout'),
                 require('./buster-assertions'),
-                require('./trewtech.utils')
+                require('./common.utils')
                 );
         } else {
             if (!this.iqtest_assertions) {
@@ -3369,9 +3442,9 @@ define(function(iqtest) {
         // Two things should have the same contents. If this is an object, the values of each property must be identical.
         // if an array, they must have the same elements, but order is irrelevant.
         // If a string, it is split on commas and treated as a CSV. 
-        contentsEqual: contentsEqual,
-        propertiesEqual: propertiesEqual,
-        valuePropertiesEqual: valuePropertiesEqual
+        collectionEquals: contentsEqual,
+        propertyEquals: propertiesEqual,
+        propertyValueEquals: valuePropertiesEqual
     };
 
 

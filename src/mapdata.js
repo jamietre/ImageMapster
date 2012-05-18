@@ -96,7 +96,7 @@
         };
 
         this.mouseout = function (e) {
-            var key, newArea,ar = me.getDataForArea(this),
+            var newArea,ar = me.getDataForArea(this),
                     opts = me.options;
 
 
@@ -120,7 +120,7 @@
                 {
                     e: e,
                     options: opts,
-                    key: key,
+                    key: ar.key,
                     selected: ar.isSelected()
                 });
             }

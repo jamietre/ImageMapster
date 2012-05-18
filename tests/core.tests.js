@@ -4,7 +4,7 @@
 this.tests = this.tests || [];
 
 this.tests.push(
-    iqtest.create("core","tests for core/common functionality")
+    iqtest.create("utility","tests for core/common functionality")
     .add("Utility Functions", function (a, r) {
         var result,
             mu = $.mapster.utils;

@@ -1,46 +1,9 @@
-/*global Test: true, iqtest */
+/*global iqtest, map_options */
 /*jslint onevar: false */
 
 this.tests = this.tests || [];
 (function() {
-    var map_options = {
-        isSelectable: true,
-        singleSelect: false,
-        mapKey: 'state',
-        mapValue: 'full',
-        listKey: 'name',
-        listSelectedAttribute: 'checked',
-        sortList: "asc",
-        showToolTip: true,
-        toolTipClose: ["area-mouseout"],
-        areas: [
-        {
-            key: "TX",
-            selected: true
-        }
-        ,
-        {
-            key: "AK",
-            isSelectable: false,
-            selected: true
-        }
-        ,
-        {
-            key: "WA",
-            staticState: true
-        }
-        ,
-        {
-            key: "OR",
-            staticState: false
-        },
-        {
-            key: "CA",
-            toolTip: $('<div>Don\'t mess with Louisiana. Why ? <a href = "http://dontmesswithtexas.org/" target="_blank" > Click here </a> for more info. </div> ')
-        }
-
-        ]
-    };
+  
     function attrMatches(jq, attr, matches) {
         var list = matches.split(','), result = $();
         jq.each(function () {
@@ -120,7 +83,7 @@ this.tests = this.tests || [];
             var expectedNewOpts = $.extend({},initialOpts);
             expectedNewOpts.isSelectable = false;
 
-            a.valuePropertiesEqual(opts,expectedNewOpts, "Options retrieved match updated value");
+            a.propertyValueEquals(opts,expectedNewOpts, "Options retrieved match updated value");
             a.equals(opts.areas.length, 6, "Area option was added");
 
             // restore original options before continuing
@@ -134,7 +97,7 @@ this.tests = this.tests || [];
 
             // This test should NOT show "WA" because StaticState items are not considered "selected"
 
-            a.contentsEqual(selected, "AK,TX", "Initially selected items returned with 'get'");
+            a.collectionEquals(selected, "AK,TX", "Initially selected items returned with 'get'");
 
 
             selected = map.mapster('get', 'TX');
@@ -149,23 +112,23 @@ this.tests = this.tests || [];
 
             attrMatches($('area'), "state", "AK,HI,LA").mapster('set', true);
             var area_sel = map.mapster('get');
-            a.contentsEqual(area_sel, "HI,AK,LA,TX", "Set using area works");
+            a.collectionEquals(area_sel, "HI,AK,LA,TX", "Set using area works");
 
             map.mapster('set', false, 'LA,TX');
-            a.contentsEqual("HI,AK", map.mapster('get'), "unset using keys works");
+            a.collectionEquals("HI,AK", map.mapster('get'), "unset using keys works");
 
             map.mapster('set', true, 'ME,OH,TX');
-            a.contentsEqual("HI,AK,ME,OH,TX", map.mapster('get'), "set using keys works");
+            a.collectionEquals("HI,AK,ME,OH,TX", map.mapster('get'), "set using keys works");
 
             // test toggling: AK should go off, MT should go on
             attrMatches($('area'), "state", "AK,MT").mapster('set');
-            a.contentsEqual("HI,ME,OH,TX,MT", map.mapster('get'), "toggling keys works");
+            a.collectionEquals("HI,ME,OH,TX,MT", map.mapster('get'), "toggling keys works");
 
             // test clicking
             $('area[state="AZ"]').first().click();
             selected = map.mapster('get', 'AZ');
             a.equals(true, selected, "Click-selected area returned 'get'");
-            a.contentsEqual("HI,ME,OH,TX,MT,AZ", map.mapster('get'), "Complete list returned with 'get'");
+            a.collectionEquals("HI,ME,OH,TX,MT,AZ", map.mapster('get'), "Complete list returned with 'get'");
 
             /// try to click select "staticstate areas
 
@@ -200,7 +163,7 @@ this.tests = this.tests || [];
             newOpts = map.mapster('get_options');
             newOpts.singleSelect = true;
             map.mapster('rebind', newOpts);
-            a.contentsEqual(map.mapster('get'), 'TX,AK', "Rebind with singleSelect reverted to original state");
+            a.collectionEquals(map.mapster('get'), 'TX,AK', "Rebind with singleSelect reverted to original state");
 
             map.mapster('set', true, "MI");
             a.equals(map.mapster('get'), 'MI', "Single select worked.");

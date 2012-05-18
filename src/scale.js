@@ -1,5 +1,5 @@
 /* scale.js: resize and zoom functionality
-   requires areacorners.js
+   requires areacorners.js, when.js
 */
 
 // options {
@@ -8,7 +8,8 @@
 //}
 //
 (function ($) {
-    var m = $.mapster, u = m.utils, p = m.MapArea.prototype;
+    var when=$.mapster_when,
+        m = $.mapster, u = m.utils, p = m.MapArea.prototype;
 
     m.utils.getScaleInfo = function (eff, actual) {
         var pct;
@@ -50,7 +51,8 @@
     // options: duration = animation time (zero = no animation)
     
     m.MapData.prototype.resize = function (newWidth, newHeight, effectDuration, callback) {
-        var highlightId, ratio, width, height, duration, opts = {
+        var p,promises,
+            highlightId, ratio, width, height, duration, opts = {
             callback: callback || effectDuration
         }, newsize, els, me = this;
         
@@ -63,7 +65,17 @@
                 $(canvas).height(h);
             }
         }
+        function cleanupAndNotify() {
 
+            me.currentAction = '';
+            
+            if ($.isFunction(opts.callback)) {
+                opts.callback();
+            }
+            
+            me.processCommandQueue();
+        }
+        // handle cleanup after the inner elements are resized
         function finishResize() {
             sizeCanvas(me.overlay_canvas, width, height);
 
@@ -76,17 +88,10 @@
             }
             sizeCanvas(me.base_canvas, width, height);
             me.redrawSelections();
-            
-            me.currentAction = '';
-            
-            if ($.isFunction(opts.callback)) {
-                opts.callback();
-            }
-            
-            me.processCommandQueue();
+            cleanupAndNotify();
 
         }
-        function resizeMap() {
+        function resizeMapData() {
             $(me.image).css(newsize);
             // start calculation at the same time as effect
             me.scaleInfo = u.getScaleInfo({
@@ -102,9 +107,8 @@
                     e.resize();
                 });
             });
-
-
         }
+
         
         if (typeof newWidth === 'object') {
             opts = newWidth;
@@ -136,29 +140,39 @@
         if (!$.mapster.hasCanvas) {
             $(me.base_canvas).children().remove();
         }
+
+        // resize all the elements that are part of the map except the image itself (which is not visible)
+        // but including the div wrapper
         els = $(me.wrapper).find('.mapster_el').add(me.wrapper);
 
-      
-
-        if (duration) {
+                if (duration) {
+            promises = [];
             me.currentAction = 'resizing';
             els.each(function (i, e) {
-                $(e).animate(newsize, { duration: duration, complete: i===0 ? finishResize:null, easing: "linear" });
+                p = when.defer();
+                promises.push(p);
+
+                $(e).animate(newsize, {
+                    duration: duration,
+                    complete: p.resolve,
+                    easing: "linear"
+                });
             });
 
-            $(me.wrapper).animate({
-                scrollLeft: opts.scrollLeft || 0,
-                scrollTop: opts.scrollTop || 0
-            },
-            { 
-                duration: duration,
-                easing: "linear" 
-            });
-            resizeMap();
+            p = when.defer();
+            promises.push(p);
+
+            // though resizeMapData is not async, it needs to be finished just the same as the animations,
+            // so add it to the "to do" list.
+            
+            when.all(promises).then(finishResize);
+            resizeMapData();
+            p.resolve();
         } else {
             els.css(newsize);
+            resizeMapData();
             finishResize();
-            resizeMap();
+            
         }
     };
 
