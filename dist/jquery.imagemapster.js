@@ -2138,7 +2138,9 @@ A jQuery plugin to enhance image maps.
             if (!$.mapster.hasCanvas) {
                 this.blur();
             }
-             e.preventDefault();
+            if(opts.clickNavigate == false) {
+               e.preventDefault();
+            }
         };
 
         this.mouseover = function (e) {
