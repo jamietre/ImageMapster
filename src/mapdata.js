@@ -51,7 +51,7 @@
             if (!$.mapster.hasCanvas) {
                 this.blur();
             }
-             e.preventDefault();
+            e.preventDefault();
         };
 
         this.mouseover = function (e) {
@@ -154,6 +154,7 @@
                 }
 
                 list_target = m.getBoundList(opts, ar.key);
+
                 if ($.isFunction(opts.onClick)) {
                     cbResult= opts.onClick.call(that,
                     {
@@ -181,6 +182,7 @@
                 if (opts.boundList && opts.boundList.length > 0) {
                     m.setBoundListProperties(opts, list_target, ar.isSelected());
                 }
+
                 areaOpts = ar.effectiveOptions();
                 if (areaOpts.includeKeys) {
                     list = u.split(areaOpts.includeKeys);
@@ -192,6 +194,7 @@
                     });
                 }
             }
+
             me.mousedown.call(this,e);
             if (opts.clickNavigate && ar.href) {
                 window.location.href=ar.href;

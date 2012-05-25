@@ -1,4 +1,44 @@
-﻿/** @license MIT License (c) copyright B Cavalier & J Hann */
+﻿/* ImageMapster
+   Version: see $.mapster.version
+
+Copyright 2011-2012 James Treworgy
+http://www.outsharked.com/imagemapster
+https://github.com/jamietre/ImageMapster
+
+A jQuery plugin to enhance image maps.
+
+Versions 1.2.4.067+ include "when.js": http://github.com/cujos/when in the
+distribution build.
+
+*/
+
+/*
+
+/// LICENSE (MIT License)
+///
+/// Permission is hereby granted, free of charge, to any person obtaining
+/// a copy of this software and associated documentation files (the
+/// "Software"), to deal in the Software without restriction, including
+/// without limitation the rights to use, copy, modify, merge, publish,
+/// distribute, sublicense, and/or sell copies of the Software, and to
+/// permit persons to whom the Software is furnished to do so, subject to
+/// the following conditions:
+///
+/// The above copyright notice and this permission notice shall be
+/// included in all copies or substantial portions of the Software.
+///
+/// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+/// EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+/// MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+/// NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+/// LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+/// OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+/// WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+///
+/// January 19, 2011
+
+*/
+/** @license MIT License (c) copyright B Cavalier & J Hann */
 
 /**
 * when
@@ -884,39 +924,7 @@ if (window.Zepto) {
         $.browser.msie = false;
     } (jQuery));
 }
-/* ImageMapster
-   Version: see $.mapster.version
-
-Copyright 2011 James Treworgy
-http://www.outsharked.com/imagemapster
-https://github.com/jamietre/ImageMapster
-
-A jQuery plugin to enhance image maps.
-*/
-/*
-/// LICENSE (MIT License)
-///
-/// Permission is hereby granted, free of charge, to any person obtaining
-/// a copy of this software and associated documentation files (the
-/// "Software"), to deal in the Software without restriction, including
-/// without limitation the rights to use, copy, modify, merge, publish,
-/// distribute, sublicense, and/or sell copies of the Software, and to
-/// permit persons to whom the Software is furnished to do so, subject to
-/// the following conditions:
-///
-/// The above copyright notice and this permission notice shall be
-/// included in all copies or substantial portions of the Software.
-///
-/// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
-/// EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-/// MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
-/// NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
-/// LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
-/// OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
-/// WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-///
-/// January 19, 2011
-*/
+/* ImageMapster core */
 
 /*jslint laxbreak: true, evil: true */
 /*global jQuery: true, Zepto: true */
@@ -2241,7 +2249,7 @@ A jQuery plugin to enhance image maps.
             if (!$.mapster.hasCanvas) {
                 this.blur();
             }
-             e.preventDefault();
+            e.preventDefault();
         };
 
         this.mouseover = function (e) {
@@ -2344,6 +2352,7 @@ A jQuery plugin to enhance image maps.
                 }
 
                 list_target = m.getBoundList(opts, ar.key);
+
                 if ($.isFunction(opts.onClick)) {
                     cbResult= opts.onClick.call(that,
                     {
@@ -2371,6 +2380,7 @@ A jQuery plugin to enhance image maps.
                 if (opts.boundList && opts.boundList.length > 0) {
                     m.setBoundListProperties(opts, list_target, ar.isSelected());
                 }
+
                 areaOpts = ar.effectiveOptions();
                 if (areaOpts.includeKeys) {
                     list = u.split(areaOpts.includeKeys);
@@ -2382,6 +2392,7 @@ A jQuery plugin to enhance image maps.
                     });
                 }
             }
+
             me.mousedown.call(this,e);
             if (opts.clickNavigate && ar.href) {
                 window.location.href=ar.href;
