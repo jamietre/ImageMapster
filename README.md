@@ -1,14 +1,30 @@
-### Summary
+###**ImageMapster:** A Jquery Plugin to make image maps useful. 
 
-ImageMapster: A Jquery Plugin to make image maps useful. 
+ImageMapster activates the areas in HTML imagemaps so you can highlight and select them. It has lots of other features for manual control, tooltips, resizing, and more.
 
-Project home page. http://www.outsharked.com/imagemapster
+### Find out More
 
-Source repository: https://github.com/jamietre/ImageMapster 
+There are lots of examples and documentation on the [ImageMapster web site.](http://www.outsharked.com/imagemapster)
+
+You can find the [source code on GitHub.](https://github.com/jamietre/ImageMapster) If you have a problem, please file a bug report there!
+
+<b>Questions?</b>
+
+- I write about ImageMapster on my blog from time to time. See [posts about imagemapster.](http://blog.outsharked.com/search/label/imagemapster)
+
+- Take a look at [ImageMapster questions on StackOverflow](http://stackoverflow.com/search?q=imagemapster); there are quite a few. Maybe someone's asked the same question already.
+
+- There are also some very detailed discussions in the [GitHub issues](https://github.com/jamietre/imagemapster/issues?direction=desc&labels=support&page=1&sort=created&state=closed) section that I've flagged as "support". 
+
+- You can also check the [feedback](http://www.outsharked.com/imagemapster/default.aspx?feedback.html) page on the project web site. 
+
+- Still can't figure it out? [email me directly](mailto:alien@outsharked.com) if you still need help. I will respond as time permits, but I will always respond.
+
+### Release Information
 
 The current release as of June 19, 2012 is **1.2.5**. Read the [release notes.](http://blog.outsharked.com/2012/06/imagemapster-125-released.html) for 1.2.5.
 
-I write about ImageMapster on my blog from time to time. See [posts about imagemapster.](http://blog.outsharked.com/search/label/imagemapster)
+
 
 
 ### Usage
