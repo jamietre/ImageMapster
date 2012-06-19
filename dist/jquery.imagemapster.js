@@ -1,5 +1,5 @@
 ﻿/* ImageMapster
-   Version: see $.mapster.version
+   Version: 1.2.5
 
 Copyright 2011-2012 James Treworgy
 http://www.outsharked.com/imagemapster
@@ -841,7 +841,7 @@ distribution build.
     };
 
     $.mapster = {
-        version: "1.2.4.067",
+        version: "1.2.5",
         render_defaults: {
             isSelectable: true,
             isDeselectable: true,
@@ -2399,7 +2399,7 @@ distribution build.
 
             $('body').append(image);
             storeImage(image);
-            $(image).load(load).error(function(e) {
+            $(image).bind('onload',load).bind('onerror',function(e) {
                 me.imageLoadError.call(me,e);
             });
             $(image).attr('src', source);
@@ -2663,7 +2663,7 @@ distribution build.
 
             if (opts.wrapClass) {
                 if (opts.wrapClass === true) {
-                    wrap.addClass(img.attr('class'));
+                    wrap.addClass(img[0].className);
                 }
                 else {
                     wrap.addClass(opts.wrapClass);
@@ -2688,7 +2688,7 @@ distribution build.
         // Now we got what we needed from the copy -clone from the original image again to make sure any other attributes are copied
         imgCopy = $(me.images[1])
             .addClass('mapster_el')
-            .addClass($(me.images[0]).attr('class'))
+            .addClass(me.images[0].className)
             .attr({id:null, usemap: null});
             
         size=u.size(me.images[0]);

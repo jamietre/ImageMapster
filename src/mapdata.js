@@ -304,7 +304,7 @@
 
             $('body').append(image);
             storeImage(image);
-            $(image).load(load).error(function(e) {
+            $(image).bind('onload',load).bind('onerror',function(e) {
                 me.imageLoadError.call(me,e);
             });
             $(image).attr('src', source);
@@ -568,7 +568,7 @@
 
             if (opts.wrapClass) {
                 if (opts.wrapClass === true) {
-                    wrap.addClass(img.attr('class'));
+                    wrap.addClass(img[0].className);
                 }
                 else {
                     wrap.addClass(opts.wrapClass);
@@ -593,7 +593,7 @@
         // Now we got what we needed from the copy -clone from the original image again to make sure any other attributes are copied
         imgCopy = $(me.images[1])
             .addClass('mapster_el')
-            .addClass($(me.images[0]).attr('class'))
+            .addClass(me.images[0].className)
             .attr({id:null, usemap: null});
             
         size=u.size(me.images[0]);

@@ -1954,7 +1954,8 @@ Array.first
 
 You can remove the call to u.polyfill to prevent the nonstandard changes.
 
-Version 1.0
+Version 1.0.1 - 6/19/1012
+
 James Treworgy
 */
 
@@ -2085,6 +2086,22 @@ James Treworgy
             return undef;
         }
 
+        // return the first element where filter returns true
+        function arrayLast(filter) {
+            var i, undef;
+
+            if (!filter) {
+                return this.length > 0 ? this[this.length-1] : undef;
+            }
+
+            for (i = this.length; i >0; i--) {
+                if (filter.call(this[i], i, this[i])) {
+                    return this[i];
+                }
+            }
+            return undef;
+        }
+
         function arrayLastIndexOf(find, i /*opt*/) {
             if (i === undefined) i = this.length - 1;
             if (i < 0) i += this.length;
@@ -2205,13 +2222,20 @@ James Treworgy
             each: function (coll, cb) {
                 coll && forEach.call(coll, cb);
             },
+            first: function(arr,filter) {
+
+                return arrayFirst.call(arr,filter);
+            },
+            last: function(arr,filter) {
+                return arrayLast.call(arr,filter);
+            },
             donothing: function () { },
             // add nonstandard polyfills
             polyfill: function () {
 
                 Array.prototype.contains = arrayContains;
                 Array.prototype.first = arrayFirst;
-
+                Array.prototype.last = arrayLast;
                 String.prototype.format = format;
             }
 
@@ -3528,7 +3552,7 @@ define(function(iqtest) {
 		
 		// should be the innermost div
 		this.groupWrapper = groupWrapper;
-		this.groupContainer = groupWrapper.find('div:only-child:last');
+		this.groupContainer = $(u.last(groupWrapper.find('div:only-child')));
 	}
 	function groupEnd(group) {
 		tmpReplace(this.groupWrapper,{
@@ -3612,13 +3636,12 @@ define(function(iqtest) {
 
 	function safeMethod(method) {
 		return function() {
-			var error;
 			try {
 				method.apply(this,u.toArray(arguments));
 			}
 			catch(err) {
 				when.debug=true;
-				throw error;
+				throw err;
 			}
 		};
 	}
