@@ -1,48 +1,38 @@
-### Code use license.
+### Summary
 
-LICENSE (MIT License)
- 
-Permission is hereby granted, free of charge, to any person obtaining
-a copy of this software and associated documentation files (the
-"Software"), to deal in the Software without restriction, including
-without limitation the rights to use, copy, modify, merge, publish,
-distribute, sublicense, and/or sell copies of the Software, and to
-permit persons to whom the Software is furnished to do so, subject to
-the following conditions:
- 
-The above copyright notice and this permission notice shall be
-included in all copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
-EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
-NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
-LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
-OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
-WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
-## Summary
-
-Image Mapster: A Jquery Plugin to make image maps useful. 
+ImageMapster: A Jquery Plugin to make image maps useful. 
 
 Project home page. http://www.outsharked.com/imagemapster
 
 Source repository: https://github.com/jamietre/ImageMapster 
 
-## Details
+The current release as of June 19, 2012 is **1.2.5**. Read the [release notes.](http://blog.outsharked.com/2012/06/imagemapster-125-released.html) for 1.2.5.
 
- Usage and Options
+I write about ImageMapster on my blog from time to time. See [posts about imagemapster.](http://blog.outsharked.com/search/label/imagemapster)
 
-*Overview*
 
-Basic usage and options. Generally speaking, you just apply ImageMapster to a jQuery object containing images. They must be associated with an imagemap via the `usemap` tag. ImageMapster can support multiple simultaneous image maps. If you apply it to a jQuery object with several images, they will all use the same options provided. 
+### Usage
 
 ----
-## Usage
 
-**mapster**: Bind to all selected images.
+Active all image maps on the page with default options: on mouseover areas are highlighted with a gray fill with no border, and clicking an area causes it to become selected.
 
-    $('img').mapster(options);
+    $('img').mapster();
+
+Activate image maps with some specific options.
+
+    $('img').mapster( { 
+        fillColor: 'ff0000', 
+        stroke: true, 
+        singleSelect: true
+    });
+
+
+### Manual Control
+
+----
+
+There are lots of ways to manipulate the imagemap from Javascript. Here area a few; see the project web site for complete documentation.
 
 **select**: Cause an area to become "selected"
 
@@ -63,6 +53,10 @@ You can also select or deselect areas using a their `mapKey`. This is an attribu
     $('img').mapster('set',true,'key1,key2');
 
 If two areas share the same value for the `mapKey` they will be automatically grouped together when activated. You can also use the values of the mapKey to select areas from code.
+
+You can pass options to change the rendering effects when using set as the last parameter:
+
+    $('img').mapster('set',true,'key', {fillColor: 'ff0000'} );
 
 MapKeys can contain more than one value. The first value always defines groups when you mouse over. Other values can be used to create logical groups. For example:
 
@@ -93,22 +87,41 @@ To simply indentify a set of areas to turn on or off, but not treat them as a lo
 
 
 ----
-## Options
+### Options
 
 Please see github repository for complete documentation.
 
-## Zepto Compatibility
+### Zepto Compatibility
 
-Yes, but you need to use the "jquery.imagemapster.zepto.js" build. This patches a few holes in Zepto that ImageMapster needs. It is safe to use the zepto version with jQuery.
+Newer versions of Zepto don't seem to work any more (as of 1.2.5). I didn't want this to hold up the ever-delayed release even further so I didn't figure out why. 
 
-## Build instructions
+In theory it should work; you need to use the "jquery.imagemapster.zepto.js" build. This patches a few holes in Zepto that ImageMapster needs. It is safe to use the zepto version with jQuery.
+
+### Build instructions
 
 The source code is broken into several modules to make management easier and to make it possible to create feature-targeted builds. A rakefile is included that creates and minifies the two release builds (with and without Zepto support):
 
 `rake`
 
-## Markdown
+### Code use license.
 
-If you use windows and Markdown, this is awesome.
+LICENSE (MIT License)
+ 
+Permission is hereby granted, free of charge, to any person obtaining
+a copy of this software and associated documentation files (the
+"Software"), to deal in the Software without restriction, including
+without limitation the rights to use, copy, modify, merge, publish,
+distribute, sublicense, and/or sell copies of the Software, and to
+permit persons to whom the Software is furnished to do so, subject to
+the following conditions:
+ 
+The above copyright notice and this permission notice shall be
+included in all copies or substantial portions of the Software.
 
-http://markdownpad.com/
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
