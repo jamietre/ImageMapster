@@ -1,6 +1,6 @@
 ###**ImageMapster:** A Jquery Plugin to make image maps useful. 
 
-ImageMapster activates the areas in HTML imagemaps so you can highlight and select them. It has lots of other features for manual control, tooltips, resizing, and more. It works with pretty much every browser, including Internet Explorer 6-10, Firefox 3.0+, Safari, Opera, Chrome. It works on mobile devices and doesn't use Flash.
+ImageMapster activates the areas in HTML imagemaps so you can highlight and select them. It has lots of other features for manual control, tooltips, resizing, and more. It is designed to be compatiable with every common platform, and is tested with Internet Explorer 6-10, Firefox 3.0+, Safari, Opera, and Chrome. It works on mobile devices and doesn't use Flash.
 
 ### Find out More
 
