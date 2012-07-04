@@ -76,7 +76,7 @@
                 if (me.options.showToolTip) {
                     $.each(arData,function(i,e) {
                         if (e.effectiveOptions().toolTip) {
-                            e.showTooltip();
+                            e.showToolTip();
                         }
                     });
                 }
@@ -134,7 +134,7 @@
             me.ensureNoHighlight();
 
             if (opts.toolTipClose && $.inArray('area-mouseout', opts.toolTipClose) >= 0 && me.activeToolTip) {
-                me.clearTooltip();
+                me.clearToolTip();
             }
         };
         this.click = function (e) {
@@ -845,7 +845,7 @@
         me.images = [];
 
         this.image = null;
-        u.ifFunction(this.clearTooltip, this);
+        u.ifFunction(this.clearToolTip, this);
     };
     // Compelete cleanup process for deslecting items. Called after a batch operation, or by AreaData for single
     // operations not flagged as "partial"

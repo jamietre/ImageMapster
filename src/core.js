@@ -195,6 +195,9 @@
             isBool: function (obj) {
                 return typeof obj === "boolean";
             },
+            isUndef: function(obj) {
+                return typeof obj === "undefined";
+            },
             // evaluates "obj", if function, calls it with args
             // (todo - update this to handle variable lenght/more than one arg)
             ifFunction: function (obj, that, args) {
@@ -224,7 +227,10 @@
                 var elements = {},
                         lastKey = 0,
                         fade_func = function (el, op, endOp, duration) {
-                            var index, obj, u = $.mapster.utils;
+                            var index, 
+                                cbIntervals = duration/15,
+                                obj, u = $.mapster.utils;
+
                             if (typeof el === 'number') {
                                 obj = elements[el];
                                 if (!obj) {
@@ -238,15 +244,16 @@
                                 elements[++lastKey] = obj = el;
                                 el = lastKey;
                             }
+
                             endOp = endOp || 1;
 
-                            op = (op + (endOp / 10) > endOp - 0.01) ? endOp : op + (endOp / 10);
+                            op = (op + (endOp / cbIntervals) > endOp - 0.01) ? endOp : op + (endOp / cbIntervals);
 
                             u.setOpacity(obj, op);
                             if (op < endOp) {
                                 setTimeout(function () {
                                     fade_func(el, op, endOp, duration);
-                                }, duration ? duration / 10 : 15);
+                                }, 15);
                             }
                         };
                 return fade_func;
@@ -379,6 +386,7 @@
         var i,  data, ar, len, result, src = this.input,
                 area_list = [],
                 me = this;
+
         len = src.length;
         for (i = 0; i < len; i++) {
             data = $.mapster.getMapData(src[i]);
@@ -389,6 +397,7 @@
                     }
                     continue;
                 }
+                
                 ar = data.getData(src[i].nodeName === 'AREA' ? src[i] : this.key);
                 if (ar) {
                     if ($.inArray(ar, area_list) < 0) {
@@ -438,16 +447,23 @@
                 map_areas = map_data.options.areas;
             if (areas) {
                 $.each(areas, function (i, e) {
-                    index = u.indexOfProp(map_areas, "key", this.key);
+                    
+                    // Issue #68 - ignore invalid data in areas array
+                    
+                    if (!e || !e.key) { 
+                        return;
+                    }
+
+                    index = u.indexOfProp(map_areas, "key", e.key);
                     if (index >= 0) {
-                        $.extend(map_areas[index], this);
+                        $.extend(map_areas[index], e);
                     }
                     else {
-                        map_areas.push(this);
+                        map_areas.push(e);
                     }
-                    ar = map_data.getDataForKey(this.key);
+                    ar = map_data.getDataForKey(e.key);
                     if (ar) {
-                        $.extend(ar.options, this);
+                        $.extend(ar.options, e);
                     }
                 });
             }
@@ -594,9 +610,18 @@
         me.deselect = function () {
             me.set.call(this, false);
         };
-        // Select or unselect areas identified by key -- a string, a csv string, or array of strings.
-        // if set_bound is true, the bound list will also be updated. Default is true. If neither true nor false,
-        // it will be toggled.
+        
+        /**
+         * Select or unselect areas. Areas can be identified by a single string key, a comma-separated list of keys, 
+         * or an array of strings.
+         * 
+         * 
+         * @param {boolean} selected Determines whether areas are selected or deselected
+         * @param {string|string[]} key A string, comma-separated string, or array of strings indicating 
+         *                              the areas to select or deselect
+         * @param {object} options Rendering options to apply when selecting an area
+         */ 
+
         me.set = function (selected, key, options) {
             var lastMap, map_data, opts=options,
                 key_list, area_list; // array of unique areas passed
