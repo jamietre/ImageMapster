@@ -14,11 +14,12 @@
         toolTipFade: true,
         toolTipClose: ['area-mouseout','image-mouseout'],
         onShowToolTip: null,
-        onCreateTooltip: null
+        onHideToolTip: null
     });
     
     $.extend(m.area_defaults, {
-        toolTip: null
+        toolTip: null,
+        toolTipClose: null
     });
     
 
@@ -111,25 +112,13 @@
      */
     
     m.MapData.prototype.clearToolTip = function() {
-        
-        if (this) {
-            if (this.activeToolTip) {
-                this.activeToolTip.stop().remove();
-                this.activeToolTip = null;
-                this.activeToolTipID = null;
-            }
-            // if (this._tooltip_events) {
-            //     $.each(this._tooltip_events, function (i,e) {
-            //         e.object.unbind(e.event);
-            //     });
-            // }
-            // this._tooltip_events=[];
-        } else {
-            $('.mapster_tooltip').stop().remove();
+        if (this.activeToolTip) {
+            this.activeToolTip.stop().remove();
+            this.activeToolTip = null;
+            this.activeToolTipID = null;
+            u.ifFunction(this.options.onHideToolTip, this);
         }
-
-    }
-;
+    };
 
     /**
      * Configure the binding between a named tooltip closing option, and a mouse event.
@@ -168,7 +157,7 @@
     /**
      * Show a tooltip.
      *
-     * @param {string|jquery}   [content]       A string of html or a jQuery object containing the tooltip content.
+     * @param {string|jquery}   [tooltip]       A string of html or a jQuery object containing the tooltip content.
      * 
      * @param {string|jquery}   [target]        The target of the tooltip, to be used to determine positioning. If null,
      *                                          absolute position values must be passed with left and top.
@@ -182,8 +171,6 @@
      * @param {object|string|jQuery} [options]  options to apply when creating this tooltip - OR -
      *                                          The markup, or a jquery object, containing the data for the tooltip 
      *                                         
-     *  @config {bool}          [template]      a template to use instead of the default. If this property exists and is null,
-     *                                          then no template will be used.
      *  @config {string}        [closeEvents]   A string with one or more comma-separated values that determine when the tooltip
      *                                          closes: 'area-click','tooltip-click','image-mouseout' are valid values
      *                                          then no template will be used.
@@ -192,20 +179,12 @@
      *  @config {string|object} [css]           CSS to apply to the outermost element of the tooltip 
      */
     
-    function showToolTip(content,target,image,container,template,options) {
-        var tooltip, corners, closeOpts,
+    function showToolTip(tooltip,target,image,container,options) {
+        var corners,
             ttopts = {};
     
         options = options || {};
-        closeOpts = options.closeEvents || 'tooltip-click';
 
-        if (typeof closeOpts === 'string') {
-            closeOpts = u.split(closeOpts);
-        }
-
-        tooltip = createToolTip(content,
-            template,
-            options.css);
 
         if (target) {
 
@@ -290,31 +269,30 @@
 
         md.clearToolTip();
 
-        tooltip = showToolTip(content,
-                    target,
-                    md.image,
-                    options.container,
-                    template,
-                    options);
+        md.activeToolTip = tooltip = createToolTip(content,
+            template,
+            options.css);
 
-        md.activeToolTip = tooltip;
         md.activeToolTipID = ad.areaId;
 
         tipClosed = function() {
             md.clearToolTip();
         };
 
-        // the map just filters out the "undefined" results
+        bindToolTipClose(closeOpts,'area-click', 'click', $(md.map), null, tipClosed);
+        bindToolTipClose(closeOpts,'tooltip-click', 'click', tooltip,null, tipClosed);
+        bindToolTipClose(closeOpts,'image-mouseout', 'mouseout', $(md.image), function(e) {
+            return (e.relatedTarget && e.relatedTarget.nodeName!=='AREA' && e.relatedTarget!==ad.area);
+        }, tipClosed);
 
-        //md._tooltip_events = $.map([
-                bindToolTipClose(closeOpts,'area-click', 'click', $(md.map), null, tipClosed);
-                bindToolTipClose(closeOpts,'tooltip-click', 'click', tooltip,null, tipClosed);
-                bindToolTipClose(closeOpts,'image-mouseout', 'mouseout', $(md.image), function(e) {
-                    return (e.relatedTarget && e.relatedTarget.nodeName!=='AREA' && e.relatedTarget!==ad.area);
-                }, tipClosed);
-            //     ],
-            // function(e) {return e; });
-      
+
+        showToolTip(tooltip,
+                    target,
+                    md.image,
+                    options.container,
+                    template,
+                    options);
+
         u.ifFunction(md.options.onShowToolTip, ad.area,
         {
             toolTip: tooltip,
@@ -388,17 +366,20 @@
                 }
                 md.clearToolTip();
 
-                md.activeToolTip = tooltip = showToolTip(getHtmlFromOptions(options),
-                            target,
-                            md.image,
-                            options.container,
+                md.activeToolTip = tooltip = createToolTip(getHtmlFromOptions(options),
                             options.template || md.options.toolTipContainer,
-                            options);
-
+                            options.css);
                 md.activeToolTipID = target[0];
+
                 bindToolTipClose(['tooltip-click'],'tooltip-click', 'click', tooltip, null, function() {
                     md.clearToolTip();
                 });
+
+                md.activeToolTip = tooltip = showToolTip(tooltip,
+                    target,
+                    md.image,
+                    options.container,
+                    options);
             }
         },
         function areaData() {
