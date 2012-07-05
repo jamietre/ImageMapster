@@ -80,7 +80,7 @@
      *  @config {bool} [fadeDuration] When non-zero, the duration in milliseconds of a fade-in effect for the tooltip.
      */
     
-    function showToolTip(tooltip,options)
+    function showToolTipImpl(tooltip,options)
     {
         var tooltipCss = { 
                 "left":  options.left + "px",
@@ -194,12 +194,19 @@
             // if there's no this context then use an empty object so the tests won't crash
             
             ad = this || {},
-            md = ad.owner,
-            areaOpts = ad.effectiveOptions();
-        
+            md = ad.owner;
+    
         options = options || {};
         content = content || areaOpts.toolTip;
-        closeOpts = options.closeEvents || ad.options.toolTipClose || 'tooltip-click';
+        closeOpts = options.closeEvents;
+
+        if (ad) {
+            options = ad.effectiveOptions();
+            closeOpts =  closeOpts || ad.options.toolTipClose;
+        }
+
+        closeOpts = closeOpts || 'tooltip-click';
+
 
         if (typeof closeOpts === 'string') {
             closeOpts = u.split(closeOpts);
@@ -261,7 +268,7 @@
         ttopts.fadeDuration= options.fadeDuration ||
                 (md.options.toolTipFade ? areaOpts.fadeDuration: 0);
 
-        showToolTip(tooltip,ttopts);
+        showToolTipImpl(tooltip,ttopts);
 
         //"this" will be null unless they passed something to forArea
         
@@ -274,9 +281,9 @@
             selected: ad.isSelected()
         });
 
-    };
+    }
     
-    m.AreaData.prototype=showToolTip;
+    m.AreaData.prototype.showToolTip=showToolTip;
 
     /**
      * Parse an object that could be a string, a jquery object, or an object with a "contents" property
@@ -336,7 +343,7 @@
             if (!options) {
                 this.clearToolTip();
             } else {
-                this.showToolTip(getHtmlFromOptions(options),options);
+                showToolTip(getHtmlFromOptions(options),options);
 
             }
         },
