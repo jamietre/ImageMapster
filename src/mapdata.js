@@ -237,7 +237,7 @@
             _xref: {},               // (int)      xref of mapKeys to data[]
             highlightId: -1,        // (int)      the currently highlighted element.
             currentAreaId: -1,
-            _tooltip_events: [],     // {}         info on events we bound to a tooltip container, so we can properly unbind them
+            //_tooltip_events: [],     // {}         info on events we bound to a tooltip container, so we can properly unbind them
             scaleInfo: null,         // {}         info about the image size, scaling, defaults
             index: -1,                 // index of this in map_cache - so we have an ID to use for wraper div
             activeAreaEvent: null

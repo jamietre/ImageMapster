@@ -9,7 +9,7 @@
     $.extend(m.defaults, {
         toolTipContainer: '<div style="border: 2px solid black; background: #EEEEEE; width:160px; padding:4px; margin: 4px; -moz-box-shadow: 3px 3px 5px #535353; ' +
         '-webkit-box-shadow: 3px 3px 5px #535353; box-shadow: 3px 3px 5px #535353; -moz-border-radius: 6px 6px 6px 6px; -webkit-border-radius: 6px; ' +
-        'border-radius: 6px 6px 6px 6px;"></div>',
+        'border-radius: 6px 6px 6px 6px;"></dteniv>',
         showToolTip: false,
         toolTipFade: true,
         toolTipClose: ['area-mouseout','image-mouseout'],
@@ -103,30 +103,6 @@
             u.setOpacity(tooltip[0], 1);
         }
     }
-
-    /**
-     * Hide and remove active tooltips
-     * 
-     * @param  {MapData} this The mapdata object to which the tooltips belong
-     */
-    
-    function clearToolTip() {
-        
-        if (this) {
-            if (this.activeToolTip) {
-                this.activeToolTip.stop().remove();
-                this.activeToolTip = null;
-                this.activeToolTipID = -1;
-            }
-            $.each(this._tooltip_events, function (i,e) {
-                e.object.unbind(e.event);
-            });
-        } else {
-            $('.mapster_tooltip').stop().remove();
-        }
-
-    }
-
       
     /**
      * Hide and remove active tooltips
@@ -134,7 +110,26 @@
      * @param  {MapData} this The mapdata object to which the tooltips belong
      */
     
-    m.MapData.prototype.clearToolTip = clearToolTip;
+    m.MapData.prototype.clearToolTip = function() {
+        
+        if (this) {
+            if (this.activeToolTip) {
+                this.activeToolTip.stop().remove();
+                this.activeToolTip = null;
+                this.activeToolTipID = null;
+            }
+            // if (this._tooltip_events) {
+            //     $.each(this._tooltip_events, function (i,e) {
+            //         e.object.unbind(e.event);
+            //     });
+            // }
+            // this._tooltip_events=[];
+        } else {
+            $('.mapster_tooltip').stop().remove();
+        }
+
+    }
+;
 
     /**
      * Configure the binding between a named tooltip closing option, and a mouse event.
@@ -146,32 +141,44 @@
      * @param  {String}   option     The name of the tooltip closing option
      * @param  {String}   event      UI event to bind to this option
      * @param  {Element}  target     The DOM element that is the target of the event
-     * @param  {Function} [callback] Callback after the tooltip is closed
+     * @param  {Function} [beforeClose] Callback when the tooltip is closed
+     * @param  {Function} [onClose]  Callback when the tooltip is closed
      */
-    m.MapData.prototype.bindToolTipClose = function(options, bindOption, event, target, callback) {
-        var event_name = event + '.mapster-tooltip',
-            me=this;
+    function bindToolTipClose(options, bindOption, event, target, beforeClose, onClose) {
+        var event_name = event + '.mapster-tooltip';
         
         if ($.inArray(bindOption, options) >= 0) {
             target.unbind(event_name)
                 .bind(event_name, function (e) {
-                    if (!callback || callback.call(this,e)) {
-                        clearToolTip.call(me);
+                    if (!beforeClose || beforeClose.call(this,e)) {
+                        target.unbind('.mapster-tooltip');
+                        if (onClose) {
+                            onClose.call(this);
+                        }
                     }
                 });
-            this._tooltip_events.push(
-            {
+            
+            return {
                 object: target, 
-                event: event_name,
-                callback: callback
-            });
+                event: event_name
+            };
         }
-    };
+    }
     
     /**
-     * Show a tooltip positioned near this area.
-     * 
+     * Show a tooltip.
+     *
      * @param {string|jquery}   [content]       A string of html or a jQuery object containing the tooltip content.
+     * 
+     * @param {string|jquery}   [target]        The target of the tooltip, to be used to determine positioning. If null,
+     *                                          absolute position values must be passed with left and top.
+     *
+     * @param {string|jquery}   [image]         If target is an [area] the image that owns it
+     * 
+     * @param {string|jquery}   [container]     An element within which the tooltip must be bounded
+     *
+     *
+     * 
      * @param {object|string|jQuery} [options]  options to apply when creating this tooltip - OR -
      *                                          The markup, or a jquery object, containing the data for the tooltip 
      *                                         
@@ -180,74 +187,36 @@
      *  @config {string}        [closeEvents]   A string with one or more comma-separated values that determine when the tooltip
      *                                          closes: 'area-click','tooltip-click','image-mouseout' are valid values
      *                                          then no template will be used.
-     *  @config {int}           [left]          The 0-based absolute x position for the tooltip
-     *  @config {int}           [top]           The 0-based absolute y position for the tooltip                                    
      *  @config {int}           [offsetx]       the horizontal amount to offset the tooltip 
      *  @config {int}           [offsety]       the vertical amount to offset the tooltip 
      *  @config {string|object} [css]           CSS to apply to the outermost element of the tooltip 
      */
     
-    function showToolTip(content,options) {
-        var offset, tooltip, corners, areaSrc, closeOpts,
-            ttopts = {},
-
-            // if there's no this context then use an empty object so the tests won't crash
-            
-            ad = this || {},
-            md = ad.owner;
+    function showToolTip(content,target,image,container,template,options) {
+        var tooltip, corners, closeOpts,
+            ttopts = {};
     
         options = options || {};
-        content = content || areaOpts.toolTip;
-        closeOpts = options.closeEvents;
-
-        if (ad) {
-            options = ad.effectiveOptions();
-            closeOpts =  closeOpts || ad.options.toolTipClose;
-        }
-
-        closeOpts = closeOpts || 'tooltip-click';
-
+        closeOpts = options.closeEvents || 'tooltip-click';
 
         if (typeof closeOpts === 'string') {
             closeOpts = u.split(closeOpts);
         }
 
-        // prevent a tooltip from being cleared if it was already active on an area in the same group.
-        // also bail out if there was no content to display.
-
-        if (!content || md.activeToolTipID === ad.areaId) {
-            return;
-        }
-
-        md.clearToolTip();
-
         tooltip = createToolTip(content,
-            typeof options.template !== 'undefined' ? 
-                options.template :
-                md.options.toolTipContainer,
+            template,
             options.css);
 
+        if (target) {
 
-        md.activeToolTip = tooltip;
-        md.activeToolTipID = ad.areaId;
-            
-        if (ad && u.isUndef(options.left) && u.isUndef(options.top)) {
-            areaSrc = ad.area ? 
-                [ad.area] :
-                $.map(ad.areas(),
-                    function(e) {
-                        return e.area;
-                    });
-
-            corners = u.areaCorners(areaSrc,
+            corners = u.areaCorners(target,image,container,
                                     tooltip.outerWidth(true),
                                     tooltip.outerHeight(true));
 
             // Try to upper-left align it first, if that doesn't work, change the parameters
 
-            offset = $(md.image).offset();
-            ttopts.left = offset.left+corners.tt[0];
-            ttopts.top =offset.top+corners.tt[1];
+            ttopts.left = corners[0];
+            ttopts.top = corners[1];
 
         } else {
             
@@ -258,21 +227,95 @@
         ttopts.left += (options.offsetx || 0);
         ttopts.top +=(options.offsety || 0);
 
-        md.bindToolTipClose(closeOpts,'area-click', 'click', $(md.map));
-        md.bindToolTipClose(closeOpts,'tooltip-click', 'click', tooltip);
-        md.bindToolTipClose(closeOpts,'image-mouseout', 'mouseout', $(md.image), function(e) {
-            return (e.relatedTarget && e.relatedTarget.nodeName!=='AREA' && e.relatedTarget!==ad.area);
-        });
-
         ttopts.css= options.css;
-        ttopts.fadeDuration= options.fadeDuration ||
-                (md.options.toolTipFade ? areaOpts.fadeDuration: 0);
+        ttopts.fadeDuration = options.fadeDuration;
 
         showToolTipImpl(tooltip,ttopts);
 
-        //"this" will be null unless they passed something to forArea
+        return tooltip;
+    }
+    
+    /**
+     * Show a tooltip positioned near this area.
+      *
+     * @param {string|jquery}   [content]       A string of html or a jQuery object containing the tooltip content.
+     
+     * @param {object|string|jQuery} [options]  options to apply when creating this tooltip - OR -
+     *                                          The markup, or a jquery object, containing the data for the tooltip 
+     *  @config {string|jquery}   [container]     An element within which the tooltip must be bounded
+     *  @config {bool}          [template]      a template to use instead of the default. If this property exists and is null,
+     *                                          then no template will be used.
+     *  @config {string}        [closeEvents]   A string with one or more comma-separated values that determine when the tooltip
+     *                                          closes: 'area-click','tooltip-click','image-mouseout' are valid values
+     *                                          then no template will be used.
+     *  @config {int}           [offsetx]       the horizontal amount to offset the tooltip 
+     *  @config {int}           [offsety]       the vertical amount to offset the tooltip 
+     *  @config {string|object} [css]           CSS to apply to the outermost element of the tooltip 
+     */
+    m.AreaData.prototype.showToolTip= function(content,options) {
+        var tooltip, closeOpts, target, tipClosed, template,
+            ttopts = {},
+            ad=this,
+            md=ad.owner,
+            areaOpts = ad.effectiveOptions();
+    
+        // copy the options object so we can update it
+        options = options ? $.extend({},options) : {};
+
+        content = content || areaOpts.toolTip;
+        closeOpts = options.closeEvents || areaOpts.toolTipClose || md.options.toolTipClose || 'tooltip-click';
         
-        u.ifFunction(md.options.onShowToolTip, ad.area || null,
+        template = typeof options.template !== 'undefined' ? 
+                options.template :
+                md.options.toolTipContainer;
+
+        options.closeEvents = typeof closeOpts === 'string' ?
+            closeOpts = u.split(closeOpts) :
+            closeOpts;
+
+        options.fadeDuration = options.fadeDuration ||
+                 (md.options.toolTipFade ? 
+                    (md.options.fadeDuration || areaOpts.fadeDuration) : 0);
+
+        target = ad.area ? 
+            ad.area :
+            $.map(ad.areas(),
+                function(e) {
+                    return e.area;
+                });
+
+        if (md.activeToolTipID===ad.areaId) {
+            return;
+        }
+
+        md.clearToolTip();
+
+        tooltip = showToolTip(content,
+                    target,
+                    md.image,
+                    options.container,
+                    template,
+                    options);
+
+        md.activeToolTip = tooltip;
+        md.activeToolTipID = ad.areaId;
+
+        tipClosed = function() {
+            md.clearToolTip();
+        };
+
+        // the map just filters out the "undefined" results
+
+        //md._tooltip_events = $.map([
+                bindToolTipClose(closeOpts,'area-click', 'click', $(md.map), null, tipClosed);
+                bindToolTipClose(closeOpts,'tooltip-click', 'click', tooltip,null, tipClosed);
+                bindToolTipClose(closeOpts,'image-mouseout', 'mouseout', $(md.image), function(e) {
+                    return (e.relatedTarget && e.relatedTarget.nodeName!=='AREA' && e.relatedTarget!==ad.area);
+                }, tipClosed);
+            //     ],
+            // function(e) {return e; });
+      
+        u.ifFunction(md.options.onShowToolTip, ad.area,
         {
             toolTip: tooltip,
             options: ttopts,
@@ -281,9 +324,9 @@
             selected: ad.isSelected()
         });
 
-    }
+        return tooltip;
+    };
     
-    m.AreaData.prototype.showToolTip=showToolTip;
 
     /**
      * Parse an object that could be a string, a jquery object, or an object with a "contents" property
@@ -316,35 +359,46 @@
      * When "noTemplate" is true, the default tooltip template will not be used either, meaning only
      * the actual html passed will be used.
      *  
-     * @param  {string|AreaElement} key The area for which to activate a tooltip 
+     * @param  {string|AreaElement} key The area for which to activate a tooltip, or a DOM element.
      * 
      * @param {object|string|jquery} [options] options to apply when creating this tooltip - OR -
      *                                         The markup, or a jquery object, containing the data for the tooltip 
-     *                                         
      *  @config {string|jQuery} [content]   the inner content of the tooltip; the tooltip text or HTML
+     *  @config {Element|jQuery} [container]   the inner content of the tooltip; the tooltip text or HTML
      *  @config {bool}          [template]  a template to use instead of the default. If this property exists and is null,
      *                                      then no template will be used.
-     *  @config {int}           [offsetx]   the horizontal amount to offset the tooltip
-     *  @config {int}           [offsety]   the vertical amount to offset the tooltip
+     *  @config {int}           [offsetx]   the horizontal amount to offset the tooltip.
+     *  @config {int}           [offsety]   the vertical amount to offset the tooltip.
      *  @config {string|object} [css]       CSS to apply to the outermost element of the tooltip 
-     *  @config {int}           [left] The 0-based absolute x position for the tooltip
-     *  @config {int}           [top] The 0-based absolute y position for the tooltip
      *  @config {string|object} [css] CSS to apply to the outermost element of the tooltip 
      *  @config {bool}          [fadeDuration] When non-zero, the duration in milliseconds of a fade-in effect for the tooltip.
      * @return {jQuery} The jQuery object
      */
     
     m.impl.tooltip = function (key,options) {
-
-        
         return (new m.Method(this,
         function mapData() {
-            options = key;
-            if (!options) {
-                this.clearToolTip();
+            var tooltip, target, md=this;
+            if (!key) {
+                md.clearToolTip();
             } else {
-                showToolTip(getHtmlFromOptions(options),options);
+                target=$(key);
+                if (md.activeToolTipID ===target[0]) {
+                    return;
+                }
+                md.clearToolTip();
 
+                md.activeToolTip = tooltip = showToolTip(getHtmlFromOptions(options),
+                            target,
+                            md.image,
+                            options.container,
+                            options.template || md.options.toolTipContainer,
+                            options);
+
+                md.activeToolTipID = target[0];
+                bindToolTipClose(['tooltip-click'],'tooltip-click', 'click', tooltip, null, function() {
+                    md.clearToolTip();
+                });
             }
         },
         function areaData() {

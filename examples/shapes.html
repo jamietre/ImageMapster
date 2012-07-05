@@ -12,7 +12,6 @@ $(document).ready(function() {
 		//alert(data.state+":"+data.selected);
 	}
 	$('img').mapster({
-		showToolTip: true,
 		noHrefIsMask: false,
 		onStateChange: state_change,
 		fillColor: '0a7a0a',
@@ -30,21 +29,17 @@ $(document).ready(function() {
 			{
 				key: 'blue-circle',
 				includeKeys: 'rectangle',
-				stroke:false,
-				toolTip: 'blue circle (really a poly)'
-
+				stroke:false
 			},
 			{
 				key: 'rectangle',
 				stroke: true,
-				strokeWidth: 3,
-				toolTip: 'rectangle'
+				strokeWidth: 3
 			},
 			{
 				key: 'outer-circle',
 				includeKeys: 'inner-circle-mask,outer-circle-mask',
-				stroke: true,
-				toolTip: 'outer circle (a real circle)'
+				stroke: true
 			},
 			{
 			    key: 'outer-circle-mask',
