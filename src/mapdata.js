@@ -46,7 +46,12 @@
         this.initializeDefaults();
         this.configureOptions(options);
 
-        // Try to stop browsers from drawing their own outline
+        /**
+         * Mousedown event. This is captured only to prevent browser from drawing an outline around an
+         * area when it's clicked.
+         * 
+         * @param  {EventData} e jQuery event data
+         */
         this.mousedown = function (e) {
             if (!$.mapster.hasCanvas) {
                 this.blur();
@@ -54,6 +59,13 @@
             e.preventDefault();
         };
 
+        /**
+         * Mouseover event. Handle highlight rendering and client callback on mouseover
+         * 
+         * @param  {EventData} e jQuery event data
+         * @return {[type]}   [description]
+         */
+        
         this.mouseover = function (e) {
             var arData = me.getAllDataForArea(this),
                 ar=arData.length ? arData[0] : null;
@@ -510,20 +522,35 @@
         this.removeSelectionFinish();
         
     };
+
     // rebind based on new area options. This copies info from array "areas" into the data[area_id].area_options property.
     // it returns a list of all selected areas.
-    p.setAreaOptions = function (area_list) {
-        var i, area_options, ar,
-                    areas = area_list || {};
+    
+    /**
+     * Set area options from an array of option data.
+     * 
+     * @param {object[]} areas An array of objects containing area-specific options
+     */
+    
+    p.setAreaOptions = function (areas) {
+        var i, area_options, ar;
+        areas = areas || [];
+
         // refer by: map_data.options[map_data.data[x].area_option_id]
+        
         for (i = areas.length - 1; i >= 0; i--) {
             area_options = areas[i];
-            ar = this.getDataForKey(area_options.key);
-            if (ar) {
-                u.updateProps(ar.options, area_options);
-                // TODO: will not deselect areas that were previously selected, so this only works for an initial bind.
-                if (u.isBool(area_options.selected)) {
-                    ar.selected = area_options.selected;
+            if (area_options) {
+                ar = this.getDataForKey(area_options.key);
+                if (ar) {
+                    u.updateProps(ar.options, area_options);
+                    
+                    // TODO: will not deselect areas that were previously selected, so this only works
+                    // for an initial bind.
+                    
+                    if (u.isBool(area_options.selected)) {
+                        ar.selected = area_options.selected;
+                    }
                 }
             }
         }
