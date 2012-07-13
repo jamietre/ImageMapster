@@ -4,7 +4,7 @@ ImageMapster activates the areas in HTML imagemaps so you can highlight and sele
 
 ### Release Information
 
-The current release as of July 13, 2012 is **1.2.6**. This is a bugfix release, and contains no new features. See the [change log](https://github.com/jamietre/ImageMapster/blob/master/README.md) for details.
+The current release as of July 13, 2012 is **1.2.6**. This is a bugfix release, and contains no new features. See the [change log](https://github.com/jamietre/ImageMapster/blob/master/CHANGES.md) for details.
 
 Read the [release notes](http://blog.outsharked.com/2012/06/imagemapster-125-released.html) for 1.2.5, the last significant update. 
 
