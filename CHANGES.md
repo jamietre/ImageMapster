@@ -16,7 +16,7 @@ Features:
 
 Bug Fixes:
 
-* [Issue #69](https://github.com/jamietre/ImageMapster/issues/68) `fill` setting not being honored sometimes in IE6-8
+* [Issue #69](https://github.com/jamietre/ImageMapster/issues/69) `fill` setting not being honored sometimes in IE6-8
 * [Issue #68](https://github.com/jamietre/ImageMapster/issues/68) Accept `areas` array with dangling commas
 
 ####version 1.2.5 - 2012.06.19
