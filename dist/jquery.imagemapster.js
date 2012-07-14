@@ -1,5 +1,5 @@
 ﻿/* ImageMapster
-   Version: 1.2.5
+   Version: see $.mapster.version
 
 Copyright 2011-2012 James Treworgy
 http://www.outsharked.com/imagemapster
@@ -841,7 +841,7 @@ distribution build.
     };
 
     $.mapster = {
-        version: "1.2.5",
+        version: "1.2.6",
         render_defaults: {
             isSelectable: true,
             isDeselectable: true,
@@ -1261,16 +1261,18 @@ distribution build.
                 map_areas = map_data.options.areas;
             if (areas) {
                 $.each(areas, function (i, e) {
-                    index = u.indexOfProp(map_areas, "key", this.key);
-                    if (index >= 0) {
-                        $.extend(map_areas[index], this);
-                    }
-                    else {
-                        map_areas.push(this);
-                    }
-                    ar = map_data.getDataForKey(this.key);
-                    if (ar) {
-                        $.extend(ar.options, this);
+                    if (this) {
+                        index = u.indexOfProp(map_areas, "key", this.key);
+                        if (index >= 0) {
+                            $.extend(map_areas[index], this);
+                        }
+                        else {
+                            map_areas.push(this);
+                        }
+                        ar = map_data.getDataForKey(this.key);
+                        if (ar) {
+                            $.extend(ar.options, this);
+                        }
                     }
                 });
             }
@@ -1733,6 +1735,39 @@ distribution build.
 (function ($) {
     var p, m=$.mapster,
         u=m.utils;
+    
+    /**
+     * Implemenation to add each area in an AreaData object to the canvas
+     * @param {Graphics} graphics The target graphics object
+     * @param {AreaData} areaData The AreaData object (a collection of area elements and metadata)
+     * @param {object} options Rendering options to apply when rendering this group of areas
+     */
+    function addShapeGroupImpl(graphics, areaData, options) {
+        var me = graphics,
+            md = me.map_data,
+            isMask = options.isMask;
+
+        // first get area options. Then override fade for selecting, and finally merge in the 
+        // "select" effect options.
+
+        $.each(areaData.areas(), function (i,e) {
+            options.isMask = isMask || (e.nohref && md.options.noHrefIsMask);
+            me.addShape(e, options);
+        });
+
+        // it's faster just to manipulate the passed options isMask property and restore it, than to 
+        // copy the object each time
+        
+        options.isMask=isMask;
+
+    }
+
+
+    /**
+     * An object associated with a particular map_data instance to manage renderin.
+     * @param {MapData} map_data The MapData object bound to this instance
+     */
+    
     m.Graphics = function (map_data) {
         //$(window).unload($.mapster.unload);
         // create graphics functions for canvas and vml browsers. usage:
@@ -1748,351 +1783,397 @@ distribution build.
         me.masks = [];
         me.map_data = map_data;
     };
-    p = m.Graphics.prototype;
+    
+    p = m.Graphics.prototype= {
+        constructor: m.Graphics,
 
-    p.begin = function (curCanvas, curName) {
-        var c = $(curCanvas);
+        /**
+         * Initiate a graphics request for a canvas
+         * @param  {Element} canvas The canvas element that is the target of this operation
+         * @param  {string} [elementName] The name to assign to the element (VML only)
+         */
+        
+        begin: function(canvas, elementName) {
+            var c = $(canvas);
 
-        this.elementName = curName;
-        this.canvas = curCanvas;
+            this.elementName = elementName;
+            this.canvas = canvas;
 
-        this.width = c.width();
-        this.height = c.height();
-        this.shapes = [];
-        this.masks = [];
-        this.active = true;
+            this.width = c.width();
+            this.height = c.height();
+            this.shapes = [];
+            this.masks = [];
+            this.active = true;
 
-    };
-    p.addShape = function (mapArea, options) {
-        var addto = options.isMask ? this.masks : this.shapes;
-        addto.push({ mapArea: mapArea, options: options });
-    };
-    p.createVisibleCanvas = function (md) {
-        return $(this.createCanvasFor(md))
-            .addClass('mapster_el')
-            .css(m.canvas_style)[0];
-    };
-    p._addShapeGroupImpl = function (areaData, mode,options) {
-        var me = this,
-            md = me.map_data,
-            isMask = options.isMask;
+        },
+        
+        /**
+         * Add an area to be rendered to this canvas. 
+         * @param {MapArea} mapArea The MapArea object to render
+         * @param {object} options An object containing any rendering options that should override the
+         *                         defaults for the area
+         */
+        
+        addShape: function(mapArea, options) {
+            var addto = options.isMask ? this.masks : this.shapes;
+            addto.push({ mapArea: mapArea, options: options });
+        },
 
-        // first get area options. Then override fade for selecting, and finally merge in the "select" effect options.
-        // copy baseOpts
+        /**
+         * Create a canvas that is sized and styled for the MapData object
+         * @param  {MapData} mapData The MapData object that will receive this new canvas
+         * @return {Element} A canvas element
+         */
+        
+        createVisibleCanvas: function (mapData) {
+            return $(this.createCanvasFor(mapData))
+                .addClass('mapster_el')
+                .css(m.canvas_style)[0];
+        },
 
-        $.each(areaData.areas(), function (i,e) {
-            options.isMask = isMask || (e.nohref && md.options.noHrefIsMask);
-            me.addShape(e, options);
-        });
-        // it's faster just to manipulate the passed options isMask property and restore it, than to copy the object
-        // each time
-        options.isMask=isMask;
+        /**
+         * Add a group of shapes from an AreaData object to the canvas
+         * 
+         * @param {AreaData} areaData An AreaData object (a set of area elements)
+         * @param {string} mode     The rendering mode, "select" or "highlight". This determines the target 
+         *                          canvas and which default options to use.
+         * @param {striong} options  Rendering options
+         */
+        
+        addShapeGroup: function (areaData, mode,options) {
+            // render includeKeys first - because they could be masks
+            var me = this,
+                list, name, canvas,
+                map_data = this.map_data,
+                opts = areaData.effectiveRenderOptions(mode);
 
-    };
-    p.addShapeGroup = function (areaData, mode,options) {
-        // render includeKeys first - because they could be masks
-        var me = this,
-            list, name, canvas,
-            map_data = this.map_data,
-            opts = areaData.effectiveRenderOptions(mode);
+            if (options) {
+                 $.extend(opts,options);
+            }
 
-        if (options) {
-             $.extend(opts,options);
+            if (mode === 'select') {
+                name = "static_" + areaData.areaId.toString();
+                canvas = map_data.base_canvas;
+            } else {
+                canvas = map_data.overlay_canvas;
+            }
+
+            me.begin(canvas, name);
+
+            if (opts.includeKeys) {
+                list = u.split(opts.includeKeys);
+                $.each(list, function (i,e) {
+                    var areaData = map_data.getDataForKey(e.toString());
+                    addShapeGroupImpl(me,areaData, areaData.effectiveRenderOptions(mode));
+                });
+            }
+
+            addShapeGroupImpl(me,areaData, opts);
+            me.render();
+            if (opts.fade) {
+                
+                // fading requires special handling for IE. We must access the fill elements directly. The fader also has to deal with 
+                // the "opacity" attribute (not css)
+
+                u.fader(m.hasCanvas ? 
+                    canvas : 
+                    $(canvas).find('._fill').not('.mapster_mask'),
+                0,
+                m.hasCanvas ? 
+                    1 : 
+                    opts.fillOpacity,
+                opts.fadeDuration); 
+               
+            }
+
         }
-
-        if (mode === 'select') {
-            name = "static_" + areaData.areaId.toString();
-            canvas = map_data.base_canvas;
-        } else {
-            canvas = map_data.overlay_canvas;
-        }
-
-        me.begin(canvas, name);
-
-        if (opts.includeKeys) {
-            list = u.split(opts.includeKeys);
-            $.each(list, function (i,e) {
-                var areaData = map_data.getDataForKey(e.toString());
-                me._addShapeGroupImpl(areaData, mode,areaData.effectiveRenderOptions(mode));
-            });
-        }
-
-        me._addShapeGroupImpl(areaData, mode,opts);
-        me.render();
-        if (opts.fade) {
-            
-            // fading requires special handling for IE. We must access the fill elements directly. The fader also has to deal with 
-            // the "opacity" attribute (not css)
-
-            u.fader(m.hasCanvas ? 
-                canvas : 
-                $(canvas).find('._fill').not('.mapster_mask'),
-            0,
-            m.hasCanvas ? 
-                1 : 
-                opts.fillOpacity,
-            opts.fadeDuration); 
-           
-        }
-
     };
+
     // configure remaining prototype methods for ie or canvas-supporting browser
-    m.initGraphics = function() {
-        if (m.hasCanvas) {
-            p.hex_to_decimal = function (hex) {
-                return Math.max(0, Math.min(parseInt(hex, 16), 255));
-            };
-            p.css3color = function (color, opacity) {
-                return 'rgba(' + this.hex_to_decimal(color.substr(0, 2)) + ','
-                        + this.hex_to_decimal(color.substr(2, 2)) + ','
-                        + this.hex_to_decimal(color.substr(4, 2)) + ',' + opacity + ')';
-            };
 
-            p.renderShape = function (context, mapArea, offset) {
-                var i,
-                    c = mapArea.coords(null,offset);
+    if (m.hasCanvas) {
 
-                switch (mapArea.shape) {
-                    case 'rect':
-                        context.rect(c[0], c[1], c[2] - c[0], c[3] - c[1]);
-                        break;
-                    case 'poly':
-                        context.moveTo(c[0], c[1]);
+        /**
+         * Convert a hex value to decimal
+         * @param  {string} hex A hexadecimal string
+         * @return {int} Integer represenation of the hex string
+         */
+        
+        p.hex_to_decimal = function (hex) {
+            return Math.max(0, Math.min(parseInt(hex, 16), 255));
+        };
 
-                        for (i = 2; i < mapArea.length; i += 2) {
-                            context.lineTo(c[i], c[i + 1]);
-                        }
-                        context.lineTo(c[0], c[1]);
-                        break;
-                    case 'circ':
-                    case 'circle':
-                        context.arc(c[0], c[1], c[2], 0, Math.PI * 2, false);
-                        break;
-                }
-            };
-            p.addAltImage = function (context, image, mapArea, options) {
-                context.beginPath();
+        p.css3color = function (color, opacity) {
+            return 'rgba(' + this.hex_to_decimal(color.substr(0, 2)) + ','
+                    + this.hex_to_decimal(color.substr(2, 2)) + ','
+                    + this.hex_to_decimal(color.substr(4, 2)) + ',' + opacity + ')';
+        };
 
-                this.renderShape(context, mapArea);
-                context.closePath();
-                context.clip();
+        p.renderShape = function (context, mapArea, offset) {
+            var i,
+                c = mapArea.coords(null,offset);
 
-                context.globalAlpha = options.altImageOpacity || options.fillOpacity;
+            switch (mapArea.shape) {
+                case 'rect':
+                    context.rect(c[0], c[1], c[2] - c[0], c[3] - c[1]);
+                    break;
+                case 'poly':
+                    context.moveTo(c[0], c[1]);
 
-                context.drawImage(image, 0, 0, mapArea.owner.scaleInfo.width, mapArea.owner.scaleInfo.height);
-            };
-
-            p.render = function () {
-                // firefox 6.0 context.save() seems to be broken. to work around,  we have to draw the contents on one temp canvas,
-                // the mask on another, and merge everything. ugh. fixed in 1.2.2. unfortunately this is a lot more code for masks,
-                // but no other way around it that i can see.
-
-                var maskCanvas, maskContext,
-                            me = this,
-                            hasMasks = me.masks.length,
-                            shapeCanvas = me.createCanvasFor(me.map_data),
-                            shapeContext = shapeCanvas.getContext('2d'),
-                            context = me.canvas.getContext('2d');
-
-                if (hasMasks) {
-                    maskCanvas = me.createCanvasFor(me.map_data);
-                    maskContext = maskCanvas.getContext('2d');
-                    maskContext.clearRect(0, 0, maskCanvas.width, maskCanvas.height);
-
-                    $.each(me.masks, function (i,e) {
-                        maskContext.save();
-                        maskContext.beginPath();
-                        me.renderShape(maskContext, e.mapArea);
-                        maskContext.closePath();
-                        maskContext.clip();
-                        maskContext.lineWidth = 0;
-                        maskContext.fillStyle = '#000';
-                        maskContext.fill();
-                        maskContext.restore();
-                    });
-
-                }
-
-                $.each(me.shapes, function (i,s) {
-                    shapeContext.save();
-                    if (s.options.fill) {
-                        if (s.options.alt_image) {
-                            me.addAltImage(shapeContext, s.options.alt_image, s.mapArea, s.options);
-                        } else {
-                            shapeContext.beginPath();
-                            me.renderShape(shapeContext, s.mapArea);
-                            shapeContext.closePath();
-                            //shapeContext.clip();
-                            shapeContext.fillStyle = me.css3color(s.options.fillColor, s.options.fillOpacity);
-                            shapeContext.fill();
-                        }
+                    for (i = 2; i < mapArea.length; i += 2) {
+                        context.lineTo(c[i], c[i + 1]);
                     }
-                    shapeContext.restore();
+                    context.lineTo(c[0], c[1]);
+                    break;
+                case 'circ':
+                case 'circle':
+                    context.arc(c[0], c[1], c[2], 0, Math.PI * 2, false);
+                    break;
+            }
+        };
+
+        p.addAltImage = function (context, image, mapArea, options) {
+            context.beginPath();
+
+            this.renderShape(context, mapArea);
+            context.closePath();
+            context.clip();
+
+            context.globalAlpha = options.altImageOpacity || options.fillOpacity;
+
+            context.drawImage(image, 0, 0, mapArea.owner.scaleInfo.width, mapArea.owner.scaleInfo.height);
+        };
+
+        p.render = function () {
+            // firefox 6.0 context.save() seems to be broken. to work around,  we have to draw the contents on one temp canvas,
+            // the mask on another, and merge everything. ugh. fixed in 1.2.2. unfortunately this is a lot more code for masks,
+            // but no other way around it that i can see.
+
+            var maskCanvas, maskContext,
+                        me = this,
+                        hasMasks = me.masks.length,
+                        shapeCanvas = me.createCanvasFor(me.map_data),
+                        shapeContext = shapeCanvas.getContext('2d'),
+                        context = me.canvas.getContext('2d');
+
+            if (hasMasks) {
+                maskCanvas = me.createCanvasFor(me.map_data);
+                maskContext = maskCanvas.getContext('2d');
+                maskContext.clearRect(0, 0, maskCanvas.width, maskCanvas.height);
+
+                $.each(me.masks, function (i,e) {
+                    maskContext.save();
+                    maskContext.beginPath();
+                    me.renderShape(maskContext, e.mapArea);
+                    maskContext.closePath();
+                    maskContext.clip();
+                    maskContext.lineWidth = 0;
+                    maskContext.fillStyle = '#000';
+                    maskContext.fill();
+                    maskContext.restore();
                 });
 
+            }
 
-                // render strokes at end since masks get stroked too
-
-                $.each(me.shapes.concat(me.masks), function (i,s) {
-                    var offset = s.options.strokeWidth === 1 ? 0.5 : 0;
-                    // offset applies only when stroke width is 1 and stroke would render between pixels.
-
-                    if (s.options.stroke) {
-                        shapeContext.save();
-                        shapeContext.strokeStyle = me.css3color(s.options.strokeColor, s.options.strokeOpacity);
-                        shapeContext.lineWidth = s.options.strokeWidth;
-
-                        shapeContext.beginPath();
-
-                        me.renderShape(shapeContext, s.mapArea, offset);
-                        shapeContext.closePath();
-                        shapeContext.stroke();
-                        shapeContext.restore();
-                    }
-                });
-
-                if (hasMasks) {
-                    // render the new shapes against the mask
-
-                    maskContext.globalCompositeOperation = "source-out";
-                    maskContext.drawImage(shapeCanvas, 0, 0);
-
-                    // flatten into the main canvas
-                    context.drawImage(maskCanvas, 0, 0);
-                } else {
-                    context.drawImage(shapeCanvas, 0, 0);
-                }
-
-                me.active = false;
-                return me.canvas;
-
-
-
-            };
-
-            // create a canvas mimicing dimensions of an existing element
-            p.createCanvasFor = function (md) {
-                return $('<canvas width="' + md.scaleInfo.width + '" height="' +md.scaleInfo.height + '"></canvas>')[0];
-            };
-            p.clearHighlight = function () {
-                var c = this.map_data.overlay_canvas;
-                c.getContext('2d').clearRect(0, 0, c.width, c.height);
-            };
-            p.removeSelections = function () {
-
-            };
-            // Draw all items from selected_list to a new canvas, then swap with the old one. This is used to delete items when using canvases.
-            p.refreshSelections = function () {
-                var canvas_temp, map_data = this.map_data;
-                // draw new base canvas, then swap with the old one to avoid flickering
-                canvas_temp = map_data.base_canvas;
-
-                map_data.base_canvas = this.createVisibleCanvas(map_data);
-                $(map_data.base_canvas).hide();
-                $(canvas_temp).before(map_data.base_canvas);
-
-                map_data.redrawSelections();
-
-                $(map_data.base_canvas).show();
-                $(canvas_temp).remove();
-            };
-
-        } else {
-            // special handling is needed for opacity in VML elements. jQuery CSS does not properly
-            // deal with "opacity" attribute of VML fills.
-            u.setOpacity = function(el,opacity) {         
-                $(el).each(function(i,e) {
-                    if (typeof e.opacity !=='undefined') {
-                       e.opacity=opacity;
+            $.each(me.shapes, function (i,s) {
+                shapeContext.save();
+                if (s.options.fill) {
+                    if (s.options.alt_image) {
+                        me.addAltImage(shapeContext, s.options.alt_image, s.mapArea, s.options);
                     } else {
-                        $(e).css("opacity",opacity);
+                        shapeContext.beginPath();
+                        me.renderShape(shapeContext, s.mapArea);
+                        shapeContext.closePath();
+                        //shapeContext.clip();
+                        shapeContext.fillStyle = me.css3color(s.options.fillColor, s.options.fillOpacity);
+                        shapeContext.fill();
                     }
-                });
-            };
-            p.renderShape = function (mapArea, options, cssclass) {
-                var me = this, stroke, e, t_fill, el_name, el_class, template, c = mapArea.coords();
-                el_name = me.elementName ? 'name="' + me.elementName + '" ' : '';
-                el_class = cssclass ? 'class="' + cssclass + '" ' : '';
+                }
+                shapeContext.restore();
+            });
 
-                t_fill = '<v:fill color="#' + options.fillColor + '" class="_fill" opacity="' + (options.fill ? options.fillOpacity : 0) + '" /><v:stroke class="_fill" opacity="' + options.strokeOpacity + '"/>';
 
-                if (options.stroke) {
-                    stroke = 'strokeweight=' + options.strokeWidth + ' stroked="t" strokecolor="#' + options.strokeColor + '"';
+            // render strokes at end since masks get stroked too
+
+            $.each(me.shapes.concat(me.masks), function (i,s) {
+                var offset = s.options.strokeWidth === 1 ? 0.5 : 0;
+                // offset applies only when stroke width is 1 and stroke would render between pixels.
+
+                if (s.options.stroke) {
+                    shapeContext.save();
+                    shapeContext.strokeStyle = me.css3color(s.options.strokeColor, s.options.strokeOpacity);
+                    shapeContext.lineWidth = s.options.strokeWidth;
+
+                    shapeContext.beginPath();
+
+                    me.renderShape(shapeContext, s.mapArea, offset);
+                    shapeContext.closePath();
+                    shapeContext.stroke();
+                    shapeContext.restore();
+                }
+            });
+
+            if (hasMasks) {
+                // render the new shapes against the mask
+
+                maskContext.globalCompositeOperation = "source-out";
+                maskContext.drawImage(shapeCanvas, 0, 0);
+
+                // flatten into the main canvas
+                context.drawImage(maskCanvas, 0, 0);
+            } else {
+                context.drawImage(shapeCanvas, 0, 0);
+            }
+
+            me.active = false;
+            return me.canvas;
+
+
+
+        };
+
+        // create a canvas mimicing dimensions of an existing element
+        p.createCanvasFor = function (md) {
+            return $('<canvas width="' + md.scaleInfo.width + '" height="' +md.scaleInfo.height + '"></canvas>')[0];
+        };
+        p.clearHighlight = function () {
+            var c = this.map_data.overlay_canvas;
+            c.getContext('2d').clearRect(0, 0, c.width, c.height);
+        };
+        p.removeSelections = function () {
+
+        };
+        // Draw all items from selected_list to a new canvas, then swap with the old one. This is used to delete items when using canvases.
+        p.refreshSelections = function () {
+            var canvas_temp, map_data = this.map_data;
+            // draw new base canvas, then swap with the old one to avoid flickering
+            canvas_temp = map_data.base_canvas;
+
+            map_data.base_canvas = this.createVisibleCanvas(map_data);
+            $(map_data.base_canvas).hide();
+            $(canvas_temp).before(map_data.base_canvas);
+
+            map_data.redrawSelections();
+
+            $(map_data.base_canvas).show();
+            $(canvas_temp).remove();
+        };
+
+    } else {
+
+        /**
+         * Set the opacity of the element. This is an IE<8 specific function for handling VML.
+         * When using VML we must override the "setOpacity" utility function (monkey patch ourselves).
+         * jQuery does not deal with opacity correctly for VML elements. This deals with that.
+         * 
+         * @param {Element} el The DOM element
+         * @param {double} opacity A value between 0 and 1 inclusive.
+         */
+        
+        u.setOpacity = function(el,opacity) {         
+            $(el).each(function(i,e) {
+                if (typeof e.opacity !=='undefined') {
+                   e.opacity=opacity;
                 } else {
-                    stroke = 'stroked="f"';
+                    $(e).css("opacity",opacity);
                 }
+            });
+        };
 
-                switch (mapArea.shape) {
-                    case 'rect':
-                        template = '<v:rect ' + el_class + el_name + ' filled="t" ' + stroke + ' style="zoom:1;margin:0;padding:0;display:block;position:absolute;left:' + c[0] + 'px;top:' + c[1]
-                                    + 'px;width:' + (c[2] - c[0]) + 'px;height:' + (c[3] - c[1]) + 'px;">' + t_fill + '</v:rect>';
-                        break;
-                    case 'poly':
-                        template = '<v:shape ' + el_class + el_name + ' filled="t" ' + stroke + ' coordorigin="0,0" coordsize="' + me.width + ',' + me.height
-                                    + '" path="m ' + c[0] + ',' + c[1] + ' l ' + c.slice(2).join(',')
-                                    + ' x e" style="zoom:1;margin:0;padding:0;display:block;position:absolute;top:0px;left:0px;width:' + me.width + 'px;height:' + me.height + 'px;">' + t_fill + '</v:shape>';
-                        break;
-                    case 'circ':
-                    case 'circle':
-                        template = '<v:oval ' + el_class + el_name + ' filled="t" ' + stroke
-                                    + ' style="zoom:1;margin:0;padding:0;display:block;position:absolute;left:' + (c[0] - c[2]) + 'px;top:' + (c[1] - c[2])
-                                    + 'px;width:' + (c[2] * 2) + 'px;height:' + (c[2] * 2) + 'px;">' + t_fill + '</v:oval>';
-                        break;
-                }
-                e = $(template);
-                $(me.canvas).append(e);
+        p.renderShape = function (mapArea, options, cssclass) {
+            var me = this, fill,stroke, e, t_fill, el_name, el_class, template, c = mapArea.coords();
+            el_name = me.elementName ? 'name="' + me.elementName + '" ' : '';
+            el_class = cssclass ? 'class="' + cssclass + '" ' : '';
 
-                return e;
-            };
-            p.render = function () {
-                var opts, me = this;
+            t_fill = '<v:fill color="#' + options.fillColor + '" class="_fill" opacity="' + 
+                (options.fill ? 
+                    options.fillOpacity :
+                    0) + 
+                '" /><v:stroke class="_fill" opacity="' + 
+                options.strokeOpacity + '"/>';
 
-                $.each(this.shapes, function (i,e) {
-                    me.renderShape(e.mapArea, e.options);
+
+            stroke = options.stroke ?
+                ' strokeweight=' + options.strokeWidth + ' stroked="t" strokecolor="#' + 
+                    options.strokeColor + '"' :
+                ' stroked="f"';
+            
+            fill = options.fill ? 
+                ' filled="t"' :
+                ' filled="f"';
+
+            switch (mapArea.shape) {
+                case 'rect':
+                    template = '<v:rect ' + el_class + el_name + fill + stroke + 
+                        ' style="zoom:1;margin:0;padding:0;display:block;position:absolute;left:' + 
+                          c[0] + 'px;top:' + c[1]  + 'px;width:' + (c[2] - c[0]) + 
+                          'px;height:' + (c[3] - c[1]) + 'px;">' + t_fill + '</v:rect>';
+                    break;
+                case 'poly':
+                    template = '<v:shape ' + el_class + el_name + fill + stroke + ' coordorigin="0,0" coordsize="' + me.width + ',' + me.height
+                                + '" path="m ' + c[0] + ',' + c[1] + ' l ' + c.slice(2).join(',')
+                                + ' x e" style="zoom:1;margin:0;padding:0;display:block;position:absolute;top:0px;left:0px;width:' + me.width + 'px;height:' + me.height + 'px;">' + t_fill + '</v:shape>';
+                    break;
+                case 'circ':
+                case 'circle':
+                    template = '<v:oval ' + el_class + el_name + fill + stroke
+                                + ' style="zoom:1;margin:0;padding:0;display:block;position:absolute;left:' + (c[0] - c[2]) + 'px;top:' + (c[1] - c[2])
+                                + 'px;width:' + (c[2] * 2) + 'px;height:' + (c[2] * 2) + 'px;">' + t_fill + '</v:oval>';
+                    break;
+            }
+            e = $(template);
+            $(me.canvas).append(e);
+
+            return e;
+        };
+        p.render = function () {
+            var opts, me = this;
+
+            $.each(this.shapes, function (i,e) {
+                me.renderShape(e.mapArea, e.options);
+            });
+
+            if (this.masks.length) {
+                $.each(this.masks, function (i,e) {
+                    opts = u.updateProps({},
+                        e.options, {
+                            fillOpacity: 1,
+                            fillColor: e.options.fillColorMask
+                        });
+                    me.renderShape(e.mapArea, opts, 'mapster_mask');
                 });
+            }
 
-                if (this.masks.length) {
-                    $.each(this.masks, function (i,e) {
-                        opts = u.updateProps({},
-                            e.options, {
-                                fillOpacity: 1,
-                                fillColor: e.options.fillColorMask
-                            });
-                        me.renderShape(e.mapArea, opts, 'mapster_mask');
-                    });
-                }
+            this.active = false;
+            return this.canvas;
+        };
 
-                this.active = false;
-                return this.canvas;
-            };
+        p.createCanvasFor = function (md) {
+            var w = md.scaleInfo.width,
+                h = md.scaleInfo.height;
+            return $('<var width="' + w + '" height="' + h 
+                + '" style="zoom:1;overflow:hidden;display:block;width:' 
+                + w + 'px;height:' + h + 'px;"></var>')[0];
+        };
 
-            p.createCanvasFor = function (md) {
-                var w = md.scaleInfo.width,
-                    h = md.scaleInfo.height;
-                return $('<var width="' + w + '" height="' + h 
-                    + '" style="zoom:1;overflow:hidden;display:block;width:' 
-                    + w + 'px;height:' + h + 'px;"></var>')[0];
-            };
+        p.clearHighlight = function () {
+            $(this.map_data.overlay_canvas).children().remove();
+        };
+        // remove single or all selections
+        p.removeSelections = function (area_id) {
+            if (area_id >= 0) {
+                $(this.map_data.base_canvas).find('[name="static_' + area_id.toString() + '"]').remove();
+            }
+            else {
+                $(this.map_data.base_canvas).children().remove();
+            }
+        };
+        p.refreshSelections = function () {
+            return null;
+        };
 
-            p.clearHighlight = function () {
-                $(this.map_data.overlay_canvas).children().remove();
-            };
-            // remove single or all selections
-            p.removeSelections = function (area_id) {
-                if (area_id >= 0) {
-                    $(this.map_data.base_canvas).find('[name="static_' + area_id.toString() + '"]').remove();
-                }
-                else {
-                    $(this.map_data.base_canvas).children().remove();
-                }
-            };
-            p.refreshSelections = function () {
-                return null;
-            };
+    }
 
-        }
-    };
-    m.initGraphics();
 } (jQuery));/* mapdata.js
    the MapData object, repesents an instance of a single bound imagemap
 */
@@ -2141,7 +2222,12 @@ distribution build.
         this.initializeDefaults();
         this.configureOptions(options);
 
-        // Try to stop browsers from drawing their own outline
+        /**
+         * Mousedown event. This is captured only to prevent browser from drawing an outline around an
+         * area when it's clicked.
+         * 
+         * @param  {EventData} e jQuery event data
+         */
         this.mousedown = function (e) {
             if (!$.mapster.hasCanvas) {
                 this.blur();
@@ -2149,6 +2235,13 @@ distribution build.
             e.preventDefault();
         };
 
+        /**
+         * Mouseover event. Handle highlight rendering and client callback on mouseover
+         * 
+         * @param  {EventData} e jQuery event data
+         * @return {[type]}   [description]
+         */
+        
         this.mouseover = function (e) {
             var arData = me.getAllDataForArea(this),
                 ar=arData.length ? arData[0] : null;
@@ -2605,20 +2698,35 @@ distribution build.
         this.removeSelectionFinish();
         
     };
+
     // rebind based on new area options. This copies info from array "areas" into the data[area_id].area_options property.
     // it returns a list of all selected areas.
-    p.setAreaOptions = function (area_list) {
-        var i, area_options, ar,
-                    areas = area_list || {};
+    
+    /**
+     * Set area options from an array of option data.
+     * 
+     * @param {object[]} areas An array of objects containing area-specific options
+     */
+    
+    p.setAreaOptions = function (areas) {
+        var i, area_options, ar;
+        areas = areas || [];
+
         // refer by: map_data.options[map_data.data[x].area_option_id]
+        
         for (i = areas.length - 1; i >= 0; i--) {
             area_options = areas[i];
-            ar = this.getDataForKey(area_options.key);
-            if (ar) {
-                u.updateProps(ar.options, area_options);
-                // TODO: will not deselect areas that were previously selected, so this only works for an initial bind.
-                if (u.isBool(area_options.selected)) {
-                    ar.selected = area_options.selected;
+            if (area_options) {
+                ar = this.getDataForKey(area_options.key);
+                if (ar) {
+                    u.updateProps(ar.options, area_options);
+                    
+                    // TODO: will not deselect areas that were previously selected, so this only works
+                    // for an initial bind.
+                    
+                    if (u.isBool(area_options.selected)) {
+                        ar.selected = area_options.selected;
+                    }
                 }
             }
         }

@@ -2,6 +2,12 @@
 
 ImageMapster activates the areas in HTML imagemaps so you can highlight and select them. It has lots of other features for manual control, tooltips, resizing, and more. It is designed to be compatiable with every common platform, and is tested with Internet Explorer 6-10, Firefox 3.0+, Safari, Opera, and Chrome. It works on mobile devices and doesn't use Flash.
 
+### Release Information
+
+The current release as of July 13, 2012 is **1.2.6**. This is a bugfix release, and contains no new features. See the [change log](https://github.com/jamietre/ImageMapster/blob/master/CHANGES.md) for details.
+
+Read the [release notes](http://blog.outsharked.com/2012/06/imagemapster-125-released.html) for 1.2.5, the last significant update. 
+
 ### Find out More
 
 There are lots of examples and documentation on the [ImageMapster web site.](http://www.outsharked.com/imagemapster)
@@ -19,12 +25,6 @@ You can find the [source code on GitHub.](https://github.com/jamietre/ImageMapst
 - You can also check the [feedback](http://www.outsharked.com/imagemapster/default.aspx?feedback.html) page on the project web site. 
 
 - Still can't figure it out? [email me directly](mailto:alien@outsharked.com) if you still need help. I will respond as time permits, but I will always respond.
-
-### Release Information
-
-The current release as of June 19, 2012 is **1.2.5**. Read the [release notes.](http://blog.outsharked.com/2012/06/imagemapster-125-released.html) for 1.2.5.
-
-
 
 
 ### Usage

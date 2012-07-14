@@ -18,7 +18,7 @@
     };
 
     $.mapster = {
-        version: "1.2.5",
+        version: "1.2.6",
         render_defaults: {
             isSelectable: true,
             isDeselectable: true,
@@ -447,6 +447,7 @@
                 map_areas = map_data.options.areas;
             if (areas) {
                 $.each(areas, function (i, e) {
+<<<<<<< HEAD
                     
                     // Issue #68 - ignore invalid data in areas array
                     
@@ -464,6 +465,20 @@
                     ar = map_data.getDataForKey(e.key);
                     if (ar) {
                         $.extend(ar.options, e);
+=======
+                    if (this) {
+                        index = u.indexOfProp(map_areas, "key", this.key);
+                        if (index >= 0) {
+                            $.extend(map_areas[index], this);
+                        }
+                        else {
+                            map_areas.push(this);
+                        }
+                        ar = map_data.getDataForKey(this.key);
+                        if (ar) {
+                            $.extend(ar.options, this);
+                        }
+>>>>>>> 156f37007f5e9a9c8971c224ea71dae74c075b4a
                     }
                 });
             }
