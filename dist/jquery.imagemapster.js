@@ -843,7 +843,7 @@ distribution build.
     };
 
     $.mapster = {
-        version: "1.2.6.004",
+        version: "1.2.6.005",
         render_defaults: {
             isSelectable: true,
             isDeselectable: true,
