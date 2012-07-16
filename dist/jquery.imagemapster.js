@@ -842,7 +842,7 @@ distribution build.
     };
 
     $.mapster = {
-        version: "1.2.6.003",
+        version: "1.2.6.004",
         render_defaults: {
             isSelectable: true,
             isDeselectable: true,
@@ -1493,6 +1493,7 @@ distribution build.
                 }
                 
                if (map_data) {
+                    
                     keys = '';
                     if (e.nodeName.toUpperCase()==='IMG') {
                         if (!m.queueCommand(map_data, $(e), 'set', [selected, key, opts])) {
@@ -3390,7 +3391,9 @@ distribution build.
                 });
         }
     };
-    // highlight this area, no render causes it to happen internally only
+    
+    // highlight this area
+     
     p.highlight = function (options) {
         var o = this.owner;
         if (this.effectiveOptions().highlight) {
@@ -3411,16 +3414,25 @@ distribution build.
             o.clearSelections();
         }
 
+
+
+
         // because areas can overlap - we can't depend on the selection state to tell us anything about the inner areas.
         // don't check if it's already selected
+        
         if (!this.isSelected()) {
             if (options) {
-                this.optsCache = $.extend(this.effectiveRenderOptions('select'),options);
+                
+                // cache the current options, and map the altImageId if an altimage was passed
+
+                this.optsCache = $.extend(this.effectiveRenderOptions('select'),
+                    options,
+                    { 
+                        altImageId: o.images.add(options.altImage)
+                    });
             }
             this.drawSelection();
-            if (options) {
-                this.optsCache=null;
-            }
+
             this.selected = true;
             this.changeState('select', true);
         }

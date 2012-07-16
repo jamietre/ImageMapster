@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
    <!-- <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.js"></script>-->
- <script type="text/javascript" src="redist/jquery.1.7.1.js"></script>
+ <script type="text/javascript" src="redist/jquery.1.7.2.min.js"></script>
    <script type="text/javascript" src="../src/redist/when.js"></script>
     <script type="text/javascript" src="../src/core.js"></script>
     <script type="text/javascript" src="../src/graphics.js"></script>
@@ -15,11 +15,19 @@
 
     <script type="text/javascript">
 $(document).ready(function() {
-    $('img').mapster({
+    var img = $('img');
+    
+    $('#az-test').bind('click',function() {
+        img.mapster('set',true,'AZ', { altImage: 'img2'});
+    });
+
+    img.mapster({
         mapKey: 'state',
         altImages: { 
-            img5: '../examples/images/usa_map_720_alt_5.jpg',
-            img2: '../examples/images/usa_map_720_alt_3.jpg'
+            img2: '../examples/images/usa_map_720_alt_2.jpg',
+            img3: '../examples/images/usa_map_720_alt_3.jpg',
+            img4: '../examples/images/usa_map_720_alt_3.jpg',
+            img5: '../examples/images/usa_map_720_alt_5.jpg'
         },
             
         areas: [
@@ -34,7 +42,7 @@ $(document).ready(function() {
                     stroke: false,
                     fillOpacity: 0.3,
                     altImageOpacity: 0.5,
-                     altImage: 'img2' 
+                     altImage: 'img5' 
 
                 }
             },
@@ -53,6 +61,7 @@ $(document).ready(function() {
 </script>
 </head>    
 <body>
+    <a id="az-test" href="#">click to bind az with altimage2</a>
 <img src="../examples/images/usa_map_720.png" 
 usemap="#usa" style="width:600px;height:371px;">
 <map id="usa_image_map" name="usa">

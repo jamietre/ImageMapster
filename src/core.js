@@ -19,7 +19,7 @@
     };
 
     $.mapster = {
-        version: "1.2.6.003",
+        version: "1.2.6.004",
         render_defaults: {
             isSelectable: true,
             isDeselectable: true,
@@ -670,6 +670,7 @@
                 }
                 
                if (map_data) {
+                    
                     keys = '';
                     if (e.nodeName.toUpperCase()==='IMG') {
                         if (!m.queueCommand(map_data, $(e), 'set', [selected, key, opts])) {
