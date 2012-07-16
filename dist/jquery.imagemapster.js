@@ -2578,7 +2578,7 @@ distribution build.
                 if (me.options.showToolTip) {
                     $.each(arData,function(i,e) {
                         if (e.effectiveOptions().toolTip) {
-                            e.showToolTip();
+                            e.showTooltip();
                         }
                     });
                 }
@@ -2636,7 +2636,7 @@ distribution build.
             me.ensureNoHighlight();
 
             if (opts.toolTipClose && $.inArray('area-mouseout', opts.toolTipClose) >= 0 && me.activeToolTip) {
-                me.clearToolTip();
+                me.clearTooltip();
             }
         };
         this.click = function (e) {
@@ -3246,7 +3246,7 @@ distribution build.
         me.images.clear();
 
         this.image = null;
-        u.ifFunction(this.clearToolTip, this);
+        u.ifFunction(this.clearTooltip, this);
     };
     // Compelete cleanup process for deslecting items. Called after a batch operation, or by AreaData for single
     // operations not flagged as "partial"
