@@ -31,10 +31,12 @@
             return result;
         },
      
-        /* private properties */
- 
-        _isReadyToBind: function() {
-            return this.complete && (!this.options.safeLoad || m.windowLoaded);
+        /** 
+         * a boolean value indicates whether all images are done loading 
+         * @return {bool} true when all are done
+         */
+        complete: function() {
+            return $.inArray(false, this.status) < 0;
         },
         
         /**
@@ -103,13 +105,6 @@
             this.splice(0);
             
             /**
-             * Flag indicating the all images have finished loading
-             * @type {boolean}
-             */
-            
-            this.complete= false;         // (bool)    when configuration is complete       
-            
-            /**
              * The number of attempts to make to before giving up, calculate from the config timeout.
              * @type {boolean}
              */
@@ -146,10 +141,10 @@
                 index=me._add(image[0]);
                 
                 image
-                    // .bind('load',function(e) {
-                    //     me.imageLoaded.call(me,e);
-                    // })
-                    .bind('ferror',function(e) {
+                    .bind('load',function(e) {
+                        me.imageLoaded.call(me,e);
+                    })
+                    .bind('error',function(e) {
                         me.imageLoadError.call(me,e);
                     });
                 
@@ -175,47 +170,48 @@
          * @param  {boolean} retry when true, indicates that the function is calling itself after failure 
          * @return {Promise} a promise that resolves when the images have finished loading
          */
+        
         bind: function(retry) {
             var me = this,
-                defer=u.defer(),
                 triesLeft = me.bindTries,
 
             /* A recursive function to continue checking that the images have been 
                loaded until a timeout has elapsed */
 
             check=function() {
-                var i,
-                    loaded=true;
+                var i;
 
-                if (!me.complete) {
-                    i=me.length;
+                // refresh status of images
+                
+                i=me.length;
 
-                    while (i-->0) {
-                        if (!me.isLoaded(i)) {
-                            loaded=false;
-                            break;
-                        }
-                    }
-                    me.complete=loaded;
-                    
-                    // check to see if every image has already been loaded
-                    
-                    if (me._isReadyToBind()) {
-                        defer.resolve();
-                    } else {
-                        // to account for failure of onLoad to fire in rare situations
-                        if (triesLeft-- > 0) {
-                            me.imgTimeout=window.setTimeout(function() {
-                                check.call(me,true);
-                            }, 50);
-                        } else {
-                            me.imageLoadError.call(me);
-                        }
+                while (i-->0) {
+                    if (!me.isLoaded(i)) {
+                        break;
                     }
                 }
+
+                // check to see if every image has already been loaded
+                
+                if (me.complete()) {
+                    me.deferred.resolve();
+                } else {
+                    // to account for failure of onLoad to fire in rare situations
+                    if (triesLeft-- > 0) {
+                        me.imgTimeout=window.setTimeout(function() {
+                            check.call(me,true);
+                        }, 50);
+                    } else {
+                        me.imageLoadError.call(me);
+                    }
+                }
+            
             };
+
+            me.deferred=u.defer();
+            
             check();
-            return defer.promise;
+            return me.deferred.promise;
         },
    
         /**
@@ -223,19 +219,19 @@
          * @param  {object} e jQuery event data
          */
         
-        // imageLoaded: function(e) {
-        //     var me=this,
-        //         index = me.indexOf(e.target);
+        imageLoaded: function(e) {
+            var me=this,
+                index = me.indexOf(e.target);
 
-        //     if (index>=0) {
+            if (index>=0) {
 
-        //         me.status[index] = true;
-        //         if ($.inArray(false, me.status) < 0 &&
-        //             (!me.options.safeLoad || m.windowLoaded)) {
-        //             me.initialize();
-        //         }
-        //     }
-        // },
+                me.status[index] = true;
+                if ($.inArray(false, me.status) < 0) {
+                    
+                    me.deferred.resolve();
+                }
+            }
+        },
         
         /**
          * Event handler for onload error

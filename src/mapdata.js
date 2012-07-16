@@ -272,9 +272,7 @@
             });
         }
 
-        me.images.bind().then(function() {
-            me.initialize();
-        });
+        return me.images.bind();
     };
     p.configureOptions=function(options) {
         // this is done here instead of the consturc

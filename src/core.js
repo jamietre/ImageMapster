@@ -832,7 +832,7 @@
         me.bind = function (options) {
 
             return this.each(function (i,e) {
-                var img, map, usemap, map_data;
+                var img, map, usemap, md;
 
                 // save ref to this image even if we can't access it yet. commands will be queued
                 img = $(e);
@@ -840,16 +840,16 @@
                 // sorry - your image must have border:0, things are too unpredictable otherwise.
                 img.css('border', 0);
 
-                map_data = m.getMapData(e);
+                md = m.getMapData(e);
                 // if already bound completely, do a total rebind
-                if (map_data) {
+                if (md) {
                     me.unbind.apply(img);
-                    if (!map_data.complete) {
+                    if (!md.complete) {
                         // will be queued
                         img.bind();
                         return true;
                     }
-                    map_data = null;
+                    md = null;
                 }
 
                 // ensure it's a valid image
@@ -861,12 +861,14 @@
                     return true;
                 }
 
-                if (!map_data) {
-                    map_data = new m.MapData(this, options);
+                if (!md) {
+                    md = new m.MapData(this, options);
 
-                    map_data.index = addMap(map_data);
-                    map_data.map = map;
-                    map_data.bindImages(true);
+                    md.index = addMap(md);
+                    md.map = map;
+                    md.bindImages().then(function() {
+                        md.initialize();
+                    });
                 }
             });
         };
