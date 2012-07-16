@@ -76,32 +76,54 @@
 
     };
 
+    /**
+     * Return the overall options effective for this area. 
+     * This should get the default options, and merge in area-specific options, finally
+     * overlaying options passed by parameter
+     * 
+     * @param  {[type]} options  options which will supercede all other options for this area
+     * @return {[type]}          the combined options
+     */
     
-    p.effectiveOptions = function (override_options) {
-        //TODO this isSelectable should cascade already this seems redundant
+    p.effectiveOptions = function (options) {
+        
         var opts = u.updateProps({},
                 this.owner.area_options,
                 this.options,
-                override_options || {},
-                {id: this.areaId }
+                options || {},
+                {
+                    id: this.areaId 
+                }
             );
+
         opts.selected = this.isSelected();
+        
         return opts;
     };
-    // Return the options effective for this area for a "render" or "highlight" mode. This should get the default options,
-    // merge in the areas-specific options, and then the mode-specific options.
     
-    p.effectiveRenderOptions = function (mode, override_options) {
+    /**
+     * Return the options effective for this area for a "render" or "highlight" mode. 
+     * This should get the default options, merge in the areas-specific options, 
+     * and then the mode-specific options.
+     * @param  {string} mode    'render' or 'highlight'
+     * @param  {[type]} options  options which will supercede all other options for this area
+     * @return {[type]}          the combined options
+     */
+    
+    p.effectiveRenderOptions = function (mode, options) {
         var allOpts,opts=this.optsCache;
         
         if (!opts || mode==='highlight') {
-            allOpts = this.effectiveOptions(override_options);
+            allOpts = this.effectiveOptions(options);
             opts = u.updateProps({},
                 allOpts,
-                allOpts["render_" + mode],
-                { 
-                    alt_image: this.owner.altImage(mode) 
-                });
+                allOpts["render_" + mode]
+                // ,
+                // { 
+                //     alt_image: this.owner.altImage(mode) 
+                // })
+                );
+                
             if (mode!=='highlight') {
                 this.optsCache=opts;
             }

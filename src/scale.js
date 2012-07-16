@@ -2,14 +2,9 @@
    requires areacorners.js, when.js
 */
 
-// options {
-//    padding: n,
-//    duration: m,
-//}
-//
+
 (function ($) {
-    var when=$.mapster_when,
-        m = $.mapster, u = m.utils, p = m.MapArea.prototype;
+    var m = $.mapster, u = m.utils, p = m.MapArea.prototype;
 
     m.utils.getScaleInfo = function (eff, actual) {
         var pct;
@@ -38,7 +33,9 @@
         // with adBlock or maybe other plugins. These must interfere with onload events somehow.
 
 
-        var vis=u.size(image),raw=u.size(imageRaw);
+        var vis=u.size(image),
+            raw=u.size(imageRaw,true);
+
         if (!raw.complete) {
             throw("Another script, such as an extension, appears to be interfering with image loading. Please let us know about this.");
         }
@@ -149,7 +146,7 @@
             promises = [];
             me.currentAction = 'resizing';
             els.each(function (i, e) {
-                p = when.defer();
+                p = u.defer();
                 promises.push(p);
 
                 $(e).animate(newsize, {
@@ -159,13 +156,13 @@
                 });
             });
 
-            p = when.defer();
+            p = u.defer();
             promises.push(p);
 
             // though resizeMapData is not async, it needs to be finished just the same as the animations,
             // so add it to the "to do" list.
             
-            when.all(promises).then(finishResize);
+            u.when.all(promises).then(finishResize);
             resizeMapData();
             p.resolve();
         } else {

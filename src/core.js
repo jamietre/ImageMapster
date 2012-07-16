@@ -1,6 +1,7 @@
 /* ImageMapster core */
 
-/*jslint laxbreak: true, evil: true */
+/*jslint laxbreak: true, evil: true, unparam: true */
+
 /*global jQuery: true, Zepto: true */
 
 
@@ -18,7 +19,7 @@
     };
 
     $.mapster = {
-        version: "1.2.6",
+        version: "1.2.6.003",
         render_defaults: {
             isSelectable: true,
             isDeselectable: true,
@@ -35,7 +36,9 @@
             strokeOpacity: 1,
             strokeWidth: 1,
             includeKeys: '',
-            alt_image: null // used internally
+            altImageId: null,
+            altImages: {} // used internally
+
         },
         defaults: {
             clickNavigate: false,
@@ -95,14 +98,8 @@
             });
         },
         utils: {
-            //            extend: function (target, sources, deep) {
-            //                var i,u=this;
-            //                $.extend.call(null, [target].concat(sources));
-            //                for (i = 0; i < deep.length; i++) {
-            //                    u.extend(
-            //                }
-            //            },
-            // return four outer corners, as well as possible places
+            when: $.mapster_when,
+            defer: $.mapster_when.defer,
 
             // extends the constructor, returns a new object prototype. Does not refer to the
             // original constructor so is protected if the original object is altered. This way you
@@ -205,11 +202,11 @@
                     obj.call(that, args);
                 }
             },
-            size: function(image) {
+            size: function(image, raw) {
                 var u=$.mapster.utils;
                 return { 
-                    width: u.imgWidth(image,true),
-                    height: u.imgHeight(image,true),
+                    width: raw ? (image.width || image.naturalWidth) : u.imgWidth(image,true) ,
+                    height: raw ? (image.height || image.naturalHeight) : u.imgHeight(image,true),
                     complete: function() { return !!this.height && !!this.width;}
                 };
             },
@@ -351,8 +348,12 @@
     // Iterates through all the objects passed, and determines whether it's an area or an image, and calls the appropriate
     // callback for each. If anything is returned from that callback, the process is stopped and that data return. Otherwise,
     // the object itself is returned.
-    var m = $.mapster;
     
+    var m = $.mapster, 
+        u = m.utils,
+        ap = Array.prototype;
+
+
     // jQuery's width() and height() are broken on IE9 in some situations. This tries everything. 
     $.each(["width","height"],function(i,e) {
         var capProp = e.substr(0,1).toUpperCase() + e.substr(1);
@@ -361,7 +362,7 @@
         // without it, we can read zero even when image is loaded in other browsers if its not visible
         // we must still check because stuff like adblock can temporarily block it
         // what a goddamn headache
-        m.utils["img"+capProp]=function(img,jqwidth) {
+        u["img"+capProp]=function(img,jqwidth) {
                 return (jqwidth ? $(img)[e]() : 0) || 
                     img[e] || img["natural"+capProp] || img["client"+capProp] || img["offset"+capProp];
         };
@@ -374,7 +375,7 @@
         me.output = that;
         me.input = that;
         me.first = opts.first || false;
-        me.args = opts.args ? Array.prototype.slice.call(opts.args, 0) : [];
+        me.args = opts.args ? ap.slice.call(opts.args, 0) : [];
         me.key = opts.key;
         me.func_map = func_map;
         me.func_area = func_area;
@@ -426,8 +427,6 @@
 
     $.mapster.impl = (function () {
         var me = {},
-            m = $.mapster,
-            u = $.mapster.utils,
             removeMap, addMap;
 
         addMap = function (map_data) {
@@ -447,7 +446,6 @@
                 map_areas = map_data.options.areas;
             if (areas) {
                 $.each(areas, function (i, e) {
-<<<<<<< HEAD
                     
                     // Issue #68 - ignore invalid data in areas array
                     
@@ -465,20 +463,6 @@
                     ar = map_data.getDataForKey(e.key);
                     if (ar) {
                         $.extend(ar.options, e);
-=======
-                    if (this) {
-                        index = u.indexOfProp(map_areas, "key", this.key);
-                        if (index >= 0) {
-                            $.extend(map_areas[index], this);
-                        }
-                        else {
-                            map_areas.push(this);
-                        }
-                        ar = map_data.getDataForKey(this.key);
-                        if (ar) {
-                            $.extend(ar.options, this);
-                        }
->>>>>>> 156f37007f5e9a9c8971c224ea71dae74c075b4a
                     }
                 });
             }
@@ -746,7 +730,7 @@
 
                     me.complete=false;
                     me.configureOptions(options);
-                    me.bindImages(true,function() {
+                    me.bindImages().then(function() {
                         me.buildDataset(true);
                         me.complete=true;
                     });
@@ -925,14 +909,14 @@
             }
 
             // for safe load option
-            $(window).bind('load', function () {
-                m.windowLoaded = true;
-                $(m.map_cache).each(function (i,e) {
-                    if (!e.complete && e.isReadyToBind()) {
-                        e.initialize();
-                    }
-                });
-            });
+            // $(window).bind('load', function () {
+            //     m.windowLoaded = true;
+            //     $(m.map_cache).each(function (i,e) {
+            //         if (!e.complete && e.isReadyToBind()) {
+            //             e.initialize();
+            //         }
+            //     });
+            // });
 
 
         };

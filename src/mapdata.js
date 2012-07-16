@@ -2,9 +2,13 @@
    the MapData object, repesents an instance of a single bound imagemap
 */
 
+
 (function ($) {
 
-    var p, m = $.mapster, u = m.utils;
+    var p,    
+        m = $.mapster, 
+        u = m.utils;
+   
     m.MapData = function (image, options) {
         var me = this;
 
@@ -44,7 +48,10 @@
         this.imgCssText = image.style.cssText || null;
 
         this.initializeDefaults();
+        
         this.configureOptions(options);
+        
+        this.images = new m.MapImages(this.options); 
 
         /**
          * Mousedown event. This is captured only to prevent browser from drawing an outline around an
@@ -52,6 +59,7 @@
          * 
          * @param  {EventData} e jQuery event data
          */
+        
         this.mousedown = function (e) {
             if (!$.mapster.hasCanvas) {
                 this.blur();
@@ -224,25 +232,64 @@
     };
     p = m.MapData.prototype;
 
+    p.bindImages=function() {
+        var me=this,
+            mi = me.images,
+            opts=me.options;
+        
+        function getOptionImages(obj) {
+            return [obj, obj.render_highlight, obj.render_select];
+        }
+        
+        // reset the images if this is a rebind
+        
+        if (mi.length>2) {
+            mi.splice(2);
+        } else if (mi.length===0) {
+            // add the actual main image
+            mi.add(me.image);
+            // will create a duplicate of the main image, we need this to get raw size info
+            mi.add(me.image.src);
+        }
+
+        // add alt images
+        
+        if ($.mapster.hasCanvas) {
+            // map altImage library first
+            
+            $.each(opts.altImages || {},function(i,e) {
+                mi.add(e,i);
+            });
+            
+            // now find everything else
+
+            $.each([opts].concat(opts.areas),function(i,e) {
+                $.each(getOptionImages(e),function(i2,e2) {
+                    if (e2 && e2.altImage) {
+                        e2.altImageId=mi.add(e2.altImage);
+                    }
+                });
+            });
+        }
+
+        me.images.bind().then(function() {
+            me.initialize();
+        });
+    };
     p.configureOptions=function(options) {
         // this is done here instead of the consturc
         this.area_options = u.updateProps({}, // default options for any MapArea
             m.area_defaults,
             options);
         this.options= u.updateProps({}, m.defaults, options);
-        this.bindTries = this.options.configTimeout / 200;
+
     };
     p.initializeDefaults = function () {
         $.extend(this,{
-            images: [],               // (Image)  all images associated with this map. this will include a "copy" of the main one
-            imageSources: [],         // (string) src for each image
-            imageStatus: [],          // (bool)   the loaded status of each indexed image in images
-            altImagesXref: {},        // (int)    xref of "render_xxx" to this.images
+            complete: false,         // (bool)    when configuration is complete       
             map: null,                // ($)      the image map
             base_canvas: null,       // (canvas|var)  where selections are rendered
             overlay_canvas: null,    // (canvas|var)  where highlights are rendered
-            imagesLoaded: false,     // (bool)    when all images have finished loading (config can proceed)
-            complete: false,         // (bool)    when configuration is complete
             commands: [],            // {}        commands that were run before configuration was completed (b/c images weren't loaded)
             data: [],                // MapData[] area groups
             mapAreas: [],            // MapArea[] list. AreaData entities contain refs to this array, so options are stored with each.
@@ -268,161 +315,7 @@
             scaleInfo: this.scaleInfo
         };
     };
-    p.isReadyToBind = function () {
-        return this.imagesLoaded && (!this.options.safeLoad || m.windowLoaded);
-    };
-    // bind a new image to a src, capturing load event. Return the new (or existing) image.
-    p.addImage = function (img, src, altId) {
-        var image, source, me = this,
-        getImageIndex=function(img) {
-            return $.inArray(img, me.images);
-        },
-
-        // fires on image onLoad evens, could mean everything is ready
-        load=function() {
-            var index = getImageIndex(this);
-            if (index>=0) {
-
-                me.imageStatus[index] = true;
-                if ($.inArray(false, me.imageStatus) < 0 &&
-                            (!me.options.safeLoad || m.windowLoaded)) {
-                    me.initialize();
-                }
-            }
-        },
-        storeImage=function(image) {
-            var index = me.images.push(image) - 1;
-            me.imageSources[index] = source;
-            me.imageStatus[index] = false;
-            if (altId) {
-                me.altImagesXref[altId] = index;
-            }
-        };
-
-        if (!img && !src) { return; }
-
-        image = img;
-        // use attr because we want the actual source, not the resolved path the browser will return directly calling image.src
-        source = src || $(image).attr('src');
-        if (!source) { throw ("Missing image source"); }
-
-        if (!image) {
-            image = $('<img class="mapster_el" />').hide()[0];
-
-            //$(this.images[0]).before(image);
-
-            //image = new Image();
-            //image.src = source;
-
-            $('body').append(image);
-            storeImage(image);
-            $(image).bind('onload',load).bind('onerror',function(e) {
-                me.imageLoadError.call(me,e);
-            });
-            $(image).attr('src', source);
-
-        } else {
-            storeImage(image);
-        }
-
-    };
-    // Checks status & updates if it's loaded
-    p.isImageLoaded= function (index) {
-        var status,img,me=this;
-        if (me.imageStatus[index]) { return true; }
-        img = me.images[index];
-        
-        if (typeof img.complete !== 'undefined') {
-            status=img.complete;
-        } else {
-            status=!!u.imgWidth(img);
-        }
-        // if complete passes, the image is loaded, but may STILL not be available because of stuff like adblock.
-        // make sure it is.
-
-        me.imageStatus[index]=status;
-        return status;
-    };
-    // Wait until all images are loaded then call initialize. This is difficult because browsers are incosistent about
-    // how or if "onload" works and in how one can actually detect if an image is already loaded. Try to check first,
-    // then bind onload event, and finally use a timer to keep checking.
-    
-    // the "first" parameter means this was the first time it was called
-
-    p.bindImages = function (first,callback) {
-        var i,
-            me = this,
-            loaded=true,
-            opts=me.options,
-            retry=function() {
-                me.bindImages.call(me,false,callback);
-            };
-            
-
-        if (first) {
-            me.complete=false;
-            me.triesLeft = me.bindTries;
-            me.imagesLoaded=false;
-            // reset the images if this is a rebind
-            if (me.images.length>2) {
-                me.images=me.images.slice(0,2);
-                me.imageSources=me.imageSources.slice(0,2);
-                me.imageStatus=me.imageStatus.slice(0,2);
-                me.altImagesXref={};
-            }
-            me.altImagesXref={};
-            if (me.images.length===0) {
-                // add the actual main image
-                me.addImage(me.image);
-                // will create a duplicate of the main image, we need this to get raw size info
-                me.addImage(null,me.image.src);
-            }
-            // add alt images
-            if ($.mapster.hasCanvas) {
-                me.addImage(null, opts.render_highlight.altImage || opts.altImage, "highlight");
-                me.addImage(null, opts.render_select.altImage || opts.altImage, "select");
-            }
-        }
-
-        if (me.imagesLoaded) {
-            return;
-        }
-
-        // check to see if every image has already been loaded
-        i=me.images.length;
-        while (i-->0) {
-            if (!me.isImageLoaded(i)) {
-                loaded=false;
-                break;
-            }
-        }
-        me.imagesLoaded=loaded;
-
-        if (me.isReadyToBind()) {
-            if (callback) {
-                callback();
-            } else {
-                me.initialize();
-            }
-        } else {
-            // to account for failure of onLoad to fire in rare situations
-            if (me.triesLeft-- > 0) {
-                me.imgTimeout=window.setTimeout(retry, 200);
-            } else {
-                me.imageLoadError.call(me);
-            }
-        }
-    };
-    p.imageLoadError=function(e) {
-        clearTimeout(this.imgTimeout);
-        this.triesLeft=0;
-        var err = e ? 'The image ' + e.target.src + ' failed to load.' : 
-        'The images never seemed to finish loading. You may just need to increase the configTimeout if images could take a long time to load.';
-        throw err;
-    };
-    p.altImage = function (mode) {
-        return this.images[this.altImagesXref[mode]];
-    };
+   
     p.wrapId = function () {
         return 'mapster_wrap_' + this.index;
     };
@@ -624,6 +517,7 @@
             .attr({id:null, usemap: null});
             
         size=u.size(me.images[0]);
+        
         if (size.complete) {
             imgCopy.css({
                 width: size.width,
@@ -864,12 +758,12 @@
         }
         // release refs
 
-        $.each(this.images, function (i,e) {
-            if (me.images[i] !== e.image) {
-                me.images[i] = null;
-            }
-        });
-        me.images = [];
+        // $.each(this.images, function (i,e) {
+        //     if (me.images[i] !== e.image) {
+        //         me.images[i] = null;
+        //     }
+        // });
+        me.images.clear();
 
         this.image = null;
         u.ifFunction(this.clearToolTip, this);

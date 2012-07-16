@@ -1,5 +1,5 @@
 ﻿/* ImageMapster
-   Version: 1.2.6.xxx (development)
+   Version: 1.2.5.003
 
 Copyright 2011-2012 James Treworgy
 http://www.outsharked.com/imagemapster
@@ -823,8 +823,7 @@ distribution build.
 );
 /*lint-ignore-end*//* ImageMapster core */
 
-/*jslint laxbreak: true, evil: true, unparam: true */
-
+/*jslint laxbreak: true, evil: true */
 /*global jQuery: true, Zepto: true */
 
 
@@ -842,7 +841,7 @@ distribution build.
     };
 
     $.mapster = {
-        version: "1.2.6.003",
+        version: "1.2.6",
         render_defaults: {
             isSelectable: true,
             isDeselectable: true,
@@ -921,8 +920,14 @@ distribution build.
             });
         },
         utils: {
-            when: $.mapster_when,
-            defer: $.mapster_when.defer,
+            //            extend: function (target, sources, deep) {
+            //                var i,u=this;
+            //                $.extend.call(null, [target].concat(sources));
+            //                for (i = 0; i < deep.length; i++) {
+            //                    u.extend(
+            //                }
+            //            },
+            // return four outer corners, as well as possible places
 
             // extends the constructor, returns a new object prototype. Does not refer to the
             // original constructor so is protected if the original object is altered. This way you
@@ -1171,12 +1176,8 @@ distribution build.
     // Iterates through all the objects passed, and determines whether it's an area or an image, and calls the appropriate
     // callback for each. If anything is returned from that callback, the process is stopped and that data return. Otherwise,
     // the object itself is returned.
+    var m = $.mapster;
     
-    var m = $.mapster, 
-        u = m.utils,
-        ap = Array.prototype;
-
-
     // jQuery's width() and height() are broken on IE9 in some situations. This tries everything. 
     $.each(["width","height"],function(i,e) {
         var capProp = e.substr(0,1).toUpperCase() + e.substr(1);
@@ -1185,7 +1186,7 @@ distribution build.
         // without it, we can read zero even when image is loaded in other browsers if its not visible
         // we must still check because stuff like adblock can temporarily block it
         // what a goddamn headache
-        u["img"+capProp]=function(img,jqwidth) {
+        m.utils["img"+capProp]=function(img,jqwidth) {
                 return (jqwidth ? $(img)[e]() : 0) || 
                     img[e] || img["natural"+capProp] || img["client"+capProp] || img["offset"+capProp];
         };
@@ -1198,7 +1199,7 @@ distribution build.
         me.output = that;
         me.input = that;
         me.first = opts.first || false;
-        me.args = opts.args ? ap.slice.call(opts.args, 0) : [];
+        me.args = opts.args ? Array.prototype.slice.call(opts.args, 0) : [];
         me.key = opts.key;
         me.func_map = func_map;
         me.func_area = func_area;
@@ -1250,6 +1251,8 @@ distribution build.
 
     $.mapster.impl = (function () {
         var me = {},
+            m = $.mapster,
+            u = $.mapster.utils,
             removeMap, addMap;
 
         addMap = function (map_data) {
@@ -2198,22 +2201,29 @@ distribution build.
    the MapData object, repesents an instance of a single bound imagemap
 */
 
+/*global when*/
+
 (function ($) {
 
-    var m = $.mapster, 
+
+    var p, 
+        m = $.mapster, 
         u = m.utils,
-        ap=[];
+        when=$.mapster_when,
+        ap = Array.prototype,
+
+
     /**
      * An object encapsulating all the images used by a MapData.
      */
     
-    m.MapImages = function(options) {
+    MapImages = function(options) {
         this.options = options;
         this.clear();
     };
 
     
-    m.MapImages.prototype = {
+    MapImages.prototype = {
         constructor: m.MapImages,
 
         /* interface to make this array-like */
@@ -2341,10 +2351,9 @@ distribution build.
 
                 index=me._add(image[0]);
                 
-                image
-                    // .bind('load',function(e) {
-                    //     me.imageLoaded.call(me,e);
-                    // })
+                image.bind('load',function(e) {
+                        me.imageLoaded.call(me,e);
+                    })
                     .bind('ferror',function(e) {
                         me.imageLoadError.call(me,e);
                     });
@@ -2373,7 +2382,7 @@ distribution build.
          */
         bind: function(retry) {
             var me = this,
-                defer=u.defer(),
+                defer=when.defer(),
                 triesLeft = me.bindTries,
 
             /* A recursive function to continue checking that the images have been 
@@ -2419,19 +2428,19 @@ distribution build.
          * @param  {object} e jQuery event data
          */
         
-        // imageLoaded: function(e) {
-        //     var me=this,
-        //         index = me.indexOf(e.target);
+        imageLoaded: function(e) {
+            var me=this,
+                index = me.indexOf(e.target);
 
-        //     if (index>=0) {
+            if (index>=0) {
 
-        //         me.status[index] = true;
-        //         if ($.inArray(false, me.status) < 0 &&
-        //             (!me.options.safeLoad || m.windowLoaded)) {
-        //             me.initialize();
-        //         }
-        //     }
-        // },
+                me.status[index] = true;
+                if ($.inArray(false, me.status) < 0 &&
+                    (!me.options.safeLoad || m.windowLoaded)) {
+                    me.initialize();
+                }
+            }
+        },
         
         /**
          * Event handler for onload error
@@ -2470,16 +2479,7 @@ distribution build.
             return status[index];
         }
     };
-    } (jQuery));/* mapdata.js
-   the MapData object, repesents an instance of a single bound imagemap
-*/
-
-
-(function ($) {
-
-    var p,    
-        m = $.mapster, 
-        u = m.utils;
+    
    
     m.MapData = function (image, options) {
         var me = this;
@@ -2523,7 +2523,7 @@ distribution build.
         
         this.configureOptions(options);
         
-        this.images = new m.MapImages(this.options); 
+        this.images = new MapImages(this.options); 
 
         /**
          * Mousedown event. This is captured only to prevent browser from drawing an outline around an
@@ -3612,9 +3612,14 @@ distribution build.
    requires areacorners.js, when.js
 */
 
-
+// options {
+//    padding: n,
+//    duration: m,
+//}
+//
 (function ($) {
-    var m = $.mapster, u = m.utils, p = m.MapArea.prototype;
+    var when=$.mapster_when,
+        m = $.mapster, u = m.utils, p = m.MapArea.prototype;
 
     m.utils.getScaleInfo = function (eff, actual) {
         var pct;
@@ -3645,7 +3650,7 @@ distribution build.
 
         var vis=u.size(image),
             raw=u.size(imageRaw,true);
-
+            
         if (!raw.complete) {
             throw("Another script, such as an extension, appears to be interfering with image loading. Please let us know about this.");
         }
@@ -3756,7 +3761,7 @@ distribution build.
             promises = [];
             me.currentAction = 'resizing';
             els.each(function (i, e) {
-                p = u.defer();
+                p = when.defer();
                 promises.push(p);
 
                 $(e).animate(newsize, {
@@ -3766,13 +3771,13 @@ distribution build.
                 });
             });
 
-            p = u.defer();
+            p = when.defer();
             promises.push(p);
 
             // though resizeMapData is not async, it needs to be finished just the same as the animations,
             // so add it to the "to do" list.
             
-            u.when.all(promises).then(finishResize);
+            when.all(promises).then(finishResize);
             resizeMapData();
             p.resolve();
         } else {
