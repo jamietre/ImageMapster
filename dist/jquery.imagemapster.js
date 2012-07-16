@@ -2372,6 +2372,7 @@ distribution build.
         
         bind: function(retry) {
             var me = this,
+                promise,
                 triesLeft = me.bindTries,
 
             /* A recursive function to continue checking that the images have been 
@@ -2407,10 +2408,10 @@ distribution build.
             
             };
 
-            me.deferred=u.defer();
+            promise = me.deferred=u.defer();
             
             check();
-            return me.deferred.promise;
+            return promise;
         },
    
         resolve: function() {
