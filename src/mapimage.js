@@ -194,7 +194,7 @@
                 // check to see if every image has already been loaded
                 
                 if (me.complete()) {
-                    me.deferred.resolve();
+                    me.resolve();
                 } else {
                     // to account for failure of onLoad to fire in rare situations
                     if (triesLeft-- > 0) {
@@ -214,6 +214,17 @@
             return me.deferred.promise;
         },
    
+        resolve: function() {
+            var me=this,
+                resolver=me.deferred;
+                
+            if (resolver) {
+                // Make a copy of the resolver before calling & removing it to ensure
+                // it is not called twice
+                me.deferred=null;
+                resolver.resolve();
+            }
+        },
         /**
          * Event handler for image onload
          * @param  {object} e jQuery event data
@@ -227,8 +238,7 @@
 
                 me.status[index] = true;
                 if ($.inArray(false, me.status) < 0) {
-                    
-                    me.deferred.resolve();
+                    me.resolve();
                 }
             }
         },
