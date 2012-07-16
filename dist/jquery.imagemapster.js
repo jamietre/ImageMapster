@@ -1,4 +1,4 @@
-﻿/* ImageMapster
+/* ImageMapster
    Version: 1.2.6.xxx (development)
 
 Copyright 2011-2012 James Treworgy
@@ -821,7 +821,8 @@ distribution build.
 	}
 // Boilerplate for AMD, Node, and browser global
 );
-/*lint-ignore-end*//* ImageMapster core */
+/*lint-ignore-end*/
+/* ImageMapster core */
 
 /*jslint laxbreak: true, evil: true, unparam: true */
 
@@ -2197,7 +2198,8 @@ distribution build.
 
     }
 
-} (jQuery));/* mapdata.js
+} (jQuery));
+/* mapdata.js
    the MapData object, repesents an instance of a single bound imagemap
 */
 
@@ -2480,7 +2482,8 @@ distribution build.
             return status[index];
         }
     };
-    } (jQuery));/* mapdata.js
+    } (jQuery));
+/* mapdata.js
    the MapData object, repesents an instance of a single bound imagemap
 */
 
