@@ -36,10 +36,10 @@
         var vis=u.size(image),
             raw=u.size(imageRaw,true);
 
-        if (!raw.complete) {
+        if (!raw.complete()) {
             throw("Another script, such as an extension, appears to be interfering with image loading. Please let us know about this.");
         }
-        if (!vis.complete) {
+        if (!vis.complete()) {
             vis=raw;
         }
         return this.getScaleInfo(vis, scale ? raw : null);
