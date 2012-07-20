@@ -19,13 +19,12 @@
     };
 
     $.mapster = {
-        version: "1.2.6.005",
+        version: "1.2.6.006",
         render_defaults: {
             isSelectable: true,
             isDeselectable: true,
             fade: false,
             fadeDuration: 150,
-            altImage: null,
             fill: true,
             fillColor: '000000',
             fillColorMask: 'FFFFFF',
@@ -36,9 +35,9 @@
             strokeOpacity: 1,
             strokeWidth: 1,
             includeKeys: '',
-            altImageId: null,
-            altImages: {} // used internally
-
+            altImage: null,
+            altImageId: null, // used internally            
+            altImages: {} 
         },
         defaults: {
             clickNavigate: false,
@@ -815,7 +814,9 @@
                 { name: 'snapshot' }
             )).go();
         };
+        
         // do not queue this function
+        
         me.state = function () {
             var md, result = null;
             $(this).each(function (i,e) {
@@ -838,11 +839,10 @@
                 // save ref to this image even if we can't access it yet. commands will be queued
                 img = $(e);
 
-                // sorry - your image must have border:0, things are too unpredictable otherwise.
-                img.css('border', 0);
-
                 md = m.getMapData(e);
+
                 // if already bound completely, do a total rebind
+                
                 if (md) {
                     me.unbind.apply(img);
                     if (!md.complete) {
@@ -856,11 +856,15 @@
                 // ensure it's a valid image
                 // jQuery bug with Opera, results in full-url#usemap being returned from jQuery's attr.
                 // So use raw getAttribute instead.
+                
                 usemap = this.getAttribute('usemap');
                 map = usemap && $('map[name="' + usemap.substr(1) + '"]');
                 if (!(img.is('img') && usemap && map.size() > 0)) {
                     return true;
                 }
+
+                // sorry - your image must have border:0, things are too unpredictable otherwise.
+                img.css('border', 0);
 
                 if (!md) {
                     md = new m.MapData(this, options);

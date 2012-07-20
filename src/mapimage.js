@@ -11,8 +11,8 @@
      * An object encapsulating all the images used by a MapData.
      */
     
-    m.MapImages = function(options) {
-        this.options = options;
+    m.MapImages = function(owner) {
+        this.owner = owner;
         this.clear();
     };
 
@@ -66,10 +66,11 @@
          */
         
         clear:function() {
-         
-            if (this.ids && this.ids.length>0) {
-                $.each(this.ids,function(i,e) {
-                    delete this[e];
+            var me=this;
+
+            if (me.ids && me.ids.length>0) {
+                $.each(me.ids,function(i,e) {
+                    delete me[e];
                 });
             }
             
@@ -78,7 +79,7 @@
              * @type {string[]}
              */
             
-            this.ids=[];
+            me.ids=[];
 
             /**
              * Length property for array-like behavior, set to zero when initializing. Array prototype
@@ -87,14 +88,14 @@
              * @type {int}
              */
             
-            this.length=0;
+            me.length=0;
 
             /**
              * the loaded status of the corresponding image
              * @type {boolean[]}
              */
             
-            this.status= [];
+            me.status= [];
             
             
             /**
@@ -102,14 +103,8 @@
              * @type {Image[]}
              */  
             
-            this.splice(0);
+            me.splice(0);
             
-            /**
-             * The number of attempts to make to before giving up, calculate from the config timeout.
-             * @type {boolean}
-             */
-            
-            this.bindTries = this.options.configTimeout / 200;
         },
 
         /**
@@ -174,7 +169,7 @@
         bind: function(retry) {
             var me = this,
                 promise,
-                triesLeft = me.bindTries,
+                triesLeft = me.owner.options.configTimeout / 200,
 
             /* A recursive function to continue checking that the images have been 
                loaded until a timeout has elapsed */
@@ -226,6 +221,7 @@
                 resolver.resolve();
             }
         },
+
         /**
          * Event handler for image onload
          * @param  {object} e jQuery event data

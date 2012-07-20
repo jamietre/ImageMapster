@@ -9,6 +9,66 @@
         m = $.mapster, 
         u = m.utils;
    
+    /**
+     * Set default values for MapData object properties
+     * @param  {MapData} me The MapData object
+     */
+    
+    function initializeDefaults(me) {
+        $.extend(me,{
+            complete: false,         // (bool)    when configuration is complete       
+            map: null,                // ($)      the image map
+            base_canvas: null,       // (canvas|var)  where selections are rendered
+            overlay_canvas: null,    // (canvas|var)  where highlights are rendered
+            commands: [],            // {}        commands that were run before configuration was completed (b/c images weren't loaded)
+            data: [],                // MapData[] area groups
+            mapAreas: [],            // MapArea[] list. AreaData entities contain refs to this array, so options are stored with each.
+            _xref: {},               // (int)      xref of mapKeys to data[]
+            highlightId: -1,        // (int)      the currently highlighted element.
+            currentAreaId: -1,
+            _tooltip_events: [],     // {}         info on events we bound to a tooltip container, so we can properly unbind them
+            scaleInfo: null,         // {}         info about the image size, scaling, defaults
+            index: -1,                 // index of this in map_cache - so we have an ID to use for wraper div
+            activeAreaEvent: null
+        });
+    }
+
+        
+    function getOptionImages(obj) {
+        return [obj, obj.render_highlight, obj.render_select];
+    }
+
+    function configureAltImages(me)
+    {
+        var opts = me.options,
+            mi = me.images;
+
+        // add alt images
+        
+        if ($.mapster.hasCanvas) {
+            // map altImage library first
+            
+            $.each(opts.altImages || {},function(i,e) {
+                mi.add(e,i);
+            });
+            
+            // now find everything else
+
+            $.each([opts].concat(opts.areas),function(i,e) {
+                $.each(getOptionImages(e),function(i2,e2) {
+                    if (e2 && e2.altImage) {
+                        e2.altImageId=mi.add(e2.altImage);
+                    }
+                });
+            });
+        }
+
+        // set area_options
+        me.area_options = u.updateProps({}, // default options for any MapArea
+            m.area_defaults,
+            opts);
+    }
+
     m.MapData = function (image, options) {
         var me = this;
 
@@ -39,19 +99,17 @@
             }
         }
 
-
-   
-        this.image = image;              // (Image)  main map image
+        me.image = image;              // (Image)  main map image
 
         // save the initial style of the image for unbinding. This is problematic, chrome duplicates styles when assigning, and
         // cssText is apparently not universally supported. Need to do something more robust to make unbinding work universally.
-        this.imgCssText = image.style.cssText || null;
+        me.imgCssText = image.style.cssText || null;
 
-        this.initializeDefaults();
-        
-        this.configureOptions(options);
-        
-        this.images = new m.MapImages(this.options); 
+        me.images = new m.MapImages(me); 
+
+        initializeDefaults(me);
+
+        me.options= u.updateProps({}, m.defaults, options);
 
         /**
          * Mousedown event. This is captured only to prevent browser from drawing an outline around an
@@ -234,71 +292,23 @@
 
     p.bindImages=function() {
         var me=this,
-            mi = me.images,
-            opts=me.options;
-        
-        function getOptionImages(obj) {
-            return [obj, obj.render_highlight, obj.render_select];
-        }
-        
+            mi = me.images;
+
         // reset the images if this is a rebind
         
         if (mi.length>2) {
             mi.splice(2);
         } else if (mi.length===0) {
+
             // add the actual main image
             mi.add(me.image);
             // will create a duplicate of the main image, we need this to get raw size info
             mi.add(me.image.src);
         }
-
-        // add alt images
         
-        if ($.mapster.hasCanvas) {
-            // map altImage library first
-            
-            $.each(opts.altImages || {},function(i,e) {
-                mi.add(e,i);
-            });
-            
-            // now find everything else
-
-            $.each([opts].concat(opts.areas),function(i,e) {
-                $.each(getOptionImages(e),function(i2,e2) {
-                    if (e2 && e2.altImage) {
-                        e2.altImageId=mi.add(e2.altImage);
-                    }
-                });
-            });
-        }
+        configureAltImages(me);
 
         return me.images.bind();
-    };
-    p.configureOptions=function(options) {
-        // this is done here instead of the consturc
-        this.area_options = u.updateProps({}, // default options for any MapArea
-            m.area_defaults,
-            options);
-        this.options= u.updateProps({}, m.defaults, options);
-
-    };
-    p.initializeDefaults = function () {
-        $.extend(this,{
-            complete: false,         // (bool)    when configuration is complete       
-            map: null,                // ($)      the image map
-            base_canvas: null,       // (canvas|var)  where selections are rendered
-            overlay_canvas: null,    // (canvas|var)  where highlights are rendered
-            commands: [],            // {}        commands that were run before configuration was completed (b/c images weren't loaded)
-            data: [],                // MapData[] area groups
-            mapAreas: [],            // MapArea[] list. AreaData entities contain refs to this array, so options are stored with each.
-            _xref: {},               // (int)      xref of mapKeys to data[]
-            highlightId: -1,        // (int)      the currently highlighted element.
-            currentAreaId: -1,
-            _tooltip_events: [],     // {}         info on events we bound to a tooltip container, so we can properly unbind them
-            scaleInfo: null,         // {}         info about the image size, scaling, defaults
-            index: -1,                 // index of this in map_cache - so we have an ID to use for wraper div
-            activeAreaEvent: null
-        });
     };
 
     p.isActive = function() {
@@ -478,6 +488,7 @@
         parentId = img.parent().attr('id');
 
         // create a div wrapper only if there's not already a wrapper, otherwise, own it
+        
         if (parentId && parentId.length >= 12 && parentId.substring(0, 12) === "mapster_wrap") {
             wrap = img.parent();
             wrap.attr('id', me.wrapId());
@@ -502,16 +513,12 @@
 
         me.scaleInfo = scale = u.scaleMap(me.images[0],me.images[1], opts.scaleMap);
         
-        base_canvas = me.graphics.createVisibleCanvas(me);
-        overlay_canvas = me.graphics.createVisibleCanvas(me);
-
-        me.base_canvas = base_canvas;
-        me.overlay_canvas = overlay_canvas;
+        me.base_canvas = base_canvas = me.graphics.createVisibleCanvas(me);
+        me.overlay_canvas = overlay_canvas = me.graphics.createVisibleCanvas(me);
 
         // Now we got what we needed from the copy -clone from the original image again to make sure any other attributes are copied
         imgCopy = $(me.images[1])
-            .addClass('mapster_el')
-            .addClass(me.images[0].className)
+            .addClass('mapster_el '+ me.images[0].className)
             .attr({id:null, usemap: null});
             
         size=u.size(me.images[0]);
@@ -752,22 +759,17 @@
             // get rid of everything except the original image
             this.image.style.cssText = this.imgCssText;
             $(this.wrapper).before(this.image).remove();
-
         }
-        // release refs
 
-        // $.each(this.images, function (i,e) {
-        //     if (me.images[i] !== e.image) {
-        //         me.images[i] = null;
-        //     }
-        // });
         me.images.clear();
 
         this.image = null;
         u.ifFunction(this.clearTooltip, this);
     };
+
     // Compelete cleanup process for deslecting items. Called after a batch operation, or by AreaData for single
     // operations not flagged as "partial"
+    
     p.removeSelectionFinish = function () {
         var g = this.graphics;
 
