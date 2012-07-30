@@ -1,5 +1,5 @@
 /* ImageMapster
-   Version: see $.mapster.version
+   Version: 1.2.6.xxx (development)
 
 Copyright 2011-2012 James Treworgy
 http://www.outsharked.com/imagemapster

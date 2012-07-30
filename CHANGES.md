@@ -7,9 +7,32 @@ Features:
 
 ####version 1.2.7 (in development)
 
-Features:
+*tooltip-enhancements branch*
 
+* [Issue 72](https://github.com/jamietre/ImageMapster/issues/72): `scaleMap` not working propery when using bootstrap (css on `body` causing incorrect evaluation of native image size)
 * Enhanced tooltip API to allow creating arbitrary tool tips bound to any area, or at an arbitrary position. 
+
+*altimage-enhancements branch*
+
+* Add `altImages` option that accepts an option defining aliases to alternate images. The name of each property is an alias that can be specified as a valid `altImage` option value elsewhere
+
+Example use of this option:
+
+
+
+    altImages: {
+       roadmap: 'images/usamap-roads.png',
+       elevation: 'images/uasmap-elevation.png'
+    }
+
+then:
+
+    $('img').mapster('set',true,'AZ', {
+		altImage: 'roadmap' 
+	});
+
+
+The aliases can also be used in the initial configuration options, both globally and for specific areas.
 
 
 ####version 1.2.6 - 2012.07.13

@@ -1,6 +1,7 @@
 /* ImageMapster core */
 
-/*jslint laxbreak: true, evil: true */
+/*jslint laxbreak: true, evil: true, unparam: true */
+
 /*global jQuery: true, Zepto: true */
 
 
@@ -18,13 +19,12 @@
     };
 
     $.mapster = {
-        version: "1.2.6",
+        version: "1.2.6.006",
         render_defaults: {
             isSelectable: true,
             isDeselectable: true,
             fade: false,
             fadeDuration: 150,
-            altImage: null,
             fill: true,
             fillColor: '000000',
             fillColorMask: 'FFFFFF',
@@ -35,7 +35,9 @@
             strokeOpacity: 1,
             strokeWidth: 1,
             includeKeys: '',
-            alt_image: null // used internally
+            altImage: null,
+            altImageId: null, // used internally            
+            altImages: {} 
         },
         defaults: {
             clickNavigate: false,
@@ -95,14 +97,8 @@
             });
         },
         utils: {
-            //            extend: function (target, sources, deep) {
-            //                var i,u=this;
-            //                $.extend.call(null, [target].concat(sources));
-            //                for (i = 0; i < deep.length; i++) {
-            //                    u.extend(
-            //                }
-            //            },
-            // return four outer corners, as well as possible places
+            when: $.mapster_when,
+            defer: $.mapster_when.defer,
 
             // extends the constructor, returns a new object prototype. Does not refer to the
             // original constructor so is protected if the original object is altered. This way you
@@ -195,6 +191,9 @@
             isBool: function (obj) {
                 return typeof obj === "boolean";
             },
+            isUndef: function(obj) {
+                return typeof obj === "undefined";
+            },
             // evaluates "obj", if function, calls it with args
             // (todo - update this to handle variable lenght/more than one arg)
             ifFunction: function (obj, that, args) {
@@ -202,11 +201,11 @@
                     obj.call(that, args);
                 }
             },
-            size: function(image) {
+            size: function(image, raw) {
                 var u=$.mapster.utils;
                 return { 
-                    width: u.imgWidth(image,true),
-                    height: u.imgHeight(image,true),
+                    width: raw ? (image.width || image.naturalWidth) : u.imgWidth(image,true) ,
+                    height: raw ? (image.height || image.naturalHeight) : u.imgHeight(image,true),
                     complete: function() { return !!this.height && !!this.width;}
                 };
             },
@@ -224,7 +223,10 @@
                 var elements = {},
                         lastKey = 0,
                         fade_func = function (el, op, endOp, duration) {
-                            var index, obj, u = $.mapster.utils;
+                            var index, 
+                                cbIntervals = duration/15,
+                                obj, u = $.mapster.utils;
+
                             if (typeof el === 'number') {
                                 obj = elements[el];
                                 if (!obj) {
@@ -238,15 +240,16 @@
                                 elements[++lastKey] = obj = el;
                                 el = lastKey;
                             }
+
                             endOp = endOp || 1;
 
-                            op = (op + (endOp / 10) > endOp - 0.01) ? endOp : op + (endOp / 10);
+                            op = (op + (endOp / cbIntervals) > endOp - 0.01) ? endOp : op + (endOp / cbIntervals);
 
                             u.setOpacity(obj, op);
                             if (op < endOp) {
                                 setTimeout(function () {
                                     fade_func(el, op, endOp, duration);
-                                }, duration ? duration / 10 : 15);
+                                }, 15);
                             }
                         };
                 return fade_func;
@@ -344,8 +347,12 @@
     // Iterates through all the objects passed, and determines whether it's an area or an image, and calls the appropriate
     // callback for each. If anything is returned from that callback, the process is stopped and that data return. Otherwise,
     // the object itself is returned.
-    var m = $.mapster;
     
+    var m = $.mapster, 
+        u = m.utils,
+        ap = Array.prototype;
+
+
     // jQuery's width() and height() are broken on IE9 in some situations. This tries everything. 
     $.each(["width","height"],function(i,e) {
         var capProp = e.substr(0,1).toUpperCase() + e.substr(1);
@@ -354,7 +361,7 @@
         // without it, we can read zero even when image is loaded in other browsers if its not visible
         // we must still check because stuff like adblock can temporarily block it
         // what a goddamn headache
-        m.utils["img"+capProp]=function(img,jqwidth) {
+        u["img"+capProp]=function(img,jqwidth) {
                 return (jqwidth ? $(img)[e]() : 0) || 
                     img[e] || img["natural"+capProp] || img["client"+capProp] || img["offset"+capProp];
         };
@@ -367,7 +374,7 @@
         me.output = that;
         me.input = that;
         me.first = opts.first || false;
-        me.args = opts.args ? Array.prototype.slice.call(opts.args, 0) : [];
+        me.args = opts.args ? ap.slice.call(opts.args, 0) : [];
         me.key = opts.key;
         me.func_map = func_map;
         me.func_area = func_area;
@@ -379,6 +386,7 @@
         var i,  data, ar, len, result, src = this.input,
                 area_list = [],
                 me = this;
+
         len = src.length;
         for (i = 0; i < len; i++) {
             data = $.mapster.getMapData(src[i]);
@@ -389,6 +397,7 @@
                     }
                     continue;
                 }
+                
                 ar = data.getData(src[i].nodeName === 'AREA' ? src[i] : this.key);
                 if (ar) {
                     if ($.inArray(ar, area_list) < 0) {
@@ -417,8 +426,6 @@
 
     $.mapster.impl = (function () {
         var me = {},
-            m = $.mapster,
-            u = $.mapster.utils,
             removeMap, addMap;
 
         addMap = function (map_data) {
@@ -438,18 +445,23 @@
                 map_areas = map_data.options.areas;
             if (areas) {
                 $.each(areas, function (i, e) {
-                    if (this) {
-                        index = u.indexOfProp(map_areas, "key", this.key);
-                        if (index >= 0) {
-                            $.extend(map_areas[index], this);
-                        }
-                        else {
-                            map_areas.push(this);
-                        }
-                        ar = map_data.getDataForKey(this.key);
-                        if (ar) {
-                            $.extend(ar.options, this);
-                        }
+                    
+                    // Issue #68 - ignore invalid data in areas array
+                    
+                    if (!e || !e.key) { 
+                        return;
+                    }
+
+                    index = u.indexOfProp(map_areas, "key", e.key);
+                    if (index >= 0) {
+                        $.extend(map_areas[index], e);
+                    }
+                    else {
+                        map_areas.push(e);
+                    }
+                    ar = map_data.getDataForKey(e.key);
+                    if (ar) {
+                        $.extend(ar.options, e);
                     }
                 });
             }
@@ -596,9 +608,18 @@
         me.deselect = function () {
             me.set.call(this, false);
         };
-        // Select or unselect areas identified by key -- a string, a csv string, or array of strings.
-        // if set_bound is true, the bound list will also be updated. Default is true. If neither true nor false,
-        // it will be toggled.
+        
+        /**
+         * Select or unselect areas. Areas can be identified by a single string key, a comma-separated list of keys, 
+         * or an array of strings.
+         * 
+         * 
+         * @param {boolean} selected Determines whether areas are selected or deselected
+         * @param {string|string[]} key A string, comma-separated string, or array of strings indicating 
+         *                              the areas to select or deselect
+         * @param {object} options Rendering options to apply when selecting an area
+         */ 
+
         me.set = function (selected, key, options) {
             var lastMap, map_data, opts=options,
                 key_list, area_list; // array of unique areas passed
@@ -648,6 +669,7 @@
                 }
                 
                if (map_data) {
+                    
                     keys = '';
                     if (e.nodeName.toUpperCase()==='IMG') {
                         if (!m.queueCommand(map_data, $(e), 'set', [selected, key, opts])) {
@@ -708,7 +730,7 @@
 
                     me.complete=false;
                     me.configureOptions(options);
-                    me.bindImages(true,function() {
+                    me.bindImages().then(function() {
                         me.buildDataset(true);
                         me.complete=true;
                     });
@@ -792,7 +814,9 @@
                 { name: 'snapshot' }
             )).go();
         };
+        
         // do not queue this function
+        
         me.state = function () {
             var md, result = null;
             $(this).each(function (i,e) {
@@ -810,41 +834,46 @@
         me.bind = function (options) {
 
             return this.each(function (i,e) {
-                var img, map, usemap, map_data;
+                var img, map, usemap, md;
 
                 // save ref to this image even if we can't access it yet. commands will be queued
                 img = $(e);
 
-                // sorry - your image must have border:0, things are too unpredictable otherwise.
-                img.css('border', 0);
+                md = m.getMapData(e);
 
-                map_data = m.getMapData(e);
                 // if already bound completely, do a total rebind
-                if (map_data) {
+                
+                if (md) {
                     me.unbind.apply(img);
-                    if (!map_data.complete) {
+                    if (!md.complete) {
                         // will be queued
                         img.bind();
                         return true;
                     }
-                    map_data = null;
+                    md = null;
                 }
 
                 // ensure it's a valid image
                 // jQuery bug with Opera, results in full-url#usemap being returned from jQuery's attr.
                 // So use raw getAttribute instead.
+                
                 usemap = this.getAttribute('usemap');
                 map = usemap && $('map[name="' + usemap.substr(1) + '"]');
                 if (!(img.is('img') && usemap && map.size() > 0)) {
                     return true;
                 }
 
-                if (!map_data) {
-                    map_data = new m.MapData(this, options);
+                // sorry - your image must have border:0, things are too unpredictable otherwise.
+                img.css('border', 0);
 
-                    map_data.index = addMap(map_data);
-                    map_data.map = map;
-                    map_data.bindImages(true);
+                if (!md) {
+                    md = new m.MapData(this, options);
+
+                    md.index = addMap(md);
+                    md.map = map;
+                    md.bindImages().then(function() {
+                        md.initialize();
+                    });
                 }
             });
         };
@@ -887,14 +916,14 @@
             }
 
             // for safe load option
-            $(window).bind('load', function () {
-                m.windowLoaded = true;
-                $(m.map_cache).each(function (i,e) {
-                    if (!e.complete && e.isReadyToBind()) {
-                        e.initialize();
-                    }
-                });
-            });
+            // $(window).bind('load', function () {
+            //     m.windowLoaded = true;
+            //     $(m.map_cache).each(function (i,e) {
+            //         if (!e.complete && e.isReadyToBind()) {
+            //             e.initialize();
+            //         }
+            //     });
+            // });
 
 
         };

@@ -1,5 +1,5 @@
-﻿/* ImageMapster
-   Version: see $.mapster.version
+/* ImageMapster
+   Version: 1.2.6.xxx (development)
 
 Copyright 2011-2012 James Treworgy
 http://www.outsharked.com/imagemapster
@@ -821,9 +821,11 @@ distribution build.
 	}
 // Boilerplate for AMD, Node, and browser global
 );
-/*lint-ignore-end*//* ImageMapster core */
+/*lint-ignore-end*/
+/* ImageMapster core */
 
-/*jslint laxbreak: true, evil: true */
+/*jslint laxbreak: true, evil: true, unparam: true */
+
 /*global jQuery: true, Zepto: true */
 
 
@@ -841,13 +843,12 @@ distribution build.
     };
 
     $.mapster = {
-        version: "1.2.6",
+        version: "1.2.6.006",
         render_defaults: {
             isSelectable: true,
             isDeselectable: true,
             fade: false,
             fadeDuration: 150,
-            altImage: null,
             fill: true,
             fillColor: '000000',
             fillColorMask: 'FFFFFF',
@@ -858,7 +859,9 @@ distribution build.
             strokeOpacity: 1,
             strokeWidth: 1,
             includeKeys: '',
-            alt_image: null // used internally
+            altImage: null,
+            altImageId: null, // used internally            
+            altImages: {} 
         },
         defaults: {
             clickNavigate: false,
@@ -918,14 +921,8 @@ distribution build.
             });
         },
         utils: {
-            //            extend: function (target, sources, deep) {
-            //                var i,u=this;
-            //                $.extend.call(null, [target].concat(sources));
-            //                for (i = 0; i < deep.length; i++) {
-            //                    u.extend(
-            //                }
-            //            },
-            // return four outer corners, as well as possible places
+            when: $.mapster_when,
+            defer: $.mapster_when.defer,
 
             // extends the constructor, returns a new object prototype. Does not refer to the
             // original constructor so is protected if the original object is altered. This way you
@@ -1018,6 +1015,9 @@ distribution build.
             isBool: function (obj) {
                 return typeof obj === "boolean";
             },
+            isUndef: function(obj) {
+                return typeof obj === "undefined";
+            },
             // evaluates "obj", if function, calls it with args
             // (todo - update this to handle variable lenght/more than one arg)
             ifFunction: function (obj, that, args) {
@@ -1025,11 +1025,11 @@ distribution build.
                     obj.call(that, args);
                 }
             },
-            size: function(image) {
+            size: function(image, raw) {
                 var u=$.mapster.utils;
                 return { 
-                    width: u.imgWidth(image,true),
-                    height: u.imgHeight(image,true),
+                    width: raw ? (image.width || image.naturalWidth) : u.imgWidth(image,true) ,
+                    height: raw ? (image.height || image.naturalHeight) : u.imgHeight(image,true),
                     complete: function() { return !!this.height && !!this.width;}
                 };
             },
@@ -1047,7 +1047,10 @@ distribution build.
                 var elements = {},
                         lastKey = 0,
                         fade_func = function (el, op, endOp, duration) {
-                            var index, obj, u = $.mapster.utils;
+                            var index, 
+                                cbIntervals = duration/15,
+                                obj, u = $.mapster.utils;
+
                             if (typeof el === 'number') {
                                 obj = elements[el];
                                 if (!obj) {
@@ -1061,15 +1064,16 @@ distribution build.
                                 elements[++lastKey] = obj = el;
                                 el = lastKey;
                             }
+
                             endOp = endOp || 1;
 
-                            op = (op + (endOp / 10) > endOp - 0.01) ? endOp : op + (endOp / 10);
+                            op = (op + (endOp / cbIntervals) > endOp - 0.01) ? endOp : op + (endOp / cbIntervals);
 
                             u.setOpacity(obj, op);
                             if (op < endOp) {
                                 setTimeout(function () {
                                     fade_func(el, op, endOp, duration);
-                                }, duration ? duration / 10 : 15);
+                                }, 15);
                             }
                         };
                 return fade_func;
@@ -1167,8 +1171,12 @@ distribution build.
     // Iterates through all the objects passed, and determines whether it's an area or an image, and calls the appropriate
     // callback for each. If anything is returned from that callback, the process is stopped and that data return. Otherwise,
     // the object itself is returned.
-    var m = $.mapster;
     
+    var m = $.mapster, 
+        u = m.utils,
+        ap = Array.prototype;
+
+
     // jQuery's width() and height() are broken on IE9 in some situations. This tries everything. 
     $.each(["width","height"],function(i,e) {
         var capProp = e.substr(0,1).toUpperCase() + e.substr(1);
@@ -1177,7 +1185,7 @@ distribution build.
         // without it, we can read zero even when image is loaded in other browsers if its not visible
         // we must still check because stuff like adblock can temporarily block it
         // what a goddamn headache
-        m.utils["img"+capProp]=function(img,jqwidth) {
+        u["img"+capProp]=function(img,jqwidth) {
                 return (jqwidth ? $(img)[e]() : 0) || 
                     img[e] || img["natural"+capProp] || img["client"+capProp] || img["offset"+capProp];
         };
@@ -1190,7 +1198,7 @@ distribution build.
         me.output = that;
         me.input = that;
         me.first = opts.first || false;
-        me.args = opts.args ? Array.prototype.slice.call(opts.args, 0) : [];
+        me.args = opts.args ? ap.slice.call(opts.args, 0) : [];
         me.key = opts.key;
         me.func_map = func_map;
         me.func_area = func_area;
@@ -1202,6 +1210,7 @@ distribution build.
         var i,  data, ar, len, result, src = this.input,
                 area_list = [],
                 me = this;
+
         len = src.length;
         for (i = 0; i < len; i++) {
             data = $.mapster.getMapData(src[i]);
@@ -1212,6 +1221,7 @@ distribution build.
                     }
                     continue;
                 }
+                
                 ar = data.getData(src[i].nodeName === 'AREA' ? src[i] : this.key);
                 if (ar) {
                     if ($.inArray(ar, area_list) < 0) {
@@ -1240,8 +1250,6 @@ distribution build.
 
     $.mapster.impl = (function () {
         var me = {},
-            m = $.mapster,
-            u = $.mapster.utils,
             removeMap, addMap;
 
         addMap = function (map_data) {
@@ -1261,18 +1269,23 @@ distribution build.
                 map_areas = map_data.options.areas;
             if (areas) {
                 $.each(areas, function (i, e) {
-                    if (this) {
-                        index = u.indexOfProp(map_areas, "key", this.key);
-                        if (index >= 0) {
-                            $.extend(map_areas[index], this);
-                        }
-                        else {
-                            map_areas.push(this);
-                        }
-                        ar = map_data.getDataForKey(this.key);
-                        if (ar) {
-                            $.extend(ar.options, this);
-                        }
+                    
+                    // Issue #68 - ignore invalid data in areas array
+                    
+                    if (!e || !e.key) { 
+                        return;
+                    }
+
+                    index = u.indexOfProp(map_areas, "key", e.key);
+                    if (index >= 0) {
+                        $.extend(map_areas[index], e);
+                    }
+                    else {
+                        map_areas.push(e);
+                    }
+                    ar = map_data.getDataForKey(e.key);
+                    if (ar) {
+                        $.extend(ar.options, e);
                     }
                 });
             }
@@ -1419,9 +1432,18 @@ distribution build.
         me.deselect = function () {
             me.set.call(this, false);
         };
-        // Select or unselect areas identified by key -- a string, a csv string, or array of strings.
-        // if set_bound is true, the bound list will also be updated. Default is true. If neither true nor false,
-        // it will be toggled.
+        
+        /**
+         * Select or unselect areas. Areas can be identified by a single string key, a comma-separated list of keys, 
+         * or an array of strings.
+         * 
+         * 
+         * @param {boolean} selected Determines whether areas are selected or deselected
+         * @param {string|string[]} key A string, comma-separated string, or array of strings indicating 
+         *                              the areas to select or deselect
+         * @param {object} options Rendering options to apply when selecting an area
+         */ 
+
         me.set = function (selected, key, options) {
             var lastMap, map_data, opts=options,
                 key_list, area_list; // array of unique areas passed
@@ -1471,6 +1493,7 @@ distribution build.
                 }
                 
                if (map_data) {
+                    
                     keys = '';
                     if (e.nodeName.toUpperCase()==='IMG') {
                         if (!m.queueCommand(map_data, $(e), 'set', [selected, key, opts])) {
@@ -1531,7 +1554,7 @@ distribution build.
 
                     me.complete=false;
                     me.configureOptions(options);
-                    me.bindImages(true,function() {
+                    me.bindImages().then(function() {
                         me.buildDataset(true);
                         me.complete=true;
                     });
@@ -1615,7 +1638,9 @@ distribution build.
                 { name: 'snapshot' }
             )).go();
         };
+        
         // do not queue this function
+        
         me.state = function () {
             var md, result = null;
             $(this).each(function (i,e) {
@@ -1633,41 +1658,46 @@ distribution build.
         me.bind = function (options) {
 
             return this.each(function (i,e) {
-                var img, map, usemap, map_data;
+                var img, map, usemap, md;
 
                 // save ref to this image even if we can't access it yet. commands will be queued
                 img = $(e);
 
-                // sorry - your image must have border:0, things are too unpredictable otherwise.
-                img.css('border', 0);
+                md = m.getMapData(e);
 
-                map_data = m.getMapData(e);
                 // if already bound completely, do a total rebind
-                if (map_data) {
+                
+                if (md) {
                     me.unbind.apply(img);
-                    if (!map_data.complete) {
+                    if (!md.complete) {
                         // will be queued
                         img.bind();
                         return true;
                     }
-                    map_data = null;
+                    md = null;
                 }
 
                 // ensure it's a valid image
                 // jQuery bug with Opera, results in full-url#usemap being returned from jQuery's attr.
                 // So use raw getAttribute instead.
+                
                 usemap = this.getAttribute('usemap');
                 map = usemap && $('map[name="' + usemap.substr(1) + '"]');
                 if (!(img.is('img') && usemap && map.size() > 0)) {
                     return true;
                 }
 
-                if (!map_data) {
-                    map_data = new m.MapData(this, options);
+                // sorry - your image must have border:0, things are too unpredictable otherwise.
+                img.css('border', 0);
 
-                    map_data.index = addMap(map_data);
-                    map_data.map = map;
-                    map_data.bindImages(true);
+                if (!md) {
+                    md = new m.MapData(this, options);
+
+                    md.index = addMap(md);
+                    md.map = map;
+                    md.bindImages().then(function() {
+                        md.initialize();
+                    });
                 }
             });
         };
@@ -1710,14 +1740,14 @@ distribution build.
             }
 
             // for safe load option
-            $(window).bind('load', function () {
-                m.windowLoaded = true;
-                $(m.map_cache).each(function (i,e) {
-                    if (!e.complete && e.isReadyToBind()) {
-                        e.initialize();
-                    }
-                });
-            });
+            // $(window).bind('load', function () {
+            //     m.windowLoaded = true;
+            //     $(m.map_cache).each(function (i,e) {
+            //         if (!e.complete && e.isReadyToBind()) {
+            //             e.initialize();
+            //         }
+            //     });
+            // });
 
 
         };
@@ -1951,13 +1981,14 @@ distribution build.
 
             var maskCanvas, maskContext,
                         me = this,
+                        md = me.map_data,
                         hasMasks = me.masks.length,
-                        shapeCanvas = me.createCanvasFor(me.map_data),
+                        shapeCanvas = me.createCanvasFor(md),
                         shapeContext = shapeCanvas.getContext('2d'),
                         context = me.canvas.getContext('2d');
 
             if (hasMasks) {
-                maskCanvas = me.createCanvasFor(me.map_data);
+                maskCanvas = me.createCanvasFor(md);
                 maskContext = maskCanvas.getContext('2d');
                 maskContext.clearRect(0, 0, maskCanvas.width, maskCanvas.height);
 
@@ -1978,8 +2009,8 @@ distribution build.
             $.each(me.shapes, function (i,s) {
                 shapeContext.save();
                 if (s.options.fill) {
-                    if (s.options.alt_image) {
-                        me.addAltImage(shapeContext, s.options.alt_image, s.mapArea, s.options);
+                    if (s.options.altImageId) {
+                        me.addAltImage(shapeContext, md.images[s.options.altImageId], s.mapArea, s.options);
                     } else {
                         shapeContext.beginPath();
                         me.renderShape(shapeContext, s.mapArea);
@@ -2027,9 +2058,6 @@ distribution build.
 
             me.active = false;
             return me.canvas;
-
-
-
         };
 
         // create a canvas mimicing dimensions of an existing element
@@ -2174,13 +2202,358 @@ distribution build.
 
     }
 
-} (jQuery));/* mapdata.js
+} (jQuery));
+/* mapdata.js
    the MapData object, repesents an instance of a single bound imagemap
 */
 
 (function ($) {
 
-    var p, m = $.mapster, u = m.utils;
+    var m = $.mapster, 
+        u = m.utils,
+        ap=[];
+    /**
+     * An object encapsulating all the images used by a MapData.
+     */
+    
+    m.MapImages = function(owner) {
+        this.owner = owner;
+        this.clear();
+    };
+
+    
+    m.MapImages.prototype = {
+        constructor: m.MapImages,
+
+        /* interface to make this array-like */
+
+        slice: function() {
+            return ap.slice.apply(this,arguments);
+        },
+        splice: function() {
+            ap.slice.apply(this.status,arguments);
+            var result= ap.slice.apply(this,arguments);
+            return result;
+        },
+     
+        /** 
+         * a boolean value indicates whether all images are done loading 
+         * @return {bool} true when all are done
+         */
+        complete: function() {
+            return $.inArray(false, this.status) < 0;
+        },
+        
+        /**
+         * Save an image in the images array and return its index 
+         * @param  {Image} image An Image object
+         * @return {int} the index of the image
+         */
+        
+        _add: function(image) {
+            var index = ap.push.call(this,image)-1;
+            this.status[index] = false;
+            return index;
+        },
+
+        /**
+         * Return the index of an Image within the images array
+         * @param  {Image} img An Image
+         * @return {int} the index within the array, or -1 if it was not found
+         */
+        
+        indexOf: function(image) {
+            return $.inArray(image, this);
+        },
+        
+        /**
+         * Clear this object and reset it to its initial state after binding.
+         */
+        
+        clear:function() {
+            var me=this;
+
+            if (me.ids && me.ids.length>0) {
+                $.each(me.ids,function(i,e) {
+                    delete me[e];
+                });
+            }
+            
+            /**
+             * A list of the cross-reference IDs bound to this object
+             * @type {string[]}
+             */
+            
+            me.ids=[];
+
+            /**
+             * Length property for array-like behavior, set to zero when initializing. Array prototype
+             * methods will update it after that.
+             * 
+             * @type {int}
+             */
+            
+            me.length=0;
+
+            /**
+             * the loaded status of the corresponding image
+             * @type {boolean[]}
+             */
+            
+            me.status= [];
+            
+            
+            /**
+             * the Image objects for each image used in the map
+             * @type {Image[]}
+             */  
+            
+            me.splice(0);
+            
+        },
+
+        /**
+         * Bind an image to the map and add it to the queue to be loaded; return an ID that
+         * can be used to reference the
+         * 
+         * @param {Image|string} image An Image object or a URL to an image
+         * @param {string} [id] An id to refer to this image
+         * @returns {int} an ID referencing the index of the image object in 
+         *                map_data.images
+         */
+     
+        add: function(image,id) {
+            var index,src,me = this;
+
+            if (!image) { return; }
+
+            if (typeof image === 'string') {
+                src = image;
+                image = me[src];
+                if (typeof image==='object') {
+                    return me.indexOf(image);
+                }
+
+                image = $('<img />')
+                    .addClass('mapster_el')
+                    .hide();
+
+                index=me._add(image[0]);
+                
+                image
+                    .bind('load',function(e) {
+                        me.imageLoaded.call(me,e);
+                    })
+                    .bind('error',function(e) {
+                        me.imageLoadError.call(me,e);
+                    });
+                
+                image.attr('src', src);
+            } else {
+
+                // use attr because we want the actual source, not the resolved path the browser will return directly calling image.src
+                
+                index=me._add($(image)[0]);
+            }
+            if (id) {
+                if (this[id]) {
+                    throw(id+" is already used or is not available as an altImage alias.");
+                }
+                me.ids.push(id);
+                me[id]=me[index];
+            }
+            return index;
+        },
+
+        /**
+         * Bind the images in this object, 
+         * @param  {boolean} retry when true, indicates that the function is calling itself after failure 
+         * @return {Promise} a promise that resolves when the images have finished loading
+         */
+        
+        bind: function(retry) {
+            var me = this,
+                promise,
+                triesLeft = me.owner.options.configTimeout / 200,
+
+            /* A recursive function to continue checking that the images have been 
+               loaded until a timeout has elapsed */
+
+            check=function() {
+                var i;
+
+                // refresh status of images
+                
+                i=me.length;
+
+                while (i-->0) {
+                    if (!me.isLoaded(i)) {
+                        break;
+                    }
+                }
+
+                // check to see if every image has already been loaded
+                
+                if (me.complete()) {
+                    me.resolve();
+                } else {
+                    // to account for failure of onLoad to fire in rare situations
+                    if (triesLeft-- > 0) {
+                        me.imgTimeout=window.setTimeout(function() {
+                            check.call(me,true);
+                        }, 50);
+                    } else {
+                        me.imageLoadError.call(me);
+                    }
+                }
+            
+            };
+
+            promise = me.deferred=u.defer();
+            
+            check();
+            return promise;
+        },
+   
+        resolve: function() {
+            var me=this,
+                resolver=me.deferred;
+                
+            if (resolver) {
+                // Make a copy of the resolver before calling & removing it to ensure
+                // it is not called twice
+                me.deferred=null;
+                resolver.resolve();
+            }
+        },
+
+        /**
+         * Event handler for image onload
+         * @param  {object} e jQuery event data
+         */
+        
+        imageLoaded: function(e) {
+            var me=this,
+                index = me.indexOf(e.target);
+
+            if (index>=0) {
+
+                me.status[index] = true;
+                if ($.inArray(false, me.status) < 0) {
+                    me.resolve();
+                }
+            }
+        },
+        
+        /**
+         * Event handler for onload error
+         * @param  {object} e jQuery event data
+         */
+        
+        imageLoadError: function(e) {
+            clearTimeout(this.imgTimeout);
+            this.triesLeft=0;
+            var err = e ? 'The image ' + e.target.src + ' failed to load.' : 
+                'The images never seemed to finish loading. You may just need to increase the configTimeout if images could take a long time to load.';
+            throw err;
+        },
+        /**
+         * Test if the image at specificed index has finished loading
+         * @param  {int}  index The image index
+         * @return {boolean} true if loaded, false if not
+         */
+        
+        isLoaded: function(index) {
+            var img,
+                me=this,
+                status=me.status;
+
+            if (status[index]) { return true; }
+            img = me[index];
+            
+            if (typeof img.complete !== 'undefined') {
+                status[index]=img.complete;
+            } else {
+                status[index]=!!u.imgWidth(img);
+            }
+            // if complete passes, the image is loaded, but may STILL not be available because of stuff like adblock.
+            // make sure it is.
+
+            return status[index];
+        }
+    };
+    } (jQuery));
+/* mapdata.js
+   the MapData object, repesents an instance of a single bound imagemap
+*/
+
+
+(function ($) {
+
+    var p,    
+        m = $.mapster, 
+        u = m.utils;
+   
+    /**
+     * Set default values for MapData object properties
+     * @param  {MapData} me The MapData object
+     */
+    
+    function initializeDefaults(me) {
+        $.extend(me,{
+            complete: false,         // (bool)    when configuration is complete       
+            map: null,                // ($)      the image map
+            base_canvas: null,       // (canvas|var)  where selections are rendered
+            overlay_canvas: null,    // (canvas|var)  where highlights are rendered
+            commands: [],            // {}        commands that were run before configuration was completed (b/c images weren't loaded)
+            data: [],                // MapData[] area groups
+            mapAreas: [],            // MapArea[] list. AreaData entities contain refs to this array, so options are stored with each.
+            _xref: {},               // (int)      xref of mapKeys to data[]
+            highlightId: -1,        // (int)      the currently highlighted element.
+            currentAreaId: -1,
+            _tooltip_events: [],     // {}         info on events we bound to a tooltip container, so we can properly unbind them
+            scaleInfo: null,         // {}         info about the image size, scaling, defaults
+            index: -1,                 // index of this in map_cache - so we have an ID to use for wraper div
+            activeAreaEvent: null
+        });
+    }
+
+        
+    function getOptionImages(obj) {
+        return [obj, obj.render_highlight, obj.render_select];
+    }
+
+    function configureAltImages(me)
+    {
+        var opts = me.options,
+            mi = me.images;
+
+        // add alt images
+        
+        if ($.mapster.hasCanvas) {
+            // map altImage library first
+            
+            $.each(opts.altImages || {},function(i,e) {
+                mi.add(e,i);
+            });
+            
+            // now find everything else
+
+            $.each([opts].concat(opts.areas),function(i,e) {
+                $.each(getOptionImages(e),function(i2,e2) {
+                    if (e2 && e2.altImage) {
+                        e2.altImageId=mi.add(e2.altImage);
+                    }
+                });
+            });
+        }
+
+        // set area_options
+        me.area_options = u.updateProps({}, // default options for any MapArea
+            m.area_defaults,
+            opts);
+    }
+
     m.MapData = function (image, options) {
         var me = this;
 
@@ -2211,16 +2584,17 @@ distribution build.
             }
         }
 
-
-   
-        this.image = image;              // (Image)  main map image
+        me.image = image;              // (Image)  main map image
 
         // save the initial style of the image for unbinding. This is problematic, chrome duplicates styles when assigning, and
         // cssText is apparently not universally supported. Need to do something more robust to make unbinding work universally.
-        this.imgCssText = image.style.cssText || null;
+        me.imgCssText = image.style.cssText || null;
 
-        this.initializeDefaults();
-        this.configureOptions(options);
+        me.images = new m.MapImages(me); 
+
+        initializeDefaults(me);
+
+        me.options= u.updateProps({}, m.defaults, options);
 
         /**
          * Mousedown event. This is captured only to prevent browser from drawing an outline around an
@@ -2228,6 +2602,7 @@ distribution build.
          * 
          * @param  {EventData} e jQuery event data
          */
+        
         this.mousedown = function (e) {
             if (!$.mapster.hasCanvas) {
                 this.blur();
@@ -2400,36 +2775,25 @@ distribution build.
     };
     p = m.MapData.prototype;
 
-    p.configureOptions=function(options) {
-        // this is done here instead of the consturc
-        this.area_options = u.updateProps({}, // default options for any MapArea
-            m.area_defaults,
-            options);
-        this.options= u.updateProps({}, m.defaults, options);
-        this.bindTries = this.options.configTimeout / 200;
-    };
-    p.initializeDefaults = function () {
-        $.extend(this,{
-            images: [],               // (Image)  all images associated with this map. this will include a "copy" of the main one
-            imageSources: [],         // (string) src for each image
-            imageStatus: [],          // (bool)   the loaded status of each indexed image in images
-            altImagesXref: {},        // (int)    xref of "render_xxx" to this.images
-            map: null,                // ($)      the image map
-            base_canvas: null,       // (canvas|var)  where selections are rendered
-            overlay_canvas: null,    // (canvas|var)  where highlights are rendered
-            imagesLoaded: false,     // (bool)    when all images have finished loading (config can proceed)
-            complete: false,         // (bool)    when configuration is complete
-            commands: [],            // {}        commands that were run before configuration was completed (b/c images weren't loaded)
-            data: [],                // MapData[] area groups
-            mapAreas: [],            // MapArea[] list. AreaData entities contain refs to this array, so options are stored with each.
-            _xref: {},               // (int)      xref of mapKeys to data[]
-            highlightId: -1,        // (int)      the currently highlighted element.
-            currentAreaId: -1,
-            _tooltip_events: [],     // {}         info on events we bound to a tooltip container, so we can properly unbind them
-            scaleInfo: null,         // {}         info about the image size, scaling, defaults
-            index: -1,                 // index of this in map_cache - so we have an ID to use for wraper div
-            activeAreaEvent: null
-        });
+    p.bindImages=function() {
+        var me=this,
+            mi = me.images;
+
+        // reset the images if this is a rebind
+        
+        if (mi.length>2) {
+            mi.splice(2);
+        } else if (mi.length===0) {
+
+            // add the actual main image
+            mi.add(me.image);
+            // will create a duplicate of the main image, we need this to get raw size info
+            mi.add(me.image.src);
+        }
+        
+        configureAltImages(me);
+
+        return me.images.bind();
     };
 
     p.isActive = function() {
@@ -2444,161 +2808,7 @@ distribution build.
             scaleInfo: this.scaleInfo
         };
     };
-    p.isReadyToBind = function () {
-        return this.imagesLoaded && (!this.options.safeLoad || m.windowLoaded);
-    };
-    // bind a new image to a src, capturing load event. Return the new (or existing) image.
-    p.addImage = function (img, src, altId) {
-        var image, source, me = this,
-        getImageIndex=function(img) {
-            return $.inArray(img, me.images);
-        },
-
-        // fires on image onLoad evens, could mean everything is ready
-        load=function() {
-            var index = getImageIndex(this);
-            if (index>=0) {
-
-                me.imageStatus[index] = true;
-                if ($.inArray(false, me.imageStatus) < 0 &&
-                            (!me.options.safeLoad || m.windowLoaded)) {
-                    me.initialize();
-                }
-            }
-        },
-        storeImage=function(image) {
-            var index = me.images.push(image) - 1;
-            me.imageSources[index] = source;
-            me.imageStatus[index] = false;
-            if (altId) {
-                me.altImagesXref[altId] = index;
-            }
-        };
-
-        if (!img && !src) { return; }
-
-        image = img;
-        // use attr because we want the actual source, not the resolved path the browser will return directly calling image.src
-        source = src || $(image).attr('src');
-        if (!source) { throw ("Missing image source"); }
-
-        if (!image) {
-            image = $('<img class="mapster_el" />').hide()[0];
-
-            //$(this.images[0]).before(image);
-
-            //image = new Image();
-            //image.src = source;
-
-            $('body').append(image);
-            storeImage(image);
-            $(image).bind('onload',load).bind('onerror',function(e) {
-                me.imageLoadError.call(me,e);
-            });
-            $(image).attr('src', source);
-
-        } else {
-            storeImage(image);
-        }
-
-    };
-    // Checks status & updates if it's loaded
-    p.isImageLoaded= function (index) {
-        var status,img,me=this;
-        if (me.imageStatus[index]) { return true; }
-        img = me.images[index];
-        
-        if (typeof img.complete !== 'undefined') {
-            status=img.complete;
-        } else {
-            status=!!u.imgWidth(img);
-        }
-        // if complete passes, the image is loaded, but may STILL not be available because of stuff like adblock.
-        // make sure it is.
-
-        me.imageStatus[index]=status;
-        return status;
-    };
-    // Wait until all images are loaded then call initialize. This is difficult because browsers are incosistent about
-    // how or if "onload" works and in how one can actually detect if an image is already loaded. Try to check first,
-    // then bind onload event, and finally use a timer to keep checking.
-    
-    // the "first" parameter means this was the first time it was called
-
-    p.bindImages = function (first,callback) {
-        var i,
-            me = this,
-            loaded=true,
-            opts=me.options,
-            retry=function() {
-                me.bindImages.call(me,false,callback);
-            };
-            
-
-        if (first) {
-            me.complete=false;
-            me.triesLeft = me.bindTries;
-            me.imagesLoaded=false;
-            // reset the images if this is a rebind
-            if (me.images.length>2) {
-                me.images=me.images.slice(0,2);
-                me.imageSources=me.imageSources.slice(0,2);
-                me.imageStatus=me.imageStatus.slice(0,2);
-                me.altImagesXref={};
-            }
-            me.altImagesXref={};
-            if (me.images.length===0) {
-                // add the actual main image
-                me.addImage(me.image);
-                // will create a duplicate of the main image, we need this to get raw size info
-                me.addImage(null,me.image.src);
-            }
-            // add alt images
-            if ($.mapster.hasCanvas) {
-                me.addImage(null, opts.render_highlight.altImage || opts.altImage, "highlight");
-                me.addImage(null, opts.render_select.altImage || opts.altImage, "select");
-            }
-        }
-
-        if (me.imagesLoaded) {
-            return;
-        }
-
-        // check to see if every image has already been loaded
-        i=me.images.length;
-        while (i-->0) {
-            if (!me.isImageLoaded(i)) {
-                loaded=false;
-                break;
-            }
-        }
-        me.imagesLoaded=loaded;
-
-        if (me.isReadyToBind()) {
-            if (callback) {
-                callback();
-            } else {
-                me.initialize();
-            }
-        } else {
-            // to account for failure of onLoad to fire in rare situations
-            if (me.triesLeft-- > 0) {
-                me.imgTimeout=window.setTimeout(retry, 200);
-            } else {
-                me.imageLoadError.call(me);
-            }
-        }
-    };
-    p.imageLoadError=function(e) {
-        clearTimeout(this.imgTimeout);
-        this.triesLeft=0;
-        var err = e ? 'The image ' + e.target.src + ' failed to load.' : 
-        'The images never seemed to finish loading. You may just need to increase the configTimeout if images could take a long time to load.';
-        throw err;
-    };
-    p.altImage = function (mode) {
-        return this.images[this.altImagesXref[mode]];
-    };
+   
     p.wrapId = function () {
         return 'mapster_wrap_' + this.index;
     };
@@ -2763,6 +2973,7 @@ distribution build.
         parentId = img.parent().attr('id');
 
         // create a div wrapper only if there's not already a wrapper, otherwise, own it
+        
         if (parentId && parentId.length >= 12 && parentId.substring(0, 12) === "mapster_wrap") {
             wrap = img.parent();
             wrap.attr('id', me.wrapId());
@@ -2787,19 +2998,16 @@ distribution build.
 
         me.scaleInfo = scale = u.scaleMap(me.images[0],me.images[1], opts.scaleMap);
         
-        base_canvas = me.graphics.createVisibleCanvas(me);
-        overlay_canvas = me.graphics.createVisibleCanvas(me);
-
-        me.base_canvas = base_canvas;
-        me.overlay_canvas = overlay_canvas;
+        me.base_canvas = base_canvas = me.graphics.createVisibleCanvas(me);
+        me.overlay_canvas = overlay_canvas = me.graphics.createVisibleCanvas(me);
 
         // Now we got what we needed from the copy -clone from the original image again to make sure any other attributes are copied
         imgCopy = $(me.images[1])
-            .addClass('mapster_el')
-            .addClass(me.images[0].className)
+            .addClass('mapster_el '+ me.images[0].className)
             .attr({id:null, usemap: null});
             
         size=u.size(me.images[0]);
+        
         if (size.complete) {
             imgCopy.css({
                 width: size.width,
@@ -3036,22 +3244,17 @@ distribution build.
             // get rid of everything except the original image
             this.image.style.cssText = this.imgCssText;
             $(this.wrapper).before(this.image).remove();
-
         }
-        // release refs
 
-        $.each(this.images, function (i,e) {
-            if (me.images[i] !== e.image) {
-                me.images[i] = null;
-            }
-        });
-        me.images = [];
+        me.images.clear();
 
         this.image = null;
         u.ifFunction(this.clearTooltip, this);
     };
+
     // Compelete cleanup process for deslecting items. Called after a batch operation, or by AreaData for single
     // operations not flagged as "partial"
+    
     p.removeSelectionFinish = function () {
         var g = this.graphics;
 
@@ -3138,32 +3341,54 @@ distribution build.
 
     };
 
+    /**
+     * Return the overall options effective for this area. 
+     * This should get the default options, and merge in area-specific options, finally
+     * overlaying options passed by parameter
+     * 
+     * @param  {[type]} options  options which will supercede all other options for this area
+     * @return {[type]}          the combined options
+     */
     
-    p.effectiveOptions = function (override_options) {
-        //TODO this isSelectable should cascade already this seems redundant
+    p.effectiveOptions = function (options) {
+        
         var opts = u.updateProps({},
                 this.owner.area_options,
                 this.options,
-                override_options || {},
-                {id: this.areaId }
+                options || {},
+                {
+                    id: this.areaId 
+                }
             );
+
         opts.selected = this.isSelected();
+        
         return opts;
     };
-    // Return the options effective for this area for a "render" or "highlight" mode. This should get the default options,
-    // merge in the areas-specific options, and then the mode-specific options.
     
-    p.effectiveRenderOptions = function (mode, override_options) {
+    /**
+     * Return the options effective for this area for a "render" or "highlight" mode. 
+     * This should get the default options, merge in the areas-specific options, 
+     * and then the mode-specific options.
+     * @param  {string} mode    'render' or 'highlight'
+     * @param  {[type]} options  options which will supercede all other options for this area
+     * @return {[type]}          the combined options
+     */
+    
+    p.effectiveRenderOptions = function (mode, options) {
         var allOpts,opts=this.optsCache;
         
         if (!opts || mode==='highlight') {
-            allOpts = this.effectiveOptions(override_options);
+            allOpts = this.effectiveOptions(options);
             opts = u.updateProps({},
                 allOpts,
-                allOpts["render_" + mode],
-                { 
-                    alt_image: this.owner.altImage(mode) 
-                });
+                allOpts["render_" + mode]
+                // ,
+                // { 
+                //     alt_image: this.owner.altImage(mode) 
+                // })
+                );
+                
             if (mode!=='highlight') {
                 this.optsCache=opts;
             }
@@ -3182,7 +3407,9 @@ distribution build.
                 });
         }
     };
-    // highlight this area, no render causes it to happen internally only
+    
+    // highlight this area
+     
     p.highlight = function (options) {
         var o = this.owner;
         if (this.effectiveOptions().highlight) {
@@ -3203,16 +3430,25 @@ distribution build.
             o.clearSelections();
         }
 
+
+
+
         // because areas can overlap - we can't depend on the selection state to tell us anything about the inner areas.
         // don't check if it's already selected
+        
         if (!this.isSelected()) {
             if (options) {
-                this.optsCache = $.extend(this.effectiveRenderOptions('select'),options);
+                
+                // cache the current options, and map the altImageId if an altimage was passed
+
+                this.optsCache = $.extend(this.effectiveRenderOptions('select'),
+                    options,
+                    { 
+                        altImageId: o.images.add(options.altImage)
+                    });
             }
             this.drawSelection();
-            if (options) {
-                this.optsCache=null;
-            }
+
             this.selected = true;
             this.changeState('select', true);
         }
@@ -3400,14 +3636,9 @@ distribution build.
    requires areacorners.js, when.js
 */
 
-// options {
-//    padding: n,
-//    duration: m,
-//}
-//
+
 (function ($) {
-    var when=$.mapster_when,
-        m = $.mapster, u = m.utils, p = m.MapArea.prototype;
+    var m = $.mapster, u = m.utils, p = m.MapArea.prototype;
 
     m.utils.getScaleInfo = function (eff, actual) {
         var pct;
@@ -3436,11 +3667,13 @@ distribution build.
         // with adBlock or maybe other plugins. These must interfere with onload events somehow.
 
 
-        var vis=u.size(image),raw=u.size(imageRaw);
-        if (!raw.complete) {
+        var vis=u.size(image),
+            raw=u.size(imageRaw,true);
+
+        if (!raw.complete()) {
             throw("Another script, such as an extension, appears to be interfering with image loading. Please let us know about this.");
         }
-        if (!vis.complete) {
+        if (!vis.complete()) {
             vis=raw;
         }
         return this.getScaleInfo(vis, scale ? raw : null);
@@ -3547,7 +3780,7 @@ distribution build.
             promises = [];
             me.currentAction = 'resizing';
             els.each(function (i, e) {
-                p = when.defer();
+                p = u.defer();
                 promises.push(p);
 
                 $(e).animate(newsize, {
@@ -3557,13 +3790,13 @@ distribution build.
                 });
             });
 
-            p = when.defer();
+            p = u.defer();
             promises.push(p);
 
             // though resizeMapData is not async, it needs to be finished just the same as the animations,
             // so add it to the "to do" list.
             
-            when.all(promises).then(finishResize);
+            u.when.all(promises).then(finishResize);
             resizeMapData();
             p.resolve();
         } else {

@@ -9,8 +9,11 @@ MAPSTER_DIST = File.join(MAPSTER_ROOT, '../dist')
 MAPSTER_PKG = File.join(MAPSTER_ROOT, '../pkg')
 
 MAPSTER_COMPONENTS = [
+  'license',
+  'redist/when',
   'core',
   'graphics',
+  'mapimage',
   'mapdata',
   'areadata',
   'areacorners',
@@ -20,17 +23,21 @@ MAPSTER_COMPONENTS = [
 
 
 MAPSTER_ZEPTO_COMPONENTS = [
+  'license',
   'zepto',
+  'redist/when',
   'core',
   'graphics',
   'mapdata',
+  'mapimage',
   'areadata',
   'areacorners',
   'scale',
   'tooltip'
 ]
 
-task :default => [:clean, :concat, :concatzepto, :dist]
+#task :default => [:clean, :concat, :concatzepto, :dist]
+task :default => [:clean, :concat, :dist]
 
 desc "Clean the distribution directory."
 task :clean do
@@ -129,8 +136,8 @@ desc "Generates a minified version for distribution, using UglifyJS."
 task :dist do
   src, target = File.join(MAPSTER_DIST,'jquery.imagemapster.js'), File.join(MAPSTER_DIST,'jquery.imagemapster.min.js')
   uglifyjs src, target
-  src, target = File.join(MAPSTER_DIST,'jquery.imagemapster.zepto.js'), File.join(MAPSTER_DIST,'jquery.imagemapster.zepto.min.js')
-  uglifyjs src, target
+  #src, target = File.join(MAPSTER_DIST,'jquery.imagemapster.zepto.js'), File.join(MAPSTER_DIST,'jquery.imagemapster.zepto.min.js')
+  #uglifyjs src, target
   process_minified src, target
 end
 
