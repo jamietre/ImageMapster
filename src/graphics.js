@@ -220,13 +220,14 @@
 
             var maskCanvas, maskContext,
                         me = this,
+                        md = me.map_data,
                         hasMasks = me.masks.length,
-                        shapeCanvas = me.createCanvasFor(me.map_data),
+                        shapeCanvas = me.createCanvasFor(md),
                         shapeContext = shapeCanvas.getContext('2d'),
                         context = me.canvas.getContext('2d');
 
             if (hasMasks) {
-                maskCanvas = me.createCanvasFor(me.map_data);
+                maskCanvas = me.createCanvasFor(md);
                 maskContext = maskCanvas.getContext('2d');
                 maskContext.clearRect(0, 0, maskCanvas.width, maskCanvas.height);
 
@@ -247,8 +248,8 @@
             $.each(me.shapes, function (i,s) {
                 shapeContext.save();
                 if (s.options.fill) {
-                    if (s.options.alt_image) {
-                        me.addAltImage(shapeContext, s.options.alt_image, s.mapArea, s.options);
+                    if (s.options.altImageId) {
+                        me.addAltImage(shapeContext, md.images[s.options.altImageId], s.mapArea, s.options);
                     } else {
                         shapeContext.beginPath();
                         me.renderShape(shapeContext, s.mapArea);
@@ -296,9 +297,6 @@
 
             me.active = false;
             return me.canvas;
-
-
-
         };
 
         // create a canvas mimicing dimensions of an existing element
