@@ -32,7 +32,9 @@
             activeAreaEvent: null
         });
     }
-
+    function configureOptions(me,options) {
+        me.options= u.updateProps({}, m.defaults, options);
+    }
         
     function getOptionImages(obj) {
         return [obj, obj.render_highlight, obj.render_select];
@@ -109,7 +111,8 @@
 
         initializeDefaults(me);
 
-        me.options= u.updateProps({}, m.defaults, options);
+        configureOptions(me,options);
+        
 
         /**
          * Mousedown event. This is captured only to prevent browser from drawing an outline around an
@@ -288,8 +291,11 @@
         this.graphics = new m.Graphics(this);
 
     };
-    p = m.MapData.prototype;
 
+    p = m.MapData.prototype;
+    p.configureOptions=function(options) {
+        configureOptions(this,options);
+    };
     p.bindImages=function() {
         var me=this,
             mi = me.images;
