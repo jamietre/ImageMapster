@@ -1,4 +1,4 @@
-/* ImageMapster
+﻿/* ImageMapster
    Version: 1.2.6.xxx (development)
 
 Copyright 2011-2012 James Treworgy
@@ -821,8 +821,7 @@ distribution build.
 	}
 // Boilerplate for AMD, Node, and browser global
 );
-/*lint-ignore-end*/
-/* ImageMapster core */
+/*lint-ignore-end*//* ImageMapster core */
 
 /*jslint laxbreak: true, evil: true, unparam: true */
 
@@ -843,7 +842,7 @@ distribution build.
     };
 
     $.mapster = {
-        version: "1.2.6.006",
+        version: "1.2.6.007",
         render_defaults: {
             isSelectable: true,
             isDeselectable: true,
@@ -2202,8 +2201,7 @@ distribution build.
 
     }
 
-} (jQuery));
-/* mapdata.js
+} (jQuery));/* mapdata.js
    the MapData object, repesents an instance of a single bound imagemap
 */
 
@@ -2482,8 +2480,7 @@ distribution build.
             return status[index];
         }
     };
-    } (jQuery));
-/* mapdata.js
+    } (jQuery));/* mapdata.js
    the MapData object, repesents an instance of a single bound imagemap
 */
 
@@ -2517,7 +2514,9 @@ distribution build.
             activeAreaEvent: null
         });
     }
-
+    function configureOptions(me,options) {
+        me.options= u.updateProps({}, m.defaults, options);
+    }
         
     function getOptionImages(obj) {
         return [obj, obj.render_highlight, obj.render_select];
@@ -2594,7 +2593,8 @@ distribution build.
 
         initializeDefaults(me);
 
-        me.options= u.updateProps({}, m.defaults, options);
+        configureOptions(me,options);
+        
 
         /**
          * Mousedown event. This is captured only to prevent browser from drawing an outline around an
@@ -2773,8 +2773,11 @@ distribution build.
         this.graphics = new m.Graphics(this);
 
     };
-    p = m.MapData.prototype;
 
+    p = m.MapData.prototype;
+    p.configureOptions=function(options) {
+        configureOptions(this,options);
+    };
     p.bindImages=function() {
         var me=this,
             mi = me.images;

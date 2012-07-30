@@ -19,7 +19,7 @@
     };
 
     $.mapster = {
-        version: "1.2.6.006",
+        version: "1.2.6.007",
         render_defaults: {
             isSelectable: true,
             isDeselectable: true,
