@@ -7,6 +7,11 @@ Features:
 
 ####version 1.2.7 (in development)
 
+* [Issue xx] Mouseover events not completely suppressed on mobile
+* selectOnMousedown feature ?
+* Tooltip enhancements
+* AltImage enhancements
+
 *tooltip-enhancements branch*
 
 * [Issue 72](https://github.com/jamietre/ImageMapster/issues/72): `scaleMap` not working propery when using bootstrap (css on `body` causing incorrect evaluation of native image size)

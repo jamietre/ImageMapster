@@ -135,7 +135,8 @@
                     key: this.key,
                     state: state_type,
                     selected: state
-                });
+                }
+            );
         }
     };
 
@@ -169,15 +170,19 @@
         // don't check if it's already selected
         if (!this.isSelected()) {
             if (options) {
-                this.optsCache = $.extend(this.effectiveRenderOptions('select'),options);
+                
+                // cache the current options, and map the altImageId if an altimage 
+                // was passed
+
+                this.optsCache = $.extend(this.effectiveRenderOptions('select'),
+                    options,
+                    { 
+                        altImageId: o.images.add(options.altImage)
+                    });
             }
+
             this.drawSelection();
 
-            // this was in ToolTip enhancement branch but not master... hmm.
-            
-            //if (options) {
-            //    this.optsCache=null;
-            //}
             this.selected = true;
             this.changeState('select', true);
         }

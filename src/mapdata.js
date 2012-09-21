@@ -831,10 +831,15 @@
                 }
 
                 if (!mapArea.nohref) {
-                    $area.bind('mouseover.mapster', me.mouseover)
-                        .bind('mouseout.mapster', me.mouseout)
-                        .bind('click.mapster', me.click)
-                        .bind('mousedown.mapster', me.mousedown);
+                    $area.bind('click.mapster', me.click);
+                       
+                    if (!m.isTouch) {
+                        $area.bind('mouseover.mapster', me.mouseover)
+                            .bind('mouseout.mapster', me.mouseout)
+                            .bind('mousedown.mapster', me.mousedown);
+                        
+                    }
+                        
                 }
 
                 // store an ID with each area. 

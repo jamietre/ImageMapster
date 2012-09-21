@@ -894,9 +894,6 @@
                 };
                 return;
             }
-            if (!u.isBool($.mapster.defaults.highlight)) {
-                m.render_defaults.highlight = !m.isTouch;
-            }
 
             $.extend(m.defaults, m.render_defaults,m.shared_defaults);
             $.extend(m.area_defaults, m.render_defaults,m.shared_defaults);
