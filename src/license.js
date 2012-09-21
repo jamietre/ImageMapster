@@ -1,18 +1,16 @@
 /* ImageMapster
-   Version: 1.2.6.xxx (development)
+   Version: 1.2.6.099 (9/21/2012 - unreleased)
 
 Copyright 2011-2012 James Treworgy
+
 http://www.outsharked.com/imagemapster
 https://github.com/jamietre/ImageMapster
 
 A jQuery plugin to enhance image maps.
 
-Versions 1.2.4.067+ include "when.js": http://github.com/cujos/when in the
-distribution build.
-
 */
 
-/*
+;
 
 /// LICENSE (MIT License)
 ///
@@ -37,4 +35,3 @@ distribution build.
 ///
 /// January 19, 2011
 
-*/

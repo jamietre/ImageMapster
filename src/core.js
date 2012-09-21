@@ -29,7 +29,7 @@
             fillColor: '000000',
             fillColorMask: 'FFFFFF',
             fillOpacity: 0.7,
-            highlight: null,
+            highlight: true,
             stroke: false,
             strokeColor: 'ff0000',
             strokeOpacity: 1,
@@ -628,11 +628,11 @@
                 if (ar) {
                     switch (selected) {
                         case true:
-                            ar.addSelection(opts); break;
+                            ar.select(opts); break;
                         case false:
-                            ar.removeSelection(true); break;
+                            ar.deselect(true); break;
                         default:
-                            ar.toggleSelection(opts); break;
+                            ar.toggle(opts); break;
                     }
                 }
             }
@@ -911,18 +911,6 @@
                     style.addRule('v\\:' + el, "behavior: url(#default#VML); antialias:true");
                 });
             }
-
-            // for safe load option
-            // $(window).bind('load', function () {
-            //     m.windowLoaded = true;
-            //     $(m.map_cache).each(function (i,e) {
-            //         if (!e.complete && e.isReadyToBind()) {
-            //             e.initialize();
-            //         }
-            //     });
-            // });
-
-
         };
         me.test = function (obj) {
             return eval(obj);

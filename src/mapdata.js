@@ -295,7 +295,7 @@
             }
 
             if (canChangeState) {
-                selected = ar.toggleSelection();
+                selected = ar.toggle();
             }
 
             if (opts.boundList && opts.boundList.length > 0) {
@@ -845,7 +845,6 @@
                 // store an ID with each area. 
                 $area.data("mapster", mapAreaId+1);
             }
-
            
             // TODO listenToList
             //            if (opts.listenToList && opts.nitG) {
