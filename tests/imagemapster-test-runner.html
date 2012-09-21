@@ -15,6 +15,7 @@
     <script type="text/javascript" src="rendering.tests.js" ></script>
     <script type="text/javascript" src="events.tests.js" ></script>
     <script type="text/javascript" src="migrated.tests.js" ></script>
+    <script type="text/javascript" src="tooltip.tests.js" ></script>
 
     <!--<script type="text/javascript" src="../src/zepto.js"></script>-->
     <script type="text/javascript" src="../src/redist/when.js"></script>
@@ -43,6 +44,8 @@
         checkedSel = 'input[type="checkbox"]:checked',
         runCount = 0,
         activeGroups=[];
+
+    // set up some global stuff for the tests to use
 
     function enableTestLink() {
         $('#startTest').toggle(!!$(checkedSel).length);

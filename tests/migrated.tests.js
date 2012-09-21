@@ -20,7 +20,10 @@ this.tests = this.tests || [];
     this.tests.push(
     iqtest.create("basic","manipulation tests - migrated from old test suite (not organized)")
         .add("Migrated tests", function (a, r) {
-            var mu = $.mapster.utils;
+            var me=this,
+                getPromise= function(name) {
+                    return me.promises(name);
+                },mu = $.mapster.utils;
 
             // Save current state to see if we cleaned up properly later
             var domCount = $('#test_elements *').length;
@@ -58,122 +61,121 @@ this.tests = this.tests || [];
 
 
             }
-            map = $("#usa_image").mapster(map_options);
+            map = $("#usa_image").mapster($.extend(map_options, {
+                onConfigured: getPromise("configured").resolve
+            }));
 
-            // TO TEST-
-            // set from areas from 
-            // queue options 
-
-            // options
             
-            var initialOpts = mu.updateProps({}, $.mapster.defaults, map_options);
-            var opts = map.mapster('get_options');
-            a.equals(opts, initialOpts, "Options retrieved match initial options");
-
-            // todo - test new options options
-            //opts = map.mapster('get_options',null,true);
-            //initialOpts.render_select = u.mergeObjects({template:$.mapster.render_defaults }); 
-
-            var newOpts = { isSelectable: false, areas: [{ key: 'MT', isDeselectable: false}] };
-            map.mapster('set_options', newOpts);
-            opts = map.mapster('get_options');
-
-            // to compare this we have to ignore areas, since they won't be the same object
-
-            var expectedNewOpts = $.extend({},initialOpts);
-            expectedNewOpts.isSelectable = false;
-
-            a.propertyValueEquals(opts,expectedNewOpts, "Options retrieved match updated value");
-            a.equals(opts.areas.length, 6, "Area option was added");
-
-            // restore original options before continuing
-            opts = map.mapster('set_options', { isSelectable: true, areas: [{ key: 'MT', isDeselectable: true}] });
-
-            a.equals(!!map.mapster, true, "Plugin returns jQuery object");
-            a.equals(map, $("#usa_image"), "Plugin returns jquery same object as invocation");
-
-            // order is not guaranteed - this is the order the areas are created.
-            var selected = map.mapster('get');
-
-            // This test should NOT show "WA" because StaticState items are not considered "selected"
-
-            a.collectionEquals(selected, "AK,TX", "Initially selected items returned with 'get'");
-
-
-            selected = map.mapster('get', 'TX');
-            a.equals(selected, true, "Initially selected single item returned true with 'get'");
-            selected = map.mapster('get', 'ME');
-            a.equals(selected, false, "Initially deselected single item returned false with 'get'");
-
-
-            // Test setting/getting via area
-
-            // AK was already selected, should be ignored
-
-            attrMatches($('area'), "state", "AK,HI,LA").mapster('set', true);
-            var area_sel = map.mapster('get');
-            a.collectionEquals(area_sel, "HI,AK,LA,TX", "Set using area works");
-
-            map.mapster('set', false, 'LA,TX');
-            a.collectionEquals("HI,AK", map.mapster('get'), "unset using keys works");
-
-            map.mapster('set', true, 'ME,OH,TX');
-            a.collectionEquals("HI,AK,ME,OH,TX", map.mapster('get'), "set using keys works");
-
-            // test toggling: AK should go off, MT should go on
-            attrMatches($('area'), "state", "AK,MT").mapster('set');
-            a.collectionEquals("HI,ME,OH,TX,MT", map.mapster('get'), "toggling keys works");
-
-            // test clicking
-            $('area[state="AZ"]').first().click();
-            selected = map.mapster('get', 'AZ');
-            a.equals(true, selected, "Click-selected area returned 'get'");
-            a.collectionEquals("HI,ME,OH,TX,MT,AZ", map.mapster('get'), "Complete list returned with 'get'");
-
-            /// try to click select "staticstate areas
-
-            $('area[state="OR"]').first().click();
-            selected = map.mapster('get', 'OR');
-            a.equals(selected, false, "Cannot select 'staticState=false' area with click");
-
-            selected = map.mapster('get', 'WA');
-            a.equals(selected, false, "staticState=true area is considered not selected");
-
-            opts = map.mapster('get_options', 'WA');
-            a.equals(opts.staticState, true, "get effective options returned correct static state for WA");
-
-            opts = map.mapster('get_options', 'OR');
-            a.equals(opts.staticState, false, "get effective options returned correct static state for OR");
-
-
-            $('area[state="WA"]').first().click();
-            selected = map.mapster('get', 'WA');
-            a.equals(selected, false, "Cannot change selection state of 'staticState=true' area with click");
-
-            // do it programatically
-
-            map.mapster('set', true, 'OR');
-            selected = map.mapster('get', 'OR');
-            a.equals(selected, true, "Can select 'staticState=false' area with 'set'");
-
-            map.mapster('set', false, 'WA');
-            a.equals(map.mapster('get', 'WA'), false, "Can deselect staticState=true' area with 'set'");
-
-            // test rebind
-            newOpts = map.mapster('get_options');
-            newOpts.singleSelect = true;
-            map.mapster('rebind', newOpts);
-            a.collectionEquals(map.mapster('get'), 'TX,AK', "Rebind with singleSelect reverted to original state");
-
-            map.mapster('set', true, "MI");
-            a.equals(map.mapster('get'), 'MI', "Single select worked.");
-
-            map.mapster('set_options', { isDeselectable: false });
-            $('area[state="MI"]').first().click();
-            a.equals(map.mapster('get', 'MI'), true, "Cannot deselect single selected item with isDeselectable=false");
-
-            $('area[state="UT"]').first().click();
+            getPromise("configured").then(function() {
             
+                var initialOpts = mu.updateProps({}, $.mapster.defaults, map_options);
+                var opts = map.mapster('get_options');
+                a.equals(opts, initialOpts, "Options retrieved match initial options");
+
+                // todo - test new options options
+                //opts = map.mapster('get_options',null,true);
+                //initialOpts.render_select = u.mergeObjects({template:$.mapster.render_defaults }); 
+
+                var newOpts = { isSelectable: false, areas: [{ key: 'MT', isDeselectable: false}] };
+                map.mapster('set_options', newOpts);
+                opts = map.mapster('get_options');
+
+                // to compare this we have to ignore areas, since they won't be the same object
+
+                var expectedNewOpts = $.extend({},initialOpts);
+                expectedNewOpts.isSelectable = false;
+
+                a.propertyValueEquals(opts,expectedNewOpts, "Options retrieved match updated value");
+                a.equals(opts.areas.length, 6, "Area option was added");
+
+                // restore original options before continuing
+                opts = map.mapster('set_options', { isSelectable: true, areas: [{ key: 'MT', isDeselectable: true}] });
+
+                a.equals(!!map.mapster, true, "Plugin returns jQuery object");
+                a.equals(map, $("#usa_image"), "Plugin returns jquery same object as invocation");
+
+                // order is not guaranteed - this is the order the areas are created.
+                var selected = map.mapster('get');
+
+                // This test should NOT show "WA" because StaticState items are not considered "selected"
+
+                a.collectionEquals(selected, "AK,TX", "Initially selected items returned with 'get'");
+
+
+                selected = map.mapster('get', 'TX');
+                a.equals(selected, true, "Initially selected single item returned true with 'get'");
+                selected = map.mapster('get', 'ME');
+                a.equals(selected, false, "Initially deselected single item returned false with 'get'");
+
+
+                // Test setting/getting via area
+
+                // AK was already selected, should be ignored
+
+                attrMatches($('area'), "state", "AK,HI,LA").mapster('set', true);
+                var area_sel = map.mapster('get');
+                a.collectionEquals(area_sel, "HI,AK,LA,TX", "Set using area works");
+
+                map.mapster('set', false, 'LA,TX');
+                a.collectionEquals("HI,AK", map.mapster('get'), "unset using keys works");
+
+                map.mapster('set', true, 'ME,OH,TX');
+                a.collectionEquals("HI,AK,ME,OH,TX", map.mapster('get'), "set using keys works");
+
+                // test toggling: AK should go off, MT should go on
+                attrMatches($('area'), "state", "AK,MT").mapster('set');
+                a.collectionEquals("HI,ME,OH,TX,MT", map.mapster('get'), "toggling keys works");
+
+                // test clicking
+                $('area[state="AZ"]').first().click();
+                selected = map.mapster('get', 'AZ');
+                a.equals(true, selected, "Click-selected area returned 'get'");
+                a.collectionEquals("HI,ME,OH,TX,MT,AZ", map.mapster('get'), "Complete list returned with 'get'");
+
+                /// try to click select "staticstate areas
+
+                $('area[state="OR"]').first().click();
+                selected = map.mapster('get', 'OR');
+                a.equals(selected, false, "Cannot select 'staticState=false' area with click");
+
+                selected = map.mapster('get', 'WA');
+                a.equals(selected, false, "staticState=true area is considered not selected");
+
+                opts = map.mapster('get_options', 'WA');
+                a.equals(opts.staticState, true, "get effective options returned correct static state for WA");
+
+                opts = map.mapster('get_options', 'OR');
+                a.equals(opts.staticState, false, "get effective options returned correct static state for OR");
+
+
+                $('area[state="WA"]').first().click();
+                selected = map.mapster('get', 'WA');
+                a.equals(selected, false, "Cannot change selection state of 'staticState=true' area with click");
+
+                // do it programatically
+
+                map.mapster('set', true, 'OR');
+                selected = map.mapster('get', 'OR');
+                a.equals(selected, true, "Can select 'staticState=false' area with 'set'");
+
+                map.mapster('set', false, 'WA');
+                a.equals(map.mapster('get', 'WA'), false, "Can deselect staticState=true' area with 'set'");
+
+                // test rebind
+                newOpts = map.mapster('get_options');
+                newOpts.singleSelect = true;
+                map.mapster('rebind', newOpts);
+                a.collectionEquals(map.mapster('get'), 'TX,AK', "Rebind with singleSelect reverted to original state");
+
+                map.mapster('set', true, "MI");
+                a.equals(map.mapster('get'), 'MI', "Single select worked.");
+
+                map.mapster('set_options', { isDeselectable: false });
+                $('area[state="MI"]').first().click();
+                a.equals(map.mapster('get', 'MI'), true, "Cannot deselect single selected item with isDeselectable=false");
+
+                $('area[state="UT"]').first().click();
+                
             a.equals(map.mapster('get'), 'UT', "New single state selected");
 
             map.mapster('set_options', { singleSelect: false, isDeselectable: true, areas: [{ key: 'ME', isDeselectable: false}] });
@@ -228,7 +230,7 @@ this.tests = this.tests || [];
             //     $.mapster.hasCanvas=oldHasCanvas;
             // }
             
-
+        });
 
         }));
 

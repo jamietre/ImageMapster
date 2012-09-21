@@ -76,7 +76,8 @@
 
     };
 
-    /**
+    
+     /**
      * Return the overall options effective for this area. 
      * This should get the default options, and merge in area-specific options, finally
      * overlaying options passed by parameter
@@ -100,7 +101,6 @@
         
         return opts;
     };
-    
     /**
      * Return the options effective for this area for a "render" or "highlight" mode. 
      * This should get the default options, merge in the areas-specific options, 
@@ -118,11 +118,7 @@
             opts = u.updateProps({},
                 allOpts,
                 allOpts["render_" + mode]
-                // ,
-                // { 
-                //     alt_image: this.owner.altImage(mode) 
-                // })
-                );
+            );
                 
             if (mode!=='highlight') {
                 this.optsCache=opts;
@@ -142,7 +138,7 @@
                 });
         }
     };
-    
+
     // highlight this area
      
     p.highlight = function (options) {
@@ -153,37 +149,35 @@
         o.setHighlightId(this.areaId);
         this.changeState('highlight', true);
     };
+
     // select this area. if "callEvent" is true then the state change event will be called. (This method can be used
     // during config operations, in which case no event is indicated)
+    
     p.drawSelection = function () {
         this.owner.graphics.addShapeGroup(this, "select");
     };
+    
     p.addSelection = function (options) {
         // need to add the new one first so that the double-opacity effect leaves the current one highlighted for singleSelect
+        
         var o = this.owner;
         if (o.options.singleSelect) {
             o.clearSelections();
         }
 
-
-
-
         // because areas can overlap - we can't depend on the selection state to tell us anything about the inner areas.
         // don't check if it's already selected
-        
         if (!this.isSelected()) {
             if (options) {
-                
-                // cache the current options, and map the altImageId if an altimage was passed
-
-                this.optsCache = $.extend(this.effectiveRenderOptions('select'),
-                    options,
-                    { 
-                        altImageId: o.images.add(options.altImage)
-                    });
+                this.optsCache = $.extend(this.effectiveRenderOptions('select'),options);
             }
             this.drawSelection();
 
+            // this was in ToolTip enhancement branch but not master... hmm.
+            
+            //if (options) {
+            //    this.optsCache=null;
+            //}
             this.selected = true;
             this.changeState('select', true);
         }
@@ -192,21 +186,23 @@
             o.graphics.refreshSelections();
         }
     };
+    
     // Remove a selected area group. If the parameter "partial" is true, then this is a manual operation
     // and the caller mus call "finishRemoveSelection" after multiple "removeSelectionFinish" events
+    
     p.removeSelection = function (partial) {
 
-        //            if (this.selected === false) {
-        //                return;
-        //            }
         this.selected = false;
         this.changeState('select', false);
+
         // release information about last area options when deselecting.
+        
         this.optsCache=null;
         this.owner.graphics.removeSelections(this.areaId);
 
         // Complete selection removal process. This is separated because it's very inefficient to perform the whole
         // process for multiple removals, as the canvas must be totally redrawn at the end of the process.ar.remove
+        
         if (!partial) {
             this.owner.removeSelectionFinish();
         }

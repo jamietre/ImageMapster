@@ -2784,6 +2784,7 @@ define(['./iqtest'], function(u,when,when_timeout, iq_asserts, buster_asserts, u
         },
         clear: function() {
             this.setDebug(false);
+            this.userPromises={};
         },
         setDebug: function(active,count) {
             this.debug=u.isBool(active) ? active : true;
@@ -2893,8 +2894,10 @@ define(['./iqtest'], function(u,when,when_timeout, iq_asserts, buster_asserts, u
         // queue a test that returns true or false
         // will wrap it & pass on to queueTest
         queueBooleanTest: function(module,assertion,args,invert) {
+            // make a copy of the object to keep in this closure
+            var testArgs = u.toArray(args);
             return this.queueTest(function() {
-                var result= module.apply(null,u.toArray(arguments));
+                var result= module.apply(null,testArgs);
 
                 if (result.passed === invert) {
                     throw({
@@ -3218,6 +3221,18 @@ define(['./iqtest'], function(u,when,when_timeout, iq_asserts, buster_asserts, u
                 next.then(callback);
             }
             return next;
+        },
+        
+        /**
+         * Return a new promise identified by name, or an existing one with that name
+         * @param  {string} name A name to identify this promist
+         * @return {[type]} A new or existing promist
+         */
+        promises: function(name)  {
+            if (typeof this.userPromises[name]==='undefined') {
+                this.userPromises[name]=when.defer();
+            }
+            return this.userPromises[name];
         },
         // return a promise from a function that has a callback parameter
         backpromise: function(func,callback,timeout) {

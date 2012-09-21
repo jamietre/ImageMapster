@@ -1,5 +1,5 @@
-/* mapdata.js
-   the MapData object, repesents an instance of a single bound imagemap
+/* mapimage.js
+   the MapImage object, repesents an instance of a single bound imagemap
 */
 
 (function ($) {
@@ -65,7 +65,7 @@
          * Clear this object and reset it to its initial state after binding.
          */
         
-        clear:function() {
+        clear: function() {
             var me=this;
 
             if (me.ids && me.ids.length>0) {
@@ -95,13 +95,10 @@
              * @type {boolean[]}
              */
             
-            me.status= [];
+            me.status=[];
             
             
-            /**
-             * the Image objects for each image used in the map
-             * @type {Image[]}
-             */  
+            // actually erase the images
             
             me.splice(0);
             
