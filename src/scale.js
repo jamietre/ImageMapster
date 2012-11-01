@@ -45,13 +45,22 @@
         return this.getScaleInfo(vis, scale ? raw : null);
     };
     
-    // options: duration = animation time (zero = no animation)
+    /**
+     * Resize the image map. Only one of newWidth and newHeight should be passed to preserve scale
+     * 
+     * @param  {int}   width       The new width OR an object containing named parameters matching this function sig
+     * @param  {int}   height      The new height
+     * @param  {int}   effectDuration Time in ms for the resize animation, or zero for no animation
+     * @param  {function} callback    A function to invoke when the operation finishes
+     * @return {promise}              NOT YET IMPLEMENTED
+     */
     
-    m.MapData.prototype.resize = function (newWidth, newHeight, effectDuration, callback) {
-        var p,promises,
-            highlightId, ratio, width, height, duration, opts = {
-            callback: callback || effectDuration
-        }, newsize, els, me = this;
+    m.MapData.prototype.resize = function (width, height, duration, callback) {
+        var p,promises,newsize,els, highlightId, ratio, 
+            opts = {
+                callback: callback || duration
+            },  
+            me = this;
         
         function sizeCanvas(canvas, w, h) {
             if ($.mapster.hasCanvas) {
@@ -62,17 +71,22 @@
                 $(canvas).height(h);
             }
         }
+
+        // Finalize resize action, do callback, pass control to command queue
+
         function cleanupAndNotify() {
 
             me.currentAction = '';
             
-            if ($.isFunction(opts.callback)) {
-                opts.callback();
+            if ($.isFunction(callback)) {
+                callback();
             }
             
             me.processCommandQueue();
         }
+
         // handle cleanup after the inner elements are resized
+        
         function finishResize() {
             sizeCanvas(me.overlay_canvas, width, height);
 
@@ -86,8 +100,8 @@
             sizeCanvas(me.base_canvas, width, height);
             me.redrawSelections();
             cleanupAndNotify();
-
         }
+
         function resizeMapData() {
             $(me.image).css(newsize);
             // start calculation at the same time as effect
@@ -107,16 +121,12 @@
         }
 
         
-        if (typeof newWidth === 'object') {
-            opts = newWidth;
-        } else {
-            opts.width = newWidth;
-            opts.height = newHeight;
-            opts.duration = effectDuration || 0;
-        }
-        width = opts.width;
-        height = opts.height;
-        duration = opts.duration;
+        if (typeof width === 'object') {
+            // allow passing all options as the only parameter
+            duration = width.duration;
+            height = width.height;
+            width = width.width;
+        } 
 
         if (me.scaleInfo.width === width && me.scaleInfo.height === height) {
             return;
@@ -142,7 +152,7 @@
         // but including the div wrapper
         els = $(me.wrapper).find('.mapster_el').add(me.wrapper);
 
-                if (duration) {
+        if (duration) {
             promises = [];
             me.currentAction = 'resizing';
             els.each(function (i, e) {
@@ -205,13 +215,13 @@
         this.area.coords = this.coords(1).join(',');
     };
     
-    m.impl.resize = function (width, height, duration) {
+    m.impl.resize = function (width, height, duration, callback) {
         if (!width && !height) {
             return false;
         }
         var x= (new m.Method(this,
                 function () {
-                    this.resize(width, height, duration);
+                    this.resize(width, height, duration, callback);
                 },
                 null,
                 {

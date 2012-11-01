@@ -545,16 +545,21 @@
         setHighlightId: function(id) {
             this.highlightId = id;
         },
+        
+        /**
+         * Clear all active selections on this map
+         */
+        
         clearSelections: function () {
-            //this.graphics.removeSelections();
             $.each(this.data, function (i,e) {
                 if (e.selected) {
-                    e.removeSelection(true);
+                    e.deselect(true);
                  }
             });
             this.removeSelectionFinish();
             
         },
+
         /**
          * Set area options from an array of option data.
          * 

@@ -92,7 +92,7 @@ div.input
 	<li>If you change the "Highlight Fill" or "Selection Fill" option, the map and all other options will be reset. (As of version 1.2.4.043 the fill type can't be changed after the map is bound.)</li>
 	</ul>
        <p>Choose the style in which highlights will be rendered. For fill, "normal" uses solid color fills. The other options use an alternate image as the source of the fill.
-       "Alternate image" requires HTML5 canvas support. In browsers that do not support it, typically Internet Explorer < 9, it will always look the same as "normal."</p>
+       "Alternate image" requires HTML5 canvas support. In browsers that do not support it, typically Internet Explorer &lt; 9, it will always look the same as "normal."</p>
 
         Make changes to the options below and click here to update the map: <input id="update" type="submit" value="Update">
 
@@ -256,7 +256,11 @@ div.input
                 ]
         };
 
-
+        function styleCheckbox(selected, $checkbox) {
+            var nowWeight = selected ? "bold" : "normal";
+            $checkbox.closest('div').css("font-weight", nowWeight);
+        }
+        
         function addCheckBoxes(items) {
             var item, selected;
             $statelist.children().remove();
@@ -277,10 +281,7 @@ div.input
                 styleCheckbox(selected, $(this));
             });
         }
-        function styleCheckbox(selected, $checkbox) {
-            nowWeight = selected ? "bold" : "normal";
-            $checkbox.closest('div').css("font-weight", nowWeight);
-        }
+
 
         $statelist = $('#statelist');
         $usamap = $('#usa_image');
@@ -402,14 +403,17 @@ div.input
                 var width = parseInt($('#img_width').val(), 10);
 
                 if ($usamap.width() != width) {
-                    $usamap.mapster('resize', width, null, 1000);
+                    $('#update').prop("disabled",true);
+                    $usamap.mapster('resize', width, null, 1000,function() {
+                        $('#update').prop("disabled",false);
+                    });
                 } else {
                     $usamap.mapster('set_options', newOpts);
                 }
 
             });
 
-        };
+        }
 
         bindlinks();
         $.mapster.impl.init();

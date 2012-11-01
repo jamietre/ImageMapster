@@ -7,6 +7,8 @@ Features:
 
 ####version 1.2.7 (in development)
 
+* [Issue 95](https://github.com/jamietre/ImageMapster/issues/95) SingleSelect broken in 1.2.6.099
+* [Issue 87](https://github.com/jamietre/ImageMapster/issues/87) Resize callback not working
 * [Issue xx] Mouseover events not completely suppressed on mobile
 * selectOnMousedown feature ?
 * Tooltip enhancements

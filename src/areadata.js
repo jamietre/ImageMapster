@@ -117,6 +117,10 @@
          });
     };
 
+    /**
+     * The public API for AreaData object
+     */
+
     m.AreaData.prototype = {
         constuctor: m.AreaData,
         select: select,
