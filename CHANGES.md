@@ -9,10 +9,9 @@ Features:
 
 * [Issue 95](https://github.com/jamietre/ImageMapster/issues/95) SingleSelect broken in 1.2.6.099
 * [Issue 87](https://github.com/jamietre/ImageMapster/issues/87) Resize callback not working
-* [Issue xx] Mouseover events not completely suppressed on mobile
-* selectOnMousedown feature ?
-* Tooltip enhancements
-* AltImage enhancements
+* [Issue 84](https://github.com/jamietre/ImageMapster/issues/84) Mouseover events not completely suppressed on mobile
+* Tooltip enhancements: tooltips can be called against arbitrary elements.
+* AltImage enhancements: see below
 
 *tooltip-enhancements branch*
 
