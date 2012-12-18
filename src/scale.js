@@ -57,11 +57,11 @@
     
     m.MapData.prototype.resize = function (width, height, duration, callback) {
         var p,promises,newsize,els, highlightId, ratio, 
-            opts = {
-                callback: callback || duration
-            },  
             me = this;
         
+        // allow omitting duration
+        callback = callback || duration;
+
         function sizeCanvas(canvas, w, h) {
             if ($.mapster.hasCanvas) {
                 canvas.width = w;
@@ -91,7 +91,7 @@
             sizeCanvas(me.overlay_canvas, width, height);
 
             // restore highlight state if it was highlighted before
-            if (opts.highlight && highlightId >= 0) {
+            if (highlightId >= 0) {
                 var areaData = me.data[highlightId];
                 areaData.tempOptions = { fade: false };
                 me.getDataForKey(areaData.key).highlight();
@@ -120,17 +120,10 @@
             });
         }
 
-        
-        if (typeof width === 'object') {
-            // allow passing all options as the only parameter
-            duration = width.duration;
-            height = width.height;
-            width = width.width;
-        } 
-
         if (me.scaleInfo.width === width && me.scaleInfo.height === height) {
             return;
         }
+
         highlightId = me.highlightId;
 
         
@@ -232,6 +225,7 @@
         return x;
     };
 
+/*
     m.impl.zoom = function (key, opts) {
         var options = opts || {};
 
@@ -328,4 +322,5 @@
 
 
     };
+    */
 } (jQuery));

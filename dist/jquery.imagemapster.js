@@ -1,5 +1,5 @@
 /* ImageMapster
-   Version: 1.2.6.100 (11/1/2012 - unreleased)
+   Version: 1.2.7 (12/18/2012)
 
 Copyright 2011-2012 James Treworgy
 
@@ -840,7 +840,7 @@ A jQuery plugin to enhance image maps.
     };
 
     $.mapster = {
-        version: "1.2.6.100",
+        version: "1.2.7",
         render_defaults: {
             isSelectable: true,
             isDeselectable: true,
@@ -3887,11 +3887,11 @@ A jQuery plugin to enhance image maps.
     
     m.MapData.prototype.resize = function (width, height, duration, callback) {
         var p,promises,newsize,els, highlightId, ratio, 
-            opts = {
-                callback: callback || duration
-            },  
             me = this;
         
+        // allow omitting duration
+        callback = callback || duration;
+
         function sizeCanvas(canvas, w, h) {
             if ($.mapster.hasCanvas) {
                 canvas.width = w;
@@ -3921,7 +3921,7 @@ A jQuery plugin to enhance image maps.
             sizeCanvas(me.overlay_canvas, width, height);
 
             // restore highlight state if it was highlighted before
-            if (opts.highlight && highlightId >= 0) {
+            if (highlightId >= 0) {
                 var areaData = me.data[highlightId];
                 areaData.tempOptions = { fade: false };
                 me.getDataForKey(areaData.key).highlight();
@@ -3950,17 +3950,10 @@ A jQuery plugin to enhance image maps.
             });
         }
 
-        
-        if (typeof width === 'object') {
-            // allow passing all options as the only parameter
-            duration = width.duration;
-            height = width.height;
-            width = width.width;
-        } 
-
         if (me.scaleInfo.width === width && me.scaleInfo.height === height) {
             return;
         }
+
         highlightId = me.highlightId;
 
         
@@ -4062,6 +4055,7 @@ A jQuery plugin to enhance image maps.
         return x;
     };
 
+/*
     m.impl.zoom = function (key, opts) {
         var options = opts || {};
 
@@ -4158,6 +4152,7 @@ A jQuery plugin to enhance image maps.
 
 
     };
+    */
 } (jQuery));
 /* tooltip.js - tooltip functionality
    requires areacorners.js

@@ -5,7 +5,7 @@ Features:
 * Return promises from asynchronous events rather than requiring callbacks like "onConfigured"
 * Return a non-jQuery object exposing the imagemapster API to simplify coding against it
 
-####version 1.2.7 (in development)
+####version 1.2.7
 
 * [Issue 95](https://github.com/jamietre/ImageMapster/issues/95) SingleSelect broken in 1.2.6.099
 * [Issue 87](https://github.com/jamietre/ImageMapster/issues/87) Resize callback not working
