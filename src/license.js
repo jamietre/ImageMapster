@@ -1,5 +1,5 @@
 /* ImageMapster
-   Version: 1.2.7 (12/18/2012)
+   Version: 1.2.8 (12/30/2012)
 
 Copyright 2011-2012 James Treworgy
 
