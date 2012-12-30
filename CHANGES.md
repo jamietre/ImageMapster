@@ -5,6 +5,11 @@ Features:
 * Return promises from asynchronous events rather than requiring callbacks like "onConfigured"
 * Return a non-jQuery object exposing the imagemapster API to simplify coding against it
 
+####version 1.2.8
+
+* [Issue 108](https://github.com/jamietre/ImageMapster/issues/108)Opacity of tooltip container not preserved
+* [Issue 107](https://github.com/jamietre/ImageMapster/issues/107)mouseoutDelay broken
+
 ####version 1.2.7
 
 * [Issue 95](https://github.com/jamietre/ImageMapster/issues/95) SingleSelect broken in 1.2.6.099
