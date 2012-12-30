@@ -87,11 +87,12 @@
      * @param  {MapData}    me       The MapData context
      * @param  {number}     delay    The number of milliseconds to delay the action
      * @param  {AreaData}   area     AreaData affected
-     * @param  {Function}   callback Function to call when the action is completed
+     * @param  {Deferred}   deferred A deferred object to return (instead of a new one)
+     * @return {Promise}    A promise that resolves when the action is completed
      */
-    function queueMouseEvent(me,delay,area) {
+    function queueMouseEvent(me,delay,area, deferred) {
         
-        var deferred = u.when.defer();
+        deferred = deferred || u.when.defer();
 
         function cbFinal(areaId) {
             if (me.currentAreaId!==areaId && me.highlightId>=0) {
@@ -108,8 +109,8 @@
 
         if (area.owner.currentAction || delay) {
             me.activeAreaEvent = window.setTimeout((function() {
-                        return function() {
-                        queueMouseEvent(0,area,deferred.resolve);
+                    return function() {
+                        queueMouseEvent(me,0,area,deferred);
                     };
                 }(area)),
                 delay || 100);

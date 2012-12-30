@@ -150,6 +150,7 @@ div.input
 		<a id="unbind_link" href="#">Unbind the map.</a><br>
 		<a id="rebind_link" href="#">Rebind the map.</a><br>
 		<a id="unbind_link_preserve" href="#">Click here to unbind, preserving state.</a><br>
+        Mouseout delay: <input type="text" id="mouseout-delay" value="0" style="width:30px;">
         </td>
 
         </tr>
@@ -194,6 +195,7 @@ div.input
             $('#strokewidth_select').val(opts.render_select.strokeWidth);
             $('#fill_select').val(opts.render_select.fillOpacity);
             $('#strokeopacity_select').val(opts.render_select.strokeOpacity);
+            $('#mouseout-delay').val(opts.mouseoutDelay);
             $('#img_width').val($usamap.width());
         },
         default_options =
@@ -210,6 +212,7 @@ div.input
             //render_zoom: {
             //    altImage: 'images/usa_map_huge.jpg'
             //},
+            mouseoutDelay: 0,
             fadeInterval: 50,
             isSelectable: true,
             singleSelect: false,
@@ -399,7 +402,7 @@ div.input
                 setOption(newOpts.render_select, "strokeWidth", $('#strokewidth_select').val());
                 setOption(newOpts.render_select, "fillOpacity", $('#fill_select').val());
                 setOption(newOpts.render_select, "strokeOpacity", $('#strokeopacity_select').val());
-
+                setOption(newOpts, "mouseoutDelay", $('#mouseout-delay').val());
                 var width = parseInt($('#img_width').val(), 10);
 
                 if ($usamap.width() != width) {

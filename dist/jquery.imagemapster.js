@@ -2551,11 +2551,12 @@ A jQuery plugin to enhance image maps.
      * @param  {MapData}    me       The MapData context
      * @param  {number}     delay    The number of milliseconds to delay the action
      * @param  {AreaData}   area     AreaData affected
-     * @param  {Function}   callback Function to call when the action is completed
+     * @param  {Deferred}   deferred A deferred object to return (instead of a new one)
+     * @return {Promise}    A promise that resolves when the action is completed
      */
-    function queueMouseEvent(me,delay,area) {
+    function queueMouseEvent(me,delay,area, deferred) {
         
-        var deferred = u.when.defer();
+        deferred = deferred || u.when.defer();
 
         function cbFinal(areaId) {
             if (me.currentAreaId!==areaId && me.highlightId>=0) {
@@ -2572,8 +2573,8 @@ A jQuery plugin to enhance image maps.
 
         if (area.owner.currentAction || delay) {
             me.activeAreaEvent = window.setTimeout((function() {
-                        return function() {
-                        queueMouseEvent(0,area,deferred.resolve);
+                    return function() {
+                        queueMouseEvent(me,0,area,deferred);
                     };
                 }(area)),
                 delay || 100);
@@ -4165,7 +4166,7 @@ A jQuery plugin to enhance image maps.
     $.extend(m.defaults, {
         toolTipContainer: '<div style="border: 2px solid black; background: #EEEEEE; width:160px; padding:4px; margin: 4px; -moz-box-shadow: 3px 3px 5px #535353; ' +
         '-webkit-box-shadow: 3px 3px 5px #535353; box-shadow: 3px 3px 5px #535353; -moz-border-radius: 6px 6px 6px 6px; -webkit-border-radius: 6px; ' +
-        'border-radius: 6px 6px 6px 6px;"></dteniv>',
+        'border-radius: 6px 6px 6px 6px; opacity: 0.8;"></dteniv>',
         showToolTip: false,
         toolTipFade: true,
         toolTipClose: ['area-mouseout','image-mouseout'],
@@ -4217,8 +4218,10 @@ A jQuery plugin to enhance image maps.
 
         // we must actually add the tooltip to the DOM and "show" it in order to figure out how much space it
         // consumes, and then reposition it with that knowledge.
+        // We also cache the actual opacity setting to restore finally.
         
-        u.setOpacity(tooltip[0], 0);
+        tooltip.attr("data-opacity",tooltip.css("opacity"))
+            .css("opacity",0);
         
         // doesn't really show it because opacity=0
         
@@ -4242,7 +4245,8 @@ A jQuery plugin to enhance image maps.
         var tooltipCss = { 
                 "left":  options.left + "px",
                 "top": options.top + "px"
-            },  
+            }, 
+            actalOpacity=tooltip.attr("data-opacity") || 0,
             zindex = tooltip.css("z-index");
         
         if (parseInt(zindex,10)===0 
@@ -4255,9 +4259,9 @@ A jQuery plugin to enhance image maps.
 
         
         if (options.fadeDuration && options.fadeDuration>0) {
-            u.fader(tooltip[0], 0, 1, options.fadeDuration);
+            u.fader(tooltip[0], 0, actalOpacity, options.fadeDuration);
         } else {
-            u.setOpacity(tooltip[0], 1);
+            u.setOpacity(tooltip[0], actalOpacity);
         }
     }
       
