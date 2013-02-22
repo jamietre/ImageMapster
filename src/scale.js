@@ -63,7 +63,7 @@
         callback = callback || duration;
 
         function sizeCanvas(canvas, w, h) {
-            if ($.mapster.hasCanvas) {
+            if (m.hasCanvas()) {
                 canvas.width = w;
                 canvas.height = h;
             } else {
@@ -137,7 +137,7 @@
         }
 
         newsize = { 'width': String(width) + 'px', 'height': String(height) + 'px' };
-        if (!$.mapster.hasCanvas) {
+        if (!m.hasCanvas()) {
             $(me.base_canvas).children().remove();
         }
 

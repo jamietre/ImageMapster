@@ -56,7 +56,7 @@
 
         // add alt images
         
-        if ($.mapster.hasCanvas) {
+        if (m.hasCanvas()) {
             // map altImage library first
             
             $.each(opts.altImages || {}, function(i,e) {
@@ -128,7 +128,7 @@
      */
     
     function mousedown(e) {
-        if (!$.mapster.hasCanvas) {
+        if (!m.hasCanvas()) {
             this.blur();
         }
         e.preventDefault();
@@ -762,8 +762,15 @@
             if (default_group) {
                 opts.mapKey = 'data-mapster-key';
             }
-            sel = ($.browser.msie && $.browser.version <= 7) ? 'area' :
-                        (default_group ? 'area[coords]' : 'area[' + opts.mapKey + ']');
+
+            // the [attribute] selector is broken on old IE with jQuery. hasVml() is a quick and dirty
+            // way to test for that
+            
+            sel = m.hasVml() ? 'area' :
+                        (default_group ? 
+                            'area[coords]' : 
+                            'area[' + opts.mapKey + ']');
+
             areas = $(me.map).find(sel).unbind('.mapster');
                         
             for (mapAreaId = 0;mapAreaId<areas.length; mapAreaId++) {

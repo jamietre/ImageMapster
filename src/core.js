@@ -19,7 +19,7 @@
     };
 
     $.mapster = {
-        version: "1.2.8",
+        version: "1.2.9",
         render_defaults: {
             isSelectable: true,
             isDeselectable: true,
@@ -210,12 +210,30 @@
                 };
             },
 
-            // basic function to set the opacity of an element. 
-            // this gets monkey patched by the graphics module when running in IE6-8
+                
+            /**
+             * Set the opacity of the element. This is an IE<8 specific function for handling VML.
+             * When using VML we must override the "setOpacity" utility function (monkey patch ourselves).
+             * jQuery does not deal with opacity correctly for VML elements. This deals with that.
+             * 
+             * @param {Element} el The DOM element
+             * @param {double} opacity A value between 0 and 1 inclusive.
+             */
 
             setOpacity: function (el, opacity) {
-                el.style.opacity = opacity;
+                if ($.mapster.hasCanvas()) {
+                    el.style.opacity = opacity;
+                } else {
+                    $(el).each(function(i,e) {
+                        if (typeof e.opacity !=='undefined') {
+                           e.opacity=opacity;
+                        } else {
+                            $(e).css("opacity",opacity);
+                        }
+                    });
+                }
             },
+
 
             // fade "el" from opacity "op" to "endOp" over a period of time "duration"
             
@@ -308,6 +326,14 @@
                 return index >= 0 ? this.map_cache[index] : null;
             }
         },
+        /**
+         * Queue a command to be run after the active async operation has finished
+         * @param  {MapData}  map_data    The target MapData object
+         * @param  {jQuery}   that        jQuery object on which the command was invoked
+         * @param  {string}   command     the ImageMapster method name
+         * @param  {object[]} args        arguments passed to the method
+         * @return {bool}                 true if the command was queued, false if not (e.g. there was no need to)
+         */
         queueCommand: function (map_data, that, command, args) {
             if (!map_data) {
                 return false;
@@ -368,6 +394,19 @@
      
     });    
 
+    /**
+     * The Method object encapsulates the process of testing an ImageMapster method to see if it's being
+     * invoked on an image, or an area; then queues the command if the MapData is in an active state.
+     * 
+     * @param {[jQuery]}    that        The target of the invocation
+     * @param {[function]}  func_map    The callback if the target is an imagemap
+     * @param {[function]}  func_area   The callback if the target is an area
+     * @param {[object]}    opt         Options: { key: a map key if passed explicitly
+     *                                             name: the command name, if it can be queued,
+     *                                             args: arguments to the method
+     *                                            }
+     */
+    
     m.Method = function (that, func_map, func_area, opts) {
         var me = this;
         me.name = opts.name;
@@ -382,47 +421,49 @@
         me.name = opts.name;
         me.allowAsync = opts.allowAsync || false;
     };
-    m.Method.prototype.go = function () {
-        var i,  data, ar, len, result, src = this.input,
-                area_list = [],
-                me = this;
+    m.Method.prototype = {
+        constructor: m.Method,
+        go: function () {
+            var i,  data, ar, len, result, src = this.input,
+                    area_list = [],
+                    me = this;
 
-        len = src.length;
-        for (i = 0; i < len; i++) {
-            data = $.mapster.getMapData(src[i]);
-            if (data) {
-                if (!me.allowAsync && m.queueCommand(data, me.input, me.name, me.args)) {
-                    if (this.first) {
-                        result = '';
+            len = src.length;
+            for (i = 0; i < len; i++) {
+                data = $.mapster.getMapData(src[i]);
+                if (data) {
+                    if (!me.allowAsync && m.queueCommand(data, me.input, me.name, me.args)) {
+                        if (this.first) {
+                            result = '';
+                        }
+                        continue;
                     }
-                    continue;
-                }
-                
-                ar = data.getData(src[i].nodeName === 'AREA' ? src[i] : this.key);
-                if (ar) {
-                    if ($.inArray(ar, area_list) < 0) {
-                        area_list.push(ar);
+                    
+                    ar = data.getData(src[i].nodeName === 'AREA' ? src[i] : this.key);
+                    if (ar) {
+                        if ($.inArray(ar, area_list) < 0) {
+                            area_list.push(ar);
+                        }
+                    } else {
+                        result = this.func_map.apply(data, me.args);
                     }
-                } else {
-                    result = this.func_map.apply(data, me.args);
-                }
-                if (this.first || typeof result !== 'undefined') {
-                    break;
+                    if (this.first || typeof result !== 'undefined') {
+                        break;
+                    }
                 }
             }
-        }
-        // if there were areas, call the area function for each unique group
-        $(area_list).each(function (i,e) {
-            result = me.func_area.apply(e, me.args);
-        });
+            // if there were areas, call the area function for each unique group
+            $(area_list).each(function (i,e) {
+                result = me.func_area.apply(e, me.args);
+            });
 
-        if (typeof result !== 'undefined') {
-            return result;
-        } else {
-            return this.output;
+            if (typeof result !== 'undefined') {
+                return result;
+            } else {
+                return this.output;
+            }
         }
     };
-
 
     $.mapster.impl = (function () {
         var me = {},
@@ -437,12 +478,52 @@
                 m.map_cache[i].index--;
             }
         };
-        /// return current map_data for an image or area
 
-        // merge new area data into existing area options. used for rebinding.
+        
+        /**
+         * Test whether the browser supports VML. Credit: google.
+         * http://stackoverflow.com/questions/654112/how-do-you-detect-support-for-vml-or-svg-in-a-browser
+         * 
+         * @return {bool} true if vml is supported, false if not
+         */
+        
+        function hasVml() {
+            var a = $('<div />').appendTo('body');
+            a.html('<v:shape id="vml_flag1" adj="1" />');
+            
+            var b = a[0].firstChild;
+            b.style.behavior = "url(#default#VML)";
+            var has = b ? typeof b.adj === "object" : true;
+            a.remove();
+            return has;
+        }
+
+        /**
+         * Test for the presence of HTML5 Canvas support. This also checks to see if excanvas.js has been 
+         * loaded and is faking it; if so, we assume that canvas is not supported.
+         *
+         * @return {bool} true if HTML5 canvas support, false if not
+         */
+        
+        function hasCanvas() {
+             return document.namespaces && document.namespaces.g_vml_ ? 
+                false :
+                $('<canvas />')[0].getContext ? 
+                    true : 
+                    false;
+        }
+
+        /**
+         * Merge new area data into existing area options on a MapData object. Used for rebinding.
+         * 
+         * @param  {[MapData]} map_data     The MapData object
+         * @param  {[object[]]} areas       areas array to merge
+         */
+        
         function merge_areas(map_data, areas) {
             var ar, index,
                 map_areas = map_data.options.areas;
+
             if (areas) {
                 $.each(areas, function (i, e) {
                     
@@ -453,6 +534,7 @@
                     }
 
                     index = u.indexOfProp(map_areas, "key", e.key);
+
                     if (index >= 0) {
                         $.extend(map_areas[index], e);
                     }
@@ -476,6 +558,7 @@
             // refresh the area_option template
             u.updateProps(map_data.area_options, map_data.options);
         }
+
         // Most methods use the "Method" object which handles figuring out whether it's an image or area called and
         // parsing key parameters. The constructor wants:
         // this, the jQuery object
@@ -486,6 +569,7 @@
         //          defaultReturn: a value to return other than the jQuery object (if its not chainable)
         //          args: the arguments
         // Returns a comma-separated list of user-selected areas. "staticState" areas are not considered selected for the purposes of this method.
+        
         me.get = function (key) {
             var md = m.getMapData(this);
             if (!(md && md.complete)) {
@@ -881,42 +965,49 @@
         me.init = function (useCanvas) {
             var style, shapes;
 
+            // for testing/debugging, use of canvas can be forced by initializing 
+            // manually with "true" or "false". But generally we test for it.
+            
+            m.hasCanvas = function() {
+                if (!u.isBool(m.hasCanvas.value)) {
+                    m.hasCanvas.value = u.isBool(useCanvas) ?
+                        useCanvas : 
+                        hasCanvas();
+                }
+                return m.hasCanvas.value;
+            };
+            m.hasVml = function() {
+                if (!u.isBool(m.hasVml.value)) {
+                    // initialize VML the first time we detect its presence.
+                    var d = document.namespaces;
+                    if (d && !d.v) {
+                        d.add("v", "urn:schemas-microsoft-com:vml");
+                        style = document.createStyleSheet();
+                        shapes = ['shape', 'rect', 'oval', 'circ', 'fill', 'stroke', 'imagedata', 'group', 'textbox'];
+                        $.each(shapes,
+                        function (i, el) {
+                            style.addRule('v\\:' + el, "behavior: url(#default#VML); antialias:true");
+                        });
+                    }
+                    m.hasVml.value = hasVml();
+                }
 
-            // check for excanvas explicitly - don't be fooled
-            m.hasCanvas = (document.namespaces && document.namespaces.g_vml_) ? false :
-                $('<canvas></canvas>')[0].getContext ? true : false;
+                return m.hasVml.value;
+            };
 
-            m.isTouch = 'ontouchstart' in document.documentElement;
-
-            if (!(m.hasCanvas || document.namespaces)) {
-                $.fn.mapster = function () {
-                    return this;
-                };
-                return;
-            }
+            m.isTouch = !!document.documentElement.ontouchstart;
 
             $.extend(m.defaults, m.render_defaults,m.shared_defaults);
             $.extend(m.area_defaults, m.render_defaults,m.shared_defaults);
 
-            // for testing/debugging, use of canvas can be forced by initializing manually with "true" or "false"
-            if (u.isBool(useCanvas)) {
-                m.hasCanvas = useCanvas;
-            }
-            if ($.browser.msie && !m.hasCanvas && !document.namespaces.v) {
-                document.namespaces.add("v", "urn:schemas-microsoft-com:vml");
-                style = document.createStyleSheet();
-                shapes = ['shape', 'rect', 'oval', 'circ', 'fill', 'stroke', 'imagedata', 'group', 'textbox'];
-                $.each(shapes,
-                function (i, el) {
-                    style.addRule('v\\:' + el, "behavior: url(#default#VML); antialias:true");
-                });
-            }
         };
         me.test = function (obj) {
             return eval(obj);
         };
         return me;
     } ());
-
+    
     $.mapster.impl.init();
+    
+    
 } (jQuery));

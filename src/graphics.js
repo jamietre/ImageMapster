@@ -3,7 +3,9 @@
 */
 (function ($) {
     var p, m=$.mapster,
-        u=m.utils;
+        u=m.utils,
+        canvasMethods,
+        vmlMethods;
     
     /**
      * Implemenation to add each area in an AreaData object to the canvas
@@ -31,7 +33,20 @@
 
     }
 
+     /**
+     * Convert a hex value to decimal
+     * @param  {string} hex A hexadecimal toString
+     * @return {int} Integer represenation of the hex string
+     */
 
+    function hex_to_decimal(hex) {
+        return Math.max(0, Math.min(parseInt(hex, 16), 255));
+    }
+    function css3color(color, opacity) {
+        return 'rgba(' + hex_to_decimal(color.substr(0, 2)) + ','
+                + hex_to_decimal(color.substr(2, 2)) + ','
+                + hex_to_decimal(color.substr(4, 2)) + ',' + opacity + ')';
+    }
     /**
      * An object associated with a particular map_data instance to manage renderin.
      * @param {MapData} map_data The MapData object bound to this instance
@@ -144,11 +159,11 @@
                 // fading requires special handling for IE. We must access the fill elements directly. The fader also has to deal with 
                 // the "opacity" attribute (not css)
 
-                u.fader(m.hasCanvas ? 
+                u.fader(m.hasCanvas() ? 
                     canvas : 
                     $(canvas).find('._fill').not('.mapster_mask'),
                 0,
-                m.hasCanvas ? 
+                m.hasCanvas() ? 
                     1 : 
                     opts.fillOpacity,
                 opts.fadeDuration); 
@@ -156,29 +171,17 @@
             }
 
         }
+
+        // These prototype methods are implementation dependent
     };
 
+    function noop() {}
+
+  
     // configure remaining prototype methods for ie or canvas-supporting browser
 
-    if (m.hasCanvas) {
-
-        /**
-         * Convert a hex value to decimal
-         * @param  {string} hex A hexadecimal string
-         * @return {int} Integer represenation of the hex string
-         */
-        
-        p.hex_to_decimal = function (hex) {
-            return Math.max(0, Math.min(parseInt(hex, 16), 255));
-        };
-
-        p.css3color = function (color, opacity) {
-            return 'rgba(' + this.hex_to_decimal(color.substr(0, 2)) + ','
-                    + this.hex_to_decimal(color.substr(2, 2)) + ','
-                    + this.hex_to_decimal(color.substr(4, 2)) + ',' + opacity + ')';
-        };
-
-        p.renderShape = function (context, mapArea, offset) {
+    canvasMethods = {
+        renderShape: function (context, mapArea, offset) {
             var i,
                 c = mapArea.coords(null,offset);
 
@@ -199,9 +202,8 @@
                     context.arc(c[0], c[1], c[2], 0, Math.PI * 2, false);
                     break;
             }
-        };
-
-        p.addAltImage = function (context, image, mapArea, options) {
+        },
+        addAltImage: function (context, image, mapArea, options) {
             context.beginPath();
 
             this.renderShape(context, mapArea);
@@ -211,9 +213,8 @@
             context.globalAlpha = options.altImageOpacity || options.fillOpacity;
 
             context.drawImage(image, 0, 0, mapArea.owner.scaleInfo.width, mapArea.owner.scaleInfo.height);
-        };
-
-        p.render = function () {
+        },
+        render: function () {
             // firefox 6.0 context.save() seems to be broken. to work around,  we have to draw the contents on one temp canvas,
             // the mask on another, and merge everything. ugh. fixed in 1.2.2. unfortunately this is a lot more code for masks,
             // but no other way around it that i can see.
@@ -255,7 +256,7 @@
                         me.renderShape(shapeContext, s.mapArea);
                         shapeContext.closePath();
                         //shapeContext.clip();
-                        shapeContext.fillStyle = me.css3color(s.options.fillColor, s.options.fillOpacity);
+                        shapeContext.fillStyle = css3color(s.options.fillColor, s.options.fillOpacity);
                         shapeContext.fill();
                     }
                 }
@@ -271,7 +272,7 @@
 
                 if (s.options.stroke) {
                     shapeContext.save();
-                    shapeContext.strokeStyle = me.css3color(s.options.strokeColor, s.options.strokeOpacity);
+                    shapeContext.strokeStyle = css3color(s.options.strokeColor, s.options.strokeOpacity);
                     shapeContext.lineWidth = s.options.strokeWidth;
 
                     shapeContext.beginPath();
@@ -297,21 +298,18 @@
 
             me.active = false;
             return me.canvas;
-        };
+        },
 
         // create a canvas mimicing dimensions of an existing element
-        p.createCanvasFor = function (md) {
+        createCanvasFor: function (md) {
             return $('<canvas width="' + md.scaleInfo.width + '" height="' +md.scaleInfo.height + '"></canvas>')[0];
-        };
-        p.clearHighlight = function () {
+        },
+        clearHighlight: function () {
             var c = this.map_data.overlay_canvas;
             c.getContext('2d').clearRect(0, 0, c.width, c.height);
-        };
-        p.removeSelections = function () {
-
-        };
+        },
         // Draw all items from selected_list to a new canvas, then swap with the old one. This is used to delete items when using canvases.
-        p.refreshSelections = function () {
+        refreshSelections: function () {
             var canvas_temp, map_data = this.map_data;
             // draw new base canvas, then swap with the old one to avoid flickering
             canvas_temp = map_data.base_canvas;
@@ -324,30 +322,12 @@
 
             $(map_data.base_canvas).show();
             $(canvas_temp).remove();
-        };
+        }
+    };
 
-    } else {
+    vmlMethods = {
 
-        /**
-         * Set the opacity of the element. This is an IE<8 specific function for handling VML.
-         * When using VML we must override the "setOpacity" utility function (monkey patch ourselves).
-         * jQuery does not deal with opacity correctly for VML elements. This deals with that.
-         * 
-         * @param {Element} el The DOM element
-         * @param {double} opacity A value between 0 and 1 inclusive.
-         */
-        
-        u.setOpacity = function(el,opacity) {         
-            $(el).each(function(i,e) {
-                if (typeof e.opacity !=='undefined') {
-                   e.opacity=opacity;
-                } else {
-                    $(e).css("opacity",opacity);
-                }
-            });
-        };
-
-        p.renderShape = function (mapArea, options, cssclass) {
+        renderShape: function (mapArea, options, cssclass) {
             var me = this, fill,stroke, e, t_fill, el_name, el_class, template, c = mapArea.coords();
             el_name = me.elementName ? 'name="' + me.elementName + '" ' : '';
             el_class = cssclass ? 'class="' + cssclass + '" ' : '';
@@ -392,8 +372,8 @@
             $(me.canvas).append(e);
 
             return e;
-        };
-        p.render = function () {
+        },
+        render: function () {
             var opts, me = this;
 
             $.each(this.shapes, function (i,e) {
@@ -413,32 +393,52 @@
 
             this.active = false;
             return this.canvas;
-        };
+        },
 
-        p.createCanvasFor = function (md) {
+        createCanvasFor: function (md) {
             var w = md.scaleInfo.width,
                 h = md.scaleInfo.height;
             return $('<var width="' + w + '" height="' + h 
                 + '" style="zoom:1;overflow:hidden;display:block;width:' 
                 + w + 'px;height:' + h + 'px;"></var>')[0];
-        };
+        },
 
-        p.clearHighlight = function () {
+        clearHighlight: function () {
             $(this.map_data.overlay_canvas).children().remove();
-        };
+        },
         // remove single or all selections
-        p.removeSelections = function (area_id) {
+        removeSelections: function (area_id) {
             if (area_id >= 0) {
                 $(this.map_data.base_canvas).find('[name="static_' + area_id.toString() + '"]').remove();
             }
             else {
                 $(this.map_data.base_canvas).children().remove();
             }
-        };
-        p.refreshSelections = function () {
-            return null;
-        };
+        }
 
-    }
+    };
+
+    // for all methods with two implemenatations, add a function that will automatically replace itself with the correct
+    // method on first invocation
+    
+    $.each(['renderShape',
+           'addAltImage',
+           'render',
+           'createCanvasFor',
+           'clearHighlight',
+           'removeSelections',
+           'refreshSelections'],
+        function(i,e) {
+            p[e]=(function(method) {
+                return function() {
+                    p[method] = (m.hasCanvas() ?
+                        canvasMethods[method] : 
+                        vmlMethods[method]) || noop;
+                  
+                    return p[method].apply(this,arguments);
+                };
+            }(e));
+    });
+
 
 } (jQuery));

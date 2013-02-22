@@ -5,6 +5,10 @@ Features:
 * Return promises from asynchronous events rather than requiring callbacks like "onConfigured"
 * Return a non-jQuery object exposing the imagemapster API to simplify coding against it
 
+####Version 1.2.9
+
+* [Issue 114](https://github.com/jamietre/ImageMapster/issues/114)Fix jQuery 1.9 compatibility
+
 ####version 1.2.8
 
 * [Issue 108](https://github.com/jamietre/ImageMapster/issues/108)Opacity of tooltip container not preserved
