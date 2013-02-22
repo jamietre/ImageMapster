@@ -7,12 +7,12 @@ Features:
 
 ####Version 1.2.9
 
-* [Issue 114](https://github.com/jamietre/ImageMapster/issues/114)Fix jQuery 1.9 compatibility
+* [Issue 114](https://github.com/jamietre/ImageMapster/issues/114) Fix jQuery 1.9 compatibility problem
 
 ####version 1.2.8
 
-* [Issue 108](https://github.com/jamietre/ImageMapster/issues/108)Opacity of tooltip container not preserved
-* [Issue 107](https://github.com/jamietre/ImageMapster/issues/107)mouseoutDelay broken
+* [Issue 108](https://github.com/jamietre/ImageMapster/issues/108) Opacity of tooltip container not preserved
+* [Issue 107](https://github.com/jamietre/ImageMapster/issues/107) mouseoutDelay broken
 
 ####version 1.2.7
 

@@ -1,5 +1,5 @@
 /* ImageMapster
-   Version: 1.2.8 (12/30/2012)
+   Version: 1.2.9 (2/22/2012)
 
 Copyright 2011-2012 James Treworgy
 
@@ -840,7 +840,7 @@ A jQuery plugin to enhance image maps.
     };
 
     $.mapster = {
-        version: "1.2.8",
+        version: "1.2.9",
         render_defaults: {
             isSelectable: true,
             isDeselectable: true,
@@ -4264,7 +4264,7 @@ A jQuery plugin to enhance image maps.
     $.extend(m.defaults, {
         toolTipContainer: '<div style="border: 2px solid black; background: #EEEEEE; width:160px; padding:4px; margin: 4px; -moz-box-shadow: 3px 3px 5px #535353; ' +
         '-webkit-box-shadow: 3px 3px 5px #535353; box-shadow: 3px 3px 5px #535353; -moz-border-radius: 6px 6px 6px 6px; -webkit-border-radius: 6px; ' +
-        'border-radius: 6px 6px 6px 6px; opacity: 0.8;"></dteniv>',
+        'border-radius: 6px 6px 6px 6px; opacity: 0.9;"></dteniv>',
         showToolTip: false,
         toolTipFade: true,
         toolTipClose: ['area-mouseout','image-mouseout'],
