@@ -1,5 +1,5 @@
 /* ImageMapster
-   Version: 1.2.9 (2/22/2012)
+   Version: 1.2.10 (2/25/2013)
 
 Copyright 2011-2012 James Treworgy
 
@@ -840,7 +840,7 @@ A jQuery plugin to enhance image maps.
     };
 
     $.mapster = {
-        version: "1.2.9",
+        version: "1.2.10",
         render_defaults: {
             isSelectable: true,
             isDeselectable: true,
@@ -906,7 +906,6 @@ A jQuery plugin to enhance image maps.
         },
         hasCanvas: null,
         isTouch: null,
-        windowLoaded: false,
         map_cache: [],
         hooks: {},
         addHook: function(name,callback) {
@@ -1288,11 +1287,9 @@ A jQuery plugin to enhance image maps.
 
     $.mapster.impl = (function () {
         var me = {},
-            removeMap, addMap;
-
-        addMap = function (map_data) {
+        addMap= function (map_data) {
             return m.map_cache.push(map_data) - 1;
-        };
+        },
         removeMap = function (map_data) {
             m.map_cache.splice(map_data.index, 1);
             for (var i = m.map_cache.length - 1; i >= this.index; i--) {
@@ -1320,6 +1317,16 @@ A jQuery plugin to enhance image maps.
         }
 
         /**
+         * Return a reference to the IE namespaces object, if available, or an empty object otherwise
+         * @return {obkect} The document.namespaces object.
+         */
+        function namespaces() {
+            return typeof(document.namespaces)==='object' ?
+                document.namespaces :
+                null;
+        }
+
+        /**
          * Test for the presence of HTML5 Canvas support. This also checks to see if excanvas.js has been 
          * loaded and is faking it; if so, we assume that canvas is not supported.
          *
@@ -1327,7 +1334,10 @@ A jQuery plugin to enhance image maps.
          */
         
         function hasCanvas() {
-             return document.namespaces && document.namespaces.g_vml_ ? 
+            var d = namespaces();
+            // when g_vml_ is present, then we can be sure excanvas is active, meaning there's not a real canvas.
+            
+             return d && d.g_vml_ ? 
                 false :
                 $('<canvas />')[0].getContext ? 
                     true : 
@@ -1800,7 +1810,8 @@ A jQuery plugin to enhance image maps.
             m.hasVml = function() {
                 if (!u.isBool(m.hasVml.value)) {
                     // initialize VML the first time we detect its presence.
-                    var d = document.namespaces;
+                    var d = namespaces();
+
                     if (d && !d.v) {
                         d.add("v", "urn:schemas-microsoft-com:vml");
                         style = document.createStyleSheet();
@@ -1820,7 +1831,7 @@ A jQuery plugin to enhance image maps.
 
             $.extend(m.defaults, m.render_defaults,m.shared_defaults);
             $.extend(m.area_defaults, m.render_defaults,m.shared_defaults);
-
+            
         };
         me.test = function (obj) {
             return eval(obj);
