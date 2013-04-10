@@ -1,5 +1,5 @@
 /* ImageMapster
-   Version: 1.2.10 (2/25/2013)
+   Version: 1.2.11 (4/10/2013)
 
 Copyright 2011-2012 James Treworgy
 
@@ -840,7 +840,7 @@ A jQuery plugin to enhance image maps.
     };
 
     $.mapster = {
-        version: "1.2.10",
+        version: "1.2.11",
         render_defaults: {
             isSelectable: true,
             isDeselectable: true,
@@ -1547,7 +1547,7 @@ A jQuery plugin to enhance image maps.
                         case false:
                             ar.deselect(true); break;
                         default:
-                            ar.toggle(opts); break;
+                            selected = ar.toggle(opts); break;
                     }
                 }
             }

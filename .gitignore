@@ -4,7 +4,6 @@
 
 examples_source/
 archived/
-build/
 website/
 ./*.zip
 ./*.js

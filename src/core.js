@@ -19,7 +19,7 @@
     };
 
     $.mapster = {
-        version: "1.2.10",
+        version: "1.2.11",
         render_defaults: {
             isSelectable: true,
             isDeselectable: true,
@@ -726,7 +726,7 @@
                         case false:
                             ar.deselect(true); break;
                         default:
-                            ar.toggle(opts); break;
+                            selected = ar.toggle(opts); break;
                     }
                 }
             }
