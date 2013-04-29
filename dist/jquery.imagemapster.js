@@ -1,5 +1,5 @@
 /* ImageMapster
-   Version: 1.2.11 (4/10/2013)
+   Version: 1.2.12 (4/29/2013)
 
 Copyright 2011-2012 James Treworgy
 
@@ -840,7 +840,7 @@ A jQuery plugin to enhance image maps.
     };
 
     $.mapster = {
-        version: "1.2.11",
+        version: "1.2.12",
         render_defaults: {
             isSelectable: true,
             isDeselectable: true,
@@ -991,6 +991,25 @@ A jQuery plugin to enhance image maps.
                 return (typeof HTMLElement === "object" ? o instanceof HTMLElement :
                         o && typeof o === "object" && o.nodeType === 1 && typeof o.nodeName === "string");
             },
+            /**
+             * Basic indexOf implementation for IE7-8. Though we use $.inArray, some jQuery versions will try to 
+             * use a prototpye on the calling object, defeating the purpose of using $.inArray in the first place.
+             *
+             * This will be replaced with the array prototype if it's available.
+             * 
+             * @param  {Array} arr The array to search
+             * @param {Object} target The item to search for
+             * @return {Number} The index of the item, or -1 if not found
+             */
+            indexOf: function(arr,target){
+                for(var i=0; i<arr.length; i++){
+                    if(arr[i]===target){
+                        return i;
+                    }
+                }
+                return -1;
+            },
+                
             // finds element of array or object with a property "prop" having value "val"
             // if prop is not defined, then just looks for property with value "val"
             indexOfProp: function (obj, prop, val) {
@@ -1540,6 +1559,7 @@ A jQuery plugin to enhance image maps.
                 key_list, area_list; // array of unique areas passed
 
             function setSelection(ar) {
+                var newState = selected;
                 if (ar) {
                     switch (selected) {
                         case true:
@@ -1547,8 +1567,9 @@ A jQuery plugin to enhance image maps.
                         case false:
                             ar.deselect(true); break;
                         default:
-                            selected = ar.toggle(opts); break;
+                            newState = ar.toggle(opts); break;
                     }
+                    return newState;
                 }
             }
             function addArea(ar) {
@@ -1560,14 +1581,15 @@ A jQuery plugin to enhance image maps.
             // Clean up after a group that applied to the same map
             function finishSetForMap(map_data) {
                 $.each(area_list, function (i, el) {
-                    setSelection(el);
+                    var newState = setSelection(el);
+                    if (map_data.options.boundList) {
+                        m.setBoundListProperties(map_data.options, m.getBoundList(map_data.options, key_list), newState);
+                    }   
                 });
                 if (!selected) {
                     map_data.removeSelectionFinish();
                 }
-                if (map_data.options.boundList) {
-                    m.setBoundListProperties(map_data.options, m.getBoundList(map_data.options, key_list), selected);
-                }            
+
             }
 
             this.filter('img,area').each(function (i,e) {
@@ -1807,6 +1829,7 @@ A jQuery plugin to enhance image maps.
                 }
                 return m.hasCanvas.value;
             };
+
             m.hasVml = function() {
                 if (!u.isBool(m.hasVml.value)) {
                     // initialize VML the first time we detect its presence.
@@ -1828,6 +1851,8 @@ A jQuery plugin to enhance image maps.
             };
 
             m.isTouch = !!document.documentElement.ontouchstart;
+
+            u.indexOf = Array.prototype.indexOf || u.indexOf;
 
             $.extend(m.defaults, m.render_defaults,m.shared_defaults);
             $.extend(m.area_defaults, m.render_defaults,m.shared_defaults);
@@ -2347,7 +2372,7 @@ A jQuery plugin to enhance image maps.
          */
         
         indexOf: function(image) {
-            return $.inArray(image, this);
+            return u.indexOf(this,image);
         },
         
         /**

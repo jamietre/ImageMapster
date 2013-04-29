@@ -58,7 +58,7 @@
          */
         
         indexOf: function(image) {
-            return $.inArray(image, this);
+            return u.indexOf(this,image);
         },
         
         /**

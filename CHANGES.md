@@ -5,6 +5,15 @@ Features:
 * Return promises from asynchronous events rather than requiring callbacks like "onConfigured"
 * Return a non-jQuery object exposing the imagemapster API to simplify coding against it
 
+####Version 1.2.12
+
+* Fix issue with $.inArray on IE8
+* Fix problem with boundList when using "set" to toggle a multiple areas at once (from 1.2.11 issue - not quite fixed)
+
+####Version 1.2.11
+
+* Fix problem de-selecting boundlist when using "set" to toggle
+
 ####Version 1.2.10
 
 * [Issue 120](https://github.com/jamietre/ImageMapster/issues/114) 1.2.9 broke IE9

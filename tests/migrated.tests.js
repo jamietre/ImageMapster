@@ -123,7 +123,9 @@ this.tests = this.tests || [];
                 a.collectionEquals("HI,AK,ME,OH,TX", map.mapster('get'), "set using keys works");
 
                 // test toggling: AK should go off, MT should go on
-                attrMatches($('area'), "state", "AK,MT").mapster('set');
+                var areas = $('area[state=AK]').first();
+                areas = areas.add($('area[state=MT]').first());
+                areas.mapster('set');
                 a.collectionEquals("HI,ME,OH,TX,MT", map.mapster('get'), "toggling keys works");
 
                 // test clicking
