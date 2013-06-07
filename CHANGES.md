@@ -5,6 +5,10 @@ Features:
 * Return promises from asynchronous events rather than requiring callbacks like "onConfigured"
 * Return a non-jQuery object exposing the imagemapster API to simplify coding against it
 
+####Version 1.2.13
+
+* Fix problem with mouseoutdelay=01
+
 ####Version 1.2.12
 
 * Fix issue with $.inArray on IE8

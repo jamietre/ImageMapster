@@ -104,18 +104,18 @@
             me.activeAreaEvent=0;
         }
         if (delay<0) {
-            return;
-        }
-
-        if (area.owner.currentAction || delay) {
-            me.activeAreaEvent = window.setTimeout((function() {
-                    return function() {
-                        queueMouseEvent(me,0,area,deferred);
-                    };
-                }(area)),
-                delay || 100);
+            deferred.resolve();
         } else {
-             cbFinal(area.areaId);
+            if (area.owner.currentAction || delay) {
+                me.activeAreaEvent = window.setTimeout((function() {
+                        return function() {
+                            queueMouseEvent(me,0,area,deferred);
+                        };
+                    }(area)),
+                    delay || 100);
+            } else {
+                 cbFinal(area.areaId);
+            }
         }
         return deferred;
     }
