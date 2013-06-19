@@ -5,6 +5,11 @@ Features:
 * Return promises from asynchronous events rather than requiring callbacks like "onConfigured"
 * Return a non-jQuery object exposing the imagemapster API to simplify coding against it
 
+####Version 1.2.14 (unreleased)
+
+* Enable mouseover events when touchscreen found (to account for proliferation of machines with mouse pointer + touchscreen)
+* TODO - detect input device actively to determine when highlight effect should be enabled
+
 ####Version 1.2.13
 
 * Fix problem with mouseoutdelay=01

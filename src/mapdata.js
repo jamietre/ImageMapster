@@ -103,9 +103,7 @@
             window.clearTimeout(me.activeAreaEvent);
             me.activeAreaEvent=0;
         }
-        if (delay<0) {
-            deferred.resolve();
-        } else {
+        if (delay>=0) {
             if (area.owner.currentAction || delay) {
                 me.activeAreaEvent = window.setTimeout((function() {
                         return function() {
@@ -844,14 +842,12 @@
                 }
 
                 if (!mapArea.nohref) {
-                    $area.bind('click.mapster', me.click);
-                       
-                    if (!m.isTouch) {
-                        $area.bind('mouseover.mapster', me.mouseover)
-                            .bind('mouseout.mapster', me.mouseout)
-                            .bind('mousedown.mapster', me.mousedown);
+                    $area.bind('click.mapster', me.click)
+                        .bind('mouseover.mapster', me.mouseover)
+                        .bind('mouseout.mapster', me.mouseout)
+                        .bind('mousedown.mapster', me.mousedown);
                         
-                    }
+                    
                         
                 }
 
