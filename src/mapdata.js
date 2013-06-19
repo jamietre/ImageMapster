@@ -103,7 +103,9 @@
             window.clearTimeout(me.activeAreaEvent);
             me.activeAreaEvent=0;
         }
-        if (delay>=0) {
+        if (delay<0) {
+            deferred.reject();
+        } else {
             if (area.owner.currentAction || delay) {
                 me.activeAreaEvent = window.setTimeout((function() {
                         return function() {
