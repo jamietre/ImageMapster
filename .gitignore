@@ -11,4 +11,5 @@ src/*.min.js
 *.sln
 *.suo
 *.bat
+tests/*.min.js
 

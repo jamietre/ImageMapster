@@ -9,7 +9,7 @@
     $.extend(m.defaults, {
         toolTipContainer: '<div style="border: 2px solid black; background: #EEEEEE; width:160px; padding:4px; margin: 4px; -moz-box-shadow: 3px 3px 5px #535353; ' +
         '-webkit-box-shadow: 3px 3px 5px #535353; box-shadow: 3px 3px 5px #535353; -moz-border-radius: 6px 6px 6px 6px; -webkit-border-radius: 6px; ' +
-        'border-radius: 6px 6px 6px 6px; opacity: 0.9;"></dteniv>',
+        'border-radius: 6px 6px 6px 6px; opacity: 0.9;"></div>',
         showToolTip: false,
         toolTipFade: true,
         toolTipClose: ['area-mouseout','image-mouseout'],
