@@ -1,0 +1,31 @@
+{
+  "name": "ImageMapster",
+  "version": "1.2.5",
+  "homepage": "https://github.com/jamietre/ImageMapster",
+  "description": "ImageMapster activates the areas in HTML imagemaps so you can highlight and select them. It has lots of other features for manual control, tooltips, resizing, and more. It is designed to be compatiable with every common platform, and is tested with Internet Explorer 6-10, Firefox 3.0+, Safari, Opera, and Chrome. It works on mobile devices and doesn't use Flash.",
+  "main": "dist/jquery.imagemapster.js",
+  "keywords": [
+    "jquery",
+    "imagemapster",
+    "activate",
+    "area",
+    "html"
+  ],
+  "authors": [
+    "James Treworgy <jamie@outsharked.com>"
+  ],
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests",
+    "build",
+    "examples",
+    "src"
+  ]
+  "dependencies": {
+    "jquery": "latest"
+  }
+}
