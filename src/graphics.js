@@ -306,7 +306,9 @@
         },
         clearHighlight: function () {
             var c = this.map_data.overlay_canvas;
-            c.getContext('2d').clearRect(0, 0, c.width, c.height);
+            if (c) {
+               c.getContext('2d').clearRect(0, 0, c.width, c.height);
+            }
         },
         // Draw all items from selected_list to a new canvas, then swap with the old one. This is used to delete items when using canvases.
         refreshSelections: function () {
@@ -314,14 +316,16 @@
             // draw new base canvas, then swap with the old one to avoid flickering
             canvas_temp = map_data.base_canvas;
 
-            map_data.base_canvas = this.createVisibleCanvas(map_data);
-            $(map_data.base_canvas).hide();
-            $(canvas_temp).before(map_data.base_canvas);
+            if (canvas_temp) {
+                map_data.base_canvas = this.createVisibleCanvas(map_data);
+                $(map_data.base_canvas).hide();
+                $(canvas_temp).before(map_data.base_canvas);
 
-            map_data.redrawSelections();
+                map_data.redrawSelections();
 
-            $(map_data.base_canvas).show();
-            $(canvas_temp).remove();
+                $(map_data.base_canvas).show();
+                $(canvas_temp).remove();
+            }
         }
     };
 
