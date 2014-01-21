@@ -21,7 +21,7 @@
 
         // because areas can overlap - we can't depend on the selection state to tell us anything about the inner areas.
         // don't check if it's already selected
-        if (!me.isSelected() && me.isSelectable()) {
+        if (!me.isSelected() && (me.isSelectable() || o.options.singleSelect)) {
             if (options) {
                 
                 // cache the current options, and map the altImageId if an altimage 
@@ -54,7 +54,7 @@
     
     function deselect(partial) {
         var me=this;
-        if(me.isDeselectable()) {
+        if(me.isDeselectable() || me.owner.options.singleSelect) {
             me.selected = false;
             me.changeState('select', false);
 
