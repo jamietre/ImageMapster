@@ -262,7 +262,7 @@
 
         function clickArea(ar) {
             var areaOpts,target;
-            canChangeState = (ar.isSelectable() &&
+            canChangeState = ((ar.isSelectable() || ar.isSelected()) &&
                 (ar.isDeselectable() || !ar.isSelected()));
             
             if (canChangeState) {
