@@ -244,9 +244,7 @@
          
         highlight: function (options) {
             var o = this.owner;
-            if (this.effectiveOptions().highlight) {
-                o.graphics.addShapeGroup(this, "highlight",options);
-            }
+            o.graphics.addShapeGroup(this, "highlight",options);
             o.setHighlightId(this.areaId);
             this.changeState('highlight', true);
         },

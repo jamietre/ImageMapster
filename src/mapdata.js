@@ -156,6 +156,11 @@
         if (me.currentAreaId === ar.areaId) {
             return;
         }
+
+        if (!ar.effectiveOptions().highlight) {
+            return;
+        }
+
         if (me.highlightId !== ar.areaId) {
             me.clearEffects();
 
@@ -198,6 +203,10 @@
 
 
         if (me.currentAreaId<0 || !ar) {
+            return;
+        }
+
+        if (!ar.effectiveOptions().highlight) {
             return;
         }
 
