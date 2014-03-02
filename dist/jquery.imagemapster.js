@@ -2747,6 +2747,11 @@ A jQuery plugin to enhance image maps.
         if (me.currentAreaId === ar.areaId) {
             return;
         }
+
+        if (!ar.effectiveOptions().highlight) {
+            return;
+        }
+
         if (me.highlightId !== ar.areaId) {
             me.clearEffects();
 
@@ -2789,6 +2794,10 @@ A jQuery plugin to enhance image maps.
 
 
         if (me.currentAreaId<0 || !ar) {
+            return;
+        }
+
+        if (!ar.effectiveOptions().highlight) {
             return;
         }
 
@@ -3759,9 +3768,7 @@ A jQuery plugin to enhance image maps.
          
         highlight: function (options) {
             var o = this.owner;
-            if (this.effectiveOptions().highlight) {
-                o.graphics.addShapeGroup(this, "highlight",options);
-            }
+            o.graphics.addShapeGroup(this, "highlight",options);
             o.setHighlightId(this.areaId);
             this.changeState('highlight', true);
         },
