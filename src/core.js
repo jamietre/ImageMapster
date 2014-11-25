@@ -122,6 +122,8 @@
             },
             // clean split: no padding or empty elements
             split: function (text,cb) {
+                var nativeSplit = String.prototype.split;
+                var i,el, arr = nativeSplit.call(text,',');
                 var i,el, arr = text.split(',');
                 for (i = 0; i < arr.length; i++) {
                     el = $.trim(arr[i]);
