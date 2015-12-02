@@ -3436,8 +3436,8 @@ A jQuery plugin to enhance image maps.
 
                 if (!mapArea.nohref) {
                     $area.bind('click.mapster', me.click)
-                        .bind('mouseover.mapster', me.mouseover)
-                        .bind('mouseout.mapster', me.mouseout)
+                        .bind('mouseover.mapster, touchstart.mapster', me.mouseover)
+                        .bind('mouseout.mapster, touchend.mapster', me.mouseout)
                         .bind('mousedown.mapster', me.mousedown);
                         
                     
