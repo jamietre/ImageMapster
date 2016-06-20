@@ -1796,7 +1796,7 @@ A jQuery plugin to enhance image maps.
                 
                 usemap = this.getAttribute('usemap');
                 map = usemap && $('map[name="' + usemap.substr(1) + '"]');
-                if (!(img.is('img') && usemap && map.size() > 0)) {
+                if (!(img.is('img') && usemap && map.length > 0)) {
                     return true;
                 }
 
