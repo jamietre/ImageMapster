@@ -287,6 +287,7 @@
         bindToolTipClose(closeOpts,'image-mouseout', 'mouseout', $(md.image), function(e) {
             return (e.relatedTarget && e.relatedTarget.nodeName!=='AREA' && e.relatedTarget!==ad.area);
         }, tipClosed);
+        bindToolTipClose(closeOpts,'image-click', 'click', $(md.image), null, tipClosed);
 
 
         showToolTip(tooltip,
