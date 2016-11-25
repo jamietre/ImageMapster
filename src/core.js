@@ -63,7 +63,9 @@
             noHrefIsMask: true,
             scaleMap: true,
             safeLoad: false,
-            areas: []
+            areas: [],
+            minSelected: 0,
+            maxSelected: null
         },
         shared_defaults: {
             render_highlight: { fade: true },

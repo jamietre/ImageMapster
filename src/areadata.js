@@ -21,7 +21,7 @@
 
         // because areas can overlap - we can't depend on the selection state to tell us anything about the inner areas.
         // don't check if it's already selected
-        if (!me.isSelected()) {
+        if (!me.isSelected() && (me.isSelectable() || o.options.singleSelect)) {
             if (options) {
                 
                 // cache the current options, and map the altImageId if an altimage 
@@ -54,19 +54,21 @@
     
     function deselect(partial) {
         var me=this;
-        me.selected = false;
-        me.changeState('select', false);
+        if(me.isDeselectable() || me.owner.options.singleSelect) {
+            me.selected = false;
+            me.changeState('select', false);
 
-        // release information about last area options when deselecting.
+            // release information about last area options when deselecting.
         
-        me.optsCache=null;
-        me.owner.graphics.removeSelections(me.areaId);
+            me.optsCache=null;
+            me.owner.graphics.removeSelections(me.areaId);
 
-        // Complete selection removal process. This is separated because it's very inefficient to perform the whole
-        // process for multiple removals, as the canvas must be totally redrawn at the end of the process.ar.remove
+            // Complete selection removal process. This is separated because it's very inefficient to perform the whole
+            // process for multiple removals, as the canvas must be totally redrawn at the end of the process.ar.remove
         
-        if (!partial) {
-            me.owner.removeSelectionFinish();
+            if (!partial) {
+                me.owner.removeSelectionFinish();
+            }
         }
     }
 
@@ -161,11 +163,15 @@
         },
         isSelectable: function () {
             return u.isBool(this.effectiveOptions().staticState) ? false :
-                        (u.isBool(this.owner.options.staticState) ? false : u.boolOrDefault(this.effectiveOptions().isSelectable,true));
+                        (u.isBool(this.owner.options.staticState) ? false : 
+                         ((this.owner.options.maxSelected!=null && this.owner.options.maxSelected<=this.numSelected()) ? false :
+                          u.boolOrDefault(this.effectiveOptions().isSelectable,true)));
         },
         isDeselectable: function () {
             return u.isBool(this.effectiveOptions().staticState) ? false :
-                        (u.isBool(this.owner.options.staticState) ? false : u.boolOrDefault(this.effectiveOptions().isDeselectable,true));
+                        (u.isBool(this.owner.options.staticState) ? false : 
+                         ((this.owner.options.minSelected>=this.numSelected()) ? false :
+                          u.boolOrDefault(this.effectiveOptions().isDeselectable,true)));
         },
         isNotRendered: function() {
             var area = $(this.area);
@@ -173,6 +179,11 @@
                 !area.attr('href') ||
                 this.effectiveOptions().isMask;
 
+        },
+        numSelected: function() {
+            var count = 0;
+            $.each(this.owner.data,function(i,e){if(e.isSelected())count++;});
+            return count;
         },
 
         
