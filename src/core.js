@@ -55,6 +55,7 @@
             onClick: null,
             onMouseover: null,
             onMouseout: null,
+            mouseoverDelay: 0,
             mouseoutDelay: 0,
             onStateChange: null,
             boundList: null,

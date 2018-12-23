@@ -876,6 +876,7 @@ A jQuery plugin to enhance image maps.
             onClick: null,
             onMouseover: null,
             onMouseout: null,
+            mouseoverDelay: 0,
             mouseoutDelay: 0,
             onStateChange: null,
             boundList: null,
@@ -2598,7 +2599,7 @@ A jQuery plugin to enhance image maps.
 
     var m = $.mapster, 
         u = m.utils;
-   
+
     /**
      * Set default values for MapData object properties
      * @param  {MapData} me The MapData object
@@ -2619,7 +2620,8 @@ A jQuery plugin to enhance image maps.
             _tooltip_events: [],     // {}         info on events we bound to a tooltip container, so we can properly unbind them
             scaleInfo: null,         // {}         info about the image size, scaling, defaults
             index: -1,                 // index of this in map_cache - so we have an ID to use for wraper div
-            activeAreaEvent: null
+            activeAreaEvent: null,
+            mouseoverDelayTimer: null,
         });
     }
 
@@ -2747,6 +2749,17 @@ A jQuery plugin to enhance image maps.
         if (me.currentAreaId === ar.areaId) {
             return;
         }
+
+        callMouseoverHandler(me, arData, ar, e);
+    }
+
+    function callMouseoverHandler(me, arData, ar, e) {
+        me.mouseoverDelayTimer = setTimeout(function() {
+            mouseoverHandler(me, arData, ar, e);
+        }, me.options.mouseoverDelay);
+    }
+
+    function mouseoverHandler(me, arData, ar, e) {
         if (me.highlightId !== ar.areaId) {
             me.clearEffects();
 
@@ -2787,6 +2800,9 @@ A jQuery plugin to enhance image maps.
             ar = me.getDataForArea(this),
             opts = me.options;
 
+        if (me.mouseoverDelayTimer) {
+            clearTimeout(me.mouseoverDelayTimer);
+        }
 
         if (me.currentAreaId<0 || !ar) {
             return;
@@ -3064,11 +3080,13 @@ A jQuery plugin to enhance image maps.
 
                 for (i=0;i<(atMost || key.length);i++) {
                     ar = me.data[me._idFromKey(key[i])];
-                    ar.area=area.length ? area[0]:area;
-                    // set the actual area moused over/selected
-                    // TODO: this is a brittle model for capturing which specific area - if this method was not used,
-                    // ar.area could have old data. fix this.
-                    result.push(ar);
+                    if (ar){
+                        ar.area=area.length ? area[0]:area;
+                        // set the actual area moused over/selected
+                        // TODO: this is a brittle model for capturing which specific area - if this method was not used,
+                        // ar.area could have old data. fix this.
+                        result.push(ar);
+                    }
                 }
             }
 

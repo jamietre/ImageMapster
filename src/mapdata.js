@@ -7,7 +7,7 @@
 
     var m = $.mapster, 
         u = m.utils;
-   
+
     /**
      * Set default values for MapData object properties
      * @param  {MapData} me The MapData object
@@ -28,7 +28,8 @@
             _tooltip_events: [],     // {}         info on events we bound to a tooltip container, so we can properly unbind them
             scaleInfo: null,         // {}         info about the image size, scaling, defaults
             index: -1,                 // index of this in map_cache - so we have an ID to use for wraper div
-            activeAreaEvent: null
+            activeAreaEvent: null,
+            mouseoverDelayTimer: null,
         });
     }
 
@@ -156,6 +157,17 @@
         if (me.currentAreaId === ar.areaId) {
             return;
         }
+
+        callMouseoverHandler(me, arData, ar, e);
+    }
+
+    function callMouseoverHandler(me, arData, ar, e) {
+        me.mouseoverDelayTimer = setTimeout(function() {
+            mouseoverHandler(me, arData, ar, e);
+        }, me.options.mouseoverDelay);
+    }
+
+    function mouseoverHandler(me, arData, ar, e) {
         if (me.highlightId !== ar.areaId) {
             me.clearEffects();
 
@@ -196,6 +208,9 @@
             ar = me.getDataForArea(this),
             opts = me.options;
 
+        if (me.mouseoverDelayTimer) {
+            clearTimeout(me.mouseoverDelayTimer);
+        }
 
         if (me.currentAreaId<0 || !ar) {
             return;
