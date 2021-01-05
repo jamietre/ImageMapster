@@ -1,5 +1,5 @@
 /* scale.js: resize and zoom functionality
-   requires areacorners.js, when.js
+   requires areacorners.js
 */
 
 

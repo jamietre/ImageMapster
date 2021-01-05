@@ -10,7 +10,6 @@ MAPSTER_PKG = File.join(MAPSTER_ROOT, '../pkg')
 
 MAPSTER_COMPONENTS = [
   'license',
-  'redist/when',
   'core',
   'graphics',
   'mapimage',
@@ -25,7 +24,6 @@ MAPSTER_COMPONENTS = [
 MAPSTER_ZEPTO_COMPONENTS = [
   'license',
   'zepto',
-  'redist/when',
   'core',
   'graphics',
   'mapdata',

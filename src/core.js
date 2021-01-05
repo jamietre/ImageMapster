@@ -96,9 +96,35 @@
             });
         },
         utils: {
-            when: $.mapster_when,
-            defer: $.mapster_when.defer,
+            when: {
+                all: function(deferredArray) {
+                    return Promise.all(deferredArray);
+                },
+                defer: function() {
+                    // Deferred is frequently referred to as an anti-pattern largely
+                    // due to error handling, however to avoid reworking existing
+                    // APIs and support backwards compat, creating a "deferred"
+                    // polyfill via native promise
+                    var Deferred = function() {
+                        this.promise = new Promise((function(resolve, reject) {
+                            this.resolve = resolve;
+                            this.reject = reject;
+                            this.resolveme = function() {
+                                console.log('resolving ' + this.idx);
+                                resolve();
+                            };
+                            this.resolveme = this.resolveme.bind(this);
+                        }).bind(this));
 
+                        this.then = this.promise.then.bind(this.promise);
+                        this.catch = this.promise.catch.bind(this.promise);
+                    };
+                    return new Deferred();
+                }
+            },
+            defer: function() {
+                return this.when.defer();
+            },
             // extends the constructor, returns a new object prototype. Does not refer to the
             // original constructor so is protected if the original object is altered. This way you
             // can "extend" an object by replacing it with its subclass.
