@@ -1,5 +1,5 @@
 /* ImageMapster
-   Version: 1.2.14-beta1 (6/18/2013)
+   Version: 1.2.14-beta2 (2021.01.04)
 
 Copyright 2011-2012 James Treworgy
 
@@ -34,4 +34,3 @@ A jQuery plugin to enhance image maps.
 /// WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 ///
 /// January 19, 2011
-

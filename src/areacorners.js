@@ -7,8 +7,8 @@
 
 
     /**
-     * Compute positions that will place a target with dimensions [width,height] outside 
-     * but near the boundaries of the elements "elements". When an imagemap is passed, the 
+     * Compute positions that will place a target with dimensions [width,height] outside
+     * but near the boundaries of the elements "elements". When an imagemap is passed, the
      *
      * @param  {Element|Element[]} elements An element or an array of elements (such as a jQuery object)
      * @param  {Element} image The image to which area elements are bound, if this is an image map.
@@ -18,7 +18,7 @@
      */
     u.areaCorners = function (elements, image, container, width, height) {
         var pos,found, minX, minY, maxX, maxY, bestMinX, bestMaxX, bestMinY, bestMaxY, curX, curY, nest, j,
-           offsetx=0, 
+           offsetx=0,
            offsety=0,
            rootx,
            rooty,
@@ -26,12 +26,12 @@
            coords=[];
 
         // if a single element was passed, map it to an array
-        
-        elements = elements.length ? 
+
+        elements = elements.length ?
             elements:
             [elements];
 
-        container = container ? 
+        container = container ?
             $(container):
             $(document.body);
 
@@ -54,7 +54,7 @@
         // map the coordinates of any type of shape to a poly and use the logic. simpler than using three different
         // calculation methods. Circles use a 20 degree increment for this estimation.
 
-        for (j=0;j<elements.length;j++) 
+        for (j=0;j<elements.length;j++)
         {
             el=elements[j];
             if (el.nodeName==='AREA') {
@@ -96,14 +96,14 @@
 
             }
         }
-        
+
         minX = minY = bestMinX = bestMinY = 999999;
         maxX = maxY = bestMaxX = bestMaxY = -1;
 
         for (j = coords.length - 2; j >= 0; j -= 2) {
             curX = coords[j];
             curY = coords[j + 1];
-            
+
             if (curX < minX) {
                 minX = curX;
                 bestMaxY = curY;
@@ -124,7 +124,7 @@
         }
 
         // try to figure out the best place for the tooltip
-        
+
         if (width && height) {
             found=false;
             $.each([[bestMaxX - width, minY - height], [bestMinX, minY - height],
@@ -138,9 +138,9 @@
                               return false;
                   }
              });
-             
+
              // default to lower-right corner if nothing fit inside the boundaries of the image
-             
+
              if (!found) {
                  nest=[maxX,maxY];
              }

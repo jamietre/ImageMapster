@@ -4,16 +4,16 @@
 
 (function ($) {
     var m = $.mapster, u = m.utils;
-    
+
     /**
      * Select this area
-     * 
+     *
      * @param {AreaData} me  AreaData context
      * @param {object} options Options for rendering the selection
      */
     function select(options) {
         // need to add the new one first so that the double-opacity effect leaves the current one highlighted for singleSelect
-        
+
         var me=this, o = me.owner;
         if (o.options.singleSelect) {
             o.clearSelections();
@@ -23,13 +23,13 @@
         // don't check if it's already selected
         if (!me.isSelected()) {
             if (options) {
-                
-                // cache the current options, and map the altImageId if an altimage 
+
+                // cache the current options, and map the altImageId if an altimage
                 // was passed
 
                 me.optsCache = $.extend(me.effectiveRenderOptions('select'),
                     options,
-                    { 
+                    {
                         altImageId: o.images.add(options.altImage)
                     });
             }
@@ -48,23 +48,23 @@
     /**
      * Deselect this area, optionally deferring finalization so additional areas can be deselected
      * in a single operation
-     * 
-     * @param  {boolean} partial when true, the caller must invoke "finishRemoveSelection" to render 
+     *
+     * @param  {boolean} partial when true, the caller must invoke "finishRemoveSelection" to render
      */
-    
+
     function deselect(partial) {
         var me=this;
         me.selected = false;
         me.changeState('select', false);
 
         // release information about last area options when deselecting.
-        
+
         me.optsCache=null;
         me.owner.graphics.removeSelections(me.areaId);
 
         // Complete selection removal process. This is separated because it's very inefficient to perform the whole
         // process for multiple removals, as the canvas must be totally redrawn at the end of the process.ar.remove
-        
+
         if (!partial) {
             me.owner.removeSelectionFinish();
         }
@@ -87,17 +87,17 @@
     }
 
     /**
-     * An AreaData object; represents a conceptual area that can be composed of 
+     * An AreaData object; represents a conceptual area that can be composed of
      * one or more MapArea objects
-     * 
+     *
      * @param {MapData} owner The MapData object to which this belongs
      * @param {string} key   The key for this area
      * @param {string} value The mapValue string for this area
      */
-    
+
     m.AreaData = function (owner, key, value) {
         $.extend(this,{
-            owner: owner, 
+            owner: owner,
             key: key || '',
             // means this represents the first key in a list of keys (it's the area group that gets highlighted on mouseover)
             isPrimary: true,
@@ -105,14 +105,14 @@
             href: '',
             value: value || '',
             options:{},
-            // "null" means unchanged. Use "isSelected" method to just test true/false 
-            selected: null,       
+            // "null" means unchanged. Use "isSelected" method to just test true/false
+            selected: null,
             // xref to MapArea objects
             areasXref: [],
             // (temporary storage) - the actual area moused over
             area: null,
             // the last options used to render this. Cache so when re-drawing after a remove, changes in options won't
-            // break already selected things. 
+            // break already selected things.
             optsCache: null
          });
     };
@@ -175,51 +175,51 @@
 
         },
 
-        
+
          /**
-         * Return the overall options effective for this area. 
+         * Return the overall options effective for this area.
          * This should get the default options, and merge in area-specific options, finally
          * overlaying options passed by parameter
-         * 
+         *
          * @param  {[type]} options  options which will supercede all other options for this area
          * @return {[type]}          the combined options
          */
-        
+
         effectiveOptions: function (options) {
-            
+
             var opts = u.updateProps({},
                     this.owner.area_options,
                     this.options,
                     options || {},
                     {
-                        id: this.areaId 
+                        id: this.areaId
                     }
                 );
 
             opts.selected = this.isSelected();
-            
+
             return opts;
         },
 
         /**
-         * Return the options effective for this area for a "render" or "highlight" mode. 
-         * This should get the default options, merge in the areas-specific options, 
+         * Return the options effective for this area for a "render" or "highlight" mode.
+         * This should get the default options, merge in the areas-specific options,
          * and then the mode-specific options.
          * @param  {string} mode    'render' or 'highlight'
          * @param  {[type]} options  options which will supercede all other options for this area
          * @return {[type]}          the combined options
          */
-        
+
         effectiveRenderOptions: function (mode, options) {
             var allOpts,opts=this.optsCache;
-            
+
             if (!opts || mode==='highlight') {
                 allOpts = this.effectiveOptions(options);
                 opts = u.updateProps({},
                     allOpts,
                     allOpts["render_" + mode]
                 );
-                    
+
                 if (mode!=='highlight') {
                     this.optsCache=opts;
                 }
@@ -241,7 +241,7 @@
         },
 
         // highlight this area
-         
+
         highlight: function (options) {
             var o = this.owner;
             if (this.effectiveOptions().highlight) {
@@ -253,12 +253,12 @@
 
         // select this area. if "callEvent" is true then the state change event will be called. (This method can be used
         // during config operations, in which case no event is indicated)
-        
+
         drawSelection: function () {
-        
+
 
             this.owner.graphics.addShapeGroup(this, "select");
-        
+
         }
 
 

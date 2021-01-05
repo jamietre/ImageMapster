@@ -19,7 +19,7 @@
     };
 
     $.mapster = {
-        version: "1.2.14-beta1",
+        version: "1.2.14-beta2",
         render_defaults: {
             isSelectable: true,
             isDeselectable: true,
@@ -36,8 +36,8 @@
             strokeWidth: 1,
             includeKeys: '',
             altImage: null,
-            altImageId: null, // used internally            
-            altImages: {} 
+            altImageId: null, // used internally
+            altImages: {}
         },
         defaults: {
             clickNavigate: false,
@@ -104,7 +104,7 @@
             // can "extend" an object by replacing it with its subclass.
             subclass: function(BaseClass, constr) {
                 var Subclass=function() {
-                    var me=this, 
+                    var me=this,
                         args=Array.prototype.slice.call(arguments,0);
                     me.base = BaseClass.prototype;
                     me.base.init = function() {
@@ -171,11 +171,11 @@
                         o && typeof o === "object" && o.nodeType === 1 && typeof o.nodeName === "string");
             },
             /**
-             * Basic indexOf implementation for IE7-8. Though we use $.inArray, some jQuery versions will try to 
+             * Basic indexOf implementation for IE7-8. Though we use $.inArray, some jQuery versions will try to
              * use a prototpye on the calling object, defeating the purpose of using $.inArray in the first place.
              *
              * This will be replaced with the array prototype if it's available.
-             * 
+             *
              * @param  {Array} arr The array to search
              * @param {Object} target The item to search for
              * @return {Number} The index of the item, or -1 if not found
@@ -188,7 +188,7 @@
                 }
                 return -1;
             },
-                
+
             // finds element of array or object with a property "prop" having value "val"
             // if prop is not defined, then just looks for property with value "val"
             indexOfProp: function (obj, prop, val) {
@@ -221,19 +221,19 @@
             },
             size: function(image, raw) {
                 var u=$.mapster.utils;
-                return { 
+                return {
                     width: raw ? (image.width || image.naturalWidth) : u.imgWidth(image,true) ,
                     height: raw ? (image.height || image.naturalHeight) : u.imgHeight(image,true),
                     complete: function() { return !!this.height && !!this.width;}
                 };
             },
 
-                
+
             /**
              * Set the opacity of the element. This is an IE<8 specific function for handling VML.
              * When using VML we must override the "setOpacity" utility function (monkey patch ourselves).
              * jQuery does not deal with opacity correctly for VML elements. This deals with that.
-             * 
+             *
              * @param {Element} el The DOM element
              * @param {double} opacity A value between 0 and 1 inclusive.
              */
@@ -254,12 +254,12 @@
 
 
             // fade "el" from opacity "op" to "endOp" over a period of time "duration"
-            
+
             fader: (function () {
                 var elements = {},
                         lastKey = 0,
                         fade_func = function (el, op, endOp, duration) {
-                            var index, 
+                            var index,
                                 cbIntervals = duration/15,
                                 obj, u = $.mapster.utils;
 
@@ -391,13 +391,13 @@
     // Iterates through all the objects passed, and determines whether it's an area or an image, and calls the appropriate
     // callback for each. If anything is returned from that callback, the process is stopped and that data return. Otherwise,
     // the object itself is returned.
-    
-    var m = $.mapster, 
+
+    var m = $.mapster,
         u = m.utils,
         ap = Array.prototype;
 
 
-    // jQuery's width() and height() are broken on IE9 in some situations. This tries everything. 
+    // jQuery's width() and height() are broken on IE9 in some situations. This tries everything.
     $.each(["width","height"],function(i,e) {
         var capProp = e.substr(0,1).toUpperCase() + e.substr(1);
         // when jqwidth parm is passed, it also checks the jQuery width()/height() property
@@ -406,16 +406,16 @@
         // we must still check because stuff like adblock can temporarily block it
         // what a goddamn headache
         u["img"+capProp]=function(img,jqwidth) {
-                return (jqwidth ? $(img)[e]() : 0) || 
+                return (jqwidth ? $(img)[e]() : 0) ||
                     img[e] || img["natural"+capProp] || img["client"+capProp] || img["offset"+capProp];
         };
-     
-    });    
+
+    });
 
     /**
      * The Method object encapsulates the process of testing an ImageMapster method to see if it's being
      * invoked on an image, or an area; then queues the command if the MapData is in an active state.
-     * 
+     *
      * @param {[jQuery]}    that        The target of the invocation
      * @param {[function]}  func_map    The callback if the target is an imagemap
      * @param {[function]}  func_area   The callback if the target is an area
@@ -424,7 +424,7 @@
      *                                             args: arguments to the method
      *                                            }
      */
-    
+
     m.Method = function (that, func_map, func_area, opts) {
         var me = this;
         me.name = opts.name;
@@ -456,7 +456,7 @@
                         }
                         continue;
                     }
-                    
+
                     ar = data.getData(src[i].nodeName === 'AREA' ? src[i] : this.key);
                     if (ar) {
                         if ($.inArray(ar, area_list) < 0) {
@@ -495,18 +495,18 @@
             }
         };
 
-        
+
         /**
          * Test whether the browser supports VML. Credit: google.
          * http://stackoverflow.com/questions/654112/how-do-you-detect-support-for-vml-or-svg-in-a-browser
-         * 
+         *
          * @return {bool} true if vml is supported, false if not
          */
-        
+
         function hasVml() {
             var a = $('<div />').appendTo('body');
             a.html('<v:shape id="vml_flag1" adj="1" />');
-            
+
             var b = a[0].firstChild;
             b.style.behavior = "url(#default#VML)";
             var has = b ? typeof b.adj === "object" : true;
@@ -525,40 +525,40 @@
         }
 
         /**
-         * Test for the presence of HTML5 Canvas support. This also checks to see if excanvas.js has been 
+         * Test for the presence of HTML5 Canvas support. This also checks to see if excanvas.js has been
          * loaded and is faking it; if so, we assume that canvas is not supported.
          *
          * @return {bool} true if HTML5 canvas support, false if not
          */
-        
+
         function hasCanvas() {
             var d = namespaces();
             // when g_vml_ is present, then we can be sure excanvas is active, meaning there's not a real canvas.
-            
-             return d && d.g_vml_ ? 
+
+             return d && d.g_vml_ ?
                 false :
-                $('<canvas />')[0].getContext ? 
-                    true : 
+                $('<canvas />')[0].getContext ?
+                    true :
                     false;
         }
 
         /**
          * Merge new area data into existing area options on a MapData object. Used for rebinding.
-         * 
+         *
          * @param  {[MapData]} map_data     The MapData object
          * @param  {[object[]]} areas       areas array to merge
          */
-        
+
         function merge_areas(map_data, areas) {
             var ar, index,
                 map_areas = map_data.options.areas;
 
             if (areas) {
                 $.each(areas, function (i, e) {
-                    
+
                     // Issue #68 - ignore invalid data in areas array
-                    
-                    if (!e || !e.key) { 
+
+                    if (!e || !e.key) {
                         return;
                     }
 
@@ -598,7 +598,7 @@
         //          defaultReturn: a value to return other than the jQuery object (if its not chainable)
         //          args: the arguments
         // Returns a comma-separated list of user-selected areas. "staticState" areas are not considered selected for the purposes of this method.
-        
+
         me.get = function (key) {
             var md = m.getMapData(this);
             if (!(md && md.complete)) {
@@ -669,7 +669,7 @@
 
         // $(img).mapster('key','group-key', true)
         me.keys = function(key,all) {
-            var keyList=[], 
+            var keyList=[],
                 md = m.getMapData(this);
 
             if (!(md && md.complete)) {
@@ -689,7 +689,7 @@
                 }
                 $.each(keys,function(i,e) {
                     if ($.inArray(e,keyList)<0) {
-                        keyList.push(e);                         
+                        keyList.push(e);
                     }
                 });
             }
@@ -712,7 +712,7 @@
                 });
             }
             return keyList.join(',');
-        
+
 
         };
         me.select = function () {
@@ -721,17 +721,17 @@
         me.deselect = function () {
             me.set.call(this, false);
         };
-        
+
         /**
-         * Select or unselect areas. Areas can be identified by a single string key, a comma-separated list of keys, 
+         * Select or unselect areas. Areas can be identified by a single string key, a comma-separated list of keys,
          * or an array of strings.
-         * 
-         * 
+         *
+         *
          * @param {boolean} selected Determines whether areas are selected or deselected
-         * @param {string|string[]} key A string, comma-separated string, or array of strings indicating 
+         * @param {string|string[]} key A string, comma-separated string, or array of strings indicating
          *                              the areas to select or deselect
          * @param {object} options Rendering options to apply when selecting an area
-         */ 
+         */
 
         me.set = function (selected, key, options) {
             var lastMap, map_data, opts=options,
@@ -763,7 +763,7 @@
                     var newState = setSelection(el);
                     if (map_data.options.boundList) {
                         m.setBoundListProperties(map_data.options, m.getBoundList(map_data.options, key_list), newState);
-                    }   
+                    }
                 });
                 if (!selected) {
                     map_data.removeSelectionFinish();
@@ -783,9 +783,9 @@
                     area_list = [];
                     key_list='';
                 }
-                
+
                if (map_data) {
-                    
+
                     keys = '';
                     if (e.nodeName.toUpperCase()==='IMG') {
                         if (!m.queueCommand(map_data, $(e), 'set', [selected, key, opts])) {
@@ -811,16 +811,16 @@
                             addArea(map_data.getDataForArea(e));
                             lastMap = map_data;
                         }
-                    
+
                     }
                 }
             });
-            
+
             if (map_data) {
                finishSetForMap(map_data);
             }
 
-           
+
             return this;
         };
         me.unbind = function (preserveState) {
@@ -930,9 +930,9 @@
                 { name: 'snapshot' }
             )).go();
         };
-        
+
         // do not queue this function
-        
+
         me.state = function () {
             var md, result = null;
             $(this).each(function (i,e) {
@@ -958,7 +958,7 @@
                 md = m.getMapData(e);
 
                 // if already bound completely, do a total rebind
-                
+
                 if (md) {
                     me.unbind.apply(img);
                     if (!md.complete) {
@@ -972,7 +972,7 @@
                 // ensure it's a valid image
                 // jQuery bug with Opera, results in full-url#usemap being returned from jQuery's attr.
                 // So use raw getAttribute instead.
-                
+
                 usemap = this.getAttribute('usemap');
                 map = usemap && $('map[name="' + usemap.substr(1) + '"]');
                 if (!(img.is('img') && usemap && map.length > 0)) {
@@ -997,13 +997,13 @@
         me.init = function (useCanvas) {
             var style, shapes;
 
-            // for testing/debugging, use of canvas can be forced by initializing 
+            // for testing/debugging, use of canvas can be forced by initializing
             // manually with "true" or "false". But generally we test for it.
-            
+
             m.hasCanvas = function() {
                 if (!u.isBool(m.hasCanvas.value)) {
                     m.hasCanvas.value = u.isBool(useCanvas) ?
-                        useCanvas : 
+                        useCanvas :
                         hasCanvas();
                 }
                 return m.hasCanvas.value;
@@ -1035,15 +1035,15 @@
 
             $.extend(m.defaults, m.render_defaults,m.shared_defaults);
             $.extend(m.area_defaults, m.render_defaults,m.shared_defaults);
-            
+
         };
         me.test = function (obj) {
             return eval(obj);
         };
         return me;
     } ());
-    
+
     $.mapster.impl.init();
-    
-    
+
+
 } (jQuery));
