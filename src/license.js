@@ -1,7 +1,7 @@
 /* ImageMapster
    Version: 1.2.14 (2021.01.06)
 
-Copyright 2011-2021 James Treworgy
+Copyright (c) 2011-2021 James Treworgy
 
 http://www.outsharked.com/imagemapster
 https://github.com/jamietre/ImageMapster
@@ -13,6 +13,8 @@ A jQuery plugin to enhance image maps.
 ;
 
 /// LICENSE (MIT License)
+///
+/// Copyright (c) 2011-2021 James Treworgy
 ///
 /// Permission is hereby granted, free of charge, to any person obtaining
 /// a copy of this software and associated documentation files (the
@@ -32,5 +34,3 @@ A jQuery plugin to enhance image maps.
 /// LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
 /// OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 /// WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-///
-/// January 19, 2011

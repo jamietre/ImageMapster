@@ -4,7 +4,7 @@ ImageMapster activates the areas in HTML imagemaps so you can highlight and sele
 
 ### Release Information
 
-See the [change log](https://github.com/jamietre/ImageMapster/blob/master/CHANGES.md) for details on the current release.
+See the [change log](https://github.com/jamietre/ImageMapster/blob/master/CHANGELOG.md) for details on the current release.
 
 Read the [release notes](http://blog.outsharked.com/2012/06/imagemapster-125-released.html) for 1.2.5, the last significant update. 
 
@@ -122,6 +122,8 @@ The source code is broken into several modules to make management easier and to 
 ### Code use license.
 
 LICENSE (MIT License)
+
+Copyright (c) 2011-2021 James Treworgy
  
 Permission is hereby granted, free of charge, to any person obtaining
 a copy of this software and associated documentation files (the
