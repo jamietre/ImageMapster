@@ -109,11 +109,6 @@
                         this.promise = new Promise((function(resolve, reject) {
                             this.resolve = resolve;
                             this.reject = reject;
-                            this.resolveme = function() {
-                                console.log('resolving ' + this.idx);
-                                resolve();
-                            };
-                            this.resolveme = this.resolveme.bind(this);
                         }).bind(this));
 
                         this.then = this.promise.then.bind(this.promise);
