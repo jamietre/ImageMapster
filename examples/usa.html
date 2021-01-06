@@ -401,7 +401,7 @@ div.input
                 setOption(newOpts.render_select, "strokeWidth", $('#strokewidth_select').val());
                 setOption(newOpts.render_select, "fillOpacity", $('#fill_select').val());
                 setOption(newOpts.render_select, "strokeOpacity", $('#strokeopacity_select').val());
-                setOption(newOpts, "mouseoutDelay", $('#mouseout-delay').val());
+                setOption(newOpts, "mouseoutDelay", parseInt($('#mouseout-delay').val(), 10));
                 var width = parseInt($('#img_width').val(), 10);
 
                 if ($usamap.width() != width) {
