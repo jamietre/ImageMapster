@@ -1,7 +1,7 @@
 /* ImageMapster
-   Version: 1.2.14-beta2 (2021.01.04)
+   Version: 1.2.14 (2021.01.06)
 
-Copyright 2011-2012 James Treworgy
+Copyright 2011-2021 James Treworgy
 
 http://www.outsharked.com/imagemapster
 https://github.com/jamietre/ImageMapster
@@ -55,7 +55,7 @@ A jQuery plugin to enhance image maps.
     };
 
     $.mapster = {
-        version: "1.2.14-beta2",
+        version: "1.2.14",
         render_defaults: {
             isSelectable: true,
             isDeselectable: true,
