@@ -207,12 +207,16 @@
              * @return {Number} The index of the item, or -1 if not found
              */
             indexOf: function(arr,target){
-                for(var i=0; i<arr.length; i++){
-                    if(arr[i]===target){
-                        return i;
+                if (Array.prototype.indexOf) {
+                    return Array.prototype.indexOf.call(arr, target);
+                } else {
+                    for(var i=0; i<arr.length; i++){
+                        if(arr[i]===target){
+                            return i;
+                        }
                     }
+                    return -1;
                 }
-                return -1;
             },
 
             // finds element of array or object with a property "prop" having value "val"
@@ -1056,8 +1060,6 @@
             };
 
             m.isTouch = !!document.documentElement.ontouchstart;
-
-            u.indexOf = Array.prototype.indexOf || u.indexOf;
 
             $.extend(m.defaults, m.render_defaults,m.shared_defaults);
             $.extend(m.area_defaults, m.render_defaults,m.shared_defaults);
