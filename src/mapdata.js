@@ -847,8 +847,8 @@
 
                 if (!mapArea.nohref) {
                     $area.on('click.mapster', me.click)
-                        .on('mouseover.mapster touchstart.mapster', me.mouseover)
-                        .on('mouseout.mapster touchend.mapster', me.mouseout)
+                        .on('mouseover.mapster touchstart.mapster.noPreventDefault', me.mouseover)
+                        .on('mouseout.mapster touchend.mapster.noPreventDefault', me.mouseout)
                         .on('mousedown.mapster', me.mousedown);
 
 

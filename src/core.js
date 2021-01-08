@@ -84,7 +84,6 @@
             border: 0
         },
         hasCanvas: null,
-        isTouch: null,
         map_cache: [],
         hooks: {},
         addHook: function(name,callback) {
@@ -1058,8 +1057,6 @@
 
                 return m.hasVml.value;
             };
-
-            m.isTouch = !!document.documentElement.ontouchstart;
 
             $.extend(m.defaults, m.render_defaults,m.shared_defaults);
             $.extend(m.area_defaults, m.render_defaults,m.shared_defaults);

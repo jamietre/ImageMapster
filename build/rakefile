@@ -10,6 +10,7 @@ MAPSTER_PKG = File.join(MAPSTER_ROOT, '../pkg')
 
 MAPSTER_COMPONENTS = [
   'license',
+  'jqueryextensions',  
   'core',
   'graphics',
   'mapimage',
@@ -23,6 +24,7 @@ MAPSTER_COMPONENTS = [
 
 MAPSTER_ZEPTO_COMPONENTS = [
   'license',
+  'jqueryextensions',    
   'zepto',
   'core',
   'graphics',
