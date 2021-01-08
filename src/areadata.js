@@ -229,7 +229,7 @@
 
         // Fire callback on area state change
         changeState: function (state_type, state) {
-            if ($.isFunction(this.owner.options.onStateChange)) {
+            if (u.isFunction(this.owner.options.onStateChange)) {
                 this.owner.options.onStateChange.call(this.owner.image,
                     {
                         key: this.key,

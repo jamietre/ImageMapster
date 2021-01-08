@@ -1,22 +1,21 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
-   <!-- <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.js"></script>-->
- <script type="text/javascript" src="redist/jquery.1.7.2.min.js"></script>
-    <script type="text/javascript" src="../src/core.js"></script>
-    <script type="text/javascript" src="../src/graphics.js"></script>
-    <script type="text/javascript" src="../src/mapimage.js"></script>
-    <script type="text/javascript" src="../src/mapdata.js"></script>
-    <script type="text/javascript" src="../src/areadata.js"></script>
-    <script type="text/javascript" src="../src/areacorners.js"></script>
-    <script type="text/javascript" src="../src/scale.js"></script>
-    <script type="text/javascript" src="../src/tooltip.js"></script>
+   <script type="text/javascript" src="//ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+   <script type="text/javascript" src="../src/core.js"></script>
+   <script type="text/javascript" src="../src/graphics.js"></script>
+   <script type="text/javascript" src="../src/mapimage.js"></script>
+   <script type="text/javascript" src="../src/mapdata.js"></script>
+   <script type="text/javascript" src="../src/areadata.js"></script>
+   <script type="text/javascript" src="../src/areacorners.js"></script>
+   <script type="text/javascript" src="../src/scale.js"></script>
+   <script type="text/javascript" src="../src/tooltip.js"></script>
 
     <script type="text/javascript">
 $(document).ready(function() {
     var img = $('img');
     
-    $('#az-test').bind('click',function() {
+    $('#az-test').on('click',function() {
         img.mapster('set',true,'AZ', { altImage: 'img2'});
     });
 

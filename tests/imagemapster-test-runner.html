@@ -1,9 +1,13 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html>
 
 <head>
     <title>ImageMapster Browser Test Runner</title>
 
-    <script type="text/javascript" src="redist/jquery.1.9.1.js"></script>
+    <!-- <script type="text/javascript" src="redist/jquery.3.5.1.js"></script>  -->
+    <script type="text/javascript" src="redist/jquery.2.2.4.js"></script>
+    <!-- <script type="text/javascript" src="redist/jquery.1.9.1.js"></script> -->
+    <!-- <script type="text/javascript" src="redist/jquery.1.7.1.js"></script> -->
     <!--<script type="text/javascript" src="redist/zepto.js"></script>-->
 
     <script type="text/javascript" src="redist/common.utils.1.0.js"></script>
@@ -19,7 +23,6 @@
 
     <!--<script type="text/javascript" src="../src/zepto.js"></script>-->
 
-    
     <script type="text/javascript" src="../src/core.js"></script>
     <script type="text/javascript" src="../src/graphics.js"></script>
     <script type="text/javascript" src="../src/mapimage.js"></script>
@@ -122,10 +125,10 @@
 
     function bindUIEvents() {
       
-        $(allSel).bind('change',function() {
+        $(allSel).on('change',function() {
             enableTestLink();
         });
-        $('#testSelectAll').bind('click',function(e)
+        $('#testSelectAll').on('click',function(e)
         {
             var checked=$(checkedSel),
                 all = $(allSel);
@@ -136,18 +139,18 @@
             }
             enableTestLink();
         });
-        $('#toggleTestImage').bind('click',function(e)
+        $('#toggleTestImage').on('click',function(e)
         {
             $('#testElements').toggle('fast');
         });
 
         enableTestLink();
 
-        $('#rerunTest').bind('click', function (e) {
+        $('#rerunTest').on('click', function (e) {
             runActiveGroups();
         }).hide();
         
-        $('#startTest').bind('click',startTests);
+        $('#startTest').on('click',startTests);
     }
 
     function configureTests() {

@@ -78,7 +78,7 @@
 
             me.currentAction = '';
 
-            if ($.isFunction(callback)) {
+            if (u.isFunction(callback)) {
                 callback();
             }
 

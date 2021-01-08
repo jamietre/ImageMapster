@@ -133,10 +133,10 @@
                 index=me._add(image[0]);
 
                 image
-                    .bind('load',function(e) {
+                    .on('load',function(e) {
                         me.imageLoaded.call(me,e);
                     })
-                    .bind('error',function(e) {
+                    .on('error',function(e) {
                         me.imageLoadError.call(me,e);
                     });
 

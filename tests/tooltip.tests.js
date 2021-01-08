@@ -42,14 +42,14 @@ this.tests.push(
             a.equals(0,$('.mapster_tooltip').length);
 
             setCallback("onShowToolTip",getPromise("shown1").resolve);
-            $('area[state=TX]').mouseover();
+            $('area[state=TX]').trigger("mouseover");
 
             getPromise("shown1").then(function() {
                 a.equals(1,$('.mapster_tooltip').length,"Tooltip was shown");
                 
                 setCallback("onShowToolTip",null);
                 setCallback("onMouseover",getPromise("removed1").resolve);
-                $('area[state=NV]').mouseover();
+                $('area[state=NV]').trigger("mouseover");
             });
 
             getPromise("removed1").then(function() {
@@ -57,7 +57,7 @@ this.tests.push(
                 
                 setCallback("onMouseover",null);
                 setCallback("onShowToolTip",getPromise("shown2").resolve);
-                $('area[state=TX]').mouseover();
+                $('area[state=TX]').trigger("mouseover");
             });
 
             getPromise("shown2").then(function() {
@@ -65,7 +65,7 @@ this.tests.push(
                 
                 setCallback("onShowToolTip",null);
                 setCallback("onHideToolTip",getPromise("click1").resolve);
-                $('.mapster_tooltip').click();
+                $('.mapster_tooltip').trigger("click");
             });
 
             getPromise("click1").then(function() {

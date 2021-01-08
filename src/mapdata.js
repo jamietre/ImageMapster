@@ -172,7 +172,7 @@
 
         me.currentAreaId = ar.areaId;
 
-        if ($.isFunction(me.options.onMouseover)) {
+        if (u.isFunction(me.options.onMouseover)) {
             me.options.onMouseover.call(this,
             {
                 e: e,
@@ -213,7 +213,7 @@
         queueMouseEvent(me,opts.mouseoutDelay,ar)
             .then(me.clearEffects);
 
-        if ($.isFunction(opts.onMouseout)) {
+        if (u.isFunction(opts.onMouseout)) {
             opts.onMouseout.call(this,
             {
                 e: e,
@@ -273,7 +273,7 @@
 
             list_target = m.getBoundList(opts, ar.key);
 
-            if ($.isFunction(opts.onClick))
+            if (u.isFunction(opts.onClick))
             {
                 cbResult= opts.onClick.call(that,
                 {
@@ -773,7 +773,7 @@
                             'area[coords]' :
                             'area[' + opts.mapKey + ']');
 
-            areas = $(me.map).find(sel).unbind('.mapster');
+            areas = $(me.map).find(sel).off('.mapster');
 
             for (mapAreaId = 0;mapAreaId<areas.length; mapAreaId++) {
                 area_id = 0;
@@ -846,10 +846,10 @@
                 }
 
                 if (!mapArea.nohref) {
-                    $area.bind('click.mapster', me.click)
-                        .bind('mouseover.mapster touchstart.mapster', me.mouseover)
-                        .bind('mouseout.mapster touchend.mapster', me.mouseout)
-                        .bind('mousedown.mapster', me.mousedown);
+                    $area.on('click.mapster', me.click)
+                        .on('mouseover.mapster touchstart.mapster', me.mouseover)
+                        .on('mouseout.mapster touchend.mapster', me.mouseout)
+                        .on('mousedown.mapster', me.mousedown);
 
 
 
@@ -880,9 +880,9 @@
         },
         clearEvents: function () {
             $(this.map).find('area')
-                        .unbind('.mapster');
+                        .off('.mapster');
             $(this.images)
-                        .unbind('.mapster');
+                        .off('.mapster');
         },
         _clearCanvases: function (preserveState) {
             // remove the canvas elements created

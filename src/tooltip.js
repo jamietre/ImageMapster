@@ -140,10 +140,10 @@
         var event_name = event + '.mapster-tooltip';
 
         if ($.inArray(bindOption, options) >= 0) {
-            target.unbind(event_name)
-                .bind(event_name, function (e) {
+            target.off(event_name)
+                .on(event_name, function (e) {
                     if (!beforeClose || beforeClose.call(this,e)) {
-                        target.unbind('.mapster-tooltip');
+                        target.off('.mapster-tooltip');
                         if (onClose) {
                             onClose.call(this);
                         }

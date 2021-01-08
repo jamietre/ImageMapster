@@ -9,7 +9,7 @@
     // all public functions in $.mapster.impl are methods
     $.fn.mapster = function (method) {
         var m = $.mapster.impl;
-        if ($.isFunction(m[method])) {
+        if ($.mapster.utils.isFunction(m[method])) {
             return m[method].apply(this, Array.prototype.slice.call(arguments, 1));
         } else if (typeof method === 'object' || !method) {
             return m.bind.apply(this, arguments);
@@ -145,7 +145,9 @@
             split: function (text,cb) {
                 var i,el, arr = text.split(',');
                 for (i = 0; i < arr.length; i++) {
-                    el = $.trim(arr[i]);
+                    // backwards compat for $.trim which would return empty string on null
+                    // which theoertically should not happen here
+                    el = arr[i] ? arr[i].trim() : '';
                     if (el==='') {
                         arr.splice(i,1);
                     } else {
@@ -237,10 +239,13 @@
             isUndef: function(obj) {
                 return typeof obj === "undefined";
             },
+            isFunction: function (obj) {
+                return typeof obj === 'function';
+            },
             // evaluates "obj", if function, calls it with args
             // (todo - update this to handle variable lenght/more than one arg)
             ifFunction: function (obj, that, args) {
-                if ($.isFunction(obj)) {
+                if (this.isFunction(obj)) {
                     obj.call(that, args);
                 }
             },
@@ -345,7 +350,7 @@
                     }
                 }
                 if (opts.listSelectedAttribute) {
-                    $(e).attr(opts.listSelectedAttribute, selected);
+                    $(e).prop(opts.listSelectedAttribute, selected);
                 }
             });
         },
@@ -398,7 +403,7 @@
             this.impl = null;
             $.fn.mapster = null;
             $.mapster = null;
-            $('*').unbind();
+            $('*').off();
         }
     };
 
@@ -988,7 +993,7 @@
                     me.unbind.apply(img);
                     if (!md.complete) {
                         // will be queued
-                        img.bind();
+                        img.on();
                         return true;
                     }
                     md = null;

@@ -2018,7 +2018,7 @@ James Treworgy
         }
         // string format function
         function format() {
-            var args = (arguments.length === 1 && $.isArray(arguments[0])) ?
+            var args = (arguments.length === 1 && isArray(arguments[0])) ?
                 arguments[0] :
                 arguments;
             return this.replace(/\{(\d+)\}/g, function (match, number) {
