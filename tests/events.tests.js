@@ -26,7 +26,7 @@ this.tests.push(
 
         getPromise("configured").then(function() {
             setCallback('onMouseover',getPromise("mouseover1").resolve);
-            areas.find('area[state="NV"]').first().mouseover();
+            areas.find('area[state="NV"]').first().trigger("mouseover");
         });
         
         getPromise("mouseover1").then(function(e) {
@@ -35,7 +35,7 @@ this.tests.push(
             a.equals(e.key, "NV", "Key returned correctly");
         
             setCallback('onMouseover',getPromise("mouseover2").resolve);
-            areas.find('area[state="AK"]').first().mouseover();
+            areas.find('area[state="AK"]').first().trigger("mouseover");
         });      
 
         
@@ -45,7 +45,7 @@ this.tests.push(
             a.equals(e.key, "AK", "Key returned correctly");
         
             setCallback('onMouseout',getPromise("mouseout1").resolve);
-            areas.find('area[state="AK"]').first().mouseout();
+            areas.find('area[state="AK"]').first().trigger("mouseout");
         });
         
         getPromise("mouseout1").then(function(e) {
@@ -54,7 +54,7 @@ this.tests.push(
             a.equals(e.selected, true, "Selected state returned correctly");        
 
             setCallback('onClick',getPromise("click1").resolve);
-            areas.find('area[state="GA"]').first().click();
+            areas.find('area[state="GA"]').first().trigger("click");
         }); 
 
 
@@ -64,7 +64,7 @@ this.tests.push(
             a.equals(e.this_context, areas.find('area[state="GA"]')[0], "Click callback fired for Georgia, and 'this' was correct");
 
             setCallback('onClick',getPromise("click2").resolve);
-            areas.find('area[state="OR"]').first().click();
+            areas.find('area[state="OR"]').first().trigger("click");
         });
         
         getPromise("click2").then(function(e) {

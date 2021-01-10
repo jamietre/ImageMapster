@@ -1,18 +1,12 @@
-<html>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
 <head>
-<title>shapes</title>
+<title>Shapes Demo</title>
 <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
 
-<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.js"></script>
-
-<script type="text/javascript" src="../src/core.js"></script>
-<script type="text/javascript" src="../src/graphics.js"></script>
-<script type="text/javascript" src="../src/mapimage.js"></script>
-<script type="text/javascript" src="../src/mapdata.js"></script>
-<script type="text/javascript" src="../src/areadata.js"></script>
-<script type="text/javascript" src="../src/areacorners.js"></script>
-<script type="text/javascript" src="../src/scale.js"></script>
-<script type="text/javascript" src="../src/tooltip.js"></script>
+<script type="text/javascript" src="javascripts/jquery.3.5.1.min.js"></script>
+<script type="text/javascript" src="../dist/jquery.imagemapster.js"></script>
+<link rel="stylesheet" href="stylesheets/base.css">
 
 <script type="text/javascript">
 
@@ -69,7 +63,11 @@ $(document).ready(function() {
 </script>
 
 </head>
-<body bgcolor="#FFFFFF" leftmargin="0" topmargin="0" marginwidth="0" marginheight="0">
+<body>
+    <div class="navmenu">
+		Return to <a href="index.html">Main Menu</a>
+		<hr/>
+    </div>
 
 <h2>Shapes Demo</h2>
 <p>This demo shows some advanced features using multiple groups and exclusions.<p>
@@ -85,7 +83,6 @@ With Internet Explorer 6-8, masking is not possible. In this case the effect is 
 that can be defined with the "fillColorMask" option. This option is ignored when using HTML5 canvases. The default is white, which is used
 for the inner circle, and 2nd small circle in the ring is set specifically to match the color of the ring area.
 </p>
-<p><a href="/imagemapster">Return to ImageMapster home</a></p>
 <img src="images/shapes.jpg" width="512" height="176" border="0" alt="" usemap="#shapes_Map">
 <map name="shapes_Map">
 <!-- ImageReady Slices (shapes.jpg) -->

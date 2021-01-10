@@ -2,33 +2,14 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-<title>Untitled Document</title>
+<title>USA Demo</title>
 
 
 
 
-<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.js"></script>
-
-<!--
-<script type="text/javascript" src="../../zepto/src/zepto.js"></script>
-<script type="text/javascript" src="../../zepto/src/event.js"></script>
-<script type="text/javascript" src="../../zepto/src/fx.js"></script>
-<script type="text/javascript" src="../src/zepto.js"></script>
--->
-
-<!--
+<script type="text/javascript" src="javascripts/jquery.3.5.1.min.js"></script>
 <script type="text/javascript" src="../dist/jquery.imagemapster.js"></script>
--->
-
-<script type="text/javascript" src="../src/core.js"></script>
-<script type="text/javascript" src="../src/graphics.js"></script>
-<script type="text/javascript" src="../src/mapimage.js"></script>
-<script type="text/javascript" src="../src/mapdata.js"></script>
-<script type="text/javascript" src="../src/areadata.js"></script>
-<script type="text/javascript" src="../src/areacorners.js"></script>
-<script type="text/javascript" src="../src/scale.js"></script>
-<script type="text/javascript" src="../src/tooltip.js"></script>
-
+<link rel="stylesheet" href="stylesheets/base.css">
 
 <STYLE TYPE="text/css">
 
@@ -70,7 +51,11 @@ div.input
 </head>
 
 <body>
-
+    <div class="navmenu">
+		Return to <a href="index.html">Main Menu</a>
+		<hr/>
+    </div>
+    <h2>USA Demo</h2>
 
 <div id="map_demo" style="width:920px; height:1000px;">
 	<p><b>Disclaimer:</b> This demo is old and the code is stylistically bad and probably difficult to understand. I <b>strongly</b> recommend using the online demos at <a href="http://www.outsharked.com/imagemapster">the project web site</a>
@@ -272,12 +257,12 @@ div.input
 
                 $statelist.append(item);
             }
-            $statelist.find('span.sel').unbind('click').bind('click', function (e) {
+            $statelist.find('span.sel').off('click').on('click', function (e) {
                 var key = $(this).attr('key');
                 $usamap.mapster('highlight', true, key);
             });
             // return the list to mapster so it can bind to it
-            return $statelist.find('input[type="checkbox"]').unbind('click').click(function (e) {
+            return $statelist.find('input[type="checkbox"]').off('click').on(function (e) {
                 var selected = $(this).is(':checked');
                 $usamap.mapster('set', selected, $(this).attr('name'));
                 styleCheckbox(selected, $(this));
@@ -288,40 +273,40 @@ div.input
         $statelist = $('#statelist');
         $usamap = $('#usa_image');
         function bindlinks() {
-            $('*').unbind();
-            $("#unbind_link").bind("click", function (e) {
+            $('*').off();
+            $("#unbind_link").on("click", function (e) {
                 e.preventDefault();
                 $usamap.mapster("unbind");
                 $usamap.width(720);
                 bindlinks();
             });
-            $("#rebind_link").bind("click", function (e) {
+            $("#rebind_link").on("click", function (e) {
                 e.preventDefault();
                 $usamap.mapster(default_options);
             });
 
-            $("#unbind_link_preserve").bind("click", function (e) {
+            $("#unbind_link_preserve").on("click", function (e) {
                 e.preventDefault();
                 $usamap.mapster("unbind", true);
                 bindlinks();
             });
-            $("#tooltip").bind("click", function (e) {
+            $("#tooltip").on("click", function (e) {
                 e.preventDefault();
                 var state = !$usamap.mapster('get_options').showToolTip;
                 $('#tooltip_state').text(state ? "enabled" : "disabled");
                 $usamap.mapster("set_options", { showToolTip: state });
             });
-            $("#show_selected").bind("click", function (e) {
+            $("#show_selected").on("click", function (e) {
                 e.preventDefault();
                 $('#selections').text($("#usa_image").mapster("get"));
             });
-            $("#single_select").bind("click", function (e) {
+            $("#single_select").on("click", function (e) {
                 e.preventDefault();
                 var state = !$usamap.mapster('get_options').singleSelect;
                 $('#single_select_state').text(state ? "enabled" : "disabled");
                 $usamap.mapster("set_options", { singleSelect: state });
             });
-            $("#is_deselectable").bind("click", function (e) {
+            $("#is_deselectable").on("click", function (e) {
                 e.preventDefault();
                 var state = !$usamap.mapster('get_options').isDeselectable;
                 $('#is_deselectable_state').text(state ? "enabled" : "disabled");
@@ -373,14 +358,14 @@ div.input
                 return options;
 
             }
-            $("#highlight_style, #select_style").bind("change", function (e) {
+            $("#highlight_style, #select_style").on("change", function (e) {
                 e.preventDefault();
                 $statelist.children().remove();
 
                 $usamap.mapster(getNewOptions());
 
             });
-            $("#update").click(function (e) {
+            $("#update").on("click", function (e) {
                 var newOpts = {};
                 function setOption(base, opt, value) {
                     if (value !== '' && value !== null) {

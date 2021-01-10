@@ -1,9 +1,10 @@
 <html>
 <head>
-<title>shapes</title>
+<title>Shapes Demo - IE</title>
 <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
-<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.6.1/jquery.js"></script>
+<script type="text/javascript" src="javascripts/jquery.3.5.1.min.js"></script>
 <script type="text/javascript" src="../dist/jquery.imagemapster.js"></script>
+<link rel="stylesheet" href="stylesheets/base.css">
 <script type="text/javascript">
 $(document).ready(function() {
 
@@ -67,7 +68,11 @@ $(document).ready(function() {
 </script>
 
 </head>
-<body bgcolor="#FFFFFF" leftmargin="0" topmargin="0" marginwidth="0" marginheight="0">
+<body>
+    <div class="navmenu">
+		Return to <a href="index.html">Main Menu</a>
+		<hr/>
+    </div>
 
 <h2>Shapes Demo (For Full IE Compatibility)</h2>
 <p>While masks sort of work for Internet Explorer 6-8, if you really want to create areas within areas, you can use polygons to split
@@ -78,7 +83,6 @@ but more complex situations where the inner area is not a solid color might not 
 <li>The rightmost rectangle is selected with the center circle (and has independent rendering options), but does not itself respond to mouse events.</li>
 </ul>
 </p>
-<p><a href="/imagemapster">Return to ImageMapster home</a></p>
 <img src="images/shapes.jpg" width="512" height="176" border="0" alt="" usemap="#shapes_Map">
 <map name="shapes_Map">
 <!-- ImageReady Slices (shapes.jpg) -->

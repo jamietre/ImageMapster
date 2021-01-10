@@ -2,10 +2,11 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-<title>Untitled Document</title>
+<title>Vegetables Demo</title>
 
-<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.5.2/jquery.js"></script>
+<script type="text/javascript" src="javascripts/jquery.3.5.1.min.js"></script>
 <script type="text/javascript" src="../dist/jquery.imagemapster.js"></script>
+<link rel="stylesheet" href="stylesheets/base.css">
 
 <STYLE TYPE="text/css">
 
@@ -17,11 +18,15 @@ p, div {
 </STYLE>
 </head>
 
-<body >
+<body>
+    <div class="navmenu">
+		Return to <a href="index.html">Main Menu</a>
+		<hr/>
+	</div>
+	<h2>Vegetables Demo</h2>
 
-
-<div id="veg_demo" style="width:640px; margin: auto;">
-	<p>Simple example demonstrating <b>singleClick</b> which permits only one area to be selected, and changing a tooltip on the fly.
+<div id="veg_demo" style="width:640px;">
+	<p>Simple example demonstrating <b>singleClick</b> which perm234its only one area to be selected, and changing a tooltip on the fly.
 	the dip has a tooltip, which is different if asparagus is selected. This also shows how to use area-specific options to control
 	the styling of each area individually. Some areas use different colors for selection to ensure that the highlight is visible
 	even though each area is a substantially different color.
@@ -125,4 +130,5 @@ $(document).ready(function () {
     </map>
 
 
-<body>
+</body>
+</html>

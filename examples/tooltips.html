@@ -4,16 +4,9 @@
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
 <title>Tooltip Examples</title>
 
-<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.js"></script>
-
-<script type="text/javascript" src="../src/core.js"></script>
-<script type="text/javascript" src="../src/graphics.js"></script>
-<script type="text/javascript" src="../src/mapdata.js"></script>
-<script type="text/javascript" src="../src/mapimage.js"></script>
-<script type="text/javascript" src="../src/areadata.js"></script>
-<script type="text/javascript" src="../src/areacorners.js"></script>
-<script type="text/javascript" src="../src/scale.js"></script>
-<script type="text/javascript" src="../src/tooltip.js"></script>
+<script type="text/javascript" src="javascripts/jquery.3.5.1.min.js"></script>
+<script type="text/javascript" src="../dist/jquery.imagemapster.js"></script>
+<link rel="stylesheet" href="stylesheets/base.css">
 
 <style type="text/css">
 
@@ -60,7 +53,7 @@ $(document).ready(function() {
     function state_change(data) {
         //alert(data.state+":"+data.selected);
     }
-    $('b').bind('mouseover', function() {
+    $('b').on('mouseover', function() {
         $('img').mapster('tooltip',this,"The text is: " + $(this).text());
 
     });
@@ -123,6 +116,11 @@ $(document).ready(function() {
 </head>
 
 <body>
+    <div class="navmenu">
+		Return to <a href="index.html">Main Menu</a>
+		<hr/>
+    </div>
+
     <h2>Advanced ToolTip Example</h2>
 <p>
     This shows how to use new ToolTip features in 1.2.6 to render tooltips manually, and for any area (inside or outside an imagemap)
@@ -151,4 +149,5 @@ href="#">
 <div style="top:400; left:200;max-width: 200px;border: 1px solid black; margin:10px; padding:10px;">
 This is a div. <b style="border: 1px solid red;">This is some content.</b> Thi
 </div>
+</body>
 </html>
