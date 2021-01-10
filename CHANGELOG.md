@@ -11,14 +11,15 @@
 * Migrate to modern testframework
 * Update website and host on Github
 
-## Version 1.3.0 (planned)
+## Version 2.0.0 (planned)
+* **Breaking Change** - [Issue 70](https://github.com/jamietre/ImageMapster/issues/70) Respect target attribute for AREA elements with href.
 
-* [Issue 70](https://github.com/jamietre/ImageMapster/issues/70) Respect target attribute for AREA elements with href
+## Version 1.3.0 - 2021.01.10
+
 * [Issue 273](https://github.com/jamietre/ImageMapster/issues/273) Add NPM support
 * [Issue 318](https://github.com/jamietre/ImageMapster/issues/318) Update to conform with jQuery 3.5.1 (latest release)
 * [Issue 319](https://github.com/jamietre/ImageMapster/issues/319) Fix Passive Event Listeners for touchstart/touchend
 * [Issue 320](https://github.com/jamietre/ImageMapster/issues/320) Support UMD and improve build system
-
 
 ## Version 1.2.14 - 2021.01.06
 
