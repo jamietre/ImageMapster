@@ -6,7 +6,7 @@
         u=m.utils,
         canvasMethods,
         vmlMethods;
-    
+
     /**
      * Implemenation to add each area in an AreaData object to the canvas
      * @param {Graphics} graphics The target graphics object
@@ -18,7 +18,7 @@
             md = me.map_data,
             isMask = options.isMask;
 
-        // first get area options. Then override fade for selecting, and finally merge in the 
+        // first get area options. Then override fade for selecting, and finally merge in the
         // "select" effect options.
 
         $.each(areaData.areas(), function (i,e) {
@@ -26,9 +26,9 @@
             me.addShape(e, options);
         });
 
-        // it's faster just to manipulate the passed options isMask property and restore it, than to 
+        // it's faster just to manipulate the passed options isMask property and restore it, than to
         // copy the object each time
-        
+
         options.isMask=isMask;
 
     }
@@ -51,7 +51,7 @@
      * An object associated with a particular map_data instance to manage renderin.
      * @param {MapData} map_data The MapData object bound to this instance
      */
-    
+
     m.Graphics = function (map_data) {
         //$(window).unload($.mapster.unload);
         // create graphics functions for canvas and vml browsers. usage:
@@ -67,7 +67,7 @@
         me.masks = [];
         me.map_data = map_data;
     };
-    
+
     p = m.Graphics.prototype= {
         constructor: m.Graphics,
 
@@ -76,7 +76,7 @@
          * @param  {Element} canvas The canvas element that is the target of this operation
          * @param  {string} [elementName] The name to assign to the element (VML only)
          */
-        
+
         begin: function(canvas, elementName) {
             var c = $(canvas);
 
@@ -90,14 +90,14 @@
             this.active = true;
 
         },
-        
+
         /**
-         * Add an area to be rendered to this canvas. 
+         * Add an area to be rendered to this canvas.
          * @param {MapArea} mapArea The MapArea object to render
          * @param {object} options An object containing any rendering options that should override the
          *                         defaults for the area
          */
-        
+
         addShape: function(mapArea, options) {
             var addto = options.isMask ? this.masks : this.shapes;
             addto.push({ mapArea: mapArea, options: options });
@@ -108,7 +108,7 @@
          * @param  {MapData} mapData The MapData object that will receive this new canvas
          * @return {Element} A canvas element
          */
-        
+
         createVisibleCanvas: function (mapData) {
             return $(this.createCanvasFor(mapData))
                 .addClass('mapster_el')
@@ -117,13 +117,13 @@
 
         /**
          * Add a group of shapes from an AreaData object to the canvas
-         * 
+         *
          * @param {AreaData} areaData An AreaData object (a set of area elements)
-         * @param {string} mode     The rendering mode, "select" or "highlight". This determines the target 
+         * @param {string} mode     The rendering mode, "select" or "highlight". This determines the target
          *                          canvas and which default options to use.
          * @param {striong} options  Rendering options
          */
-        
+
         addShapeGroup: function (areaData, mode,options) {
             // render includeKeys first - because they could be masks
             var me = this,
@@ -155,19 +155,19 @@
             addShapeGroupImpl(me,areaData, opts);
             me.render();
             if (opts.fade) {
-                
-                // fading requires special handling for IE. We must access the fill elements directly. The fader also has to deal with 
+
+                // fading requires special handling for IE. We must access the fill elements directly. The fader also has to deal with
                 // the "opacity" attribute (not css)
 
-                u.fader(m.hasCanvas() ? 
-                    canvas : 
+                u.fader(m.hasCanvas() ?
+                    canvas :
                     $(canvas).find('._fill').not('.mapster_mask'),
                 0,
-                m.hasCanvas() ? 
-                    1 : 
+                m.hasCanvas() ?
+                    1 :
                     opts.fillOpacity,
-                opts.fadeDuration); 
-               
+                opts.fadeDuration);
+
             }
 
         }
@@ -177,7 +177,7 @@
 
     function noop() {}
 
-  
+
     // configure remaining prototype methods for ie or canvas-supporting browser
 
     canvasMethods = {
@@ -332,28 +332,28 @@
             el_name = me.elementName ? 'name="' + me.elementName + '" ' : '';
             el_class = cssclass ? 'class="' + cssclass + '" ' : '';
 
-            t_fill = '<v:fill color="#' + options.fillColor + '" class="_fill" opacity="' + 
-                (options.fill ? 
+            t_fill = '<v:fill color="#' + options.fillColor + '" class="_fill" opacity="' +
+                (options.fill ?
                     options.fillOpacity :
-                    0) + 
-                '" /><v:stroke class="_fill" opacity="' + 
+                    0) +
+                '" /><v:stroke class="_fill" opacity="' +
                 options.strokeOpacity + '"/>';
 
 
             stroke = options.stroke ?
-                ' strokeweight=' + options.strokeWidth + ' stroked="t" strokecolor="#' + 
+                ' strokeweight=' + options.strokeWidth + ' stroked="t" strokecolor="#' +
                     options.strokeColor + '"' :
                 ' stroked="f"';
-            
-            fill = options.fill ? 
+
+            fill = options.fill ?
                 ' filled="t"' :
                 ' filled="f"';
 
             switch (mapArea.shape) {
                 case 'rect':
-                    template = '<v:rect ' + el_class + el_name + fill + stroke + 
-                        ' style="zoom:1;margin:0;padding:0;display:block;position:absolute;left:' + 
-                          c[0] + 'px;top:' + c[1]  + 'px;width:' + (c[2] - c[0]) + 
+                    template = '<v:rect ' + el_class + el_name + fill + stroke +
+                        ' style="zoom:1;margin:0;padding:0;display:block;position:absolute;left:' +
+                          c[0] + 'px;top:' + c[1]  + 'px;width:' + (c[2] - c[0]) +
                           'px;height:' + (c[3] - c[1]) + 'px;">' + t_fill + '</v:rect>';
                     break;
                 case 'poly':
@@ -398,8 +398,8 @@
         createCanvasFor: function (md) {
             var w = md.scaleInfo.width,
                 h = md.scaleInfo.height;
-            return $('<var width="' + w + '" height="' + h 
-                + '" style="zoom:1;overflow:hidden;display:block;width:' 
+            return $('<var width="' + w + '" height="' + h
+                + '" style="zoom:1;overflow:hidden;display:block;width:'
                 + w + 'px;height:' + h + 'px;"></var>')[0];
         },
 
@@ -420,7 +420,7 @@
 
     // for all methods with two implemenatations, add a function that will automatically replace itself with the correct
     // method on first invocation
-    
+
     $.each(['renderShape',
            'addAltImage',
            'render',
@@ -432,9 +432,9 @@
             p[e]=(function(method) {
                 return function() {
                     p[method] = (m.hasCanvas() ?
-                        canvasMethods[method] : 
+                        canvasMethods[method] :
                         vmlMethods[method]) || noop;
-                  
+
                     return p[method].apply(this,arguments);
                 };
             }(e));

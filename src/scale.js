@@ -1,5 +1,5 @@
 /* scale.js: resize and zoom functionality
-   requires areacorners.js, when.js
+   requires areacorners.js
 */
 
 
@@ -28,7 +28,7 @@
     };
     // Scale a set of AREAs, return old data as an array of objects
     m.utils.scaleMap = function (image, imageRaw, scale) {
-        
+
         // stunningly, jQuery width can return zero even as width does not, seems to happen only
         // with adBlock or maybe other plugins. These must interfere with onload events somehow.
 
@@ -44,21 +44,21 @@
         }
         return this.getScaleInfo(vis, scale ? raw : null);
     };
-    
+
     /**
      * Resize the image map. Only one of newWidth and newHeight should be passed to preserve scale
-     * 
+     *
      * @param  {int}   width       The new width OR an object containing named parameters matching this function sig
      * @param  {int}   height      The new height
      * @param  {int}   effectDuration Time in ms for the resize animation, or zero for no animation
      * @param  {function} callback    A function to invoke when the operation finishes
      * @return {promise}              NOT YET IMPLEMENTED
      */
-    
+
     m.MapData.prototype.resize = function (width, height, duration, callback) {
-        var p,promises,newsize,els, highlightId, ratio, 
+        var p,promises,newsize,els, highlightId, ratio,
             me = this;
-        
+
         // allow omitting duration
         callback = callback || duration;
 
@@ -77,16 +77,16 @@
         function cleanupAndNotify() {
 
             me.currentAction = '';
-            
+
             if ($.isFunction(callback)) {
                 callback();
             }
-            
+
             me.processCommandQueue();
         }
 
         // handle cleanup after the inner elements are resized
-        
+
         function finishResize() {
             sizeCanvas(me.overlay_canvas, width, height);
 
@@ -109,7 +109,7 @@
                     width: width,
                     height: height
                 },
-                { 
+                {
                     width: me.scaleInfo.realWidth,
                     height: me.scaleInfo.realHeight
                 });
@@ -126,7 +126,7 @@
 
         highlightId = me.highlightId;
 
-        
+
         if (!width) {
             ratio = height / me.scaleInfo.realHeight;
             width = Math.round(me.scaleInfo.realWidth * ratio);
@@ -164,7 +164,7 @@
 
             // though resizeMapData is not async, it needs to be finished just the same as the animations,
             // so add it to the "to do" list.
-            
+
             u.when.all(promises).then(finishResize);
             resizeMapData();
             p.resolve();
@@ -172,7 +172,7 @@
             els.css(newsize);
             resizeMapData();
             finishResize();
-            
+
         }
     };
 
@@ -207,7 +207,7 @@
     p.reset = function () {
         this.area.coords = this.coords(1).join(',');
     };
-    
+
     m.impl.resize = function (width, height, duration, callback) {
         if (!width && !height) {
             return false;

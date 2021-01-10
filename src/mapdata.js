@@ -5,17 +5,17 @@
 
 (function ($) {
 
-    var m = $.mapster, 
+    var m = $.mapster,
         u = m.utils;
-   
+
     /**
      * Set default values for MapData object properties
      * @param  {MapData} me The MapData object
      */
-    
+
     function initializeDefaults(me) {
         $.extend(me,{
-            complete: false,         // (bool)    when configuration is complete       
+            complete: false,         // (bool)    when configuration is complete
             map: null,                // ($)      the image map
             base_canvas: null,       // (canvas|var)  where selections are rendered
             overlay_canvas: null,    // (canvas|var)  where highlights are rendered
@@ -33,9 +33,9 @@
     }
 
     /**
-     * Return an array of all image-containing options from an options object; 
+     * Return an array of all image-containing options from an options object;
      * that is, containers that may have an "altImage" property
-     * 
+     *
      * @param  {object} obj     An options object
      * @return {object[]}       An array of objects
      */
@@ -46,7 +46,7 @@
     /**
      * Parse all the altImage references, adding them to the library so they can be preloaded
      * and aliased.
-     * 
+     *
      * @param  {MapData} me The MapData object on which to operate
      */
     function configureAltImages(me)
@@ -55,14 +55,14 @@
             mi = me.images;
 
         // add alt images
-        
+
         if (m.hasCanvas()) {
             // map altImage library first
-            
+
             $.each(opts.altImages || {}, function(i,e) {
                 mi.add(e,i);
             });
-            
+
             // now find everything else
 
             $.each([opts].concat(opts.areas),function(i,e) {
@@ -81,9 +81,9 @@
     }
 
     /**
-     * Queue a mouse move action based on current delay settings 
+     * Queue a mouse move action based on current delay settings
      * (helper for mouseover/mouseout handlers)
-     * 
+     *
      * @param  {MapData}    me       The MapData context
      * @param  {number}     delay    The number of milliseconds to delay the action
      * @param  {AreaData}   area     AreaData affected
@@ -91,7 +91,7 @@
      * @return {Promise}    A promise that resolves when the action is completed
      */
     function queueMouseEvent(me,delay,area, deferred) {
-        
+
         deferred = deferred || u.when.defer();
 
         function cbFinal(areaId) {
@@ -126,7 +126,7 @@
      *
      * @param  {EventData} e jQuery event data
      */
-    
+
     function mousedown(e) {
         if (!m.hasCanvas()) {
             this.blur();
@@ -136,12 +136,12 @@
 
     /**
      * Mouseover event. Handle highlight rendering and client callback on mouseover
-     * 
+     *
      * @param  {MapData} me The MapData context
      * @param  {EventData} e jQuery event data
      * @return {[type]}   [description]
      */
-    
+
     function mouseover(me,e) {
         var arData = me.getAllDataForArea(this),
             ar=arData.length ? arData[0] : null;
@@ -190,7 +190,7 @@
      * @param  {EventData} e jQuery event data
      * @return {[type]}   [description]
      */
-    
+
     function mouseout(me,e) {
         var newArea,
             ar = me.getDataForArea(this),
@@ -202,7 +202,7 @@
         }
 
         newArea=me.getDataForArea(e.relatedTarget);
-        
+
         if (newArea === ar) {
             return;
         }
@@ -224,7 +224,7 @@
         }
 
     }
-    
+
     /**
      * Clear any active tooltip or highlight
      *
@@ -232,15 +232,15 @@
      * @param  {EventData} e jQuery event data
      * @return {[type]}   [description]
      */
-    
+
     function clearEffects(me) {
         var opts = me.options;
 
         me.ensureNoHighlight();
 
-        if (opts.toolTipClose 
-            && $.inArray('area-mouseout', opts.toolTipClose) >= 0 
-            && me.activeToolTip) 
+        if (opts.toolTipClose
+            && $.inArray('area-mouseout', opts.toolTipClose) >= 0
+            && me.activeToolTip)
         {
             me.clearToolTip();
         }
@@ -253,7 +253,7 @@
      * @param  {EventData} e jQuery event data
      * @return {[type]}   [description]
      */
-    
+
     function click(me,e) {
         var selected, list, list_target, newSelectionState, canChangeState, cbResult,
             that = this,
@@ -264,7 +264,7 @@
             var areaOpts,target;
             canChangeState = (ar.isSelectable() &&
                 (ar.isDeselectable() || !ar.isSelected()));
-            
+
             if (canChangeState) {
                 newSelectionState = !ar.isSelected();
             } else {
@@ -273,7 +273,7 @@
 
             list_target = m.getBoundList(opts, ar.key);
 
-            if ($.isFunction(opts.onClick)) 
+            if ($.isFunction(opts.onClick))
             {
                 cbResult= opts.onClick.call(that,
                 {
@@ -333,29 +333,29 @@
      * @param {Element} image   an IMG element
      * @param {object} options  ImageMapster binding options
      */
-    m.MapData = function (image, options) 
+    m.MapData = function (image, options)
     {
         var me = this;
-        
-        // (Image)  main map image
-        
-        me.image = image;              
 
-        me.images = new m.MapImages(me); 
+        // (Image)  main map image
+
+        me.image = image;
+
+        me.images = new m.MapImages(me);
         me.graphics = new m.Graphics(me);
 
-        // save the initial style of the image for unbinding. This is problematic, chrome 
+        // save the initial style of the image for unbinding. This is problematic, chrome
         // duplicates styles when assigning, and cssText is apparently not universally supported.
         // Need to do something more robust to make unbinding work universally.
-        
+
         me.imgCssText = image.style.cssText || null;
 
         initializeDefaults(me);
 
         me.configureOptions(options);
-        
+
         // create context-bound event handlers from our private functions
-        
+
         me.mouseover = function(e) { mouseover.call(this,me,e); };
         me.mouseout = function(e) { mouseout.call(this,me,e); };
         me.click = function(e) { click.call(this,me,e); };
@@ -370,7 +370,7 @@
          * @param  {[type]} target      The target
          * @param  {[type]} options     The options to merge
          */
-        
+
         configureOptions: function(options) {
             this.options= u.updateProps({}, m.defaults, options);
         },
@@ -379,13 +379,13 @@
          * Ensure all images are loaded
          * @return {Promise} A promise that resolves when the images have finished loading (or fail)
          */
-    
+
         bindImages: function() {
             var me=this,
                 mi = me.images;
 
             // reset the images if this is a rebind
-            
+
             if (mi.length>2) {
                 mi.splice(2);
             } else if (mi.length===0) {
@@ -395,7 +395,7 @@
                 // will create a duplicate of the main image, we need this to get raw size info
                 mi.add(me.image.src);
             }
-            
+
             configureAltImages(me);
 
             return me.images.bind();
@@ -405,18 +405,18 @@
          * Test whether an async action is currently in progress
          * @return {Boolean} true or false indicating state
          */
-        
+
         isActive: function() {
             return !this.complete || this.currentAction;
         },
 
         /**
-         * Return an object indicating the various states. This isn't really used by 
+         * Return an object indicating the various states. This isn't really used by
          * production code.
-         * 
+         *
          * @return {object} An object with properties for various states
          */
-        
+
         state: function () {
             return {
                 complete: this.complete,
@@ -425,13 +425,13 @@
                 zoomedArea: this.zoomedArea,
                 scaleInfo: this.scaleInfo
             };
-        },   
+        },
 
         /**
          * Get a unique ID for the wrapper of this imagemapster
          * @return {string} A string that is unique to this image
          */
-        
+
         wrapId: function () {
             return 'mapster_wrap_' + this.index;
         },
@@ -444,7 +444,7 @@
          * Return a comma-separated string of all selected keys
          * @return {string} CSV of all keys that are currently selected
          */
-        
+
         getSelected: function () {
             var result = '';
             $.each(this.data, function (i,e) {
@@ -461,7 +461,7 @@
          * @param  {number} atMost  A number limiting the number of areas to be returned (typically 1 or 0 for no limit)
          * @return {MapArea[]}      Array of MapArea objects
          */
-        
+
         getAllDataForArea:function (area,atMost) {
             var i,ar, result,
                 me=this,
@@ -492,30 +492,30 @@
         getDataForKey: function (key) {
             return this.data[this._idFromKey(key)];
         },
-        
+
         /**
          * Get the primary keys associated with an area group.
          * If this is a primary key, it will be returned.
-         * 
+         *
          * @param  {string key An area key
          * @return {string} A CSV of area keys
          */
-        
+
         getKeysForGroup: function(key) {
             var ar=this.getDataForKey(key);
-            
+
             return !ar ? '':
-                ar.isPrimary ? 
+                ar.isPrimary ?
                     ar.key :
                     this.getPrimaryKeysForMapAreas(ar.areas()).join(',');
         },
-        
+
         /**
          * given an array of MapArea object, return an array of its unique primary keys
          * @param  {MapArea[]} areas The areas to analyze
          * @return {string[]} An array of unique primary keys
          */
-        
+
         getPrimaryKeysForMapAreas: function(areas)
         {
             var keys=[];
@@ -548,11 +548,11 @@
         setHighlightId: function(id) {
             this.highlightId = id;
         },
-        
+
         /**
          * Clear all active selections on this map
          */
-        
+
         clearSelections: function () {
             $.each(this.data, function (i,e) {
                 if (e.selected) {
@@ -560,31 +560,31 @@
                  }
             });
             this.removeSelectionFinish();
-            
+
         },
 
         /**
          * Set area options from an array of option data.
-         * 
+         *
          * @param {object[]} areas An array of objects containing area-specific options
          */
-        
+
         setAreaOptions: function (areas) {
             var i, area_options, ar;
             areas = areas || [];
 
             // refer by: map_data.options[map_data.data[x].area_option_id]
-            
+
             for (i = areas.length - 1; i >= 0; i--) {
                 area_options = areas[i];
                 if (area_options) {
                     ar = this.getDataForKey(area_options.key);
                     if (ar) {
                         u.updateProps(ar.options, area_options);
-                        
+
                         // TODO: will not deselect areas that were previously selected, so this only works
                         // for an initial bind.
-                        
+
                         if (u.isBool(area_options.selected)) {
                             ar.selected = area_options.selected;
                         }
@@ -611,7 +611,7 @@
         ///called when images are done loading
         initialize: function () {
             var imgCopy, base_canvas, overlay_canvas, wrap, parentId, css, i,size,
-                img,sort_func, sorted_list,  scale,  
+                img,sort_func, sorted_list,  scale,
                         me = this,
                         opts = me.options;
 
@@ -620,11 +620,11 @@
             }
 
             img = $(me.image);
-            
+
             parentId = img.parent().attr('id');
 
             // create a div wrapper only if there's not already a wrapper, otherwise, own it
-            
+
             if (parentId && parentId.length >= 12 && parentId.substring(0, 12) === "mapster_wrap") {
                 wrap = img.parent();
                 wrap.attr('id', me.wrapId());
@@ -641,14 +641,14 @@
                 }
             }
             me.wrapper = wrap;
-            
+
             // me.images[1] is the copy of the original image. It should be loaded & at its native size now so we can obtain the true
             // width & height. This is needed to scale the imagemap if not being shown at its native size. It is also needed purely
             // to finish binding in case the original image was not visible. It can be impossible in some browsers to obtain the
             // native size of a hidden image.
 
             me.scaleInfo = scale = u.scaleMap(me.images[0],me.images[1], opts.scaleMap);
-            
+
             me.base_canvas = base_canvas = me.graphics.createVisibleCanvas(me);
             me.overlay_canvas = overlay_canvas = me.graphics.createVisibleCanvas(me);
 
@@ -656,16 +656,16 @@
             imgCopy = $(me.images[1])
                 .addClass('mapster_el '+ me.images[0].className)
                 .attr({id:null, usemap: null});
-                
+
             size=u.size(me.images[0]);
-            
+
             if (size.complete) {
                 imgCopy.css({
                     width: size.width,
                     height: size.height
                 });
             }
-     
+
             me.buildDataset();
 
             // now that we have processed all the areas, set css for wrapper, scale map if needed
@@ -732,10 +732,10 @@
 
                 me.options.boundList = opts.onGetList.call(me.image, sorted_list);
             }
-            
+
             me.complete=true;
             me.processCommandQueue();
-            
+
             if (opts.onConfigured && typeof opts.onConfigured === 'function') {
                 opts.onConfigured.call(img, true);
             }
@@ -767,14 +767,14 @@
 
             // the [attribute] selector is broken on old IE with jQuery. hasVml() is a quick and dirty
             // way to test for that
-            
+
             sel = m.hasVml() ? 'area' :
-                        (default_group ? 
-                            'area[coords]' : 
+                        (default_group ?
+                            'area[coords]' :
                             'area[' + opts.mapKey + ']');
 
             areas = $(me.map).find(sel).unbind('.mapster');
-                        
+
             for (mapAreaId = 0;mapAreaId<areas.length; mapAreaId++) {
                 area_id = 0;
                 area = areas[mapAreaId];
@@ -789,7 +789,7 @@
                 if (default_group) {
                      curKey=String(mapAreaId);
                     $area.attr('data-mapster-key', curKey);
-                   
+
                 } else {
                     curKey = area.getAttribute(opts.mapKey);
                 }
@@ -847,18 +847,18 @@
 
                 if (!mapArea.nohref) {
                     $area.bind('click.mapster', me.click)
-                        .bind('mouseover.mapster, touchstart.mapster', me.mouseover)
-                        .bind('mouseout.mapster, touchend.mapster', me.mouseout)
+                        .bind('mouseover.mapster touchstart.mapster', me.mouseover)
+                        .bind('mouseout.mapster touchend.mapster', me.mouseout)
                         .bind('mousedown.mapster', me.mousedown);
-                        
-                    
-                        
+
+
+
                 }
 
-                // store an ID with each area. 
+                // store an ID with each area.
                 $area.data("mapster", mapAreaId+1);
             }
-           
+
             // TODO listenToList
             //            if (opts.listenToList && opts.nitG) {
             //                opts.nitG.bind('click.mapster', event_hooks[map_data.hooks_index].listclick_hook);
@@ -870,7 +870,7 @@
 
         },
         processCommandQueue: function() {
-            
+
             var cur,me=this;
             while (!me.currentAction && me.commands.length) {
                 cur = me.commands[0];
@@ -914,7 +914,7 @@
 
         // Compelete cleanup process for deslecting items. Called after a batch operation, or by AreaData for single
         // operations not flagged as "partial"
-        
+
         removeSelectionFinish: function () {
             var g = this.graphics;
 

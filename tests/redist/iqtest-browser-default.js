@@ -2775,8 +2775,8 @@ define(['./iqtest'], function(u,when,when_timeout, iq_asserts, buster_asserts, u
                 cbPromise: null,
                 resolver: null,
                 stopped: false,
-                passed: null
-
+                passed: null,
+                userPromises: {}
             });
 
             // resolve immediately to start the chain when the first thing is added
