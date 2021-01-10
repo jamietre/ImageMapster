@@ -148,7 +148,7 @@ module.exports = function (grunt) {
         updateConfigs: ['pkg'],
         commit: true,
         commitMessage: 'Release v%VERSION%',
-        commitFiles: ['-a'], // '-a' for all files
+        commitFiles: ['-a'], // '-a' for all tracked files
         createTag: true,
         tagName: 'v%VERSION%',
         tagMessage: 'Version %VERSION%',
@@ -184,4 +184,7 @@ module.exports = function (grunt) {
   grunt.registerTask('minor', ['preBump', 'bump-only:minor', 'postBump']);
   grunt.registerTask('major', ['preBump', 'bump-only:major', 'postBump']);
   grunt.registerTask('prerelease', ['preBump', 'bump-only:prerelease', 'postBump']);
+  grunt.registerTask('prepatch', ['preBump', 'bump-only:prepatch', 'postBump']);
+  grunt.registerTask('preminor', ['preBump', 'bump-only:preminor', 'postBump']);
+  grunt.registerTask('premajor', ['preBump', 'bump-only:premajor', 'postBump']);
 };
