@@ -1,7 +1,7 @@
 {
   "name": "imagemapster",
   "version": "1.3.0-beta.1",
-  "description": "A jQuery plugin to enhance image maps",
+  "description": "jQuery plugin that activates areas in HTML imagemaps with support for highlighting, selecting, tooltips, resizing and more",
   "main": "dist/jquery.imagemapster.min.js",
   "files": [
     "dist/**/*"
@@ -27,7 +27,11 @@
     "maps",
     "image",
     "imagemap",
-    "canvas"
+    "canvas",
+    "highlight",
+    "select",
+    "resize",
+    "tooltip"
   ],
   "author": {
     "name": "James Treworgy",
