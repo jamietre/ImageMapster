@@ -14,6 +14,9 @@
 ## Version 2.0.0 (planned)
 * **Breaking Change** - [Issue 70](https://github.com/jamietre/ImageMapster/issues/70) Respect target attribute for AREA elements with href.
 
+## Version 1.3.1 - 2021.01.10
+* Publish to NPM
+
 ## Version 1.3.0 - 2021.01.10
 
 * [Issue 273](https://github.com/jamietre/ImageMapster/issues/273) Add NPM support
