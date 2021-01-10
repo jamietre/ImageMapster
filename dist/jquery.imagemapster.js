@@ -1,39 +1,82 @@
-/* ImageMapster
-   Version: 1.2.14 (2021.01.06)
-
-Copyright (c) 2011-2021 James Treworgy
-
-http://www.outsharked.com/imagemapster
-https://github.com/jamietre/ImageMapster
-
-A jQuery plugin to enhance image maps.
-
+/*!
+* imagemapster - v1.3.0-beta.0 - 2021-01-09
+* https://github.com/jamietre/ImageMapster/
+* Copyright (c) 2011 - 2021 James Treworgy
+* License: MIT
 */
+(function (factory) {
+    if (typeof define === 'function' && define.amd) {
+        // AMD. Register as an anonymous module.
+        define(['jquery'], factory);
+    } else if (typeof module === 'object' && module.exports) {
+        // Node/CommonJS
+        module.exports = function( root, jQuery ) {
+            if ( jQuery === undefined ) {
+                // require('jQuery') returns a factory that requires window to
+                // build a jQuery instance, we normalize how we use modules
+                // that require this pattern but the window provided is a noop
+                // if it's defined (how jquery works)
+                if ( typeof window !== 'undefined' ) {
+                    jQuery = require('jquery');
+                }
+                else {
+                    jQuery = require('jquery')(root);
+                }
+            }
+            factory(jQuery);
+            return jQuery;
+        };
+    } else {
+        // Browser globals
+        factory(jQuery);
+    }
+}(function (jQuery) {
+    (function ($) {
+    // Test via a getter in the options object to see if the passive property is accessed
+    var supportsPassive = false;
+    try {
+        var opts = Object.defineProperty({}, 'passive', {
+            get: function() {
+                supportsPassive = true;
+            }
+        });
+        window.addEventListener("testPassive.mapster", function() {}, opts);
+        window.removeEventListener("testPassive.mapster", function() {}, opts);
+    } catch (e) {}
 
-;
+    if (supportsPassive) {
+        // In order to not interrupt scrolling on touch devices
+        // we commit to not calling preventDefault from within listeners
+        // There is a plan to handle this natively in jQuery 4.0 but for
+        // now we are on our own.
+        // TODO: Migrate to jQuery 4.0 approach if/when released
+        // https://www.chromestatus.com/feature/5745543795965952
+        // https://github.com/WICG/EventListenerOptions/blob/gh-pages/explainer.md
+        // https://github.com/jquery/jquery/issues/2871#issuecomment-175175180
+        // https://jsbin.com/bupesajoza/edit?html,js,output
+        var setupListener = function(ns, type, listener) {
+            if (ns.includes("noPreventDefault")) {
+                this.addEventListener(type, listener, { passive: true });
+            } else {
+                console.warn("non-passive events - listener not added");
+                return false;
+            }
+        };
 
-/// LICENSE (MIT License)
-///
-/// Copyright (c) 2011-2021 James Treworgy
-///
-/// Permission is hereby granted, free of charge, to any person obtaining
-/// a copy of this software and associated documentation files (the
-/// "Software"), to deal in the Software without restriction, including
-/// without limitation the rights to use, copy, modify, merge, publish,
-/// distribute, sublicense, and/or sell copies of the Software, and to
-/// permit persons to whom the Software is furnished to do so, subject to
-/// the following conditions:
-///
-/// The above copyright notice and this permission notice shall be
-/// included in all copies or substantial portions of the Software.
-///
-/// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
-/// EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-/// MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
-/// NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
-/// LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
-/// OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
-/// WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+        // special events for noPreventDefault
+        $.event.special.touchstart = {
+            setup: function (_, ns, listener) {
+                return setupListener(ns, "touchstart", listener);
+            }
+        };
+        $.event.special.touchend = {
+            setup: function (_, ns, listener) {
+                return setupListener(ns, "touchend", listener);
+            }
+        };
+    }
+}(jQuery));
+
 /* ImageMapster core */
 
 /*jslint laxbreak: true, evil: true, unparam: true */
@@ -42,10 +85,12 @@ A jQuery plugin to enhance image maps.
 
 
 (function ($) {
+    var mapster_version = '1.3.0-beta.0';
+
     // all public functions in $.mapster.impl are methods
     $.fn.mapster = function (method) {
         var m = $.mapster.impl;
-        if ($.isFunction(m[method])) {
+        if ($.mapster.utils.isFunction(m[method])) {
             return m[method].apply(this, Array.prototype.slice.call(arguments, 1));
         } else if (typeof method === 'object' || !method) {
             return m.bind.apply(this, arguments);
@@ -55,7 +100,7 @@ A jQuery plugin to enhance image maps.
     };
 
     $.mapster = {
-        version: "1.2.14",
+        version: mapster_version,
         render_defaults: {
             isSelectable: true,
             isDeselectable: true,
@@ -120,7 +165,6 @@ A jQuery plugin to enhance image maps.
             border: 0
         },
         hasCanvas: null,
-        isTouch: null,
         map_cache: [],
         hooks: {},
         addHook: function(name,callback) {
@@ -181,7 +225,9 @@ A jQuery plugin to enhance image maps.
             split: function (text,cb) {
                 var i,el, arr = text.split(',');
                 for (i = 0; i < arr.length; i++) {
-                    el = $.trim(arr[i]);
+                    // backwards compat for $.trim which would return empty string on null
+                    // which theoertically should not happen here
+                    el = arr[i] ? arr[i].trim() : '';
                     if (el==='') {
                         arr.splice(i,1);
                     } else {
@@ -273,10 +319,13 @@ A jQuery plugin to enhance image maps.
             isUndef: function(obj) {
                 return typeof obj === "undefined";
             },
+            isFunction: function (obj) {
+                return typeof obj === 'function';
+            },
             // evaluates "obj", if function, calls it with args
             // (todo - update this to handle variable lenght/more than one arg)
             ifFunction: function (obj, that, args) {
-                if ($.isFunction(obj)) {
+                if (this.isFunction(obj)) {
                     obj.call(that, args);
                 }
             },
@@ -381,7 +430,7 @@ A jQuery plugin to enhance image maps.
                     }
                 }
                 if (opts.listSelectedAttribute) {
-                    $(e).attr(opts.listSelectedAttribute, selected);
+                    $(e).prop(opts.listSelectedAttribute, selected);
                 }
             });
         },
@@ -434,7 +483,7 @@ A jQuery plugin to enhance image maps.
             this.impl = null;
             $.fn.mapster = null;
             $.mapster = null;
-            $('*').unbind();
+            $('*').off();
         }
     };
 
@@ -1024,7 +1073,7 @@ A jQuery plugin to enhance image maps.
                     me.unbind.apply(img);
                     if (!md.complete) {
                         // will be queued
-                        img.bind();
+                        img.on();
                         return true;
                     }
                     md = null;
@@ -1090,8 +1139,6 @@ A jQuery plugin to enhance image maps.
                 return m.hasVml.value;
             };
 
-            m.isTouch = !!document.documentElement.ontouchstart;
-
             $.extend(m.defaults, m.render_defaults,m.shared_defaults);
             $.extend(m.area_defaults, m.render_defaults,m.shared_defaults);
 
@@ -1106,6 +1153,7 @@ A jQuery plugin to enhance image maps.
 
 
 } (jQuery));
+
 /* graphics.js
    Graphics object handles all rendering.
 */
@@ -1550,6 +1598,7 @@ A jQuery plugin to enhance image maps.
 
 
 } (jQuery));
+
 /* mapimage.js
    the MapImage object, repesents an instance of a single bound imagemap
 */
@@ -1685,10 +1734,10 @@ A jQuery plugin to enhance image maps.
                 index=me._add(image[0]);
 
                 image
-                    .bind('load',function(e) {
+                    .on('load',function(e) {
                         me.imageLoaded.call(me,e);
                     })
-                    .bind('error',function(e) {
+                    .on('error',function(e) {
                         me.imageLoadError.call(me,e);
                     });
 
@@ -1827,6 +1876,7 @@ A jQuery plugin to enhance image maps.
         }
     };
     } (jQuery));
+
 /* mapdata.js
    the MapData object, repesents an instance of a single bound imagemap
 */
@@ -2001,7 +2051,7 @@ A jQuery plugin to enhance image maps.
 
         me.currentAreaId = ar.areaId;
 
-        if ($.isFunction(me.options.onMouseover)) {
+        if (u.isFunction(me.options.onMouseover)) {
             me.options.onMouseover.call(this,
             {
                 e: e,
@@ -2042,7 +2092,7 @@ A jQuery plugin to enhance image maps.
         queueMouseEvent(me,opts.mouseoutDelay,ar)
             .then(me.clearEffects);
 
-        if ($.isFunction(opts.onMouseout)) {
+        if (u.isFunction(opts.onMouseout)) {
             opts.onMouseout.call(this,
             {
                 e: e,
@@ -2102,7 +2152,7 @@ A jQuery plugin to enhance image maps.
 
             list_target = m.getBoundList(opts, ar.key);
 
-            if ($.isFunction(opts.onClick))
+            if (u.isFunction(opts.onClick))
             {
                 cbResult= opts.onClick.call(that,
                 {
@@ -2602,7 +2652,7 @@ A jQuery plugin to enhance image maps.
                             'area[coords]' :
                             'area[' + opts.mapKey + ']');
 
-            areas = $(me.map).find(sel).unbind('.mapster');
+            areas = $(me.map).find(sel).off('.mapster');
 
             for (mapAreaId = 0;mapAreaId<areas.length; mapAreaId++) {
                 area_id = 0;
@@ -2675,10 +2725,10 @@ A jQuery plugin to enhance image maps.
                 }
 
                 if (!mapArea.nohref) {
-                    $area.bind('click.mapster', me.click)
-                        .bind('mouseover.mapster touchstart.mapster', me.mouseover)
-                        .bind('mouseout.mapster touchend.mapster', me.mouseout)
-                        .bind('mousedown.mapster', me.mousedown);
+                    $area.on('click.mapster', me.click)
+                        .on('mouseover.mapster touchstart.mapster.noPreventDefault', me.mouseover)
+                        .on('mouseout.mapster touchend.mapster.noPreventDefault', me.mouseout)
+                        .on('mousedown.mapster', me.mousedown);
 
 
 
@@ -2709,9 +2759,9 @@ A jQuery plugin to enhance image maps.
         },
         clearEvents: function () {
             $(this.map).find('area')
-                        .unbind('.mapster');
+                        .off('.mapster');
             $(this.images)
-                        .unbind('.mapster');
+                        .off('.mapster');
         },
         _clearCanvases: function (preserveState) {
             // remove the canvas elements created
@@ -2753,6 +2803,7 @@ A jQuery plugin to enhance image maps.
         }
     };
 } (jQuery));
+
 /* areadata.js
    AreaData and MapArea protoypes
 */
@@ -2984,7 +3035,7 @@ A jQuery plugin to enhance image maps.
 
         // Fire callback on area state change
         changeState: function (state_type, state) {
-            if ($.isFunction(this.owner.options.onStateChange)) {
+            if (u.isFunction(this.owner.options.onStateChange)) {
                 this.owner.options.onStateChange.call(this.owner.image,
                     {
                         key: this.key,
@@ -3051,6 +3102,7 @@ A jQuery plugin to enhance image maps.
         }
     };
 } (jQuery));
+
 /* areacorners.js
    determine the best place to put a box of dimensions (width,height) given a circle, rect or poly
 */
@@ -3201,6 +3253,7 @@ A jQuery plugin to enhance image maps.
         return nest;
     };
 } (jQuery));
+
 /* scale.js: resize and zoom functionality
    requires areacorners.js
 */
@@ -3281,7 +3334,7 @@ A jQuery plugin to enhance image maps.
 
             me.currentAction = '';
 
-            if ($.isFunction(callback)) {
+            if (u.isFunction(callback)) {
                 callback();
             }
 
@@ -3527,6 +3580,7 @@ A jQuery plugin to enhance image maps.
     };
     */
 } (jQuery));
+
 /* tooltip.js - tooltip functionality
    requires areacorners.js
 */
@@ -3669,10 +3723,10 @@ A jQuery plugin to enhance image maps.
         var event_name = event + '.mapster-tooltip';
 
         if ($.inArray(bindOption, options) >= 0) {
-            target.unbind(event_name)
-                .bind(event_name, function (e) {
+            target.off(event_name)
+                .on(event_name, function (e) {
                     if (!beforeClose || beforeClose.call(this,e)) {
-                        target.unbind('.mapster-tooltip');
+                        target.off('.mapster-tooltip');
                         if (onClose) {
                             onClose.call(this);
                         }
@@ -3929,3 +3983,5 @@ A jQuery plugin to enhance image maps.
     )).go();
     };
 } (jQuery));
+
+}));
