@@ -1,0 +1,57 @@
+{
+  "name": "imagemapster",
+  "version": "1.2.14",
+  "description": "A jQuery plugin to enhance image maps",
+  "main": "dist/jquery.imagemapster.min.js",
+  "files": [
+    "dist/**/*"
+  ],
+  "scripts": {
+    "build": "grunt build",
+    "fullbuild": "grunt fullbuild",
+    "debug": "grunt debug",
+    "test": "grunt test",
+    "example": "grunt example"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jamietre/ImageMapster.git"
+  },
+  "keywords": [
+    "jquery",
+    "imagemapster",
+    "activate",
+    "area",
+    "html",
+    "plugin",
+    "maps",
+    "image",
+    "imagemap",
+    "canvas"
+  ],
+  "author": {
+    "name": "James Treworgy",
+    "url": "http://www.outsharked.com/imagemapster/default.aspx?about.html",
+    "email": "jamie@outsharked.com"
+  },
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/jamietre/ImageMapster/issues"
+  },
+  "homepage": "https://github.com/jamietre/ImageMapster/",
+  "peerDependencies": {
+    "jquery": ">=1.7.0"
+  },
+  "devDependencies": {
+    "grunt": "^1.3.0",
+    "grunt-bump": "^0.8.0",
+    "grunt-contrib-clean": "^2.0.0",
+    "grunt-contrib-concat": "^1.0.1",
+    "grunt-contrib-connect": "^3.0.0",
+    "grunt-contrib-uglify": "^5.0.0",
+    "grunt-contrib-watch": "^1.1.0",
+    "grunt-docco": "^0.5.0",
+    "grunt-umd": "^3.0.0",
+    "jit-grunt": "^0.10.0"
+  }
+}

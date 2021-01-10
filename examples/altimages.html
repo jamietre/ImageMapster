@@ -1,17 +1,10 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
-   <script type="text/javascript" src="//ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
-   <script type="text/javascript" src="../src/jqueryextensions.js"></script>   
-   <script type="text/javascript" src="../src/core.js"></script>
-   <script type="text/javascript" src="../src/graphics.js"></script>
-   <script type="text/javascript" src="../src/mapimage.js"></script>
-   <script type="text/javascript" src="../src/mapdata.js"></script>
-   <script type="text/javascript" src="../src/areadata.js"></script>
-   <script type="text/javascript" src="../src/areacorners.js"></script>
-   <script type="text/javascript" src="../src/scale.js"></script>
-   <script type="text/javascript" src="../src/tooltip.js"></script>
-
+   <title>AltImages Demo</title>
+   <script type="text/javascript" src="javascripts/jquery.3.5.1.min.js"></script>
+   <script type="text/javascript" src="../dist/jquery.imagemapster.js"></script>
+   <link rel="stylesheet" href="stylesheets/base.css">
     <script type="text/javascript">
 $(document).ready(function() {
     var img = $('img');
@@ -60,7 +53,14 @@ $(document).ready(function() {
 </script>
 </head>    
 <body>
-    <a id="az-test" href="#">click to bind az with altimage2</a>
+    <div class="navmenu">
+		Return to <a href="index.html">Main Menu</a>
+		<hr/>
+    </div>
+    <h2>AltImages Demo</h2>
+    <p>
+        <a id="az-test" href="#">click to bind az with altimage</a>
+    </p>
 <img src="../examples/images/usa_map_720.png" 
 usemap="#usa" style="width:600px;height:371px;">
 <map id="usa_image_map" name="usa">

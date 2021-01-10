@@ -12,4 +12,6 @@ src/*.min.js
 *.suo
 *.bat
 tests/*.min.js
-
+node_modules/
+build/
+.vscode/

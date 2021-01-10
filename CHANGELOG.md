@@ -5,17 +5,20 @@
 * Return promises from asynchronous events rather than requiring callbacks like "onConfigured"
 * Return a non-jQuery object exposing the imagemapster API to simplify coding against it
 * Detect input device actively to determine when highlight effect should be enabled
-* Rewrite in Typescript
+* Rewrite in ES6/Typescript
+* Update to modern build system (e.g. rollup/weback/etc.)
 * Create React component
 * Migrate to modern testframework
 * Update website and host on Github
 
-## Version 2.0.0 (planned)
-* Update to conform with jQuery 3.5.1 (latest release)
-* Add NPM support
-* Improve build system
-* Improve _target for AREA elements with href
-* Fix Passive Event Listeners for touchstart/touchend
+## Version 1.3.0 (planned)
+
+* [Issue 70](https://github.com/jamietre/ImageMapster/issues/70) Respect target attribute for AREA elements with href
+* [Issue 273](https://github.com/jamietre/ImageMapster/issues/273) Add NPM support
+* [Issue 318](https://github.com/jamietre/ImageMapster/issues/318) Update to conform with jQuery 3.5.1 (latest release)
+* [Issue 319](https://github.com/jamietre/ImageMapster/issues/319) Fix Passive Event Listeners for touchstart/touchend
+* [Issue 320](https://github.com/jamietre/ImageMapster/issues/320) Support UMD and improve build system
+
 
 ## Version 1.2.14 - 2021.01.06
 

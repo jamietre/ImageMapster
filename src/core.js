@@ -6,6 +6,8 @@
 
 
 (function ($) {
+    var mapster_version = '<%= pkg.version %>';
+
     // all public functions in $.mapster.impl are methods
     $.fn.mapster = function (method) {
         var m = $.mapster.impl;
@@ -19,7 +21,7 @@
     };
 
     $.mapster = {
-        version: "1.2.14",
+        version: mapster_version,
         render_defaults: {
             isSelectable: true,
             isDeselectable: true,

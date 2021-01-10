@@ -1,18 +1,18 @@
-###**ImageMapster:** A Jquery Plugin to make image maps useful. 
+# ImageMapster: A jQuery Plugin to make image maps useful
 
 ImageMapster activates the areas in HTML imagemaps so you can highlight and select them. It has lots of other features for manual control, tooltips, resizing, and more. It is designed to be compatible with every common platform, and is tested with Internet Explorer 6-10, Firefox 3.0+, Safari, Opera, and Chrome. It works on mobile devices and doesn't use Flash.
 
-### Release Information
+## Release Information
 
-See the [change log](https://github.com/jamietre/ImageMapster/blob/master/CHANGELOG.md) for details on the current release.
+See the [change log](https://github.com/jamietre/ImageMapster/blob/master/CHANGELOG.md) for details on the release history and roadmap.
 
-Read the [release notes](http://blog.outsharked.com/2012/06/imagemapster-125-released.html) for 1.2.5, the last significant update. 
+Read the [release notes](http://blog.outsharked.com/2012/06/imagemapster-125-released.html) for 1.2.5, the last significant feature update. 
 
-### Find out More
+## Find out More
 
 There are lots of examples and documentation on the [ImageMapster web site.](http://www.outsharked.com/imagemapster)
 
-You can find the [source code on GitHub.](https://github.com/jamietre/ImageMapster) If you have a problem, please file a bug report there!
+You can find the [source code on GitHub.](https://github.com/jamietre/ImageMapster). If you have a problem, please file a bug report there!
 
 <b>Questions?</b>
 
@@ -27,11 +27,28 @@ You can find the [source code on GitHub.](https://github.com/jamietre/ImageMapst
 - Still can't figure it out? [email me directly](mailto:alien@outsharked.com) if you still need help. I will respond as time permits, but I will always respond.
 
 
+## Getting Started
+
+### Installation
+
+#### NPM
+This package can be installed via NPM:
+
+```sh
+npm install jquery imagemapster --save
+```
+
+#### Browser
+Download the latest version of ImageMapster from the [Releases](https://github.com/jamietre/ImageMapster/releases) page and include in your webpage:
+
+```js
+<script language="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script language="text/javascript" src="jquery.imagemapster.min.js"></script>
+```
+
 ### Usage
 
-----
-
-Active all image maps on the page with default options: on mouseover areas are highlighted with a gray fill with no border, and clicking an area causes it to become selected.
+Activate all image maps on the page with default options: on mouseover areas are highlighted with a gray fill with no border, and clicking an area causes it to become selected.
 
     $('img').mapster();
 
@@ -44,11 +61,9 @@ Activate image maps with some specific options.
     });
 
 
-### Manual Control
+#### Methods
 
-----
-
-There are lots of ways to manipulate the imagemap from Javascript. Here area a few; see the project web site for complete documentation.
+There are lots of ways to manipulate the imagemap from Javascript. Here area a few, see the [ImageMapster web site](http://www.outsharked.com/imagemapster) for complete documentation.
 
 **select**: Cause an area to become "selected"
 
@@ -102,44 +117,55 @@ Groups created this way are *independent* of the primary group. If you select "n
 To simply indentify a set of areas to turn on or off, but not treat them as a logical group, you can use CSS classes and select areas directly, or use the <code>keys</code> option to identify the primary keys associated with a group (see documentation).
 
 
-----
-### Options
+#### Options
 
-Please see github repository for complete documentation.
+Please see the [ImageMapster web site](http://www.outsharked.com/imagemapster) for complete documentation.
 
-### Zepto Compatibility
+## Zepto Compatibility
 
 Newer versions of Zepto don't seem to work any more (as of 1.2.5). I didn't want this to hold up the ever-delayed release even further so I didn't figure out why. 
 
 In theory it should work; you need to use the "jquery.imagemapster.zepto.js" build. This patches a few holes in Zepto that ImageMapster needs. It is safe to use the zepto version with jQuery.
 
-### Build instructions
+To generate a Zepto build of ImageMapster:
 
-The source code is broken into several modules to make management easier and to make it possible to create feature-targeted builds. A rakefile is included that creates and minifies the two release builds (with and without Zepto support):
+1. Clone the repository
+2. Install NPM dependencies - `npm install`
+3. Generate a full build - `npm run fullbuild`
 
-`rake`
 
-### Code use license.
+## Examples
 
-LICENSE (MIT License)
+ImageMapster includes several examples.  To view the examples:
 
-Copyright (c) 2011-2021 James Treworgy
- 
-Permission is hereby granted, free of charge, to any person obtaining
-a copy of this software and associated documentation files (the
-"Software"), to deal in the Software without restriction, including
-without limitation the rights to use, copy, modify, merge, publish,
-distribute, sublicense, and/or sell copies of the Software, and to
-permit persons to whom the Software is furnished to do so, subject to
-the following conditions:
- 
-The above copyright notice and this permission notice shall be
-included in all copies or substantial portions of the Software.
+1. Clone the repo
+2. Install NPM dependencies - `npm install`
+3. Open [index.html](examples/index.html) directly from your file system in a browser
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
-EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
-NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
-LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
-OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
-WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+## Development
+
+### Build
+
+The source code is broken into several modules to make management easier and to make it possible to create feature-targeted builds. ImageMapster is built using grunt and can be invoked as follows:
+
+1. Clone the repo
+2. Install NPM dependencies - `npm install`
+3. Install [Grunt Cli](https://gruntjs.com/getting-started) - `npm install -g grunt-cli`
+4. Generate a Build:
+    - Release Build (compressed/uncompressed/sourcemap for jQuery) - `grunt build`
+    - Full Release Build (compressed/uncompressed/sourcemap for jQuery & Zepto) - `grunt fullbuild`
+    - jQuery Dev Build (uncompressed only) - `grunt jquery`
+    - Zepto Dev Build (uncompressed only) - `grunt zepto`
+
+
+### Debug
+
+1. Clone the repo
+2. Install NPM dependencies - `npm install`
+3. Install [Grunt Cli](https://gruntjs.com/getting-started) - `npm install -g grunt-cli`
+4. Run the debug task - `grunt debug`
+
+## License
+
+Copyright &copy; 2011-21 [James Treworgy](https://github.com/jamietre).
+Licensed under the [MIT License](LICENSE.md).
