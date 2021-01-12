@@ -22,7 +22,7 @@ npm install jquery imagemapster --save
 #### Browser
 Download the latest version of ImageMapster from the [Releases](https://github.com/jamietre/ImageMapster/releases) page and include in your webpage:
 
-```js
+```html
 <script language="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
 <script language="text/javascript" src="jquery.imagemapster.min.js"></script>
 ```
@@ -118,7 +118,7 @@ To simply indentify a set of areas to turn on or off, but not treat them as a lo
 
 #### Options
 
-Please see the [ImageMapster web site](http://www.outsharked.com/imagemapster) for complete documentation.
+Please see the [ImageMapster web site](http://www.outsharked.com/imagemapster/default.aspx?docs.html) for complete documentation.
 
 ## Examples
 

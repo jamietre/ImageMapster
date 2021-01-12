@@ -28,13 +28,13 @@ Guidelines for bug reports:
 
 A good bug report shouldn't leave others needing to chase you up for more information. Please try to be as detailed as possible in your report. What is your environment? What steps will reproduce the issue? What browser(s) and OS experience the problem? Do other browsers show the bug differently? What would you expect to be the outcome? All these details will help people to fix any potential bugs.
 
-Once you have established that there is a potential issue, please use the [report a bug](https://github.com/jamietre/ImageMapster/issues/new?template=bug_report.md) issue template and supply all requested information.  If the required information is not provided, your issue will be marked with the 'needs author feedback' label and closed until there is enough information for the team to evaluate/reproduce.
+Once you have established that there is a potential issue, please use the [bug report](https://github.com/jamietre/ImageMapster/issues/new?template=bug_report.md) issue template and supply all requested information.  If the required information is not provided, your issue will be marked with the 'needs author feedback' label and closed until there is enough information for the team to evaluate/reproduce.
 
 ## Feature requests
 
 Feature requests are welcome. But take a moment to find out whether your idea fits with the scope and aims of the project.
 
-Please use the [request feature](https://github.com/jamietre/ImageMapster/issues/new?template=feature_request.md) issue template and supply all requested information.  If the required information is not provided, your issue will be marked with the 'needs author feedback' label and closed until there is enough information to evaluate your proposal.
+Please use the [feature request](https://github.com/jamietre/ImageMapster/issues/new?template=feature_request.md) issue template and supply all requested information.  If the required information is not provided, your issue will be marked with the 'needs author feedback' label and closed until there is enough information to evaluate your proposal.
 
 ## Pull requests
 

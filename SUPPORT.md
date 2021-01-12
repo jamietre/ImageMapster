@@ -4,9 +4,9 @@
 
 Have questions?  Looking for support for ImageMapster?
 
-- There are lots of examples and documentation on the [ImageMapster web site.](http://www.outsharked.com/imagemapster).
+- There are lots of examples and documentation on the [ImageMapster web site](http://www.outsharked.com/imagemapster).
 
-- I write about ImageMapster on my blog from time to time. See [posts about imagemapster.](http://blog.outsharked.com/search/label/imagemapster)
+- I write about ImageMapster on my blog from time to time. See [posts about imagemapster](http://blog.outsharked.com/search/label/imagemapster).
 
 - Take a look at [ImageMapster questions on StackOverflow](http://stackoverflow.com/search?q=imagemapster); there are quite a few. Maybe someone's asked the same question already.
 
@@ -14,4 +14,6 @@ Have questions?  Looking for support for ImageMapster?
 
 - You can also check the [feedback](http://www.outsharked.com/imagemapster/default.aspx?feedback.html) page on the project web site. 
 
-- You can find the [source code on GitHub.](https://github.com/jamietre/ImageMapster). If you have a problem, please file a bug report there!
+- You can review the [source code on GitHub](https://github.com/jamietre/ImageMapster). 
+
+If you identify a bug, please file a [bug report](https://github.com/jamietre/ImageMapster/issues/new?template=bug_report.md) and if you'd like to see a new feature, please file a [feature request](https://github.com/jamietre/ImageMapster/issues/new?template=feature_request.md)!
