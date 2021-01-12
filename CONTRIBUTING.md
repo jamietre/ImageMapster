@@ -44,7 +44,7 @@ Please use the [pull request](https://github.com/jamietre/ImageMapster/pulls/new
 
 **Please ask first** before embarking on any significant pull request (e.g. implementing features or refactoring code), otherwise you risk spending a lot of time working on something that the project's maintainers might not want to merge into the project.
 
-In lieu of a formal style-guide, take care to maintain the existing coding style. Add unit tests for any new or changed functionality. If the type of unit test required to support your pull request is not supported by the current test framework (iqTest), please add an example covering the functionality.  Please make sure your changes build by running `grunt build` as described in the [development section](README.md#development) of the [Readme](README).
+In lieu of a formal style-guide, take care to maintain the existing coding style. Add unit tests for any new or changed functionality. If the type of unit test required to support your pull request is not supported by the current test framework (iqTest), please add an example covering the functionality.  Please make sure your changes build by running `grunt build` as described in the [development section](README.md#development) of the [Readme](README.md).
 
 ## License
 
