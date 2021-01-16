@@ -1,5 +1,12 @@
 # ImageMapster: A jQuery Plugin to make image maps useful
 
+[![license](https://img.shields.io/github/license/jamietre/ImageMapster)](https://github.com/jamietre/ImageMapster/blob/master/LICENSE)
+[![gh stable](https://img.shields.io/github/v/release/jamietre/imagemapster?sort=semver&label=stable)](https://GitHub.com/jamietre/ImageMapster/releases/)
+[![gh latest](https://img.shields.io/github/v/release/jamietre/imagemapster?include_prereleases&sort=semver&label=latest)](https://GitHub.com/jamietre/ImageMapster/releases/)
+[![npm downloads](https://img.shields.io/npm/dm/imagemapster?label=npm)](https://www.npmjs.com/package/imagemapster)
+[![jsDelivr downloads](https://data.jsdelivr.com/v1/package/npm/imagemapster/badge?style=rounded)](https://www.jsdelivr.com/package/npm/imagemapster)
+[![cdnjs version](https://img.shields.io/cdnjs/v/imagemapster.svg?color=orange)](https://cdnjs.com/libraries/imagemapster)
+
 ImageMapster activates the areas in HTML imagemaps so you can highlight and select them. It has lots of other features for manual control, tooltips, resizing, and more. It is designed to be compatible with every common platform, and is tested with Internet Explorer 6-10, Firefox 3.0+, Safari, Opera, and Chrome. It works on mobile devices and doesn't use Flash.
 
 ## Release Information
@@ -20,12 +27,18 @@ npm install jquery imagemapster --save
 ```
 
 #### Browser
+
 Download the latest version of ImageMapster from the [Releases](https://github.com/jamietre/ImageMapster/releases) page and include in your webpage:
 
 ```html
 <script language="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
 <script language="text/javascript" src="jquery.imagemapster.min.js"></script>
 ```
+
+Alternatively, you can include ImageMapster from one of the following CDNs:
+
+1. [jsDelivr](https://www.jsdelivr.com/package/npm/imagemapster) - https://www.jsdelivr.com/package/npm/imagemapster
+2. [cdnjs](https://cdnjs.com/libraries/imagemapster) - https://cdnjs.com/libraries/imagemapster
 
 ### Usage
 
