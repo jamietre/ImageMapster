@@ -14,6 +14,9 @@
 ## Version 2.0.0 (planned)
 * **Breaking Change** - [Issue 70](https://github.com/jamietre/ImageMapster/issues/70) Respect target attribute for AREA elements with href.
 
+## Version 1.3.2 (planned)
+* [Issue 328](https://github.com/jamietre/ImageMapster/issues/328) Fix tracking internal map_cache on unbind
+
 ## Version 1.3.1 - 2021.01.10
 * Publish to NPM
 
