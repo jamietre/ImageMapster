@@ -521,7 +521,7 @@
         },
         removeMap = function (map_data) {
             m.map_cache.splice(map_data.index, 1);
-            for (var i = m.map_cache.length - 1; i >= this.index; i--) {
+            for (var i = m.map_cache.length - 1; i >= map_data.index; i--) {
                 m.map_cache[i].index--;
             }
         };
