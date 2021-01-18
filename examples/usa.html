@@ -73,7 +73,12 @@ div.input
 	<div style="clear:both;"></div>
 	<b>Using This Demonstration</b>
 	<ul><li>Change rendering options for highlight or select and click "update" to cause them to take effect.</li>
-	<li>If you change the "Highlight Fill" or "Selection Fill" option, the map and all other options will be reset. (As of version 1.2.4.043 the fill type can't be changed after the map is bound.)</li>
+    <li>If you change the "Highlight Fill" or "Selection Fill" option, the map and all other options will be reset. (As of version 1.2.4.043 the fill type can't be changed after the map is bound.)</li>
+    <li>Click a State label next to the checkbox in the list on the right to highlight the State.</li>
+    <li>Washington has a staticState === true meaning it is always selected</li>
+    <li>Oregon has a staticState === false meaning it is not selectable via mouse but can be selected programmatically via the list on right.</li>
+    <li>Alaska is marked selectable === false meaning it cannot be un/selected via mouse but can be selected programmatically via list on right.</li>
+    <li>Maine is marked isSelected === true meaning it is selected on initial load but both mouse & programmatic access can alter its state.</li>    
 	</ul>
        <p>Choose the style in which highlights will be rendered. For fill, "normal" uses solid color fills. The other options use an alternate image as the source of the fill.
        "Alternate image" requires HTML5 canvas support. In browsers that do not support it, typically Internet Explorer &lt; 9, it will always look the same as "normal."</p>
@@ -259,10 +264,10 @@ div.input
             }
             $statelist.find('span.sel').off('click').on('click', function (e) {
                 var key = $(this).attr('key');
-                $usamap.mapster('highlight', true, key);
+                $usamap.mapster('highlight', key);
             });
             // return the list to mapster so it can bind to it
-            return $statelist.find('input[type="checkbox"]').off('click').on(function (e) {
+            return $statelist.find('input[type="checkbox"]').off('click').on('click', function (e) {
                 var selected = $(this).is(':checked');
                 $usamap.mapster('set', selected, $(this).attr('name'));
                 styleCheckbox(selected, $(this));

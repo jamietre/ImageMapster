@@ -244,6 +244,7 @@
 
         highlight: function (options) {
             var o = this.owner;
+            o.ensureNoHighlight();
             if (this.effectiveOptions().highlight) {
                 o.graphics.addShapeGroup(this, "highlight",options);
             }

@@ -1,5 +1,5 @@
 /*!
-* imagemapster - v1.3.2-beta.0 - 2021-01-17
+* imagemapster - v1.3.2-beta.0 - 2021-01-18
 * https://github.com/jamietre/ImageMapster/
 * Copyright (c) 2011 - 2021 James Treworgy
 * License: MIT
@@ -3050,6 +3050,7 @@
 
         highlight: function (options) {
             var o = this.owner;
+            o.ensureNoHighlight();
             if (this.effectiveOptions().highlight) {
                 o.graphics.addShapeGroup(this, "highlight",options);
             }
