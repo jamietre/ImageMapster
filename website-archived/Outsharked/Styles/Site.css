@@ -1,0 +1,314 @@
+﻿/* DEFAULTS
+----------------------------------------------------------*/
+
+body   
+{
+    background: #FFFFFF;
+    font-size: .80em;
+    font-family: "Helvetica Neue", "Lucida Grande", "Segoe UI", Arial, Helvetica, Verdana, sans-serif;
+    margin: 0px;
+    padding: 0px;
+    color: #696969;
+
+}
+/* hack to target only chrome & ff with this - forces scroll bar to appear even when not needed. */
+body:nth-of-type(1) {
+    overflow-y: scroll;
+    overflow: -moz-scrollbars-vertical;
+}
+.page-head
+{
+    background: #EEEEEE;
+}
+a:link, a:visited
+{
+    color: #034af3;
+}
+
+a:hover
+{
+    color: #1d60ff;
+    text-decoration: none;
+}
+
+a:active
+{
+    color: #034af3;
+}
+
+p
+{
+    margin-bottom: 10px;
+    line-height: 1.6em;
+}
+
+
+
+.loading 
+{
+    background-image: url(../images/loading-large.gif);
+    background-position: 450px 150px;
+    background-repeat:no-repeat;
+}
+
+
+
+/* Interactive Elements */
+.logo
+{
+    width: 300px;
+    height: 204px;
+    float:left;
+    z-index: 1;
+}
+.logo a
+{
+    background-image: url(../images/shark-logo-basic-small-trans.gif);   
+    background-repeat:no-repeat;
+    padding: 0px  300px 204px 0px;
+    text-decoration: none;
+}
+.navigation
+{
+    margin-top:40px;
+    height: 140px;
+    width: 600px;
+    float:left;
+}
+.navigation ul
+{
+    list-style:  none;
+    height: 140px;
+    width: 600px;
+    float:left;  
+    padding:0;    
+    margin: 0;
+    overflow: hidden;
+}
+
+.navigation li
+{
+    display: block;    
+    float:left;
+    margin:  20px 10px 0px 0px;
+    text-align: center;
+    padding: 10px 00px 10px 00px;
+    height:140px;
+}
+.navigation div
+{
+    float:left;
+    width: 140px;
+    height: 120px;
+}
+.navigation a
+{
+    height: 100px;
+    width: 120px;
+    float: left;
+    background-repeat: no-repeat;
+    text-decoration: none;
+    padding-top: 20px;
+    font: Arial, Helvetica;
+    font-size: 20px;
+    font-weight: 500;
+    line-height: 40px;
+    color: #DDDDDD;
+
+}
+
+
+.square1 
+{
+    background-image: url(../images/square1.gif);
+}
+.square2
+{
+    background-image: url(../images/square2.gif);
+}
+.square3
+{
+    background-image: url(../images/square3.gif);
+}
+.square4
+{
+    background-image: url(../images/square4.gif);
+}
+
+
+.main-content 
+{
+    clear: both;
+    border: 0;
+    padding: 0;
+    
+    width: 100%;
+    min-height: 420px;
+    height:auto !important;
+    height:420px; 
+}
+
+
+
+/* HEADINGS   
+----------------------------------------------------------*/
+
+h1, h2, h3, h4, h5, h6
+{
+    font-size: 1.5em;
+    color: #666666;
+    font-variant: small-caps;
+    text-transform: none;
+    font-weight: 200;
+    margin-bottom: 0px;
+}
+
+h1
+{
+    font-size: 1.6em;
+    padding-bottom: 0px;
+    margin-bottom: 0px;
+}
+
+h2
+{
+    margin-top: 0px;
+    font-size: 1.5em;
+    font-weight: 600;
+}
+
+h3
+{
+    font-size: 1.2em;
+}
+
+h4
+{
+    font-size: 1.1em;
+}
+
+h5, h6
+{
+    font-size: 1em;
+}
+
+/* this rule styles <h1> and <h2> tags that are the 
+first child of the left and right table columns */
+.rightColumn > h1, .rightColumn > h2, .leftColumn > h1, .leftColumn > h2
+{
+    margin-top: 0px;
+}
+
+
+/* PRIMARY LAYOUT ELEMENTS   
+----------------------------------------------------------*/
+
+.page
+{
+    width: 960px;
+    background-color: #fff;
+    margin: 5px auto 0px auto;
+    border: 0;
+}
+
+.header
+{
+    position: relative;
+    margin: 0px;
+    padding: 0px;
+    background: #4b6c9e;
+    width: 100%;
+}
+
+.header h1
+{
+    font-weight: 700;
+    margin: 0px;
+    padding: 0px 0px 0px 20px;
+    color: #f9f9f9;
+    border: none;
+    line-height: 2em;
+    font-size: 2em;
+}
+
+.main-wrapper
+{
+    padding: 0px 20px 20px 20px;
+    margin: 12px 24px 8px 8px;
+}
+
+.leftCol
+{
+    padding: 6px 0px;
+    margin: 12px 8px 8px 8px;
+    width: 200px;
+    min-height: 200px;
+}
+
+.footer
+{
+    color: #4e5766;
+    padding: 8px 0px 0px 0px;
+    margin: 0px auto;
+    text-align: center;
+    line-height: normal;
+}
+
+
+
+/* MISC  
+----------------------------------------------------------*/
+
+.clear
+{
+    clear: both;margin:0;border:0;padding:0;
+}
+
+.title
+{
+    display: block;
+    float: left;
+    text-align: left;
+    width: auto;
+}
+
+.loginDisplay
+{
+    font-size: 1.1em;
+    display: block;
+    text-align: right;
+    padding: 10px;
+    color: White;
+}
+
+.loginDisplay a:link
+{
+    color: white;
+}
+
+.loginDisplay a:visited
+{
+    color: white;
+}
+
+.loginDisplay a:hover
+{
+    color: white;
+}
+
+.failureNotification
+{
+    font-size: 1.2em;
+    color: Red;
+}
+
+.bold
+{
+    font-weight: bold;
+}
+
+.submitButton
+{
+    text-align: right;
+    padding-right: 10px;
+}

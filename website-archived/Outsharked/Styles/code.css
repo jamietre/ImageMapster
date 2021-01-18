@@ -1,0 +1,14 @@
+﻿pre.myprettyprint
+{
+background-color: #EEEEEE;
+border: none;
+padding: 4px 8px 4px 8px;
+line-height: 1.6em;
+font-size: 12px;
+font-weight:normal;
+font-family: Consolas, Menlo, Monaco, 'Lucida Console', 'Liberation Mono', 'DejaVu Sans Mono', 'Bitstream Vera Sans Mono', 'Courier New', monospace, serif;
+}
+code
+{
+    font-size: 12px;
+}

@@ -1,0 +1,37 @@
+﻿<%@ Master Language="C#" AutoEventWireup="true" CodeBehind="Site.master.cs" Inherits="Outsharked.SiteMaster" EnableViewState="false" %>
+<%@ Register Src="~/Navigation.ascx" TagName="Navigation" TagPrefix="outs" %>
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head runat="server">
+    <title></title>
+</head>
+<body>
+    <form runat="server">
+
+    <div class="page-head" style="width:100%;height:200px;">
+        <div style="margin-left: auto; margin-right: auto; width:960px;">
+            <div class="logo fade">
+                <a id="logo_link" runat="server" altimage="~/images/shark-logo-plastic-small-trans.gif" href="http://blog.outsharked.com">&nbsp;</a>
+            </div>
+            <outs:Navigation runat="server" ID="Navbar" />
+        </div>
+    </div>
+
+    <div class="page">
+        <div class="main-wrapper" >
+            <div class="main-content">
+                <asp:ContentPlaceHolder ID="MainContent" runat="server" />
+            </div>
+        </div>
+        <div class="clear">
+        </div>
+    </div>
+    <div class="footer">
+        
+    </div>
+
+    </form>
+
+</body>
+</html>

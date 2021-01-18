@@ -1,0 +1,50 @@
+<div>
+<h1>Release Notes</h1>
+
+<p>This section details major changes to each release. For more detail see the <a href="https://github.com/jamietre/ImageMapster/commits/master">commit history</a> on github.</p>
+
+<h2>Version 1.2.5</h2>
+
+<h3>Features:</h3>
+<ul>
+<li><b>Zepto compatible:</b> ImageMapster will work with Zepto instead of jQuery using a special build to patche Zepto with a couple jQuery features that are not implemented by Zepto. This build is 
+included in the distribution. The Zepto build is completely compatible with jQuery as well and will detect when jQuery is being used. But because it adds a little bit to the size of the 
+plugin I'm keeping it as a separate build.</li>
+<li>Allow passing options to <code><a class="popup" href="docs.html#set">set</a></code> to control rendering options at run-time.</li>
+<li><code><a class="popup" href="docs.html#keys">keys</a></code> option allows accessing keys for an area, area group or key group.</li>
+<li><code><a class="popup" href="docs.html#mouseoutDelay">mouseoutDelay</a></code> option allows a time delay after the mouse exits a hotspot before the highlight is removed.</li>
+<li><code><a class="popup" href="docs.html#highlight">highlight</a></code> method allows control of highlighted area from code. 
+This is different from the existing <code><a class="popup" href="docs.html#set">set</a></code> method, which selects or deselect areas. The new feature
+mimics the effect of a mouseover, versus a click</li>
+<li>Returning <code>true</code> from an <code><a class="popup" href="docs.html#onClick">onClick</a></code> event handler will cause navigation to the area's <code>href</code> url</li>
+</ul>
+
+<h3>Bug fixes and improvements:</h3>
+
+<ul>
+<li>Rendering options can be changed on the fly without affecting areas that have already been rendered. Previously, while you could use <code><a class="popup" href="docs.html#set_options">set_options</a></code> to 
+change any rendering option to a map that had already been bound, deselecting areas would cause everything to be redrawn with the new options.</li>
+<li>Enable fade effect for IE 8 (requires applying opacity to child elements, IE8 specific problem)</li>
+<li>Improve rendering sharpness for 1 pixel strokes by adding 0.5 pixels to coordinates that fall on a pixel boundary</li>
+<li>Block UI events while resizing, would cause unpredictable behavior</li>
+<li>Detect touchscreen devices and ignore <code>mouseenter</code> events improves mobile device performance</li>
+<li>Fix flickering tooltips and areas when moving between adjacent grouped areas</li>
+<li>Substantial performance improvements with large image maps</li>
+<li>(bug) Fix tooltip positioning for <code>circle</code> and <code>rect</code> area shapes</li>
+<li>(bug) Trim results of string splits so spaces don't cause problems. Spaces between keys in a list would cause failure.</li>
+<li>(bug) Couldn't disable fill effect when using <code><a class="popup" href="docs.html#altImage">altImage</a></code></li>
+<li>(bug) Fix for mask handling in Firefox 6.0</li>
+</ul>
+
+<h3>General:</h3>
+
+<ul>
+<li><b>Method queuing:</b> All method calls are queued, and will be executed only after any pending async operations are finished (initial binding or resizing). 
+Because ImageMapster binds asynchronously (as it needs to wait for images to finish loading), and the resize method can be called with effects that take time,
+this was not safe prior to 1.2.5.</li>
+<li>Refactor code into a modular architecture</li>
+<li>Split into two separate builds (one for jQuery only, one for jQuery or Zepto)</li>
+<li>Works if Explorer Canvas (a library to make HTML5 code work with Internet Explorer) is loaded. Though Excanvas isn't needed for ImageMapster, if it was included on a page, 
+ImageMapster would fail.</li>
+</ul>
+</div>

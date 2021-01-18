@@ -1,0 +1,99 @@
+<html>
+<head>
+<title>shapes</title>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.6.1/jquery.js"></script>
+<script type="text/javascript" src="../jquery.imagemapster.js"></script>
+<script type="text/javascript">
+$(document).ready(function() {
+
+	function state_change(data) {
+		//alert(data.state+":"+data.selected);
+	}
+	$('img').mapster({
+		noHrefIsMask: false,
+		onStateChange: state_change,
+		fillColor: '0a7a0a',
+		fillOpacity: 0.7,
+		mapKey: "group",
+		strokeWidth: 2,
+		stroke:true,
+		strokeColor: 'F88017',
+		render_select: {
+			fillColor: 'adadad',
+			fillOpacity: 0.5
+
+		},
+		areas: [
+			{
+				key: 'blue-circle',
+				includeKeys: 'rectangle',
+				stroke:false
+
+			},
+			{
+				key: 'rectangle',
+				stroke: true,
+				strokeWidth: 3
+			},
+			{
+				key: 'outer-circle',
+				includeKeys: 'inner-circle-mask,outer-circle-mask',
+				stroke: true			},
+			{
+			    key: 'outer-circle-mask',
+			    isMask: true,
+			    fillColorMask: 'ff002a'
+			},
+			{
+			    key: 'inner-circle-mask',
+			    fillColorMask: 'ffffff',
+			    isMask: true
+			}
+		]
+
+	});
+
+});
+</script>
+
+</head>
+<body bgcolor="#FFFFFF" leftmargin="0" topmargin="0" marginwidth="0" marginheight="0">
+
+<h2>Shapes Demo</h2>
+<p>This demo shows some advanced features using multiple groups and exclusions.<p>
+<p><ul><li>The outer circle is selected independently from the inner circle.</li>
+<li>The inner circle area is used twice - once as an exclusion from the outer circle to create the ring effect, and again as its own
+area. This is done by specifying two different groups in its "mapKey" and then specifying options for both to create the desired effect.</li>
+<li>The small circle within the ring when highlighed is another exclusion and shows excluding multiple areas.</li>
+<li>The rightmost rectangle is selected with the center circle (and has independent rendering options), but does not itself respond to mouse events.</li>
+</ul>
+</p>
+<p>
+With Internet Explorer 6-8, masking is not possible. In this case the effect is simulated by rendering the masked area with a specific color
+that can be defined with the "fillColorMask" option. This option is ignored when using HTML5 canvases. The default is white, which is used
+for the inner circle, and 2nd small circle in the ring is set specifically to match the color of the ring area.
+</p>
+<p><a href="/imagemapster">Return to ImageMapster home</a></p>
+<img src="images/shapes.jpg" width="512" height="176" border="0" alt="" usemap="#shapes_Map">
+<map name="shapes_Map">
+<!-- ImageReady Slices (shapes.jpg) -->
+<area shape="rect" group="rectangle" alt="" coords="378,39,463,116" nohref >
+<area shape="poly" group="blue-circle" alt="" coords="286,34, 298,42, 308,54, 314,79, 307,103, 292,118, 270,125, 242,122, 227,112, 216,97, 212,73, 219,53, 227,43, 240,34, 264,29" href="#">
+<!--
+<area shape="poly" group="outer-circle" alt="" coords="100,22, 100,46, 90,47, 88,48, 82,51, 73,58, 66,68, 64,81, 65,90, 66,92, 69,98, 77,107, 85,112, 95,115, 100,115, 100,139, 93,138, 83,137, 81,136, 73,133, 71,132, 60,125, 49,113, 42,99, 39,85, 40,69, 41,67, 44,57, 51,45, 65,32, 81,25, 85,24, 91,23" href="#">
+<area shape="poly" group="outer-circle" alt="" coords="108,23, 123,26, 139,35, 151,48, 158,62, 161,76, 160,92, 159,94, 156,104, 149,116, 135,129, 125,134, 115,137, 109,138, 100,138, 100,115, 111,114, 113,113, 122,108, 132,98, 135,92, 137,83, 136,71, 135,69, 132,63, 124,54, 113,48, 109,47, 105,46, 100,46, 100,22"
+href="#">
+
+<area shape="circle" group="inner-circle" coords="101,81,36" href="#">
+-->
+<!-- concentric circles for stroke highlighting -->
+<area shape="circle" group="inner-circle,inner-circle-mask" coords="101,81,36" href="#">
+<area shape="circle" group="outer-circle-mask" coords="148,81,12" nohref >
+<area shape="circle" group="outer-circle" coords="100,81,59" href="#">
+<!-- End circles -->
+
+</map>
+
+</body>
+</html>

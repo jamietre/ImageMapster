@@ -1,0 +1,40 @@
+<div>
+<h1>Feedback</h1>
+<p>Tell me what you think, post a link to your site using ImageMapster in a cool way. If you have technical questions, <br /><a href="https://github.com/jamietre/ImageMapster/issues">github</a> is a better place to ask them.</p>
+<p>
+ My email address is on the <a class="nav" data-local="1" href="default.aspx?about.html">about</a> page.
+</p>
+
+<div id="disqus-wait" style="display:none;"><div style="float:left; background-position: center;">
+<img style="border:0; float:left; margin-top: 2px;" src="../images/disqus-logo-small.gif" >
+<img style="border:0; margin-top: 6px; float:left;" src="../images/disqus-ajax.gif" >
+&nbsp;&nbsp;&nbsp;<b>It may take a few moments for the comment dialog to appear.</b></div></div>
+
+<div id="disqus_thread">
+<script type="text/javascript">
+    var disqus_shortname = 'outsharked',
+    disqus_identifier = 'imagemapster-feedback',
+    disqus_url = 'http://www.outsharked.com/imagemapster/default.aspx?feedback.html',
+    disqus_title = 'Imagemapster Feedback';
+        
+</script>
+<script type="text/javascript" src="http://outsharked.disqus.com/embed.js" async="async"></script>
+</div>
+<script type="text/javascript">
+    var checkDisqus,checkDisqusCount=100;
+    checkDisqus = function () {
+        if ($('#disqus_thread').children().length) {
+            $('#disqus-wait').remove();
+        } else {
+            $('#disqus-wait').show();
+            if (--checkDisqusCount > 0) {
+                window.setTimeout(checkDisqus, 200);
+            }
+        }
+    }
+    // give it a half second to sort itself out
+    window.setTimeout(checkDisqus, 500);
+</script>
+  
+
+</div>

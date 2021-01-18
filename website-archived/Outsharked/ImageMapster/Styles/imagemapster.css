@@ -1,0 +1,365 @@
+body 
+{
+    padding:0;
+    margin:0;
+    border:0;
+    line-height: 1.4;
+    background-color: #FAFAFA;
+    font-family: Arial, Sans-Serif;
+}
+*:focus {
+  outline: 0;
+}
+*:-moz-any-link:focus {
+  outline: none;
+}
+a:active {
+  outline: none;
+}
+accordion-control
+{ 
+    cursor:pointer;
+}
+a.clean, a.clean:visited
+{
+    color: inherit;
+    text-decoration: none;
+}
+area 
+{
+    outline: 0;
+}
+h1 
+{
+   font-size: 16px;
+   margin-bottom: 10px;
+   padding-bottom: 4px;
+   padding-top: 6px;
+   border-bottom: 1px solid black;   
+}
+h2
+{
+    font-weight: normal;
+    font-size: 16px;
+    padding:0;
+    font-style:italic;
+    
+}
+h3 
+{
+  font-size: 16px;
+   margin-bottom: 10px;
+   padding-bottom: 4px;
+   padding-top: 0;
+   margin-top: 0;
+   border-bottom: 1px solid black;      
+}
+#site-wrapper
+{
+    font-size:14px;
+    line-height: 1.5;
+}
+
+div.nav 
+{
+    float:left;
+    width: 220px;
+    height: 1000px;
+    background-color: #888888;
+    background-image: url('../images/map-bg.jpg');
+    background-repeat: repeat-y;
+    margin-right: 20px;
+    padding-top:70px;
+}
+div.header 
+{
+    right: 0px;
+    left: 220px;
+    height: 89px;
+    width: auto;
+    position: absolute;
+    background-color: #525252;
+
+}
+div.header img
+{
+    border: 0;
+
+}
+
+
+div.content 
+{
+    position: absolute;
+    width: auto;
+    left: 220px;
+    right: 0px;
+    top: 90px;
+    float:left;
+    padding: 20px 20px 20px 20px;
+}
+div.sidebar
+{
+    float: left;
+    padding-right:  16px;
+    padding-bottom: 8px;
+    margin-right: 30px;
+    background-color: #EEEEEE;   
+}
+div.sidebar2 
+{
+    float: left;
+    width: 560px;
+    padding-right:  16px;
+    padding-bottom: 8px;
+}
+ul.feature-list
+{
+  list-style-type:none;   
+  margin:0;
+  padding: 0;
+}
+ul.feature-list li
+{
+    margin:0;
+   padding: 20px 0 12px 0;
+   clear:both; 
+}
+img.list
+{
+    clear:both;
+    float:left;
+    margin-top:4px;   
+    border: 1px solid;
+}
+
+ul.menu 
+{
+     font-family: Arial, Sans-Serif;
+     color: #1B3CE2;
+     font-size: 24px;
+     margin:0;
+     padding:0;
+
+}
+
+ul.menu li
+{
+    height: 50px;
+    list-style-type: none;
+    padding-top: 20px;
+    padding-bottom: 0px;
+}
+ul.menu li div
+{
+    padding-top: 20px;
+    padding-bottom: 20px;
+    cursor: pointer;
+    
+}
+ul.menu a
+{
+    color: inherit;
+    text-decoration: none;
+    padding-left: 20px;
+    cursor: inherit;
+}
+
+
+ul.menu li div.big 
+{
+     background-position:center left;
+     background-repeat: no-repeat;
+}
+
+ul.menu li div.selected
+{
+    background-position:center left;
+     background-repeat: no-repeat;
+     background-image: url('../images/right-triangle.gif');
+    cursor: default;
+     font-weight: bold;
+     color: #5E1317;
+}
+ul.triangle
+{
+    list-style-image: url('../images/right-triangle.gif');
+    padding: 8px 0 0 0;
+    margin: 0 0 0 36px;
+}
+ul.triangle li 
+{
+    line-height: 1.5;
+    padding: 0 0 8px 0;
+}
+.code, code
+{
+    font-family: Consolas, Menlo, Monaco, Lucida Console, Liberation Mono, DejaVu Sans Mono, Bitstream Vera Sans Mono, Courier New, monospace, serif;
+    background-color:  #F8F8F8;
+    border: 1px dotted #DDD;
+    padding: 0px 2px 0px 2px;
+    letter-spacing: -0.1em;
+}
+a.code:visited, a.code
+{
+    color: #000099;
+    text-decoration:none;
+    
+}
+pre
+{
+    background-color: #F8F8F8;
+    border: 1px solid #CCC;
+    font-size: 13px;
+    line-height: 19px;
+    overflow: auto;
+    padding: 6px 10px;
+    -moz-border-radius: 3px;
+    -webkit-border-radius: 3px;
+    border-radius: 3px;
+       font-family: Consolas, Menlo, Monaco, Lucida Console, Liberation Mono, DejaVu Sans Mono, Bitstream Vera Sans Mono, Courier New, monospace, serif;
+    display: block;
+}
+
+pre.code, pre code
+{
+    border-style: none;
+}
+.popup 
+{
+    background-repeat: no-repeat;
+    background-image: url('../images/popout_icon.gif');
+    background-position:center left;
+    padding-left: 14px;
+}
+
+.optionMap li
+{
+    padding-top: 6px;
+    padding-bottom: 6px;
+}
+
+#forkme-holder 
+{
+    position: absolute; 
+    top: 89px; 
+    right: -0;
+    z-index: 1000;
+}
+
+#latestChanges
+{
+     font-size: 14px;
+     line-height: 20px;
+}
+#latestChanges ul
+{
+     margin-bottom: 0;
+}
+
+.changes table tr {
+    background-color: #dddddd;	
+}
+.changes table tr td:first-child 
+{
+    width: 120px;
+}
+.changes table tr td
+{
+    padding: 6px;
+    margin-right:0;
+   
+}
+/* Simplemodal */
+
+.modal-loading
+{
+    background-image: url('../../images/icons/loading-large.gif');
+    background-position:center;
+    background-repeat:no-repeat;
+    border: 1px solid #CCCCCC;
+    height: 50px;
+}
+
+
+#simplemodal-overlay {background:#464646 url('../../images/overlays/7px_dark_diagonal_stripe.gif'); cursor:wait;}
+
+/* Container */
+
+#simplemodal-container 
+{
+    background-color:#ffffff; 
+    border:3px solid #000099; 
+    margin: 24px 0 0 0;
+    padding: 12px;
+    -moz-border-radius: 3px; 
+    -webkit-border-radius: 3px; 
+    border-radius: 3px;
+    -moz-box-shadow: 0 7px 18px #444; 
+    -webkit-box-shadow: 0 7px 18px #444; 
+    box-shadow: 0 7px 18px #444;
+}
+#simplemodal-container .simplemodal-wrap { background-color: #fff; padding: 0; }
+#simplemodal-container .simplemodal-data { z-index: 4200; background-color: #fff;}
+#simplemodal-container a.modalCloseImg 
+{
+    background: #fff url(../../images/icons/close-large.gif) no-repeat 5px 2px; 
+    width: 70px;
+    height: 23px;
+    border:3px solid #000099;
+    border-bottom: none;
+    display:inline;
+    z-index:-1000;
+    position:absolute;
+    top:-26px;
+    right:-3px;
+    cursor:pointer;
+    -moz-border-radius-topright: 3px;
+    -webkit-border-top-right-radius: 3px;
+    border-top-right-radius: 3px;
+    -moz-border-radius-topleft: 3px;
+    -webkit-border-top-left-radius: 3px;
+    border-top-left-radius: 3px;
+    }
+    
+/* For accordion */
+
+.active
+{
+    background-image: url('../../images/icons/down-triangle.gif');
+    background-repeat:no-repeat;
+    background-position: 0px 12px;
+    padding-left: 20px;
+}
+.inactive
+{
+    background-image: url('../../images/icons/right-triangle.gif');
+    background-repeat:no-repeat;
+    background-position: 0px 12px;
+    padding-left: 20px;
+}
+ul.accordion 
+{
+    list-style-type: none;   
+    padding:0;
+    margin:0;
+}
+ul.accordion ul
+{
+    list-style-type: disc;
+}
+ul.accordion li
+{
+    display: block;
+    clear:both;
+    padding-top: 6px;
+    padding-left: 16px;
+    margin:0;
+}
+#disqus_thread
+{
+    position: relative;
+    width: 800px;
+    z-index: 2000;
+}
+

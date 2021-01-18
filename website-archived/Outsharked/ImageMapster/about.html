@@ -1,0 +1,58 @@
+<div>
+
+<h1>About ImageMapster</h1>
+
+<p>ImageMapster started as a fork of David Lynch's <a href="https://github.com/kemayo/maphilight">MapHilight</a> in early 2011. I wanted to add the ability
+to keep areas selected. I had a lot of ideas for interesting things that could be done with image maps, so ended up adding many more features. In the months since this began,
+I pretty much rewrote it from the ground up, but a few parts of the code, most notably the core VML rendering code, still inherit directly from its MapHilight roots. </p>
+
+<p>I have put a great deal of effort into ensuring that ImageMapster will work reliably in many environments. Often, images will not be 
+finished loading when the rest of a page has finished being configured. Javascript code will usually begin running before some page images have finished loading. It is critical 
+that images be completely loaded before ImageMapster can configure itself: it needs to know their native and display sizes, make copies, and do other work.
+The software uses a number of different methods, depending on the browser, to ensure that everything is ready when it begins configuration.</p>
+<p> Additonally, ImageMapster
+will <i>queue commands</i> issued to it before configuration is complete. This means you can write post-configuration code that works against your image map without concern
+for the timing of images being loaded. Any commands that ImageMapster receives before it's done configuring will be queued, and processed in order once configuration
+is complete.
+</p>
+
+<p>ImageMapster uses HTML5 canvases to do its work in modern browsers. In older browsers (Internet Explorer &lt; 9) it uses VML to achieve similar effects.
+</p>
+
+<p>ImageMapster works in all major browsers (IE6+, Firefox 2+, Opera, Chrome, Safari) and on mobile devices.</p>
+<h1>About Me</h1>
+<div style="margin-right:80px;">
+My name is James Treworgy. I'm a sofware developer in Washington, DC. I love C# and Javascript. You can email me <a href="mailto:jamie@outsharked.com">here.</a> 
+You can find me on <a href="http://stackoverflow.com/users/480527/jamietre">StackOverflow</a>, and <a href="https://github.com/jamietre">github.</a> I have a <a href="http://blog.outsharked.com">blog</a> too.
+
+</div>
+<h1>About This Site</h1>
+<p>
+This is a prototype for a simple ajax web framework that intends to create a highly responsive experience for
+people using modern browsers, but still work fine without Javascript. This way spiders can index everything normally, and
+if for some reason a client isn't Javascript-enabled, they should still be able to see all the content (if not use the actual functionality which the web site is about!). It uses HTML5
+history to make browser navigation work. If you're using Chrome, Firefox of Opera, the "back" button in your web browser should do just what you expect.
+</p>
+<p>Content is loaded asynchronously from standard HTML pages (fragments). At the back end I'm using <a href="https://github.com/jamietre/CsQuery" target="blank">CsQuery</a>, 
+my C# jQuery port, to manage and manipulate server-rendered HTML. 
+</p>
+<p>
+The modal dialogs are created with <a href="https://github.com/jamietre/simplemodal">Simple<b>r</b>Modal</a>, my little fork
+of the venerable SimpleModal jQuery plugin, to simplify getting content with ajax and a few other improvements.
+</p>
+<p>The accordion control on the Demos page is done with a variant of Jan Jarfalk's <a href="http://unwrongest.com/projects/accordion/">Accordion</a>. 
+(Why was it so hard to find a dead-simple jQuery accordion plugin?) His original work probably does a lot more than
+my fork does.
+</p>
+
+<h1>License</h1>
+
+<p>
+LICENSE (MIT License)
+</p><p>
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+</p><p>
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+</p><p>
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+</p>

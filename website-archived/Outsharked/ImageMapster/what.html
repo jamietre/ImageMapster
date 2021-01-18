@@ -1,0 +1,261 @@
+<div>
+<h1>ImageMapster makes HTML image maps useful.</h1>
+<p style="margin-right: 34px;">
+<p style="font-family: 'Palatino, Times New Roman'; font-style: italic; line-height: 40px; font-size: 22px; margin: 30px 90px 30px 90px;">ImageMapster is a jQuery plugin that lets you activate HTML image maps without using Flash. It works 
+just about everywhere that Javascript does, including modern browsers, Internet Explorer 6, and mobile devices like iPads, iPhones and Androids.
+</p>
+<div style="padding-right:20px;">
+
+<div id="release" data-crc="e08cd7ec24ffa9e6cbe628a98e8f14cac226a258" 
+    style="text-align: center;">
+    Download the latest release (1.2.10, February 25, 2013) 
+    <a href="https://raw.github.com/jamietre/ImageMapster/{crc}/dist/jquery.imagemapster.js">jquery.imagemapster.js</a> 
+    or <a href="https://raw.github.com/jamietre/ImageMapster/{crc}/dist/jquery.imagemapster.min.js">jquery.imagemapster.min.js</a>
+</div>
+
+<p>
+    <i>Note: ImageMapster used to be distributed as a ZIP archive. You can still download the full package including examples and source as a <a href="https://github.com/jamietre/ImageMapster/archive/master.zip">zip from GitHub</a> but I will no longer be building a version-specific ZIP file with each release.</i>
+</p>
+
+<h1>What's New?</h1>
+
+    <p id="git-info">
+        The last changes pushed to GitHib were on <b><span data-field="git-last-date"></span></b>: <span data-field="git-last-desc"></span>
+        You can <a class="popup" href="#latestChanges">see all recent changes to the dev code</a> or <a target="_blank" href="http://www.github.com/jamietre/imagemapster">go to the GitHub project page.</a>
+
+    </p>
+    
+    <ul>
+        <li><b>1.2.10 released</b> - February 25, 2012. Bug fix for broken IE9 from 1.2.9. <a href="https://github.com/jamietre/ImageMapster/blob/{crc}/CHANGES.md">See complete change log.</a> </li>
+        <li><b>1.2.9 released</b> - February 22, 2012. This version is now compatible with jQuery 1.9+. There are no other changes. </li>
+        <li>Take a look the new <a href="http://www.dezynetek.com/AbsoluteBeginners/beginner1.htm">introduction to 
+            ImageMapster for absolute beginners</a>, written by Dezynetek.</li>
+        <li><b>1.2.8 released</b> - December 30, 2012. Minor bugfix release.</li>
+        <li><a data-local="1" href="default.aspx?demos.html#fiddle">More jsfiddle examples</a> added on July 18, check 'em out.
+        <li>The current development version is <a href="https://raw.github.com/jamietre/ImageMapster/master/dist/jquery.imagemapster.js"><span id="devVersion"></span></a>, updated <b> <span id="devDate"></span></b></li>
+        <li>The last blog post about ImageMapster was <span id="lastBlogPostLink"></span></li>
+    </ul>
+
+<div id="latestChanges" style="display:none; padding: 8px;">
+    <div style="margin: 4px;">
+        Ten most recent changes to the development version: <a href="https://github.com/jamietre/ImageMapster/commits/master">https://github.com/jamietre/ImageMapster/commits/master</a>
+    </div>
+    <div><i>
+        This data is obtained in (almost) real time from github. <a href="#how" class="popup">How?</a>
+    </i></div>
+    <div id="latestChangesDetail" style="background-color: #eeeeee; margin: 4px; width: 800px;">
+        <br />
+        Data from github not available - please use the link above.
+    </div>
+    
+</div>
+
+
+</div>
+<h1>Highlight and select areas</h1>
+
+<ul class="feature-list" >
+<li>
+<img src="images/what-highlight.gif" class="list">
+<div class="sidebar2">
+<ul class="triangle">
+<li>Automatic mouseover/rollover highlighting of HTML image maps</li>
+<li>Control highlight <a class="popup" href="docs.html#fill">color and opacity</a>, <a class="popup" href="docs.html#stroke">border</a>,
+ and <br /><a class="popup" href="docs.html#fade">fade effect</a> on mouseover</li>
+</ul>
+</div>
+</li>
+
+<li>
+<img src="images/what-multiple.gif" class="list">
+<div class="sidebar2">
+<ul class="triangle">
+<li>Click-select and deselect one or more areas, or allow highlighing only by disabling  
+<a class="code popup" href="docs.html#selectable">isSelectable</a></li>
+<li>Use like a toggle or menu with the <a class="code popup" href="docs.html#singleselect">singleSelect</a> option</li> 
+<li>Define areas as inactive or always active with <a class="code popup" href="docs.html#staticstate">staticState</a></li> 
+</ul>
+</div>
+</li>
+</ul>
+<div style="clear:both;"></div>
+<h1>Create cool effects by using an alternate image</h1>
+<ul class="feature-list" >
+<li >   
+    <img src="images/what-alt.gif" class="list" style="margin-top:12px;">
+    <div class="sidebar2" style="width:60%;">
+        <ul class="triangle">
+            <li>Use any other image to render fill and select effects with<a class="code popup" href="docs.html#altImage">altImage</a> </li>
+            <li>Regular fills and borders can be used in combination with alternate image to create complex highlight and selection effects</li>
+        </ul>
+    </div>
+</li>
+
+</ul>
+<div style="clear:both;"></div>
+<h1>Bind the image map to an external list</h1>
+<ul class="feature-list" >
+<li >   
+    <img src="images/what-external.gif" class="list" style="margin-top:12px;">
+    <div class="sidebar2" style="width:60%;">
+        <ul class="triangle">
+            <li>Link user actions to an external list using <a class="code popup" href="docs.html#boundlist">boundList</a> </li>
+            <li>Automatically generate list from user-defined attributes in the image map data with <a class="code popup" href="docs.html#ongetlist">onGetList</a>, optionally
+            sorted by specifying <a class="code popup" href="docs.html#sortlist">sortlist=true</a></li>
+        </ul>
+    </div>
+</li>
+</ul>
+<div style="clear:both;"></div>
+<h1>Show floating tooltips for areas or area groups</h1>
+<ul class="feature-list" >
+<li >   
+    <img src="images/what-tooltip.gif" class="list" style="margin-top:12px;">
+    <div class="sidebar2" style="width:60%;">
+        <ul class="triangle">
+            <li>Effortlessly create area-specific <a class="popup" href="docs.html#tooltips">tooltips</a> </li>
+            <li>Use the default tooltip container, or create any HTML template to display tooltips</li>
+            <li>Manually activate or deactivate tooltips with <a class="popup code" href="docs.html#tooltip">$mapster.tooltip()</a> method</li>
+
+        </ul>
+    </div>
+</li>
+</ul>
+
+<div style="clear:both;"></div>
+<h1>Use grouping and exclusion masks to create complex functionality</h1>
+<ul class="feature-list" >
+<li >   
+    <img src="images/what-group.gif" class="list" style="margin-top:12px;">
+    <div class="sidebar2" style="width:60%;">
+        <ul class="triangle">
+            <li>Group areas together into logical entities that will be selected or highlighted together</li>
+            <li>Link groups so that activating one group also activates another group using <a class="popup code" href="docs.html#includekeys">includekeys</a></li>
+            <li>Exclude areas inside of other areas by using <a class="popup" href="docs.html#masks">masks</a></li>
+            <li>Areas can be members of more than one group, allowing you create concentric selection areas by defining an interior area as both a mask and its own selection group</li>
+        </ul>
+    </div>
+</li>
+</ul>
+<div style="clear:both;"></div>
+<h1>Automatically scale imagemaps to any display size, even while active</h1>
+<ul class="feature-list" >
+<li >   
+    <img src="images/what-resize.gif" class="list" style="margin-top:12px;">
+    <div class="sidebar2" style="width:60%;">
+        <ul class="triangle">
+            <li>Imagemap data can be automatically scaled to match the display size of an image using <a class="popup code" href="docs.html#scalemap">scaleMap</a></li>
+            <li>Resize imagemaps dynamically by calling <a class="popup code" href="docs.html#resize">resize</a> on an existing bound imagemap</li>
+        </ul>
+    </div>
+</li>
+</ul>
+</div>
+
+<div id="how" style="display:none;">
+    <p>This web site uses <a href="https://github.com/jamietre/CsQuery">CsQuery</a> - a feature-complete (as of 2/12) server side implementation of 
+    jQuery written in C# that I've been working on since early 2011. It is a standalone library and not framework dependent, e.g. it will work with
+    MVC, Webforms, or anywhere else you want to use it. It's fast enough to use in real-time to process and serve web pages.
+    </p>
+
+    <p>
+    You can manipulate HTML the same way on the server that you can with jQuery on the client - making it easy to do things like
+    grab stuff from other web sites and add it into a page. It lets you use CSS selectors and jQuery DOM manipulation methods against any 
+    HTML from the server.</p>
+    <p>
+    For grabbing data, it's much faster than using client-side requests because the end-user will never wait for the request to complete. That is, 
+    instead of requiring each client to make requests, the server can do it on a schedule (like this) and cache the results, which will be available
+    (most likely) the next time the page is accessed. You can greatly reduce the amount of traffic generated, and also eliminate any 
+    delays since all your data is gathered asynchronously. As far as the user is
+    concerned, it was already there. Also, since you aren't running queries from the client, you aren't limited by cross-browser 
+    restrictions imposed by web browsers. <i>You can grab whetever you want, from wherever you want.</i>
+
+    </p>
+    <p>
+    
+    Here's the basic code used to pull that stuff from GitHub. Since there's no real need to have that info updated in real time, I do it
+    every four hours to keep the number of server requests generated to a reasonable level.  This code starts async requests when the info
+    is missing or stale, then updates static variables to cache their values. The <code>CQ</code> object is essentially the same as a
+    jQuery object on the client side.
+    </p>
+
+    <pre class="prettyprint myprettyprint">
+        // Main entry point; "page" is the CQ representation of the markup for this page
+
+        public static void ParsePage(CQ page) {
+
+            RefreshRemoteData();
+
+            page["#devVersion"].Text(String.IsNullOrEmpty(devVersion) ? 
+                "unforunately not available, please visit github" : 
+                devVersion);
+
+            page["#devDate"].Text(String.IsNullOrEmpty(devDate) ? 
+                "recently" : 
+                devDate);
+            
+            if (RecentChanges != null)
+            {
+                page["#latestChangesDetail"].Empty().Append(RecentChanges);
+            }
+
+            var lastLink = page["#lastBlogPostLink"];
+
+            if (LastBlogPostLink != null)
+            {
+                lastLink.Empty().Append(LastBlogPostLink);
+            }
+            else
+            {
+                lastLink.Remove();
+            }
+        }
+
+        // Each of these statements starts an async request, which when finished calls the 
+        // delegate in the Then clause.
+
+        private static void RefreshRemoteData()
+        {
+            if (devVersion == null || LastUpdate.AddHours(4) &gt; DateTime.Now)
+            {
+                CQ.CreateFromUrlAsync("https://raw.github.com/jamietre/ImageMapster/master/src/core.js")
+                    .Then((Action&lt;ICsqWebResponse&gt;)UpdateVersionNumber);
+
+                CQ.CreateFromUrlAsync("https://github.com/jamietre/ImageMapster")
+                    .Then((Action&lt;ICsqWebResponse&gt;)UpdateVersionDate);
+
+                CQ.CreateFromUrlAsync("http://blog.outsharked.com/search/label/imagemapster")
+                    .Then((Action&lt;ICsqWebResponse&gt;)UpdateBlogTitle);
+            }
+        }
+        
+        private static void UpdateBlogTitle(ICsqWebResponse response)
+        {
+            var csq = response.Dom;
+            var post = csq[".date-header"].First();
+            if (post.Length &gt; 0)
+            {
+                var content = CQ.Create("&lt;span&gt;&lt;b&gt;" + post.Find("span").Text() + "&lt;/b&gt;: &lt;/span&gt;");
+                var link = post.Parent().Find(".post-title a").Attr("target", "_blank");
+                content.Append(link);
+                LastBlogPostLink = content;
+            }
+        }
+
+        private static void UpdateVersionNumber(ICsqWebResponse response)
+        {
+            var js = response.Html;
+            var pos = js.IndexOf("version:");
+            if (pos &gt;= 0)
+            {
+                int firstQ = js.IndexOf('"', pos);
+                int lastQ = js.IndexOf('"', firstQ + 1);
+                devVersion = js.Substring(firstQ + 1, lastQ - firstQ - 1);
+            }
+            LastUpdate = DateTime.Now;
+        }
+
+        ...
+
+    </pre>    
+</div>

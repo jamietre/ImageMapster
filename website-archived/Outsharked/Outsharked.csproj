@@ -1,0 +1,473 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>
+    </ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{BD6134DC-8070-4667-8F20-DA3F13368AE8}</ProjectGuid>
+    <ProjectTypeGuids>{349c5851-65df-11da-9384-00065b846f21};{fae04ec0-301f-11d3-bf4b-00c04f79efbc}</ProjectTypeGuids>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>Outsharked</RootNamespace>
+    <AssemblyName>Outsharked</AssemblyName>
+    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <UseIISExpress>false</UseIISExpress>
+    <SccProjectName>Svn</SccProjectName>
+    <SccLocalPath>Svn</SccLocalPath>
+    <SccAuxPath>Svn</SccAuxPath>
+    <SccProvider>SubversionScc</SccProvider>
+    <FileUpgradeFlags>
+    </FileUpgradeFlags>
+    <UpgradeBackupLocation>
+    </UpgradeBackupLocation>
+    <OldToolsVersion>4.0</OldToolsVersion>
+    <IISExpressSSLPort />
+    <IISExpressAnonymousAuthentication />
+    <IISExpressWindowsAuthentication />
+    <IISExpressUseClassicPipelineMode />
+    <SolutionDir Condition="$(SolutionDir) == '' Or $(SolutionDir) == '*Undefined*'">..\</SolutionDir>
+    <RestorePackages>true</RestorePackages>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <PackageAsSingleFile>true</PackageAsSingleFile>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <PackageAsSingleFile>false</PackageAsSingleFile>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="CsQuery, Version=1.3.3.249, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\CsQuery.1.3.4\lib\net40\CsQuery.dll</HintPath>
+    </Reference>
+    <Reference Include="Drintl.Support">
+      <HintPath>redist\Drintl.Support.dll</HintPath>
+    </Reference>
+    <Reference Include="IQMap, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>redist\IQMap.dll</HintPath>
+    </Reference>
+    <Reference Include="IQObjectMapper, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>redist\IQObjectMapper.dll</HintPath>
+    </Reference>
+    <Reference Include="IQRoute, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>redist\IQRoute.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="System.Data.SqlServerCe, Version=4.0.0.0, Culture=neutral, PublicKeyToken=89845dcd8080cc91" />
+    <Reference Include="System.Web.Extensions" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Web" />
+    <Reference Include="System.Xml" />
+    <Reference Include="System.Configuration" />
+    <Reference Include="System.Web.Services" />
+    <Reference Include="System.EnterpriseServices" />
+    <Reference Include="System.Web.DynamicData" />
+    <Reference Include="System.Web.Entity" />
+    <Reference Include="System.Web.ApplicationServices" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="App_Data\outsharked.sdf" />
+    <Content Include="Content.ascx" />
+    <Content Include="CsQueryTest\default.aspx" />
+    <Content Include="GetNav.aspx" />
+    <Content Include="GetContent.aspx" />
+    <Content Include="Default.aspx" />
+    <Content Include="google86478669aad3df5b.html" />
+    <Content Include="ImageMapster\about.html" />
+    <Content Include="blank.html" />
+    <Content Include="ImageMapster\release-notes.html" />
+    <Content Include="ImageMapster\Examples\zoom.html" />
+    <Content Include="ImageMapster\feedback.html" />
+    <Content Include="ImageMapster\faq.html" />
+    <Content Include="ImageMapster\docs.html" />
+    <Content Include="ImageMapster\Examples\images\frog_map.jpg" />
+    <Content Include="ImageMapster\Examples\images\frog_map_alt.jpg" />
+    <Content Include="ImageMapster\Examples\images\lobster-small.gif" />
+    <Content Include="ImageMapster\Examples\images\Provincie_Gelderland.gif" />
+    <Content Include="ImageMapster\Examples\images\scandinavia.png" />
+    <Content Include="ImageMapster\Examples\images\shapes.jpg" />
+    <Content Include="ImageMapster\Examples\images\usa_map_720.png" />
+    <Content Include="ImageMapster\Examples\images\usa_map_720_alt_1.jpg" />
+    <Content Include="ImageMapster\Examples\images\usa_map_720_alt_2.jpg" />
+    <Content Include="ImageMapster\Examples\images\usa_map_720_alt_3.jpg" />
+    <Content Include="ImageMapster\Examples\images\usa_map_720_alt_4.jpg" />
+    <Content Include="ImageMapster\Examples\images\usa_map_720_alt_5.jpg" />
+    <Content Include="ImageMapster\Examples\images\vegetables.jpg" />
+    <Content Include="ImageMapster\Examples\Joints\body_hand_foot_highlights_75p.jpg" />
+    <Content Include="ImageMapster\Examples\Joints\jquery-1.6.1.min.js" />
+    <Content Include="ImageMapster\Examples\Joints\jquery.imagemapster.1.1.3b5.js" />
+    <Content Include="ImageMapster\Examples\Joints\SkeletonJointExample.html" />
+    <Content Include="ImageMapster\Examples\Joints\SkeletonJointMapping.js" />
+    <Content Include="ImageMapster\Examples\Joints\SkeletonJointMapping.min.js" />
+    <Content Include="ImageMapster\Examples\shapes-ie.html" />
+    <Content Include="ImageMapster\Examples\shapes.html" />
+    <Content Include="ImageMapster\Examples\usa.html" />
+    <Content Include="ImageMapster\Examples\vegetables.html" />
+    <Content Include="ImageMapster\images\demos\lobster-small.gif" />
+    <Content Include="ImageMapster\images\demos\shapes.jpg" />
+    <Content Include="ImageMapster\images\demos\usa_map_720.png" />
+    <Content Include="ImageMapster\images\demos\usa_map_720_alt_1.jpg" />
+    <Content Include="ImageMapster\images\demos\usa_map_720_alt_2.jpg" />
+    <Content Include="ImageMapster\images\demos\usa_map_720_alt_3.jpg" />
+    <Content Include="ImageMapster\images\demos\usa_map_720_alt_4.jpg" />
+    <Content Include="ImageMapster\images\demos\usa_map_720_alt_5.jpg" />
+    <Content Include="ImageMapster\images\demos\vegetables.jpg" />
+    <Content Include="ImageMapster\images\epic.gif" />
+    <Content Include="ImageMapster\images\example-bones.gif" />
+    <Content Include="ImageMapster\images\popout_icon.gif" />
+    <Content Include="ImageMapster\images\what-alt.gif" />
+    <Content Include="ImageMapster\images\what-external.gif" />
+    <Content Include="ImageMapster\images\what-group.gif" />
+    <Content Include="ImageMapster\images\what-highlight.gif" />
+    <Content Include="ImageMapster\images\what-multiple.gif" />
+    <Content Include="ImageMapster\images\what-resize.gif" />
+    <Content Include="ImageMapster\images\what-tooltip.gif" />
+    <Content Include="ImageMapster\Scripts\demos.js" />
+    <Content Include="ImageMapster\Scripts\imagemapster-site.js" />
+    <Content Include="ImageMapster\test.html" />
+    <Content Include="ImageMapster\wild.html" />
+    <Content Include="ImageMapster\Default.aspx" />
+    <Content Include="ImageMapster\demos.html" />
+    <Content Include="ImageMapster\error-404.html" />
+    <Content Include="ImageMapster\Global.asax" />
+    <Content Include="ImageMapster\images\fork-alt.gif" />
+    <Content Include="ImageMapster\images\fork-transp.gif" />
+    <Content Include="ImageMapster\images\fork.gif" />
+    <Content Include="ImageMapster\images\fork.jpg" />
+    <Content Include="ImageMapster\images\icon-fork-me-tr.png" />
+    <Content Include="ImageMapster\images\icon-fork-me.png" />
+    <Content Include="ImageMapster\images\logo.gif" />
+    <Content Include="ImageMapster\images\logo2.gif" />
+    <Content Include="ImageMapster\images\logo2.jpg" />
+    <Content Include="ImageMapster\images\map-banner.gif" />
+    <Content Include="ImageMapster\images\map-bg-old.jpg" />
+    <Content Include="ImageMapster\images\map-bg.jpg" />
+    <Content Include="ImageMapster\images\right-triangle.gif" />
+    <Content Include="ImageMapster\ServeRaw.aspx" />
+    <Content Include="ImageMapster\Styles\imagemapster.css" />
+    <Content Include="ImageMapster\template.html" />
+    <Content Include="ImageMapster\template_raw.html" />
+    <Content Include="ImageMapster\what.html" />
+    <Content Include="Images\disqus-ajax.gif" />
+    <Content Include="Images\disqus-logo-small.gif" />
+    <Content Include="Images\disqus-logo.gif" />
+    <Content Include="Images\icons\close-large.gif" />
+    <Content Include="Images\icons\down-triangle.gif" />
+    <Content Include="Images\icons\loading-large.gif" />
+    <Content Include="Images\icons\loading-tiny.gif" />
+    <Content Include="Images\icons\right-triangle.gif" />
+    <Content Include="Images\loading-large.gif" />
+    <Content Include="Images\lobster-small.gif" />
+    <Content Include="Images\lobster-small.jpg" />
+    <Content Include="Images\map-clip.gif" />
+    <Content Include="Images\menu\right-triangle.gif" />
+    <Content Include="Images\overlays\7px_blue_diagonal_stripe.gif" />
+    <Content Include="Images\overlays\7px_dark_diagonal_stripe.gif" />
+    <Content Include="Images\overlays\7px_grey_diagonal_stripe.gif" />
+    <Content Include="Images\overlays\7px_light_diagonal_stripe.gif" />
+    <Content Include="Images\shark-logo-basic-small-trans.gif" />
+    <Content Include="Images\shark-logo-basic-small.jpg" />
+    <Content Include="Images\shark-logo-plastic-small-trans.gif" />
+    <Content Include="Images\shark-logo-plastic-small.jpg" />
+    <Content Include="Images\square1-plastic.gif" />
+    <Content Include="Images\square1-selected.gif" />
+    <Content Include="Images\square1.gif" />
+    <Content Include="Images\square2-plastic.gif" />
+    <Content Include="Images\square2-selected.gif" />
+    <Content Include="Images\square2.gif" />
+    <Content Include="Images\square3-plastic.gif" />
+    <Content Include="Images\square3-selected.gif" />
+    <Content Include="Images\square3.gif" />
+    <Content Include="Images\square4-plastic.gif" />
+    <Content Include="Images\square4-selected.gif" />
+    <Content Include="Images\square4.gif" />
+    <Content Include="Images\vegetables.jpg" />
+    <Content Include="Navigation.ascx" />
+    <Content Include="redist\Antlr3.Runtime.dll" />
+    <Content Include="redist\dotless.Core.dll" />
+    <Content Include="redist\Drintl.Support.dll" />
+    <Content Include="redist\Drintl.Support.pdb" />
+    <Content Include="redist\EcmaScript.NET.modified.dll" />
+    <Content Include="redist\IQMap.dll" />
+    <Content Include="redist\IQMap.pdb" />
+    <Content Include="redist\IQObjectMapper.dll" />
+    <Content Include="redist\IQObjectMapper.pdb" />
+    <Content Include="redist\IQRoute.dll" />
+    <Content Include="redist\IQRoute.pdb" />
+    <Content Include="redist\JTC.Web.UI.ContextScriptManager.dll" />
+    <Content Include="redist\JTC.Web.UI.ContextScriptManager.pdb" />
+    <Content Include="redist\Yahoo.Yui.Compressor.dll" />
+    <Content Include="Scripts\bg-transition.js" />
+    <Content Include="Scripts\crossfade.js" />
+    <Content Include="Scripts\dev\jquery.imagemapster.js" />
+    <Content Include="Scripts\framework.js" />
+    <Content Include="Scripts\ga.js" />
+    <Content Include="Scripts\hoverintent.js" />
+    <Content Include="Scripts\jquery-1.5.min.js" />
+    <Content Include="Scripts\jquery-ui-1.8.9.custom.min.js" />
+    <Content Include="Scripts\jquery.accordion.js" />
+    <Content Include="Scripts\jquery.easing.js" />
+    <Content Include="Scripts\jquery.hslide.js" />
+    <Content Include="Scripts\jquery.imagemapster.js" />
+    <Content Include="Scripts\jquery.imagemapster.min.js" />
+    <Content Include="Scripts\jquery.quicksand.js" />
+    <Content Include="Scripts\jquery.simplemodal.1.4.4.js" />
+    <Content Include="Scripts\jquery.simplermodal.js" />
+    <Content Include="Scripts\jquery.tinysort.1.4.js" />
+    <Content Include="Scripts\libraries.js" />
+    <Content Include="Scripts\outsharked-menu.js" />
+    <Content Include="Scripts\outsharked.js" />
+    <Content Include="Scripts\prettify\lang-apollo.js" />
+    <Content Include="Scripts\prettify\lang-css.js" />
+    <Content Include="Scripts\prettify\lang-hs.js" />
+    <Content Include="Scripts\prettify\lang-lisp.js" />
+    <Content Include="Scripts\prettify\lang-lua.js" />
+    <Content Include="Scripts\prettify\lang-ml.js" />
+    <Content Include="Scripts\prettify\lang-proto.js" />
+    <Content Include="Scripts\prettify\lang-scala.js" />
+    <Content Include="Scripts\prettify\lang-sql.js" />
+    <Content Include="Scripts\prettify\lang-vb.js" />
+    <Content Include="Scripts\prettify\lang-vhdl.js" />
+    <Content Include="Scripts\prettify\lang-wiki.js" />
+    <Content Include="Scripts\prettify\lang-yaml.js" />
+    <Content Include="Scripts\prettify\prettify.css" />
+    <Content Include="Scripts\prettify\prettify.js" />
+    <Content Include="Scripts\simplemodal-wrapper.js" />
+    <Content Include="SharpLinter\error-404.html" />
+    <Content Include="SharpLinter\Default.aspx" />
+    <Content Include="SharpLinter\Styles\sharplinter.css" />
+    <Content Include="SharpLinter\template.html" />
+    <Content Include="SharpLinter\home.html" />
+    <Content Include="SharpLinter\template_raw.html" />
+    <Content Include="simpletix\App_Themes\RedTheatre\images\banner.jpg" />
+    <Content Include="simpletix\App_Themes\RedTheatre\images\fotter.gif" />
+    <Content Include="simpletix\App_Themes\RedTheatre\images\right_bg.jpg" />
+    <Content Include="simpletix\App_Themes\RedTheatre\images\top_menubg.jpg" />
+    <Content Include="simpletix\App_Themes\RedTheatre\style.css" />
+    <Content Include="simpletix\css\common.css" />
+    <Content Include="simpletix\css\jquery-ui-1.8.14.flick.css" />
+    <Content Include="simpletix\css\TekerikRadAjaxLoadingPanel.css" />
+    <Content Include="simpletix\css\wide\Theater.css" />
+    <Content Include="simpletix\demo.aspx" />
+    <Content Include="simpletix\images\icons\Fugue\cross.png" />
+    <Content Include="simpletix\images\venue\seating-chart\800\zaalplan Rode Zaal Fakkelteater omgekeerd.jpg" />
+    <Content Include="simpletix\js\fancybox\jquery.easing-1.3.pack.js" />
+    <Content Include="simpletix\js\fancybox\jquery.fancybox-1.3.4.css" />
+    <Content Include="simpletix\js\fancybox\jquery.fancybox-1.3.4.pack.js" />
+    <Content Include="simpletix\js\fancybox\targets.js" />
+    <Content Include="simpletix\js\mapping.js" />
+    <Content Include="simpletix\js\mapping.min.js" />
+    <Content Include="simpletix\Notes\notes.txt" />
+    <Content Include="Styles\code.css" />
+    <Content Include="Styles\Site.css" />
+    <Content Include="Global.asax" />
+    <Content Include="Scripts\jquery-1.4.1-vsdoc.js" />
+    <Content Include="Scripts\jquery-1.4.1.js" />
+    <Content Include="Scripts\jquery-1.4.1.min.js" />
+    <Content Include="Web.config">
+      <SubType>Designer</SubType>
+    </Content>
+    <Content Include="Web.Debug.config">
+      <DependentUpon>Web.config</DependentUpon>
+    </Content>
+    <Content Include="Web.Release.config">
+      <DependentUpon>Web.config</DependentUpon>
+    </Content>
+    <Content Include="packages.config" />
+    <None Include="Properties\PublishProfiles\discountasp.net.pubxml" />
+    <None Include="Properties\PublishProfiles\Profile1.pubxml" />
+    <None Include="_bin_deployableAssemblies\amd64\Microsoft.VC90.CRT\README_ENU.txt" />
+    <None Include="_bin_deployableAssemblies\amd64\Microsoft.VC90.CRT\msvcr90.dll" />
+    <None Include="_bin_deployableAssemblies\amd64\Microsoft.VC90.CRT\Microsoft.VC90.CRT.manifest" />
+    <None Include="_bin_deployableAssemblies\amd64\sqlcese40.dll" />
+    <None Include="_bin_deployableAssemblies\amd64\sqlceqp40.dll" />
+    <None Include="_bin_deployableAssemblies\amd64\sqlceme40.dll" />
+    <None Include="_bin_deployableAssemblies\amd64\sqlceer40EN.dll" />
+    <None Include="_bin_deployableAssemblies\amd64\sqlcecompact40.dll" />
+    <None Include="_bin_deployableAssemblies\amd64\sqlceca40.dll" />
+    <None Include="_bin_deployableAssemblies\x86\Microsoft.VC90.CRT\README_ENU.txt" />
+    <None Include="_bin_deployableAssemblies\x86\Microsoft.VC90.CRT\msvcr90.dll" />
+    <None Include="_bin_deployableAssemblies\x86\Microsoft.VC90.CRT\Microsoft.VC90.CRT.manifest" />
+    <None Include="_bin_deployableAssemblies\x86\sqlcese40.dll" />
+    <None Include="_bin_deployableAssemblies\x86\sqlceqp40.dll" />
+    <None Include="_bin_deployableAssemblies\x86\sqlceme40.dll" />
+    <None Include="_bin_deployableAssemblies\x86\sqlceer40EN.dll" />
+    <None Include="_bin_deployableAssemblies\x86\sqlcecompact40.dll" />
+    <None Include="_bin_deployableAssemblies\x86\sqlceca40.dll" />
+    <None Include="_bin_deployableAssemblies\System.Data.SqlServerCe.Entity\System.Data.SqlServerCe.Entity.dll" />
+    <None Include="_bin_deployableAssemblies\EN\System.Data.SqlServerCe.xml" />
+    <None Include="_bin_deployableAssemblies\System.Data.SqlServerCe.dll" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Content.ascx.cs">
+      <DependentUpon>Content.ascx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Content.ascx.designer.cs">
+      <DependentUpon>Content.ascx</DependentUpon>
+    </Compile>
+    <Compile Include="CsQueryTest\Controllers\CsqueryTest.cs" />
+    <Compile Include="CsQueryTest\default.aspx.cs">
+      <DependentUpon>default.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="CsQueryTest\default.aspx.designer.cs">
+      <DependentUpon>default.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="CsQueryTest\Domain\QueryTestDef.cs" />
+    <Compile Include="Framework\ExtensionMethods.cs" />
+    <Compile Include="Framework\HtmlContentHandler.cs" />
+    <Compile Include="GetNav.aspx.cs">
+      <DependentUpon>GetNav.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="GetNav.aspx.designer.cs">
+      <DependentUpon>GetNav.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="GetContent.aspx.cs">
+      <DependentUpon>GetContent.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="GetContent.aspx.designer.cs">
+      <DependentUpon>GetContent.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="Default.aspx.cs">
+      <DependentUpon>Default.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Default.aspx.designer.cs">
+      <DependentUpon>Default.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="Global.asax.cs">
+      <DependentUpon>Global.asax</DependentUpon>
+    </Compile>
+    <Compile Include="Framework\CsQueryPage.cs">
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Helpers\XmlDocumentationExtensions.cs" />
+    <Compile Include="ImageMapster\Controllers\What.cs" />
+    <Compile Include="ImageMapster\Default.aspx.cs">
+      <DependentUpon>Default.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="ImageMapster\Default.aspx.designer.cs">
+      <DependentUpon>Default.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="ImageMapster\Global.asax.cs">
+      <DependentUpon>Global.asax</DependentUpon>
+    </Compile>
+    <Compile Include="Helpers\OffsiteContent.cs" />
+    <Compile Include="ImageMapster\ServeRaw.aspx.cs">
+      <DependentUpon>ServeRaw.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="ImageMapster\ServeRaw.aspx.designer.cs">
+      <DependentUpon>ServeRaw.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="Navigation.ascx.cs">
+      <DependentUpon>Navigation.ascx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Navigation.ascx.designer.cs">
+      <DependentUpon>Navigation.ascx</DependentUpon>
+    </Compile>
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="SharpLinter\Default.aspx.cs">
+      <DependentUpon>Default.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="SharpLinter\Default.aspx.designer.cs">
+      <DependentUpon>Default.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="simpletix\demo.aspx.cs">
+      <DependentUpon>demo.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="simpletix\demo.aspx.designer.cs">
+      <DependentUpon>demo.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="Site.Master.cs">
+      <DependentUpon>Site.Master</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Site.Master.designer.cs">
+      <DependentUpon>Site.Master</DependentUpon>
+    </Compile>
+    <Compile Include="Site\IContent.cs" />
+    <Compile Include="Site\NavMap.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="CsQueryTest\scripts\" />
+    <Folder Include="csquery\scripts\" />
+    <Folder Include="csquery\styles\" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Site.Master" />
+  </ItemGroup>
+  <ItemGroup>
+    <WCFMetadata Include="Service References\" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\CSharpEval\CSharpEval.csproj">
+      <Project>{628e5659-692d-4163-bb3c-c94e81e12e29}</Project>
+      <Name>CSharpEval</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <PropertyGroup>
+    <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
+    <VSToolsPath Condition="'$(VSToolsPath)' == ''">$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)</VSToolsPath>
+  </PropertyGroup>
+  <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
+  <Import Project="$(VSToolsPath)\WebApplications\Microsoft.WebApplication.targets" Condition="'$(VSToolsPath)' != ''" />
+  <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v10.0\WebApplications\Microsoft.WebApplication.targets" Condition="false" />
+  <ProjectExtensions>
+    <VisualStudio>
+      <FlavorProperties GUID="{349c5851-65df-11da-9384-00065b846f21}">
+        <WebProjectProperties>
+          <UseIIS>False</UseIIS>
+          <AutoAssignPort>True</AutoAssignPort>
+          <DevelopmentServerPort>64449</DevelopmentServerPort>
+          <DevelopmentServerVPath>/</DevelopmentServerVPath>
+          <IISUrl>
+          </IISUrl>
+          <NTLMAuthentication>False</NTLMAuthentication>
+          <UseCustomServer>False</UseCustomServer>
+          <CustomServerUrl>
+          </CustomServerUrl>
+          <SaveServerSettingsInUserFile>False</SaveServerSettingsInUserFile>
+        </WebProjectProperties>
+      </FlavorProperties>
+    </VisualStudio>
+  </ProjectExtensions>
+  <Import Project="$(SolutionDir)\.nuget\NuGet.targets" Condition="Exists('$(SolutionDir)\.nuget\NuGet.targets')" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

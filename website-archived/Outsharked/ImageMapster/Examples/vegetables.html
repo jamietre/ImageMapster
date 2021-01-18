@@ -1,0 +1,128 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<title>Untitled Document</title>
+
+<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.5.2/jquery.js"></script>
+<script type="text/javascript" src="../jquery.imagemapster.js"></script>
+
+<STYLE TYPE="text/css">
+
+p, div {
+ font-family: Arial, Helvetica, Sans Serif;
+ font-size: 12px;
+ font-weight: normal;
+}
+</STYLE>
+</head>
+
+<body >
+
+
+<div id="veg_demo" style="width:640px; margin: auto;">
+	<p>Simple example demonstrating <b>singleClick</b> which permits only one area to be selected, and changing a tooltip on the fly.
+	the dip has a tooltip, which is different if asparagus is selected. This also shows how to use area-specific options to control
+	the styling of each area individually. Some areas use different colors for selection to ensure that the highlight is visible
+	even though each area is a substantially different color.
+
+	</p>
+	<div style="clear:both;margin-left:80px;">
+	<img id="veg" src="images/vegetables.jpg" usemap="#veg" >
+	</div>
+    <div style="clear:both; height:8px;"></div>
+    <div id="selections" style="clear:both;"></div>
+</div>
+
+<script type="text/javascript">
+
+$(document).ready(function () {
+	   var image = $('img');
+	   var xref = {
+	   		carrots: "<b>Carrots</b> are delicious and may turn your skin orange!",
+	   		asparagus: "<b>Asparagus</b> is one of the first vegetables of the spring. Being a dark green, it's great for you, and has interesting side effects.",
+	   		squash: "<b>Squash</b> is a winter vegetable, and not eaten raw too much. Is that really squash?",
+	   		redpepper: "<b>Red peppers</b> are actually the same as green peppers, they've just been left on the vine longer. Delicious when fire-roasted.",
+	   		yellowpepper: "Similar to red peppers, <b>yellow peppers</b> are sometimes sweeter.",
+	   		celery: "<b>Celery</b> is a fascinating vegetable. Being mostly water, it actually takes your body more calories to process it than it provides.",
+	   		cucumbers: "<b>Cucumbers</b> are cool.",
+	   		broccoli: "<b>Broccoli</b> is like a forest of goodness in your mouth. And very good for you. Eat lots of broccoli!",
+	   		dip: "Everything here is good for you but this one. <b>Don't be a dip!</b>"
+	   };
+	   var defaultDipTooltip = 'I know you want the dip. But it\'s loaded with saturated fat, just skip it and enjoy as many delicious, crisp vegetables as you can eat.';
+
+	   image.mapster(
+       {
+       		fillOpacity: 0.4,
+       		fillColor: "d42e16",
+       		strokeColor: "3320FF",
+       		strokeOpacity: 0.8,
+       		strokeWidth: 4,
+       		stroke: true,
+            isSelectable: true,
+			singleSelect: true,
+            mapKey: 'name',
+            listKey: 'name',
+            onClick: function (e) {
+                var newToolTip = defaultDipTooltip;
+                $('#selections').html(xref[e.key]);
+                if (e.key==='asparagus') {
+                	newToolTip = "OK. I know I have come down on the dip before, but let's be real. Raw asparagus without any of that " +
+                			"delicious ranch and onion dressing slathered all over it is not so good.";
+                }
+                image.mapster('set_options',{areas: [{
+                	key: "dip",
+                	toolTip: newToolTip
+                	}]
+                });
+            },
+            showToolTip: true,
+            toolTipClose: ["tooltip-click", "area-click"],
+            areas: [
+                {
+                	key: "redpepper",
+                	fillColor: "ffffff"
+                },
+                {
+                	key: "yellowpepper",
+                	fillColor: "000000"
+                },
+                {
+                	key: "carrots",
+                	fillColor: "000000"
+                },
+                {
+                   key: "dip",
+                  toolTip: defaultDipTooltip
+                },
+                {
+                   key: "asparagus",
+                   strokeColor: "FFFFFF"
+                }
+                ]
+        });
+      });
+      </script>
+	<map id="veg_map" name="veg">
+	<area shape="poly" name="redpepper" coords="412,156, 427,161, 429,163, 444,153, 453,155, 457,159, 452,168, 459,174, 455,178, 460,179, 463,193, 460,203, 441,214, 436,217, 458,238, 469,257, 479,267, 478,269, 479,285, 458,309, 436,310, 414,305, 410,323, 397,334, 379,313, 389,316, 401,320, 399,305, 382,300, 371,290,
+	367,296, 366,298,
+	338,274, 332,272, 300,239, 316,238, 316,234, 313,230, 328,225, 333,213, 338,196, 333,181, 337,166, 345,145" href="#">
+	<area shape="poly" name="celery" coords="147,131, 156,143, 163,146, 177,129, 175,138, 177,138, 182,144, 180,164, 148,169, 139,171, 144,180, 141,198, 139,208, 140,222, 127,237, 148,216, 163,212, 166,216, 160,223, 163,233, 153,281, 135,318, 129,313, 122,322, 117,320, 99,301, 98,293, 85,300, 80,303, 74,300,
+	64,285, 76,272, 98,249,
+	94,246, 72,261, 57,258, 62,251, 60,248, 47,228, 51,207, 71,195, 72,192, 38,202, 33,195, 30,173, 147,127" href="#">
+	<area shape="poly" name="carrots" coords="175,74, 170,80, 154,85, 189,103, 190,111, 182,111, 179,98, 157,95, 142,111, 140,128, 38,169, 39,163, 74,143, 74,141, 56,135, 52,115, 79,111, 78,106, 63,98, 71,91, 81,88, 82,83, 91,75, 136,74, 174,70" href="#">
+	<area shape="poly" name="asparagus" coords="224,25, 239,33, 244,36, 247,32, 327,23, 344,31, 343,36, 319,41, 315,42, 302,52, 272,61, 265,64, 270,73, 256,67, 248,60, 187,55, 192,58, 192,60, 184,64, 185,67, 176,67, 173,69, 142,67, 146,63, 135,59, 123,57, 142,44, 145,42, 143,39, 145,32, 207,38, 185,18, 212,19,
+	220,22" href="#">
+	<area shape="poly" name="squash" coords="388,26, 391,38, 394,43, 395,46, 425,58, 427,68, 428,92, 386,125, 371,132, 374,124, 377,118, 374,105, 371,105, 370,107, 364,102, 368,97, 356,87, 353,89, 348,86, 322,87, 314,100, 314,102, 282,85, 278,84, 273,74, 272,68, 319,46, 346,31" href="#">
+	<area shape="poly" name="yellowpepper" coords="237,222, 246,254, 255,291, 262,323, 271,322, 285,350, 306,352, 307,365, 298,374, 285,366, 270,375, 249,378, 244,384, 231,389, 215,373, 210,363, 203,357, 199,368, 184,361, 175,349, 162,356, 140,340, 143,305, 161,252, 168,224, 188,240, 194,223, 198,232, 213,226, 224,224,
+	229,218" href="#">
+	<area shape="poly" name="broccoli" coords="341,89, 342,91, 360,95, 353,100, 360,104, 364,109, 368,115, 369,112, 367,110, 376,111, 373,123, 367,128, 362,128, 359,131, 348,134, 345,137, 340,138, 341,148, 334,167, 323,172, 315,165, 315,162, 312,165, 311,172, 293,167, 292,141, 298,136, 307,134, 322,129, 328,128,
+	329,116, 319,109, 314,104,
+	317,93, 332,84" href="#">
+	<area shape="poly" name="broccoli" coords="328,178, 338,197, 337,202, 330,215, 328,217, 325,228, 307,234, 305,239, 287,225, 287,216, 286,212, 282,216, 277,212, 277,185, 284,179, 310,175" href="#">
+	<area shape="poly" name="dip" coords="253,102, 277,100, 280,105, 290,107, 295,111, 304,130, 290,140, 287,147, 240,157, 238,159, 227,153, 203,146, 198,125, 200,116, 214,102, 231,102" href="#">
+
+    </map>
+
+
+<body>
