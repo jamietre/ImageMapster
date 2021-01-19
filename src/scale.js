@@ -1,231 +1,241 @@
-/* scale.js: resize and zoom functionality
-   requires areacorners.js
+/* 
+  scale.js
+  Resize and zoom functionality
+  Requires areacorners.js
 */
 
-
 (function ($) {
-    var m = $.mapster, u = m.utils, p = m.MapArea.prototype;
+  'use strict';
 
-    m.utils.getScaleInfo = function (eff, actual) {
-        var pct;
-        if (!actual) {
-            pct = 1;
-            actual=eff;
-        } else {
-            pct = eff.width / actual.width || eff.height / actual.height;
-            // make sure a float error doesn't muck us up
-            if (pct > 0.98 && pct < 1.02) { pct = 1; }
-        }
-        return {
-            scale: (pct !== 1),
-            scalePct: pct,
-            realWidth: actual.width,
-            realHeight: actual.height,
-            width: eff.width,
-            height: eff.height,
-            ratio: eff.width / eff.height
-        };
+  var m = $.mapster,
+    u = m.utils,
+    p = m.MapArea.prototype;
+
+  m.utils.getScaleInfo = function (eff, actual) {
+    var pct;
+    if (!actual) {
+      pct = 1;
+      actual = eff;
+    } else {
+      pct = eff.width / actual.width || eff.height / actual.height;
+      // make sure a float error doesn't muck us up
+      if (pct > 0.98 && pct < 1.02) {
+        pct = 1;
+      }
+    }
+    return {
+      scale: pct !== 1,
+      scalePct: pct,
+      realWidth: actual.width,
+      realHeight: actual.height,
+      width: eff.width,
+      height: eff.height,
+      ratio: eff.width / eff.height
     };
-    // Scale a set of AREAs, return old data as an array of objects
-    m.utils.scaleMap = function (image, imageRaw, scale) {
+  };
+  // Scale a set of AREAs, return old data as an array of objects
+  m.utils.scaleMap = function (image, imageRaw, scale) {
+    // stunningly, jQuery width can return zero even as width does not, seems to happen only
+    // with adBlock or maybe other plugins. These must interfere with onload events somehow.
 
-        // stunningly, jQuery width can return zero even as width does not, seems to happen only
-        // with adBlock or maybe other plugins. These must interfere with onload events somehow.
+    var vis = u.size(image),
+      raw = u.size(imageRaw, true);
 
+    if (!raw.complete()) {
+      throw 'Another script, such as an extension, appears to be interfering with image loading. Please let us know about this.';
+    }
+    if (!vis.complete()) {
+      vis = raw;
+    }
+    return this.getScaleInfo(vis, scale ? raw : null);
+  };
 
-        var vis=u.size(image),
-            raw=u.size(imageRaw,true);
+  /**
+   * Resize the image map. Only one of newWidth and newHeight should be passed to preserve scale
+   *
+   * @param  {int}   width       The new width OR an object containing named parameters matching this function sig
+   * @param  {int}   height      The new height
+   * @param  {int}   effectDuration Time in ms for the resize animation, or zero for no animation
+   * @param  {function} callback    A function to invoke when the operation finishes
+   * @return {promise}              NOT YET IMPLEMENTED
+   */
 
-        if (!raw.complete()) {
-            throw("Another script, such as an extension, appears to be interfering with image loading. Please let us know about this.");
+  m.MapData.prototype.resize = function (width, height, duration, callback) {
+    var p,
+      promises,
+      newsize,
+      els,
+      highlightId,
+      ratio,
+      me = this;
+
+    // allow omitting duration
+    callback = callback || duration;
+
+    function sizeCanvas(canvas, w, h) {
+      if (m.hasCanvas()) {
+        canvas.width = w;
+        canvas.height = h;
+      } else {
+        $(canvas).width(w);
+        $(canvas).height(h);
+      }
+    }
+
+    // Finalize resize action, do callback, pass control to command queue
+
+    function cleanupAndNotify() {
+      me.currentAction = '';
+
+      if (u.isFunction(callback)) {
+        callback();
+      }
+
+      me.processCommandQueue();
+    }
+
+    // handle cleanup after the inner elements are resized
+
+    function finishResize() {
+      sizeCanvas(me.overlay_canvas, width, height);
+
+      // restore highlight state if it was highlighted before
+      if (highlightId >= 0) {
+        var areaData = me.data[highlightId];
+        areaData.tempOptions = { fade: false };
+        me.getDataForKey(areaData.key).highlight();
+        areaData.tempOptions = null;
+      }
+      sizeCanvas(me.base_canvas, width, height);
+      me.redrawSelections();
+      cleanupAndNotify();
+    }
+
+    function resizeMapData() {
+      $(me.image).css(newsize);
+      // start calculation at the same time as effect
+      me.scaleInfo = u.getScaleInfo(
+        {
+          width: width,
+          height: height
+        },
+        {
+          width: me.scaleInfo.realWidth,
+          height: me.scaleInfo.realHeight
         }
-        if (!vis.complete()) {
-            vis=raw;
-        }
-        return this.getScaleInfo(vis, scale ? raw : null);
-    };
+      );
+      $.each(me.data, function (_, e) {
+        $.each(e.areas(), function (_, e) {
+          e.resize();
+        });
+      });
+    }
 
-    /**
-     * Resize the image map. Only one of newWidth and newHeight should be passed to preserve scale
-     *
-     * @param  {int}   width       The new width OR an object containing named parameters matching this function sig
-     * @param  {int}   height      The new height
-     * @param  {int}   effectDuration Time in ms for the resize animation, or zero for no animation
-     * @param  {function} callback    A function to invoke when the operation finishes
-     * @return {promise}              NOT YET IMPLEMENTED
-     */
+    if (me.scaleInfo.width === width && me.scaleInfo.height === height) {
+      return;
+    }
 
-    m.MapData.prototype.resize = function (width, height, duration, callback) {
-        var p,promises,newsize,els, highlightId, ratio,
-            me = this;
+    highlightId = me.highlightId;
 
-        // allow omitting duration
-        callback = callback || duration;
+    if (!width) {
+      ratio = height / me.scaleInfo.realHeight;
+      width = Math.round(me.scaleInfo.realWidth * ratio);
+    }
+    if (!height) {
+      ratio = width / me.scaleInfo.realWidth;
+      height = Math.round(me.scaleInfo.realHeight * ratio);
+    }
 
-        function sizeCanvas(canvas, w, h) {
-            if (m.hasCanvas()) {
-                canvas.width = w;
-                canvas.height = h;
-            } else {
-                $(canvas).width(w);
-                $(canvas).height(h);
-            }
-        }
+    newsize = { width: String(width) + 'px', height: String(height) + 'px' };
+    if (!m.hasCanvas()) {
+      $(me.base_canvas).children().remove();
+    }
 
-        // Finalize resize action, do callback, pass control to command queue
+    // resize all the elements that are part of the map except the image itself (which is not visible)
+    // but including the div wrapper
+    els = $(me.wrapper).find('.mapster_el').add(me.wrapper);
 
-        function cleanupAndNotify() {
+    if (duration) {
+      promises = [];
+      me.currentAction = 'resizing';
+      els.each(function (_, e) {
+        p = u.defer();
+        promises.push(p);
 
-            me.currentAction = '';
+        $(e).animate(newsize, {
+          duration: duration,
+          complete: p.resolve,
+          easing: 'linear'
+        });
+      });
 
-            if (u.isFunction(callback)) {
-                callback();
-            }
+      p = u.defer();
+      promises.push(p);
 
-            me.processCommandQueue();
-        }
+      // though resizeMapData is not async, it needs to be finished just the same as the animations,
+      // so add it to the "to do" list.
 
-        // handle cleanup after the inner elements are resized
+      u.when.all(promises).then(finishResize);
+      resizeMapData();
+      p.resolve();
+    } else {
+      els.css(newsize);
+      resizeMapData();
+      finishResize();
+    }
+  };
 
-        function finishResize() {
-            sizeCanvas(me.overlay_canvas, width, height);
+  m.MapArea = u.subclass(m.MapArea, function () {
+    //change the area tag data if needed
+    this.base.init();
+    if (this.owner.scaleInfo.scale) {
+      this.resize();
+    }
+  });
 
-            // restore highlight state if it was highlighted before
-            if (highlightId >= 0) {
-                var areaData = me.data[highlightId];
-                areaData.tempOptions = { fade: false };
-                me.getDataForKey(areaData.key).highlight();
-                areaData.tempOptions = null;
-            }
-            sizeCanvas(me.base_canvas, width, height);
-            me.redrawSelections();
-            cleanupAndNotify();
-        }
+  p.coords = function (percent, coordOffset) {
+    var j,
+      newCoords = [],
+      pct = percent || this.owner.scaleInfo.scalePct,
+      offset = coordOffset || 0;
 
-        function resizeMapData() {
-            $(me.image).css(newsize);
-            // start calculation at the same time as effect
-            me.scaleInfo = u.getScaleInfo({
-                    width: width,
-                    height: height
-                },
-                {
-                    width: me.scaleInfo.realWidth,
-                    height: me.scaleInfo.realHeight
-                });
-            $.each(me.data, function (i, e) {
-                $.each(e.areas(), function (i, e) {
-                    e.resize();
-                });
-            });
-        }
+    if (pct === 1 && coordOffset === 0) {
+      return this.originalCoords;
+    }
 
-        if (me.scaleInfo.width === width && me.scaleInfo.height === height) {
-            return;
-        }
+    for (j = 0; j < this.length; j++) {
+      //amount = j % 2 === 0 ? xPct : yPct;
+      newCoords.push(Math.round(this.originalCoords[j] * pct) + offset);
+    }
+    return newCoords;
+  };
+  p.resize = function () {
+    this.area.coords = this.coords().join(',');
+  };
 
-        highlightId = me.highlightId;
+  p.reset = function () {
+    this.area.coords = this.coords(1).join(',');
+  };
 
+  m.impl.resize = function (width, height, duration, callback) {
+    if (!width && !height) {
+      return false;
+    }
+    var x = new m.Method(
+      this,
+      function () {
+        this.resize(width, height, duration, callback);
+      },
+      null,
+      {
+        name: 'resize',
+        args: arguments
+      }
+    ).go();
+    return x;
+  };
 
-        if (!width) {
-            ratio = height / me.scaleInfo.realHeight;
-            width = Math.round(me.scaleInfo.realWidth * ratio);
-        }
-        if (!height) {
-            ratio = width / me.scaleInfo.realWidth;
-            height = Math.round(me.scaleInfo.realHeight * ratio);
-        }
-
-        newsize = { 'width': String(width) + 'px', 'height': String(height) + 'px' };
-        if (!m.hasCanvas()) {
-            $(me.base_canvas).children().remove();
-        }
-
-        // resize all the elements that are part of the map except the image itself (which is not visible)
-        // but including the div wrapper
-        els = $(me.wrapper).find('.mapster_el').add(me.wrapper);
-
-        if (duration) {
-            promises = [];
-            me.currentAction = 'resizing';
-            els.each(function (i, e) {
-                p = u.defer();
-                promises.push(p);
-
-                $(e).animate(newsize, {
-                    duration: duration,
-                    complete: p.resolve,
-                    easing: "linear"
-                });
-            });
-
-            p = u.defer();
-            promises.push(p);
-
-            // though resizeMapData is not async, it needs to be finished just the same as the animations,
-            // so add it to the "to do" list.
-
-            u.when.all(promises).then(finishResize);
-            resizeMapData();
-            p.resolve();
-        } else {
-            els.css(newsize);
-            resizeMapData();
-            finishResize();
-
-        }
-    };
-
-
-    m.MapArea = u.subclass(m.MapArea, function () {
-        //change the area tag data if needed
-        this.base.init();
-        if (this.owner.scaleInfo.scale) {
-            this.resize();
-        }
-    });
-
-    p.coords = function (percent, coordOffset) {
-        var j, newCoords = [],
-                    pct = percent || this.owner.scaleInfo.scalePct,
-                    offset = coordOffset || 0;
-
-        if (pct === 1 && coordOffset === 0) {
-            return this.originalCoords;
-        }
-
-        for (j = 0; j < this.length; j++) {
-            //amount = j % 2 === 0 ? xPct : yPct;
-            newCoords.push(Math.round(this.originalCoords[j] * pct) + offset);
-        }
-        return newCoords;
-    };
-    p.resize = function () {
-        this.area.coords = this.coords().join(',');
-    };
-
-    p.reset = function () {
-        this.area.coords = this.coords(1).join(',');
-    };
-
-    m.impl.resize = function (width, height, duration, callback) {
-        if (!width && !height) {
-            return false;
-        }
-        var x= (new m.Method(this,
-                function () {
-                    this.resize(width, height, duration, callback);
-                },
-                null,
-                {
-                    name: 'resize',
-                    args: arguments
-                }
-            )).go();
-        return x;
-    };
-
-/*
+  /*
     m.impl.zoom = function (key, opts) {
         var options = opts || {};
 
@@ -319,8 +329,6 @@
                     key: key
                 }
                 )).go();
-
-
     };
     */
-} (jQuery));
+})(jQuery);

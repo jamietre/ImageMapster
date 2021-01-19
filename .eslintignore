@@ -1,0 +1,5 @@
+tests/redist/
+examples/redist/
+build/
+dist/
+node_modules/

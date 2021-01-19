@@ -1,0 +1,21 @@
+{
+  "root": true,
+  "extends": ["eslint:recommended", "jquery", "prettier"],
+  "plugins": ["html"],
+  "reportUnusedDisableDirectives": true,
+  "parserOptions": {
+    "ecmaVersion": 5,
+    "sourceType": "script"
+  },
+  "env": {
+    "browser": true,
+    "jquery": true
+  },
+  "globals": {},
+  "rules": {
+    "one-var": ["error", { "var": "consecutive" }],
+    "strict": ["error", "function"],
+    "no-nested-ternary": 0,
+    "camelcase": 0
+  }
+}

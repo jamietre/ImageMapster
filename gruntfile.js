@@ -1,7 +1,6 @@
-'use strict';
-
+// eslint-disable-next-line strict, no-undef
 module.exports = function (grunt) {
-
+  // eslint-disable-next-line no-undef
   require('jit-grunt')(grunt, {
     'bump-only': 'grunt-bump',
     'bump-commit': 'grunt-bump'
@@ -9,7 +8,8 @@ module.exports = function (grunt) {
 
   grunt.initConfig({
     pkg: grunt.file.readJSON('package.json'),
-    banner: '/*!\n' +
+    banner:
+      '/*!\n' +
       '* <%= pkg.title || pkg.name %> - v<%= pkg.version %> - <%= grunt.template.today("yyyy-mm-dd") %>\n' +
       '<%= pkg.homepage ? "* " + pkg.homepage + "\\n" : "" %>' +
       '* Copyright (c) 2011 - <%= grunt.template.today("yyyy") %> <%= pkg.author.name %>\n' +
@@ -29,15 +29,12 @@ module.exports = function (grunt) {
           'src/areadata.js',
           'src/areacorners.js',
           'src/scale.js',
-          'src/tooltip.js',
+          'src/tooltip.js'
         ],
         dest: 'build/jquery.<%= pkg.name %>.jquery.js'
       },
       zepto: {
-        src: [
-          'src/zepto.js',
-          '<%= concat.jquery.src %>'
-        ],
+        src: ['src/zepto.js', '<%= concat.jquery.src %>'],
         dest: 'build/jquery.<%= pkg.name %>.zepto.js'
       },
       jquerydist: {
@@ -55,7 +52,7 @@ module.exports = function (grunt) {
         },
         src: '<%= umd.zepto.options.dest %>',
         dest: 'dist/jquery.<%= pkg.name %>.zepto.js'
-      },
+      }
     },
     uglify: {
       options: {
@@ -71,7 +68,7 @@ module.exports = function (grunt) {
       zepto: {
         src: '<%= concat.zeptodist.dest %>',
         dest: 'dist/jquery.<%= pkg.name %>.zepto.min.js'
-      },
+      }
     },
     umd: {
       jquery: {
@@ -100,13 +97,15 @@ module.exports = function (grunt) {
       tests: {
         options: {
           port: 9101,
-          open: 'http://<%= connect.options.hostname %>:<%= connect.tests.options.port %>/tests/imagemapster-test-runner.html'
+          open:
+            'http://<%= connect.options.hostname %>:<%= connect.tests.options.port %>/tests/imagemapster-test-runner.html'
         }
       },
       examples: {
         options: {
           port: 9102,
-          open: 'http://<%= connect.options.hostname %>:<%= connect.examples.options.port %>/examples/index.html'
+          open:
+            'http://<%= connect.options.hostname %>:<%= connect.examples.options.port %>/examples/index.html'
         }
       }
     },
@@ -119,20 +118,20 @@ module.exports = function (grunt) {
         tasks: ['jquery'],
         options: {
           livereload: '<%= connect.options.livereload %>'
-        },
+        }
       },
       examples: {
         files: ['examples/**/*.html', 'examples/**/*.css'],
         options: {
           livereload: '<%= connect.options.livereload %>'
-        },
+        }
       },
       tests: {
         files: ['tests/**/*.js', 'tests/**/*.html'],
         options: {
           livereload: '<%= connect.options.livereload %>'
-        },
-      },
+        }
+      }
     },
     docco: {
       source: {
@@ -167,14 +166,43 @@ module.exports = function (grunt) {
       npm: {
         command: 'npm publish'
       }
-    },    
+    },
+    eslint: {
+      options: {
+        failOnError: true,
+        extensions: ['.js', '.html']
+      },
+      target: ['.']
+    }
   });
 
-  grunt.registerTask('default', ['clean', 'concat:iife', 'concat:dist', 'uglify']);
-  grunt.registerTask('fullbuild', ['clean', 'concat:jquery', 'concat:zepto', 'umd', 'concat:jquerydist', 'concat:zeptodist', 'uglify']);
+  grunt.registerTask('default', ['build']);
+  grunt.registerTask('fullbuild', [
+    'clean',
+    'eslint',
+    'concat:jquery',
+    'concat:zepto',
+    'umd:jquery',
+    'umd:zepto',
+    'concat:jquerydist',
+    'concat:zeptodist',
+    'uglify'
+  ]);
   grunt.registerTask('build', ['jquery', 'uglify:jquery']);
-  grunt.registerTask('jquery', ['clean', 'concat:jquery', 'umd:jquery', 'concat:jquerydist']);
-  grunt.registerTask('zepto', ['clean', 'concat:zepto', 'umd:zepto', 'concat:zeptodist']);
+  grunt.registerTask('jquery', [
+    'clean',
+    'eslint',
+    'concat:jquery',
+    'umd:jquery',
+    'concat:jquerydist'
+  ]);
+  grunt.registerTask('zepto', [
+    'clean',
+    'eslint',
+    'concat:zepto',
+    'umd:zepto',
+    'concat:zeptodist'
+  ]);
   grunt.registerTask('debug', ['jquery', 'connect', 'watch']);
   grunt.registerTask('example', ['jquery', 'connect:examples', 'watch']);
   grunt.registerTask('test', ['jquery', 'connect:tests', 'watch']);
@@ -183,7 +211,11 @@ module.exports = function (grunt) {
   grunt.registerTask('patch', ['preBump', 'bump-only:patch', 'postBump']);
   grunt.registerTask('minor', ['preBump', 'bump-only:minor', 'postBump']);
   grunt.registerTask('major', ['preBump', 'bump-only:major', 'postBump']);
-  grunt.registerTask('prerelease', ['preBump', 'bump-only:prerelease', 'postBump']);
+  grunt.registerTask('prerelease', [
+    'preBump',
+    'bump-only:prerelease',
+    'postBump'
+  ]);
   grunt.registerTask('prepatch', ['preBump', 'bump-only:prepatch', 'postBump']);
   grunt.registerTask('preminor', ['preBump', 'bump-only:preminor', 'postBump']);
   grunt.registerTask('premajor', ['preBump', 'bump-only:premajor', 'postBump']);

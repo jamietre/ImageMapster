@@ -1,4 +1,4 @@
-#### Tests for ImageMapster
+# Tests for ImageMapster
 
 5/15/2012
 
@@ -8,4 +8,3 @@ I am in the process of revising the test suite to use IQTest, a promise-aware te
 The dev code (1.2.4.067) is considered stable; it will become an official release when I'm finished updating the tests..
 
 The old tests (loaded from `test.html`) are no longer supported. They are still here until I finish the update but should not be considered functional.
-

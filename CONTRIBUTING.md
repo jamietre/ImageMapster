@@ -2,7 +2,7 @@
 
 :+1::tada: First off, thanks for taking the time to contribute! :tada::+1:
 
-The following is a set of guidelines for contributing to ImageMapster. 
+The following is a set of guidelines for contributing to ImageMapster.
 
 Please take a moment to review this document in order to make the contribution process easy and effective for everyone involved. These are mostly guidelines, not rules. Use your best judgment, and feel free to propose changes to this document in a pull request.
 
@@ -28,13 +28,13 @@ Guidelines for bug reports:
 
 A good bug report shouldn't leave others needing to chase you up for more information. Please try to be as detailed as possible in your report. What is your environment? What steps will reproduce the issue? What browser(s) and OS experience the problem? Do other browsers show the bug differently? What would you expect to be the outcome? All these details will help people to fix any potential bugs.
 
-Once you have established that there is a potential issue, please use the [bug report](https://github.com/jamietre/ImageMapster/issues/new?template=bug_report.md) issue template and supply all requested information.  If the required information is not provided, your issue will be marked with the 'needs author feedback' label and closed until there is enough information for the team to evaluate/reproduce.
+Once you have established that there is a potential issue, please use the [bug report](https://github.com/jamietre/ImageMapster/issues/new?template=bug_report.md) issue template and supply all requested information. If the required information is not provided, your issue will be marked with the 'needs author feedback' label and closed until there is enough information for the team to evaluate/reproduce.
 
 ## Feature requests
 
 Feature requests are welcome. But take a moment to find out whether your idea fits with the scope and aims of the project.
 
-Please use the [feature request](https://github.com/jamietre/ImageMapster/issues/new?template=feature_request.md) issue template and supply all requested information.  If the required information is not provided, your issue will be marked with the 'needs author feedback' label and closed until there is enough information to evaluate your proposal.
+Please use the [feature request](https://github.com/jamietre/ImageMapster/issues/new?template=feature_request.md) issue template and supply all requested information. If the required information is not provided, your issue will be marked with the 'needs author feedback' label and closed until there is enough information to evaluate your proposal.
 
 ## Pull requests
 
@@ -44,7 +44,7 @@ Please use the [pull request](https://github.com/jamietre/ImageMapster/pulls/new
 
 **Please ask first** before embarking on any significant pull request (e.g. implementing features or refactoring code), otherwise you risk spending a lot of time working on something that the project's maintainers might not want to merge into the project.
 
-In lieu of a formal style-guide, take care to maintain the existing coding style. Add unit tests for any new or changed functionality. If the type of unit test required to support your pull request is not supported by the current test framework (iqTest), please add an example covering the functionality.  Please make sure your changes build by running `grunt build` as described in the [development section](README.md#development) of the [Readme](README.md).
+In lieu of a formal style-guide, take care to maintain the existing coding style. Add unit tests for any new or changed functionality. If the type of unit test required to support your pull request is not supported by the current test framework (iqTest), please add an example covering the functionality. Please make sure your changes build by running `grunt build` as described in the [development section](README.md#development) of the [Readme](README.md).
 
 ## License
 

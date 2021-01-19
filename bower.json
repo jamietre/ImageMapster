@@ -20,9 +20,7 @@
     "resize",
     "tooltip"
   ],
-  "authors": [
-    "James Treworgy <jamie@outsharked.com>"
-  ],
+  "authors": ["James Treworgy <jamie@outsharked.com>"],
   "license": "MIT",
   "ignore": [
     "**/.*",
