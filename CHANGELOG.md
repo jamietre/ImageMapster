@@ -17,9 +17,14 @@
 
 ## Version 1.3.2 (planned)
 
+- [Issue 324](https://github.com/jamietre/ImageMapster/issues/324) Improve project health
+- [Issue 325](https://github.com/jamietre/ImageMapster/issues/325) Add badges & CDN info to readme
 - [Issue 327](https://github.com/jamietre/ImageMapster/issues/327) Add linter & format files
 - [Issue 328](https://github.com/jamietre/ImageMapster/issues/328) Fix tracking internal map_cache on unbind
 - [Issue 330](https://github.com/jamietre/ImageMapster/issues/330) Fix shapes example rectangle responds to mouseevents
+- [Issue 332](https://github.com/jamietre/ImageMapster/issues/332) Fix programmatic area highlight to single area at a time
+- [Issue 333](https://github.com/jamietre/ImageMapster/issues/333) Fix USA example area highlight & select
+- [Issue 336](https://github.com/jamietre/ImageMapster/issues/336) Fix undefined handler for AREA mousedown event
 
 ## Version 1.3.1 - 2021.01.10
 
