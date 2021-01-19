@@ -1,5 +1,5 @@
 /*!
-* imagemapster - v1.3.2-beta.0 - 2021-01-18
+* imagemapster - v1.3.2-beta.0 - 2021-01-19
 * https://github.com/jamietre/ImageMapster/
 * Copyright (c) 2011 - 2021 James Treworgy
 * License: MIT
@@ -2395,6 +2395,9 @@
     };
     me.clearEffects = function (e) {
       clearEffects.call(this, me, e);
+    };
+    me.mousedown = function (e) {
+      mousedown.call(this, e);
     };
   };
 

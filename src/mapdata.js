@@ -368,6 +368,9 @@
     me.clearEffects = function (e) {
       clearEffects.call(this, me, e);
     };
+    me.mousedown = function (e) {
+      mousedown.call(this, e);
+    };
   };
 
   m.MapData.prototype = {
