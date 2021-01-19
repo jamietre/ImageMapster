@@ -16,8 +16,7 @@
    James Treworgy
 */
 
-/*global define, require, module */
-/*jslint curly: false */
+/* global define, require, module */
 (function (define) {
     define(function () {
         var u,nativeSplit=String.prototype.split;

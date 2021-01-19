@@ -1,6 +1,6 @@
 **IMPORTANT: Please do not create a Pull Request without creating an issue first.**
 
-*Any change needs to be discussed before proceeding. Failure to do so may result in the rejection of the pull request.*
+_Any change needs to be discussed before proceeding. Failure to do so may result in the rejection of the pull request._
 
 Please provide enough information so that others can review your pull request:
 
@@ -12,7 +12,7 @@ Explain the **details** for making this change. What existing problem does the p
 
 **Test plan (required)**
 
-Demonstrate the code is solid. Example: The exact commands you ran and their output, screenshots / videos if the pull request changes UI.  The existing test framework (iqTest) is somewhat limited so if you are unable to add a test due to a limitation in the framework, please instead create a new example specific to the fuctionality changed/added covered in the PR.
+Demonstrate the code is solid. Example: The exact commands you ran and their output, screenshots / videos if the pull request changes UI. The existing test framework (iqTest) is somewhat limited so if you are unable to add a test due to a limitation in the framework, please instead create a new example specific to the fuctionality changed/added covered in the PR.
 
 <!-- If you added a test, please make sure the tests pass. -->
 

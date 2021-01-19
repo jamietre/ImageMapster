@@ -1,5 +1,4 @@
 ﻿/** NOTE: MODIFIED - must not catch errors for use in IQTest */
-/*lint-ignore-file*/
 
 /** @license MIT License (c) copyright B Cavalier & J Hann */
 
@@ -806,15 +805,15 @@ define(['./when'], function(when) {
         when(promise, deferred.resolve, deferred.reject);
 
         return deferred.then(
-			function(value) {
-				cancelTimeout();
-				return value;
-			},
-			function(reason) {
-				cancelTimeout();
-				throw reason;
-			}
-		);
+            function(value) {
+                cancelTimeout();
+                return value;
+            },
+            function(reason) {
+                cancelTimeout();
+                throw reason;
+            }
+        );
     };
 
 });
@@ -1006,8 +1005,7 @@ var buster = (function (setTimeout, B) {
 
     return buster.extend(B || {}, buster);
 }(setTimeout, buster));
-/*jslint eqeqeq: false, onevar: false, plusplus: false*/
-/*global buster, require, module*/
+/* global buster, require, module */
 if (typeof require == "function" && typeof module == "object") {
     var buster = require("./buster-core");
 }
@@ -1158,8 +1156,7 @@ if (typeof require == "function" && typeof module == "object") {
 if (typeof module != "undefined") {
     module.exports = buster.eventEmitter;
 }
-/*jslint eqeqeq: false, onevar: false, plusplus: false*/
-/*global buster, require, module*/
+/* global buster, require, module */
 (function () {
     var isCommonJS = typeof require == "function" && typeof module == "object";
     if (isCommonJS) buster = require("buster-core");
@@ -1959,8 +1956,7 @@ Version 1.0.1 - 6/19/1012
 James Treworgy
 */
 
-/*global define, require, module */
-/*jslint curly: false, expr: true */
+/* global define, require, module */
 (function (define) {
     define(function () {
         var u;
@@ -2290,8 +2286,7 @@ IqTest: A javascript testing framework that promises to be easy
 MIT License
 */
 
-/*jslint novar:true, onevar: false, debug: true */
-/*global alert, define, require, module, buster, u */
+/* global alert, define, require, module, buster, u */
 
 
 (function(define) {
@@ -3347,8 +3342,7 @@ Each assertion should throw an error when called with no args: "Expected 1 argum
 This is necessary for iqtest to determine the position of the "message" argument
  */
 
-/*jslint eqeqeq:false */
-/*global define, require, module */
+/* global define, require, module */
 
  (function(define) {
 define(function(iqtest) {
@@ -3502,195 +3496,194 @@ define(function(iqtest) {
 
 
 /*
-	An HTML output writer for iqtest
+    An HTML output writer for iqtest
 
-	Uses options on the TestGroup:
-	groupTemplate: {name} = group name
-	testTemplate: {name} = test name, {desc} = simple failure description
-	itemTemplate: {fulltext} 
+    Uses options on the TestGroup:
+    groupTemplate: {name} = group name
+    testTemplate: {name} = test name, {desc} = simple failure description
+    itemTemplate: {fulltext} 
 
-	This should append itself to iqtest.writers.xxx
+    This should append itself to iqtest.writers.xxx
 
 */
-/*global iqtest, when */
-/*jslint smarttabs:true  */
+/* global iqtest, when */
 
 (function(iqtest) {
-	var u = iqtest.impl.utility,
-		options = {
-			group:'<pre><h1>Starting test group "<span class="test-name"></span>": <span class="test-groupstatus"></span></h1>'+
-				'<div><div></div></div></pre>',
-			testStart: '<h2>Starting test "<span class="test-name"></span>": <span class="test-teststatus"></span></h2><div></div>',
-			testEnd: '<h3><span class="test-count"></span> assertions passed.</h3>',
-			itemStart: '<span style="color: blue;font-style: italic;">#<span class="test-number"></span>: '
-					+'<span class="test-assertion"></span> "<span class="test-message"></span>"....</span><br/>',
-			itemEnd: '<span class="test-failmessage"></span><br/>',
-			log: '<span style="color:purple"><span class="test-logmessage"></span><br/>',
-			// the following are just formats 
-			resultSuccess: '<span style="color:green"></span>',
-			resultFail:'<span style="color:red"></span>',
-			showPassed: false
-			
-		};
-	
-	// replace every element in "el" containing class "test-*" with the value of properties "*"
-	function tmpReplace(el,obj){
-		var sel,replaceEl,prop;
-		for (prop in obj) {
-			if (obj.hasOwnProperty(prop)) {
-				sel = '.test-'+prop.toLowerCase();
-				replaceEl = $(sel,el);
-				if (!replaceEl.length) {
-					replaceEl=$(el).filter(sel);
-				}
-				replaceEl.empty().append(obj[prop]);				
-			}
-		}
-		return el;
-	}
+    var u = iqtest.impl.utility,
+        options = {
+            group:'<pre><h1>Starting test group "<span class="test-name"></span>": <span class="test-groupstatus"></span></h1>'+
+                '<div><div></div></div></pre>',
+            testStart: '<h2>Starting test "<span class="test-name"></span>": <span class="test-teststatus"></span></h2><div></div>',
+            testEnd: '<h3><span class="test-count"></span> assertions passed.</h3>',
+            itemStart: '<span style="color: blue;font-style: italic;">#<span class="test-number"></span>: '
+                    +'<span class="test-assertion"></span> "<span class="test-message"></span>"....</span><br/>',
+            itemEnd: '<span class="test-failmessage"></span><br/>',
+            log: '<span style="color:purple"><span class="test-logmessage"></span><br/>',
+            // the following are just formats 
+            resultSuccess: '<span style="color:green"></span>',
+            resultFail:'<span style="color:red"></span>',
+            showPassed: false
+            
+        };
+    
+    // replace every element in "el" containing class "test-*" with the value of properties "*"
+    function tmpReplace(el,obj){
+        var sel,replaceEl,prop;
+        for (prop in obj) {
+            if (obj.hasOwnProperty(prop)) {
+                sel = '.test-'+prop.toLowerCase();
+                replaceEl = $(sel,el);
+                if (!replaceEl.length) {
+                    replaceEl=$(el).filter(sel);
+                }
+                replaceEl.empty().append(obj[prop]);
+            }
+        }
+        return el;
+    }
 
-	function getResultOutput(passed) {
-		var tmpl = passed ? options.resultSuccess: options.resultFail;
-		
-		return $(tmpl).text(passed ? "Passed":"Failed");
-	}
+    function getResultOutput(passed) {
+        var tmpl = passed ? options.resultSuccess: options.resultFail;
+        
+        return $(tmpl).text(passed ? "Passed":"Failed");
+    }
 
-	/* Implementation */
+    /* Implementation */
 
-	function groupStart(group) {
-		var groupWrapper = tmpReplace($(options.group).clone(),{
-			name: group.name,
-			groupstatus: "Running"
-		});
+    function groupStart(group) {
+        var groupWrapper = tmpReplace($(options.group).clone(),{
+            name: group.name,
+            groupstatus: "Running"
+        });
 
-		this.container.append(groupWrapper);
-		
-		// should be the innermost div
-		this.groupWrapper = groupWrapper;
-		this.groupContainer = $(u.last(groupWrapper.find('div:only-child')));
-	}
-	function groupEnd(group) {
-		tmpReplace(this.groupWrapper,{
-			groupstatus: getResultOutput(group.passed)
-		});
-	}
+        this.container.append(groupWrapper);
+        
+        // should be the innermost div
+        this.groupWrapper = groupWrapper;
+        this.groupContainer = $(u.last(groupWrapper.find('div:only-child')));
+    }
+    function groupEnd(group) {
+        tmpReplace(this.groupWrapper,{
+            groupstatus: getResultOutput(group.passed)
+        });
+    }
 
-	function testStart(test) {
-			
-		var testData = this.getTestData(test.id),
-			content= tmpReplace($(options.testStart).clone(),{
-				name: test.name,
-				teststatus: "Running"
-			});
+    function testStart(test) {
+            
+        var testData = this.getTestData(test.id),
+            content= tmpReplace($(options.testStart).clone(),{
+                name: test.name,
+                teststatus: "Running"
+            });
 
-		testData.testWrapper = content;
-		testData.testContainer = content.filter('div');
+        testData.testWrapper = content;
+        testData.testContainer = content.filter('div');
 
-		this.groupContainer.append(content);
-	}
+        this.groupContainer.append(content);
+    }
 
-	function testEnd(test) {
-		var testData = this.getTestData(test.id),
-			content = tmpReplace($(options.testEnd).clone(),{
-				count: test.count
-			});
+    function testEnd(test) {
+        var testData = this.getTestData(test.id),
+            content = tmpReplace($(options.testEnd).clone(),{
+                count: test.count
+            });
 
-		testData.testContainer.append(content);
-		
-		tmpReplace(testData.testWrapper, {
-			teststatus: getResultOutput(test.passed)
-		});
-	}
+        testData.testContainer.append(content);
+        
+        tmpReplace(testData.testWrapper, {
+            teststatus: getResultOutput(test.passed)
+        });
+    }
 
-	function itemStart(test,testinfo)
-	{
-		var testData = this.getTestData(test.id),
-			tempItem= tmpReplace($(options.itemStart).clone(),{
-				number: testinfo.count,
-				assertion: testinfo.assertion,
-				message: testinfo.desc
-			});
+    function itemStart(test,testinfo)
+    {
+        var testData = this.getTestData(test.id),
+            tempItem= tmpReplace($(options.itemStart).clone(),{
+                number: testinfo.count,
+                assertion: testinfo.assertion,
+                message: testinfo.desc
+            });
 
-		testData.itemTarget = tempItem;
-		testData.testContainer.append(tempItem);
-	}
-	function itemEnd(test,response) {
-		// this can get called without itemStart (prob should create a different kind of event for errors but...)
-		var testData = this.getTestData(test.id);
+        testData.itemTarget = tempItem;
+        testData.testContainer.append(tempItem);
+    }
+    function itemEnd(test,response) {
+        // this can get called without itemStart (prob should create a different kind of event for errors but...)
+        var testData = this.getTestData(test.id);
 
-		if (response.passed) {
-			if (!options.showPassed) {
-				testData.itemTarget.remove();
-			}
-		} else {
-			testData.itemTarget.replaceWith(tmpReplace($(options.itemEnd).clone(),{
-				failmessage: response.fulltext
-			}));
-		}
-		testData.itemTarget=null;
-		response.written=true;
-	}
-	function testLog(test,message) {
-		var testData = this.getTestData(test.id);
-		testData.testContainer.append(tmpReplace($(options.log).clone(),{
-			logmessage: message
-		}));
-	}
-	//	function render() {
-	//	var me=this;
+        if (response.passed) {
+            if (!options.showPassed) {
+                testData.itemTarget.remove();
+            }
+        } else {
+            testData.itemTarget.replaceWith(tmpReplace($(options.itemEnd).clone(),{
+                failmessage: response.fulltext
+            }));
+        }
+        testData.itemTarget=null;
+        response.written=true;
+    }
+    function testLog(test,message) {
+        var testData = this.getTestData(test.id);
+        testData.testContainer.append(tmpReplace($(options.log).clone(),{
+            logmessage: message
+        }));
+    }
+    //  function render() {
+    //    var me=this;
 
-	//	u.each(me.results,function(i,result) {
-	//		if (!result.written) {
-	//		.event(this.group.itemEnd,this.group,result);
-	//	}
-	//	});
-	//	}
+    //    u.each(me.results,function(i,result) {
+    //      if (!result.written) {
+    //        .event(this.group.itemEnd,this.group,result);
+    //      }
+    //    });
+    //  }
 
-	// ensure that errors don't ever cause a promise to fail. errors in the harness should always
-	// cause execution to stop.
+    // ensure that errors don't ever cause a promise to fail. errors in the harness should always
+    // cause execution to stop.
 
-	function safeMethod(method) {
-		return function() {
-			try {
-				method.apply(this,u.toArray(arguments));
-			}
-			catch(err) {
-				when.debug=true;
-				throw err;
-			}
-		};
-	}
-	function HtmlWriter(container, opts) {
-		// when added to a TestGroup, the group should assign itself to owner
-		this.owner=null;
-		this.container=container;
-		this.tests={};
+    function safeMethod(method) {
+        return function() {
+            try {
+                method.apply(this,u.toArray(arguments));
+            }
+            catch(err) {
+                when.debug=true;
+                throw err;
+            }
+        };
+    }
+    function HtmlWriter(container, opts) {
+        // when added to a TestGroup, the group should assign itself to owner
+        this.owner=null;
+        this.container=container;
+        this.tests={};
 
-		if (typeof opts==='object') {
-			$.extend(options,opts);
-		}
-	}
+        if (typeof opts==='object') {
+            $.extend(options,opts);
+        }
+    }
 
-	HtmlWriter.prototype = {
-		constructor: HtmlWriter,
-		groupStart: safeMethod(groupStart),
-		groupEnd: safeMethod(groupEnd),
-		testStart: safeMethod(testStart),
-		testEnd: safeMethod(testEnd),
-		itemStart: safeMethod(itemStart),
-		itemEnd: safeMethod(itemEnd),
-		testLog: safeMethod(testLog),
-		// internal api
-		getTestData: function(id) {
-			if (!this.tests[id]) {
-				this.tests[id]={};
-			}
-			return this.tests[id];
-		}
-	};
+    HtmlWriter.prototype = {
+        constructor: HtmlWriter,
+        groupStart: safeMethod(groupStart),
+        groupEnd: safeMethod(groupEnd),
+        testStart: safeMethod(testStart),
+        testEnd: safeMethod(testEnd),
+        itemStart: safeMethod(itemStart),
+        itemEnd: safeMethod(itemEnd),
+        testLog: safeMethod(testLog),
+        // internal api
+        getTestData: function(id) {
+            if (!this.tests[id]) {
+                this.tests[id]={};
+            }
+            return this.tests[id];
+        }
+    };
 
 
-	iqtest.writers.html = HtmlWriter;
+    iqtest.writers.html = HtmlWriter;
 
 }(iqtest));
 

@@ -6,6 +6,7 @@
 [![npm downloads](https://img.shields.io/npm/dm/imagemapster?label=npm)](https://www.npmjs.com/package/imagemapster)
 [![jsDelivr downloads](https://data.jsdelivr.com/v1/package/npm/imagemapster/badge?style=rounded)](https://www.jsdelivr.com/package/npm/imagemapster)
 [![cdnjs version](https://img.shields.io/cdnjs/v/imagemapster.svg?color=orange)](https://cdnjs.com/libraries/imagemapster)
+[![code style: prettier](https://img.shields.io/badge/code_style-prettier-ff69b4.svg)](https://github.com/prettier/prettier)
 
 ImageMapster activates the areas in HTML imagemaps so you can highlight and select them. It has lots of other features for manual control, tooltips, resizing, and more. It is designed to be compatible with every common platform, and is tested with Internet Explorer 6-10, Firefox 3.0+, Safari, Opera, and Chrome. It works on mobile devices and doesn't use Flash.
 
@@ -13,13 +14,14 @@ ImageMapster activates the areas in HTML imagemaps so you can highlight and sele
 
 See the [change log](https://github.com/jamietre/ImageMapster/blob/master/CHANGELOG.md) for details on the release history and roadmap.
 
-Read the [release notes](http://blog.outsharked.com/2012/06/imagemapster-125-released.html) for 1.2.5, the last significant feature update. 
+Read the [release notes](http://blog.outsharked.com/2012/06/imagemapster-125-released.html) for 1.2.5, the last significant feature update.
 
 ## Getting Started
 
 ### Installation
 
 #### NPM
+
 This package can be installed via NPM:
 
 ```sh
@@ -31,7 +33,10 @@ npm install jquery imagemapster --save
 Download the latest version of ImageMapster from the [Releases](https://github.com/jamietre/ImageMapster/releases) page and include in your webpage:
 
 ```html
-<script language="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script
+  language="text/javascript"
+  src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"
+></script>
 <script language="text/javascript" src="jquery.imagemapster.min.js"></script>
 ```
 
@@ -51,10 +56,10 @@ $('img').mapster();
 Activate image maps with some specific options.
 
 ```js
-$('img').mapster( {
-    fillColor: 'ff0000',
-    stroke: true,
-    singleSelect: true
+$('img').mapster({
+  fillColor: 'ff0000',
+  stroke: true,
+  singleSelect: true
 });
 ```
 
@@ -79,13 +84,13 @@ $('area').mapster('deselect');
 **set**: select or deselect an element. If `selected` is true, the area is selected, if false, it is deselected.
 
 ```js
-$('area').mapster('set',selected);
+$('area').mapster('set', selected);
 ```
 
 You can also select or deselect areas using a their `mapKey`. This is an attribute on each area in your HTML that identifies it. You define a mapKey using a configuration option: `mapKey: 'data-key'`.
 
 ```js
-$('img').mapster('set',true,'key1,key2');
+$('img').mapster('set', true, 'key1,key2');
 ```
 
 If two areas share the same value for the `mapKey` they will be automatically grouped together when activated. You can also use the values of the mapKey to select areas from code.
@@ -93,39 +98,43 @@ If two areas share the same value for the `mapKey` they will be automatically gr
 You can pass options to change the rendering effects when using set as the last parameter:
 
 ```js
-$('img').mapster('set',true,'key', {fillColor: 'ff0000'} );
+$('img').mapster('set', true, 'key', { fillColor: 'ff0000' });
 ```
 
 MapKeys can contain more than one value. The first value always defines groups when you mouse over. Other values can be used to create logical groups. For example:
 
 ```html
-<img id="usamap" src="map.jpeg" usemap="#usa">
+<img id="usamap" src="map.jpeg" usemap="#usa" />
 <map name="usa">
-    <area data-key="maine,new-england,really-cold" shape="poly" coords="...">
-    <area data-key="new-hampshire,new-england,really-cold" shape="poly" coords="...">
-    <area data-key="vermont,new-england,really-cold" shape="poly" coords="...">
-    <area data-key="connecticut,new-england" shape="poly" coords="...">
-    <area data-key="rhode-island,new-england" shape="poly" coords="...">
-    <area data-key="massachusetts,new-england" shape="poly" coords="...">
-    <!-- more states... -->
+  <area data-key="maine,new-england,really-cold" shape="poly" coords="..." />
+  <area
+    data-key="new-hampshire,new-england,really-cold"
+    shape="poly"
+    coords="..."
+  />
+  <area data-key="vermont,new-england,really-cold" shape="poly" coords="..." />
+  <area data-key="connecticut,new-england" shape="poly" coords="..." />
+  <area data-key="rhode-island,new-england" shape="poly" coords="..." />
+  <area data-key="massachusetts,new-england" shape="poly" coords="..." />
+  <!-- more states... -->
 </map>
 ```
 
 ```js
-$('#usamap').mapster( { mapKey: 'data-key' } );
+$('#usamap').mapster({ mapKey: 'data-key' });
 ```
 
 Mousing over each state would cause just that state to be higlighted. You can also select other logical groups from code code:
 
 ```js
 // select all New England states
-$('img').mapster('set',true,'new-england');
+$('img').mapster('set', true, 'new-england');
 
 // select just Maine, New Hampshire & Vermont
-$('img').mapster('set',true,'really-cold');
+$('img').mapster('set', true, 'really-cold');
 ```
 
-Groups created this way are *independent* of the primary group. If you select "new-england" from code, you can't unselect just "MA" by clicking on it. You would have to unselect "new-england" from code. 
+Groups created this way are _independent_ of the primary group. If you select "new-england" from code, you can't unselect just "MA" by clicking on it. You would have to unselect "new-england" from code.
 
 To simply indentify a set of areas to turn on or off, but not treat them as a logical group, you can use CSS classes and select areas directly, or use the <code>keys</code> option to identify the primary keys associated with a group (see documentation).
 
@@ -135,15 +144,14 @@ Please see the [ImageMapster web site](http://www.outsharked.com/imagemapster/de
 
 ## Examples
 
-ImageMapster includes several examples.  To view the examples:
+ImageMapster includes several examples. To view the examples:
 
 1. Clone the repo
-2. Install NPM dependencies - `npm install`
-3. Open [index.html](examples/index.html) directly from your file system in a browser
+2. Open [index.html](examples/index.html) directly from your file system in a browser
 
 ## Zepto Compatibility
 
-Newer versions of Zepto don't seem to work any more (as of 1.2.5). I didn't want this to hold up the ever-delayed release even further so I didn't figure out why. 
+Newer versions of Zepto don't seem to work any more (as of 1.2.5). I didn't want this to hold up the ever-delayed release even further so I didn't figure out why.
 
 In theory it should work; you need to use the "jquery.imagemapster.zepto.js" build. This patches a few holes in Zepto that ImageMapster needs. It is safe to use the zepto version with jQuery.
 
@@ -171,10 +179,10 @@ The source code is broken into several modules to make management easier and to 
 2. Install NPM dependencies - `npm install`
 3. Install [Grunt Cli](https://gruntjs.com/getting-started) - `npm install -g grunt-cli`
 4. Generate a Build:
-    - Release Build (compressed/uncompressed/sourcemap for jQuery) - `grunt build`
-    - Full Release Build (compressed/uncompressed/sourcemap for jQuery & Zepto) - `grunt fullbuild`
-    - jQuery Dev Build (uncompressed only) - `grunt jquery`
-    - Zepto Dev Build (uncompressed only) - `grunt zepto`
+   - Release Build (compressed/uncompressed/sourcemap for jQuery) - `grunt build`
+   - Full Release Build (compressed/uncompressed/sourcemap for jQuery & Zepto) - `grunt fullbuild`
+   - jQuery Dev Build (uncompressed only) - `grunt jquery`
+   - Zepto Dev Build (uncompressed only) - `grunt zepto`
 
 ### Debug
 
