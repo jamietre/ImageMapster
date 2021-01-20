@@ -1,5 +1,5 @@
 /*!
-* imagemapster - v1.3.2-beta.0 - 2021-01-19
+* imagemapster - v1.3.2-beta.0 - 2021-01-20
 * https://github.com/jamietre/ImageMapster/
 * Copyright (c) 2011 - 2021 James Treworgy
 * License: MIT
@@ -510,7 +510,9 @@
       this.impl = null;
       $.fn.mapster = null;
       $.mapster = null;
-      $('*').off();
+      // Note - We intentionally do not remove tooltip ns here in order to ensure
+      // that if a tooltip is currently open it can still be closed
+      return $('*').off('.mapster');
     }
   };
 
@@ -1112,7 +1114,6 @@
           me.unbind.apply(img);
           if (!md.complete) {
             // will be queued
-            img.on();
             return true;
           }
           md = null;
@@ -1883,10 +1884,10 @@
         index = me._add(image[0]);
 
         image
-          .on('load', function (e) {
+          .on('load.mapster', function (e) {
             me.imageLoaded.call(me, e);
           })
-          .on('error', function (e) {
+          .on('error.mapster', function (e) {
             me.imageLoadError.call(me, e);
           });
 
@@ -3959,12 +3960,17 @@
     beforeClose,
     onClose
   ) {
-    var event_name = event + '.mapster-tooltip';
+    // Tooltip namespace is intentionally different from standard
+    // .mapster namespace because if tooltip is open when mapster
+    // is unbound, there wouldn't be a way to close the tooltip
+    // if the event listener was removed.
+    var tooltip_ns = '.mapster-tooltip',
+      event_name = event + tooltip_ns;
 
     if ($.inArray(bindOption, options) >= 0) {
       target.off(event_name).on(event_name, function (e) {
         if (!beforeClose || beforeClose.call(this, e)) {
-          target.off('.mapster-tooltip');
+          target.off(tooltip_ns);
           if (onClose) {
             onClose.call(this);
           }
