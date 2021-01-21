@@ -30,9 +30,16 @@ npm install jquery imagemapster --save
 
 #### Browser
 
+:warning: **_As of ImageMapster v1.3.0, if targeting ES5 browers, you must include a Promise polyfill such as [es6-promise](https://www.npmjs.com/package/es6-promise). See [Issue 341](https://github.com/jamietre/ImageMapster/issues/341) for details._**
+
 Download the latest version of ImageMapster from the [Releases](https://github.com/jamietre/ImageMapster/releases) page and include in your webpage:
 
 ```html
+<!-- Optional: If targeting ES5 browers, as of ImageMapster v1.3.0, a Promise polyfill is required! -->
+<script
+  type="text/javascript"
+  src="https://cdn.jsdelivr.net/npm/es6-promise/dist/es6-promise.auto.min.js"
+></script>
 <script
   language="text/javascript"
   src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"
@@ -153,7 +160,7 @@ ImageMapster includes several examples. To view the examples:
 
 As of ImageMapster v1.3.2, ImageMapster contains full support for Zepto v1.2.0. Prior to ImageMapster v1.3.2 and with any version of Zepto except v1.2.0, ImageMapster is unlikely to work as expected. In the early versions of ImageMapster, Zepto support was maintained, however due to changes in Zepto, as of v1.2.5 of ImageMapster, support for Zepto compatability was not maintained as it required too much effort and pushing ImageMapster forward with jQuery was the priority.
 
-**_Given that Zepto is no longer actively developed and with plans in the ImageMapster Roadmap to convert to a Native JS Library, ImageMapster will be officially dropping support of Zepto as of ImageMapster v2.0.0._**
+:warning: **_Given that Zepto is no longer actively developed and with plans in the ImageMapster Roadmap to convert to a Native JS Library, ImageMapster will be officially dropping support of Zepto as of ImageMapster v2.0.0._**
 
 To use ImageMapster >= v1.3.2 < 2.0.0 with Zepto v.1.2.0, Zepto must contain the following [Zepto Modules](https://github.com/madrobby/zepto#zepto-modules) at a minimum:
 
@@ -165,12 +172,19 @@ To use ImageMapster >= v1.3.2 < 2.0.0 with Zepto v.1.2.0, Zepto must contain the
 
 ### CDN
 
+:warning: **_As of ImageMapster v1.3.0, if targeting ES5 browers, you must include a Promise polyfill such as [es6-promise](https://www.npmjs.com/package/es6-promise). See [Issue 341](https://github.com/jamietre/ImageMapster/issues/341) for details._**
+
 1. [jsDelivr](https://www.jsdelivr.com/package/npm/imagemapster?version=1.3.2) - https://www.jsdelivr.com/package/npm/imagemapster?version=1.3.2
 2. [cdnjs](https://cdnjs.com/libraries/imagemapster/1.3.2) - https://cdnjs.com/libraries/imagemapster/1.3.2
 
 Use `jquery.imagemapster.zepto.min.js`
 
 ```html
+<!-- Optional: If targeting ES5 browers, as of ImageMapster v1.3.0, a Promise polyfill is required! -->
+<script
+  type="text/javascript"
+  src="https://cdn.jsdelivr.net/npm/es6-promise/dist/es6-promise.auto.min.js"
+></script>
 <script
   language="text/javascript"
   src="/path/to/your/custom/zeptodist"
