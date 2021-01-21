@@ -27,6 +27,7 @@
 - [Issue 336](https://github.com/jamietre/ImageMapster/issues/336) Fix undefined handler for AREA mousedown event
 - [Issue 338](https://github.com/jamietre/ImageMapster/issues/338) Fix event listener issues
 - [Issue 339](https://github.com/jamietre/ImageMapster/issues/339) Fix Zepto support
+- [Issue 341](https://github.com/jamietre/ImageMapster/issues/341) Update readme regarding Promise polyfill requirement for ES5 browsers
 
 ## Version 1.3.1 - 2021.01.10
 
