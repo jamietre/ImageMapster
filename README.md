@@ -151,15 +151,66 @@ ImageMapster includes several examples. To view the examples:
 
 ## Zepto Compatibility
 
-Newer versions of Zepto don't seem to work any more (as of 1.2.5). I didn't want this to hold up the ever-delayed release even further so I didn't figure out why.
+As of ImageMapster v1.3.2, ImageMapster contains full support for Zepto v1.2.0. Prior to ImageMapster v1.3.2 and with any version of Zepto except v1.2.0, ImageMapster is unlikely to work as expected. In the early versions of ImageMapster, Zepto support was maintained, however due to changes in Zepto, as of v1.2.5 of ImageMapster, support for Zepto compatability was not maintained as it required too much effort and pushing ImageMapster forward with jQuery was the priority.
 
-In theory it should work; you need to use the "jquery.imagemapster.zepto.js" build. This patches a few holes in Zepto that ImageMapster needs. It is safe to use the zepto version with jQuery.
+**_Given that Zepto is no longer actively developed and with plans in the ImageMapster Roadmap to convert to a Native JS Library, ImageMapster will be officially dropping support of Zepto as of ImageMapster v2.0.0._**
 
-To generate a Zepto build of ImageMapster:
+To use ImageMapster >= v1.3.2 < 2.0.0 with Zepto v.1.2.0, Zepto must contain the following [Zepto Modules](https://github.com/madrobby/zepto#zepto-modules) at a minimum:
 
-1. Clone the repository
-2. Install NPM dependencies - `npm install`
-3. Generate a full build - `npm run fullbuild`
+- zepto
+- event
+- ie
+- fx
+- touch
+
+### CDN
+
+1. [jsDelivr](https://www.jsdelivr.com/package/npm/imagemapster?version=1.3.2) - https://www.jsdelivr.com/package/npm/imagemapster?version=1.3.2
+2. [cdnjs](https://cdnjs.com/libraries/imagemapster/1.3.2) - https://cdnjs.com/libraries/imagemapster/1.3.2
+
+Use `jquery.imagemapster.zepto.min.js`
+
+```html
+<script
+  language="text/javascript"
+  src="/path/to/your/custom/zeptodist"
+></script>
+<script
+  language="text/javascript"
+  src="/path/to/cdn/for/v1.3.2/dist/jquery.imagemapster.zepto.min.js"
+></script>
+```
+
+### NPM
+
+The maintainers of Zepto decided not to support any module loaders so there is no official support of Zepto using AMD/CJS/etc. Given this, the Zepto version of ImageMapster expects a dependency of `jquery` when using a module loader. The Zepto version of ImageMapster will work with jQuery or Zepto. If you'd like to utilize Zepto, there are some projects that wrap Zepto and support UMD such as [zepto-modules](https://www.npmjs.com/package/zepto-modules). In order to use Zepto, you will need to configure your bundler to map `jquery` to your Zepto build.
+
+Using `webpack` and the `zepto-modules/_custom` module as an example:
+
+#### Install from NPM
+
+```sh
+npm install zepto-modules imagemapster@1.3.2 --save
+```
+
+#### yourmodule.js
+
+```js
+import $ from 'zepto-modules/_custom';
+import im from 'imagemapster/dist/jquery.imagemapster.zepto.js';
+...
+$(yourImage).mapster({ ... });
+```
+
+#### webpack.config.js
+
+```js
+resolve: {
+  alias: {
+    jquery: path.resolve('./node_modules/zepto-modules/_custom');
+  }
+}
+```
 
 ## Find out More
 

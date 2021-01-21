@@ -25,6 +25,8 @@
 - [Issue 332](https://github.com/jamietre/ImageMapster/issues/332) Fix programmatic area highlight to single area at a time
 - [Issue 333](https://github.com/jamietre/ImageMapster/issues/333) Fix USA example area highlight & select
 - [Issue 336](https://github.com/jamietre/ImageMapster/issues/336) Fix undefined handler for AREA mousedown event
+- [Issue 338](https://github.com/jamietre/ImageMapster/issues/338) Fix event listener issues
+- [Issue 339](https://github.com/jamietre/ImageMapster/issues/339) Fix Zepto support
 
 ## Version 1.3.1 - 2021.01.10
 
