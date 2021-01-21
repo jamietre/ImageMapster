@@ -421,7 +421,9 @@
       this.impl = null;
       $.fn.mapster = null;
       $.mapster = null;
-      $('*').off();
+      // Note - We intentionally do not remove tooltip ns here in order to ensure
+      // that if a tooltip is currently open it can still be closed
+      return $('*').off('.mapster');
     }
   };
 
@@ -1023,7 +1025,6 @@
           me.unbind.apply(img);
           if (!md.complete) {
             // will be queued
-            img.on();
             return true;
           }
           md = null;

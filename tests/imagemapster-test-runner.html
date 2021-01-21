@@ -7,7 +7,7 @@
     <!-- <script type="text/javascript" src="redist/jquery.2.2.4.js"></script> -->
     <!-- <script type="text/javascript" src="redist/jquery.1.9.1.js"></script> -->
     <!-- <script type="text/javascript" src="redist/jquery.1.7.1.js"></script> -->
-    <!--<script type="text/javascript" src="redist/zepto.js"></script>-->
+    <!-- <script type="text/javascript" src="redist/zepto.1.2.0.js"></script> -->
 
     <script type="text/javascript" src="redist/common.utils.1.0.js"></script>
     <script
@@ -27,7 +27,10 @@
       type="text/javascript"
       src="../dist/jquery.imagemapster.js"
     ></script>
-    <!-- <script type="text/javascript" src="../dist/jquery.imagemapster.zepto.js"></script> -->
+    <!-- <script
+      type="text/javascript"
+      src="../dist/jquery.imagemapster.zepto.js"
+    ></script> -->
   </head>
 
   <body>
@@ -140,9 +143,17 @@
           }
           enableTestLink();
         });
-        $('#toggleTestImage').on('click', function () {
-          $('#testElements').toggle('fast');
-        });
+
+        // Zepto returns height/width of 0/0 when image is not visible
+        // so force image to be displayed
+        if (window.Zepto) {
+          $('#testElements').toggle(true);
+          $('#toggleTestImage').hide();
+        } else {
+          $('#toggleTestImage').on('click', function () {
+            $('#testElements').toggle('fast');
+          });
+        }
 
         enableTestLink();
 
@@ -179,6 +190,12 @@
     </style>
 
     <h1>ImageMapster Test Runner</h1>
+    <p>
+      <strong>*** If using Zepto build ***</strong><br />
+      The test image at bottom of page MUST be visible otherwise the resize tests will fail because Zepto returns width/height of 0/0 when content isn't visible.
+      For this reason, the ability to toggle visibility of the image is not
+      supported.
+    </p>
     <div>
       <b>Choose tests to run: </b>
       <a href="#" id="testSelectAll">select all</a>&nbsp;

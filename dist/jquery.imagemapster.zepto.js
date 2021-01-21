@@ -4,7 +4,7 @@
 * Copyright (c) 2011 - 2021 James Treworgy
 * License: MIT
 */
-(function (factory) {
+(function (root, factory) {
   if (typeof define === 'function' && define.amd) {
     // AMD. Register as an anonymous module.
     define(['jquery'], factory);
@@ -28,10 +28,36 @@
     };
   } else {
       // Browser globals
-      factory(jQuery);
+      factory(root.jQuery || root.Zepto);
   }
-}(function (jQuery) {
+}(typeof self !== 'undefined' ? self : this, function (jQuery) {
     /* 
+  zepto.js
+  Monkey patch for Zepto to add some methods ImageMapster needs
+*/
+
+(function ($) {
+  'use strict';
+
+  var origStop = $.fn.stop;
+  if (!origStop) {
+    $.fn.stop = function () {
+      return this;
+    };
+  }
+
+  $.each(['Height', 'Width'], function (_, name) {
+    var funcName = 'outer' + name,
+      origFunc = $.fn[funcName];
+    if (!origFunc) {
+      $.fn[funcName] = function () {
+        return this[name.toLowerCase()]();
+      };
+    }
+  });
+})(jQuery);
+
+/* 
   jqueryextensions.js
   Extend/intercept jquery behavior
 */

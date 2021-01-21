@@ -82,7 +82,7 @@ module.exports = function (grunt) {
         options: {
           src: '<%= concat.zepto.dest %>',
           dest: 'build/jquery.<%= pkg.name %>.zepto.umd.js',
-          template: 'jqueryplugin.hbs'
+          template: 'zeptoplugin.hbs'
         }
       }
     },
@@ -115,7 +115,7 @@ module.exports = function (grunt) {
       },
       src: {
         files: ['src/**/*.js'],
-        tasks: ['jquery'],
+        tasks: ['build'],
         options: {
           livereload: '<%= connect.options.livereload %>'
         }
@@ -177,7 +177,7 @@ module.exports = function (grunt) {
   });
 
   grunt.registerTask('default', ['build']);
-  grunt.registerTask('fullbuild', [
+  grunt.registerTask('build', [
     'clean',
     'eslint',
     'concat:jquery',
@@ -185,29 +185,14 @@ module.exports = function (grunt) {
     'umd:jquery',
     'umd:zepto',
     'concat:jquerydist',
-    'concat:zeptodist',
-    'uglify'
-  ]);
-  grunt.registerTask('build', ['jquery', 'uglify:jquery']);
-  grunt.registerTask('jquery', [
-    'clean',
-    'eslint',
-    'concat:jquery',
-    'umd:jquery',
-    'concat:jquerydist'
-  ]);
-  grunt.registerTask('zepto', [
-    'clean',
-    'eslint',
-    'concat:zepto',
-    'umd:zepto',
     'concat:zeptodist'
   ]);
-  grunt.registerTask('debug', ['jquery', 'connect', 'watch']);
-  grunt.registerTask('example', ['jquery', 'connect:examples', 'watch']);
-  grunt.registerTask('test', ['jquery', 'connect:tests', 'watch']);
-  grunt.registerTask('postBump', ['build', 'bump-commit', 'shell:npm']);
-  grunt.registerTask('preBump', ['clean', 'build']);
+  grunt.registerTask('dist', ['build', 'uglify']);
+  grunt.registerTask('debug', ['build', 'connect', 'watch']);
+  grunt.registerTask('example', ['build', 'connect:examples', 'watch']);
+  grunt.registerTask('test', ['build', 'connect:tests', 'watch']);
+  grunt.registerTask('postBump', ['dist', 'bump-commit', 'shell:npm']);
+  grunt.registerTask('preBump', ['clean', 'dist']);
   grunt.registerTask('patch', ['preBump', 'bump-only:patch', 'postBump']);
   grunt.registerTask('minor', ['preBump', 'bump-only:minor', 'postBump']);
   grunt.registerTask('major', ['preBump', 'bump-only:major', 'postBump']);

@@ -134,10 +134,10 @@
         index = me._add(image[0]);
 
         image
-          .on('load', function (e) {
+          .on('load.mapster', function (e) {
             me.imageLoaded.call(me, e);
           })
-          .on('error', function (e) {
+          .on('error.mapster', function (e) {
             me.imageLoadError.call(me, e);
           });
 
