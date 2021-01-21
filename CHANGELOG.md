@@ -15,7 +15,7 @@
 
 - **Breaking Change** - [Issue 70](https://github.com/jamietre/ImageMapster/issues/70) Respect target attribute for AREA elements with href.
 
-## Version 1.3.2 (planned)
+## Version 1.3.2 - 2021.01.21
 
 - [Issue 324](https://github.com/jamietre/ImageMapster/issues/324) Improve project health
 - [Issue 325](https://github.com/jamietre/ImageMapster/issues/325) Add badges & CDN info to readme
