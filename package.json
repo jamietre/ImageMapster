@@ -8,7 +8,7 @@
   ],
   "scripts": {
     "build": "grunt build",
-    "fullbuild": "grunt fullbuild",
+    "dist": "grunt dist",
     "debug": "grunt debug",
     "test": "grunt test",
     "example": "grunt example"

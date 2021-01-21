@@ -244,10 +244,8 @@ The source code is broken into several modules to make management easier and to 
 2. Install NPM dependencies - `npm install`
 3. Install [Grunt Cli](https://gruntjs.com/getting-started) - `npm install -g grunt-cli`
 4. Generate a Build:
-   - Release Build (compressed/uncompressed/sourcemap for jQuery) - `grunt build`
-   - Full Release Build (compressed/uncompressed/sourcemap for jQuery & Zepto) - `grunt fullbuild`
-   - jQuery Dev Build (uncompressed only) - `grunt jquery`
-   - Zepto Dev Build (uncompressed only) - `grunt zepto`
+   - Debug Build (uncompressed) - `grunt build`
+   - Release Build (uncompressed/compressed/sourcemap) - `grunt dist`
 
 ### Debug
 
