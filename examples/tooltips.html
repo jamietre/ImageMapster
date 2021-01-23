@@ -59,12 +59,34 @@
       $(document).ready(function () {
         'use strict';
 
+        $('.trigger-tooltip').on('click', function() {
+          var key = $(this).data('group'),
+            tooltip_text = $(this).data('tooltip-text'),
+            tooltip_jquery = $(this).data('tooltip-jquery'),
+            tooltip_content = $(this).data('tooltip-content'),
+            tooltip = tooltip_text ||
+                      (tooltip_jquery && $('<div>').text(tooltip_jquery)) ||
+                      (tooltip_content && { content: tooltip_content });
+
+          if (key) {
+            $('img').mapster('tooltip', key, tooltip);
+          } else {
+            $('img').mapster('tooltip');
+          }
+        });
         // eslint-disable-next-line no-unused-vars
         function state_change(data) {
           //alert(data.state+":"+data.selected);
         }
-        $('b').on('mouseover', function () {
-          $('img').mapster('tooltip', this, 'The text is: ' + $(this).text());
+        $('.generic-tooltip').on('mouseover', function () {
+          var tooltip_text = $(this).data('tooltip-text'),
+            tooltip_jquery = $(this).data('tooltip-jquery'),
+            tooltip_content = $(this).data('tooltip-content'),
+            tooltip = tooltip_text ||
+                      (tooltip_jquery && $('<div>').text(tooltip_jquery)) ||
+                      (tooltip_content && { content: tooltip_content });
+
+          $('img').mapster('tooltip', this, tooltip);
         });
 
         $('img').mapster({
@@ -131,6 +153,15 @@
       This shows how to use new ToolTip features in 1.2.6 to render tooltips
       manually, and for any area (inside or outside an imagemap)
     </p>
+    <p>
+      <ul>
+        <li class="trigger-tooltip"><a href="#">Clear Tooltip</a></li>
+        <li class="trigger-tooltip" data-group="blue-circle"><a href="#">Show default blue-circle tooltip</a></li>
+        <li class="trigger-tooltip" data-group="blue-circle" data-tooltip-text="Overridden tooltip text"><a href="#">Show overridden by text blue-circle tooltip</a></li>
+        <li class="trigger-tooltip" data-group="blue-circle" data-tooltip-jquery="Overridden tooltip jquery"><a href="#">Show overridden by jQuery blue-circle tooltip</a></li>
+        <li class="trigger-tooltip" data-group="blue-circle" data-tooltip-content="Overridden tooltip options.content"><a href="#">Show overridden by options.content blue-circle tooltip</a></li>
+      </ul>
+    </p>
 
     <img
       src="images/shapes.jpg"
@@ -182,16 +213,38 @@ href="#">
 
     <div
       style="
-        top: 400;
-        left: 200;
-        max-width: 200px;
+        width: 350px;
         border: 1px solid black;
         margin: 10px;
         padding: 10px;
       "
     >
       This is a div.
-      <b style="border: 1px solid red">This is some content.</b> Thi
+      <b class="generic-tooltip" data-tooltip-text="This is my tooltip using text" style="border: 1px solid red">Apply tooltip using text.</b>
+    </div>
+
+    <div
+      style="
+        width: 350px;
+        border: 1px solid black;
+        margin: 10px;
+        padding: 10px;
+      "
+    >
+      This is a div.
+      <b class="generic-tooltip" data-tooltip-jquery="This is my tooltip using jquery" style="border: 1px solid green">Apply tooltip using jquery.</b>
+    </div>
+
+    <div
+      style="
+        width: 350px;
+        border: 1px solid black;
+        margin: 10px;
+        padding: 10px;
+      "
+    >
+      This is another div.
+      <b class="generic-tooltip" data-tooltip-content="This is my tooltip using options.content" style="border: 1px solid orange">Apply tooltip using options.content.</b>
     </div>
   </body>
 </html>

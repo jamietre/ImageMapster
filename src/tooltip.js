@@ -234,8 +234,7 @@
       *
      * @param {string|jquery}   [content]       A string of html or a jQuery object containing the tooltip content.
 
-     * @param {object|string|jQuery} [options]  options to apply when creating this tooltip - OR -
-     *                                          The markup, or a jquery object, containing the data for the tooltip
+     * @param {object} [options]  options to apply when creating this tooltip
      *  @config {string|jquery}   [container]     An element within which the tooltip must be bounded
      *  @config {bool}          [template]      a template to use instead of the default. If this property exists and is null,
      *                                          then no template will be used.
@@ -371,6 +370,14 @@
       : null;
   }
 
+  function getOptionsFromOptions(options) {
+    return options
+      ? typeof options == 'string' || options.jquery
+        ? { content: options }
+        : options
+      : {};
+  }
+
   /**
    * Activate or remove a tooltip for an area. When this method is called on an area, the
    * key parameter doesn't apply and "options" is the first parameter.
@@ -384,7 +391,7 @@
    * When "noTemplate" is true, the default tooltip template will not be used either, meaning only
    * the actual html passed will be used.
    *
-   * @param  {string|AreaElement} key The area for which to activate a tooltip, or a DOM element.
+   * @param  {string|AreaElement|HTMLElement} key The area key or element for which to activate a tooltip, or a DOM element/selector.
    *
    * @param {object|string|jquery} [options] options to apply when creating this tooltip - OR -
    *                                         The markup, or a jquery object, containing the data for the tooltip
@@ -411,11 +418,15 @@
           md.clearToolTip();
         } else {
           target = $(key);
+          if (!target || !target.length) {
+            return;
+          }
           if (md.activeToolTipID === target[0]) {
             return;
           }
           md.clearToolTip();
 
+          options = getOptionsFromOptions(options);
           md.activeToolTip = tooltip = createToolTip(
             getHtmlFromOptions(options),
             options.template || md.options.toolTipContainer,
@@ -448,7 +459,7 @@
           options = key;
         }
 
-        this.showToolTip(getHtmlFromOptions(options), options);
+        this.showToolTip(getHtmlFromOptions(options), getOptionsFromOptions(options));
       },
       {
         name: 'tooltip',
