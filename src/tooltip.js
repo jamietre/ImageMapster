@@ -16,6 +16,7 @@
       '-webkit-box-shadow: 3px 3px 5px #535353; box-shadow: 3px 3px 5px #535353; -moz-border-radius: 6px 6px 6px 6px; -webkit-border-radius: 6px; ' +
       'border-radius: 6px 6px 6px 6px; opacity: 0.9;"></div>',
     showToolTip: false,
+    toolTip: null,
     toolTipFade: true,
     toolTipClose: ['area-mouseout', 'image-mouseout'],
     onShowToolTip: null,
@@ -288,13 +289,12 @@
           return e.area;
         });
 
-    if (md.activeToolTipID === ad.areaId) {
-      return;
-    }
-
+    // always clear and redraw tooltip because its potentially 
+    // dynamic content and could change between invocations
     md.clearToolTip();
 
-    md.activeToolTip = tooltip = createToolTip(content, template, options.css);
+    var effectiveContent = u.isFunction(content) ? content({ key: this.key, target: target }) : content;
+    md.activeToolTip = tooltip = createToolTip(effectiveContent, template, options.css);
 
     md.activeToolTipID = ad.areaId;
 
@@ -363,7 +363,7 @@
     // see if any html was passed as either the options object itself, or the content property
 
     return options
-      ? typeof options === 'string' || options.jquery
+      ? typeof options === 'string' || options.jquery || u.isFunction(options)
         ? options
         : options.content
       : null;
@@ -371,7 +371,7 @@
 
   function getOptionsFromOptions(options) {
     return options
-      ? typeof options == 'string' || options.jquery
+      ? typeof options == 'string' || options.jquery || u.isFunction(options)
         ? { content: options }
         : options
       : {};
@@ -420,14 +420,17 @@
           if (!target || !target.length) {
             return;
           }
-          if (md.activeToolTipID === target[0]) {
-            return;
-          }
+
+          // always clear and redraw tooltip because its potentially 
+          // dynamic content and could change between invocations
           md.clearToolTip();
+
+          var content = getHtmlFromOptions(options),
+            effectiveContent = u.isFunction(content) ? content({ key: this.key, target: target }) : content;
 
           options = getOptionsFromOptions(options);
           md.activeToolTip = tooltip = createToolTip(
-            getHtmlFromOptions(options),
+            effectiveContent,
             options.template || md.options.toolTipContainer,
             options.css
           );
