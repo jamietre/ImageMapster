@@ -68,7 +68,11 @@
             tooltip =
               tooltip_text ||
               (tooltip_jquery && $('<div>').text(tooltip_jquery)) ||
-              (tooltip_content && { content: tooltip_content }) ||
+              (tooltip_content && {
+                content: tooltip_content,
+                fadeDuration: 1000,
+                closeEvents: ['tooltip-click']
+              }) ||
               (tooltip_func &&
                 function () {
                   return tooltip_func;
@@ -92,7 +96,11 @@
             tooltip =
               tooltip_text ||
               (tooltip_jquery && $('<div>').text(tooltip_jquery)) ||
-              (tooltip_content && { content: tooltip_content }) ||
+              (tooltip_content && {
+                content: tooltip_content,
+                fadeDuration: 1000,
+                closeEvents: ['generic-click']
+              }) ||
               (tooltip_func &&
                 function () {
                   return tooltip_func;

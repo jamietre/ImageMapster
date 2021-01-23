@@ -18,7 +18,7 @@
     showToolTip: false,
     toolTip: null,
     toolTipFade: true,
-    toolTipClose: ['area-mouseout', 'image-mouseout'],
+    toolTipClose: ['area-mouseout', 'image-mouseout','generic-mouseout'],
     onShowToolTip: null,
     onHideToolTip: null
   });
@@ -182,17 +182,13 @@
    *
    * @param {string|jquery}   [container]     An element within which the tooltip must be bounded
    *
-   *
-   *
-   * @param {object|string|jQuery} [options]  options to apply when creating this tooltip - OR -
-   *                                          The markup, or a jquery object, containing the data for the tooltip
-   *
-   *  @config {string}        [closeEvents]   A string with one or more comma-separated values that determine when the tooltip
-   *                                          closes: 'area-click','tooltip-click','image-mouseout' are valid values
-   *                                          then no template will be used.
+   * @param {object|string|jQuery} [options]  options to apply when creating this tooltip
    *  @config {int}           [offsetx]       the horizontal amount to offset the tooltip
    *  @config {int}           [offsety]       the vertical amount to offset the tooltip
    *  @config {string|object} [css]           CSS to apply to the outermost element of the tooltip
+   *  @config {bool}          [fadeDuration]  When non-zero, the duration in milliseconds of a fade-in effect for the tooltip.
+   *  @config {int}           [left]          The 0-based absolute x position for the tooltip (only used if target is not specified)
+   *  @config {int}           [top]           The 0-based absolute y position for the tooltip (only used if target it not specified)
    */
 
   function showToolTip(tooltip, target, image, container, options) {
@@ -233,10 +229,10 @@
   /**
      * Show a tooltip positioned near this area.
       *
-     * @param {string|jquery}   [content]       A string of html or a jQuery object containing the tooltip content.
+     * @param {string|jquery|function}   [content] A string of html, jQuery object or function that returns same containing the tooltip content.
 
      * @param {object} [options]  options to apply when creating this tooltip
-     *  @config {string|jquery}   [container]     An element within which the tooltip must be bounded
+     *  @config {string|jquery} [container]     An element within which the tooltip must be bounded
      *  @config {bool}          [template]      a template to use instead of the default. If this property exists and is null,
      *                                          then no template will be used.
      *  @config {string}        [closeEvents]   A string with one or more comma-separated values that determine when the tooltip
@@ -245,6 +241,7 @@
      *  @config {int}           [offsetx]       the horizontal amount to offset the tooltip
      *  @config {int}           [offsety]       the vertical amount to offset the tooltip
      *  @config {string|object} [css]           CSS to apply to the outermost element of the tooltip
+     *  @config {bool}          [fadeDuration]  When non-zero, the duration in milliseconds of a fade-in effect for the tooltip.
      */
   m.AreaData.prototype.showToolTip = function (content, options) {
     var tooltip,
@@ -289,12 +286,20 @@
           return e.area;
         });
 
-    // always clear and redraw tooltip because its potentially 
-    // dynamic content and could change between invocations
+    if (md.activeToolTipID === ad.areaId) {
+      return;
+    }
+
     md.clearToolTip();
 
-    var effectiveContent = u.isFunction(content) ? content({ key: this.key, target: target }) : content;
-    md.activeToolTip = tooltip = createToolTip(effectiveContent, template, options.css);
+    var effectiveContent = u.isFunction(content)
+      ? content({ key: this.key, target: target })
+      : content;
+    md.activeToolTip = tooltip = createToolTip(
+      effectiveContent,
+      template,
+      options.css
+    );
 
     md.activeToolTipID = ad.areaId;
 
@@ -333,13 +338,7 @@
       tipClosed
     );
 
-    showToolTip(
-      tooltip,
-      target,
-      md.image,
-      options.container,
-      options
-    );
+    showToolTip(tooltip, target, md.image, options.container, options);
 
     u.ifFunction(md.options.onShowToolTip, ad.area, {
       toolTip: tooltip,
@@ -394,15 +393,16 @@
    *
    * @param {object|string|jquery} [options] options to apply when creating this tooltip - OR -
    *                                         The markup, or a jquery object, containing the data for the tooltip
-   *  @config {string|jQuery} [content]   the inner content of the tooltip; the tooltip text or HTML
-   *  @config {Element|jQuery} [container]   the inner content of the tooltip; the tooltip text or HTML
-   *  @config {bool}          [template]  a template to use instead of the default. If this property exists and is null,
+   *  @config {string|jQuery|function} [content] the inner content of the tooltip; the tooltip text, HTML or function that returns same
+   *  @config {Element|jQuery} [container] the inner content of the tooltip; the tooltip text or HTML
+   *  @config {bool}           [template] a template to use instead of the default. If this property exists and is null,
    *                                      then no template will be used.
-   *  @config {int}           [offsetx]   the horizontal amount to offset the tooltip.
-   *  @config {int}           [offsety]   the vertical amount to offset the tooltip.
-   *  @config {string|object} [css]       CSS to apply to the outermost element of the tooltip
-   *  @config {string|object} [css] CSS to apply to the outermost element of the tooltip
-   *  @config {bool}          [fadeDuration] When non-zero, the duration in milliseconds of a fade-in effect for the tooltip.
+   *  @config {string}         [closeEvents] A string with one or more comma-separated values that determine when the tooltip
+   *                                         closes: 'area-click','tooltip-click','image-mouseout','generic-click','generic-mouseout' are valid values
+   *  @config {int}            [offsetx] the horizontal amount to offset the tooltip.
+   *  @config {int}            [offsety] the vertical amount to offset the tooltip.
+   *  @config {string|object}  [css] CSS to apply to the outermost element of the tooltip
+   *  @config {bool}           [fadeDuration] When non-zero, the duration in milliseconds of a fade-in effect for the tooltip.
    * @return {jQuery} The jQuery object
    */
 
@@ -412,39 +412,79 @@
       function mapData() {
         var tooltip,
           target,
+          defaultTarget,
+          closeOpts,
+          tipClosed,
           md = this;
         if (!key) {
           md.clearToolTip();
         } else {
           target = $(key);
-          if (!target || !target.length) {
+          defaultTarget = target && target.length > 0 ? target[0] : null;
+          if (md.activeToolTipID === defaultTarget) {
             return;
           }
 
-          // always clear and redraw tooltip because its potentially 
-          // dynamic content and could change between invocations
           md.clearToolTip();
+          if (!defaultTarget) {
+            return;
+          }
 
           var content = getHtmlFromOptions(options),
-            effectiveContent = u.isFunction(content) ? content({ key: this.key, target: target }) : content;
+            effectiveContent = u.isFunction(content)
+              ? content({ key: this.key, target: target })
+              : content;
 
           options = getOptionsFromOptions(options);
+
+          closeOpts =
+            options.closeEvents || md.options.toolTipClose || 'tooltip-click';
+
+          options.closeEvents =
+            typeof closeOpts === 'string'
+              ? (closeOpts = u.split(closeOpts))
+              : closeOpts;
+
+          options.fadeDuration =
+            options.fadeDuration ||
+            (md.options.toolTipFade ? md.options.fadeDuration : 0);
+
+          tipClosed = function () {
+            md.clearToolTip();
+          };
+
           md.activeToolTip = tooltip = createToolTip(
             effectiveContent,
             options.template || md.options.toolTipContainer,
             options.css
           );
-          md.activeToolTipID = target[0];
+          md.activeToolTipID = defaultTarget;
 
           bindToolTipClose(
-            ['tooltip-click'],
+            closeOpts,
             'tooltip-click',
             'click',
             tooltip,
             null,
-            function () {
-              md.clearToolTip();
-            }
+            tipClosed
+          );
+
+          bindToolTipClose(
+            closeOpts,
+            'generic-mouseout',
+            'mouseout',
+            target,
+            null,
+            tipClosed
+          );
+
+          bindToolTipClose(
+            closeOpts,
+            'generic-click',
+            'click',
+            target,
+            null,
+            tipClosed
           );
 
           md.activeToolTip = tooltip = showToolTip(
@@ -461,7 +501,10 @@
           options = key;
         }
 
-        this.showToolTip(getHtmlFromOptions(options), getOptionsFromOptions(options));
+        this.showToolTip(
+          getHtmlFromOptions(options),
+          getOptionsFromOptions(options)
+        );
       },
       {
         name: 'tooltip',
