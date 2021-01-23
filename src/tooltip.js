@@ -338,7 +338,6 @@
       target,
       md.image,
       options.container,
-      template,
       options
     );
 
