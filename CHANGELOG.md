@@ -15,6 +15,14 @@
 
 - **Breaking Change** - [Issue 70](https://github.com/jamietre/ImageMapster/issues/70) Respect target attribute for AREA elements with href.
 
+## Version 1.3.3 (planned)
+
+- [Issue 344](https://github.com/jamietre/ImageMapster/issues/344) Fix exception on tooltip api when options is jQuery object
+- [Issue 345](https://github.com/jamietre/ImageMapster/issues/345) Fix tooltip options not applied via api call
+- [Issue 347](https://github.com/jamietre/ImageMapster/issues/347) Add default tooltip options and tooltip function support
+- [Issue 348](https://github.com/jamietre/ImageMapster/issues/348) Fix generic tooltips to respect tooltip options
+- [Issue 349](https://github.com/jamietre/ImageMapster/issues/349) Fix tooltips do not close on unbind
+
 ## Version 1.3.2 - 2021.01.21
 
 - [Issue 324](https://github.com/jamietre/ImageMapster/issues/324) Improve project health

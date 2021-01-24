@@ -421,8 +421,6 @@
       this.impl = null;
       $.fn.mapster = null;
       $.mapster = null;
-      // Note - We intentionally do not remove tooltip ns here in order to ensure
-      // that if a tooltip is currently open it can still be closed
       return $('*').off('.mapster');
     }
   };

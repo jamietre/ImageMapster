@@ -59,16 +59,59 @@
       $(document).ready(function () {
         'use strict';
 
+        $('.trigger-tooltip').on('click', function () {
+          var key = $(this).data('group'),
+            tooltip_text = $(this).data('tooltip-text'),
+            tooltip_jquery = $(this).data('tooltip-jquery'),
+            tooltip_content = $(this).data('tooltip-content'),
+            tooltip_func = $(this).data('tooltip-func'),
+            tooltip =
+              tooltip_text ||
+              (tooltip_jquery && $('<div>').text(tooltip_jquery)) ||
+              (tooltip_content && {
+                content: tooltip_content,
+                fadeDuration: 1000,
+                closeEvents: ['tooltip-click']
+              }) ||
+              (tooltip_func &&
+                function () {
+                  return tooltip_func;
+                });
+
+          if (key) {
+            $('#shapeimage').mapster('tooltip', key, tooltip);
+          } else {
+            $('#shapeimage').mapster('tooltip');
+          }
+        });
         // eslint-disable-next-line no-unused-vars
         function state_change(data) {
           //alert(data.state+":"+data.selected);
         }
-        $('b').on('mouseover', function () {
-          $('img').mapster('tooltip', this, 'The text is: ' + $(this).text());
+        $('.generic-tooltip').on('mouseover', function () {
+          var tooltip_text = $(this).data('tooltip-text'),
+            tooltip_jquery = $(this).data('tooltip-jquery'),
+            tooltip_content = $(this).data('tooltip-content'),
+            tooltip_func = $(this).data('tooltip-func'),
+            tooltip =
+              tooltip_text ||
+              (tooltip_jquery && $('<div>').text(tooltip_jquery)) ||
+              (tooltip_content && {
+                content: tooltip_content,
+                fadeDuration: 1000,
+                closeEvents: ['generic-click']
+              }) ||
+              (tooltip_func &&
+                function () {
+                  return tooltip_func;
+                });
+
+          $('#shapeimage').mapster('tooltip', this, tooltip);
         });
 
-        $('img').mapster({
+        $('#shapeimage').mapster({
           showToolTip: true,
+          toolTip: 'This is the default tooltip using text',
           noHrefIsMask: false,
           onStateChange: state_change,
           fillColor: '0a7a0a',
@@ -86,13 +129,17 @@
               key: 'blue-circle',
               includeKeys: 'rectangle',
               stroke: false,
-              toolTip: 'blue circle (really a poly)'
+              toolTip: $('<div/>').text('blue circle (really a poly)')
             },
             {
               key: 'rectangle',
               stroke: true,
               strokeWidth: 3,
-              toolTip: 'rectangle'
+              toolTip: function (data) {
+                // Note - data.target could be 1 or more area elements depending on how
+                //        area tooltip was triggered (e.g. mouseover, tooltip api, etc.)
+                return $(data.target).data('tooltip-for-func');
+              }
             },
             {
               key: 'outer-circle',
@@ -111,8 +158,22 @@
               isMask: true
             },
             {
-              key: 'inner-circle',
-              toolTip: 'inner circle'
+              key: 'inner-circle'
+            }
+          ]
+        });
+
+        $('#beatlesimage').mapster({
+          mapKey: 'data-name',
+          isSelectable: false,
+          showToolTip: true,
+          toolTip: function (data) {
+            return $(data.target).data('firstname');
+          },
+          areas: [
+            {
+              key: 'george',
+              toolTip: $('<div/>').text('A tooltip for George')
             }
           ]
         });
@@ -128,11 +189,51 @@
 
     <h2>Advanced ToolTip Example</h2>
     <p>
-      This shows how to use new ToolTip features in 1.2.6 to render tooltips
-      manually, and for any area (inside or outside an imagemap)
+      This shows how to use ToolTip features in 1.2.6 and extended in 1.3.3 to
+      render tooltips manually, and for any area (inside or outside an imagemap)
     </p>
+    <hr />
+    <p>
+      Example of displaying tooltips. Click a link to invoke the tooltip via API
+      and hover over sections of the shapes.
+    </p>
+    <ul>
+      <li class="trigger-tooltip"><a href="#">Clear Tooltip</a></li>
+      <li class="trigger-tooltip" data-group="blue-circle">
+        <a href="#">Show default blue-circle tooltip</a>
+      </li>
+      <li
+        class="trigger-tooltip"
+        data-group="blue-circle"
+        data-tooltip-text="Overridden tooltip text"
+      >
+        <a href="#">Show overridden by text blue-circle tooltip</a>
+      </li>
+      <li
+        class="trigger-tooltip"
+        data-group="blue-circle"
+        data-tooltip-jquery="Overridden tooltip jquery"
+      >
+        <a href="#">Show overridden by jQuery blue-circle tooltip</a>
+      </li>
+      <li
+        class="trigger-tooltip"
+        data-group="blue-circle"
+        data-tooltip-content="Overridden tooltip options.content"
+      >
+        <a href="#">Show overridden by options.content blue-circle tooltip</a>
+      </li>
+      <li
+        class="trigger-tooltip"
+        data-group="blue-circle"
+        data-tooltip-func="Overridden tooltip func"
+      >
+        <a href="#">Show overridden by func blue-circle tooltip</a>
+      </li>
+    </ul>
 
     <img
+      id="shapeimage"
       src="images/shapes.jpg"
       width="512"
       height="176"
@@ -145,6 +246,7 @@
       <area
         shape="rect"
         group="rectangle"
+        data-tooltip-for-func="Hello there rectangle"
         alt=""
         coords="378,39,463,116"
         href="#"
@@ -152,6 +254,7 @@
       <area
         shape="poly"
         group="blue-circle"
+        data-tooltip-for-func="Hello there blue-circle"
         alt=""
         coords="286,34, 298,42, 308,54, 314,79, 307,103, 292,118, 270,125, 242,122, 227,112, 216,97, 212,73, 219,53, 227,43, 240,34, 264,29"
         href="#"
@@ -167,31 +270,121 @@ href="#">
       <area
         shape="circle"
         group="inner-circle,inner-circle-mask"
+        data-tooltip-for-func="Hello there inner-circle"
         coords="101,81,36"
         href="#"
       />
       <area
         shape="circle"
         group="outer-circle-mask"
+        data-tooltip-for-func="Hello there outer-circle-mask"
         coords="148,81,12"
         nohref
       />
-      <area shape="circle" group="outer-circle" coords="100,81,59" href="#" />
+      <area
+        shape="circle"
+        group="outer-circle"
+        data-tooltip-for-func="Hello there outer-circle"
+        coords="100,81,59"
+        href="#"
+      />
       <!-- End circles -->
     </map>
 
+    <hr />
+    <p>
+      Example of displaying tooltips on generic HTML Elements. Hover over the
+      bold text to display the tooltip.
+    </p>
     <div
-      style="
-        top: 400;
-        left: 200;
-        max-width: 200px;
-        border: 1px solid black;
-        margin: 10px;
-        padding: 10px;
-      "
+      style="width: 350px; border: 1px solid black; margin: 10px; padding: 10px"
     >
       This is a div.
-      <b style="border: 1px solid red">This is some content.</b> Thi
+      <b
+        class="generic-tooltip"
+        data-tooltip-text="This is my tooltip using text"
+        style="border: 1px solid red"
+        >Apply tooltip using text.</b
+      >
     </div>
+
+    <div
+      style="width: 350px; border: 1px solid black; margin: 10px; padding: 10px"
+    >
+      This is a div.
+      <b
+        class="generic-tooltip"
+        data-tooltip-jquery="This is my tooltip using jquery"
+        style="border: 1px solid green"
+        >Apply tooltip using jquery.</b
+      >
+    </div>
+
+    <div
+      style="width: 350px; border: 1px solid black; margin: 10px; padding: 10px"
+    >
+      This is another div.
+      <b
+        class="generic-tooltip"
+        data-tooltip-content="This is my tooltip using options.content"
+        style="border: 1px solid orange"
+        >Apply tooltip using options.content.</b
+      >
+    </div>
+
+    <div
+      style="width: 350px; border: 1px solid black; margin: 10px; padding: 10px"
+    >
+      This is another div.
+      <b
+        class="generic-tooltip"
+        data-tooltip-func="This is my tooltip using function"
+        style="border: 1px solid purple"
+        >Apply tooltip using function.</b
+      >
+    </div>
+
+    <hr />
+    <p>
+      Example of using the mapster toolTip property at a global level to apply
+      tooltips to areas. The tooltip property can be a string, jQuery object or
+      function. Hover over the members of the band and see their name.
+    </p>
+    <img
+      id="beatlesimage"
+      src="images/beatles_basic.jpg"
+      style="width: 400px; height: 240px"
+      usemap="#beatles-map"
+    />
+    <map name="beatles-map">
+      <area
+        shape="rect"
+        data-name="paul"
+        data-firstname="Paul"
+        coords="36,46,121,131"
+        href="#"
+      />
+      <area
+        shape="rect"
+        data-name="ringo"
+        data-firstname="Ringo"
+        coords="113,76,198,161"
+        href="#"
+      />
+      <area
+        shape="rect"
+        data-name="john"
+        data-firstname="John"
+        coords="192,50,277,135"
+        href="#"
+      />
+      <area
+        shape="rect"
+        data-name="george"
+        data-firstname="George"
+        coords="262,60,347,145"
+        href="#"
+      />
+    </map>
   </body>
 </html>
