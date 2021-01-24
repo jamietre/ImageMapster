@@ -15,7 +15,7 @@
 
 - **Breaking Change** - [Issue 70](https://github.com/jamietre/ImageMapster/issues/70) Respect target attribute for AREA elements with href.
 
-## Version 1.3.3 (planned)
+## Version 1.4.0 - 2021.01.24
 
 - [Issue 344](https://github.com/jamietre/ImageMapster/issues/344) Fix exception on tooltip api when options is jQuery object
 - [Issue 345](https://github.com/jamietre/ImageMapster/issues/345) Fix tooltip options not applied via api call
