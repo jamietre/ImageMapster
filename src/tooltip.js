@@ -291,6 +291,11 @@
     var effectiveContent = u.isFunction(content)
       ? content({ key: this.key, target: target })
       : content;
+
+    if (!effectiveContent) {
+      return;
+    }
+
     md.activeToolTip = tooltip = createToolTip(
       effectiveContent,
       template,
@@ -430,6 +435,10 @@
             effectiveContent = u.isFunction(content)
               ? content({ key: this.key, target: target })
               : content;
+
+          if (!effectiveContent) {
+            return;
+          }
 
           options = getOptionsFromOptions(options);
 
