@@ -146,11 +146,7 @@
     beforeClose,
     onClose
   ) {
-    // Tooltip namespace is intentionally different from standard
-    // .mapster namespace because if tooltip is open when mapster
-    // is unbound, there wouldn't be a way to close the tooltip
-    // if the event listener was removed.
-    var tooltip_ns = '.mapster-tooltip',
+    var tooltip_ns = '.mapster.tooltip',
       event_name = event + tooltip_ns;
 
     if ($.inArray(bindOption, options) >= 0) {
