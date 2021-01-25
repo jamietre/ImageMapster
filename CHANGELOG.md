@@ -11,9 +11,10 @@
 - Migrate to modern testframework
 - Update website and host on Github
 
-## Version 2.0.0 (planned)
+## Version 1.5.0 (planned)
 
-- **Breaking Change** - [Issue 70](https://github.com/jamietre/ImageMapster/issues/70) Respect target attribute for AREA elements with href.
+- [Issue 352](https://github.com/jamietre/ImageMapster/issues/352) Fix inconsistency of navigation href via onClick vs. clickNavigate
+- [Issue 353](https://github.com/jamietre/ImageMapster/issues/353) Add `navigationMode` configuration option to improve AREA element href & target support
 
 ## Version 1.4.0 - 2021.01.24
 

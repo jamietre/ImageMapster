@@ -1,0 +1,46 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Navigation Target Demo</title>
+    <script type="text/javascript" src="redist/jquery.3.5.1.min.js"></script>
+    <link rel="stylesheet" href="stylesheets/base.css" />
+
+    <script type="text/javascript">
+      $(document).ready(function () {
+        'use strict';
+
+        var getUrlParameter = function getUrlParameter(sParam) {
+          var sPageURL = window.location.search.substring(1),
+            sURLVariables = sPageURL.split('&'),
+            sParameterName,
+            i;
+
+          for (i = 0; i < sURLVariables.length; i++) {
+            sParameterName = sURLVariables[i].split('=');
+
+            if (sParameterName[0] === sParam) {
+              return sParameterName[1] === undefined
+                ? true
+                : decodeURIComponent(sParameterName[1]);
+            }
+          }
+        };
+
+        $('#navigateMode').text(getUrlParameter('navigateMode'));
+        $('#clickNavigate').text(getUrlParameter('clickNavigate'));
+        $('#name').text(getUrlParameter('name'));
+      });
+    </script>
+  </head>
+
+  <body>
+    <div class="navmenu">
+      <a href="#" onClick="window.history.back()">Go Back</a>
+      <hr />
+    </div>
+    <p>NavigateMode: <span id="navigateMode">TBD</span></p>
+    <p>ClickNavigate: <span id="clickNavigate">TBD</span></p>
+    <p>Name: <span id="name">TBD</span></p>
+  </body>
+</html>

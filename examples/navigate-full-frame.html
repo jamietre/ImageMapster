@@ -1,0 +1,172 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Navigation Demo - Simple</title>
+    <script
+      type="text/javascript"
+      src="https://cdn.jsdelivr.net/npm/es6-promise/dist/es6-promise.auto.min.js"
+    ></script>
+
+    <script type="text/javascript" src="redist/jquery.3.5.1.min.js"></script>
+    <script
+      type="text/javascript"
+      src="../dist/jquery.imagemapster.js"
+    ></script>
+
+    <!-- <script type="text/javascript" src="redist/zepto.1.2.0.min.js"></script>
+    <script
+      type="text/javascript"
+      src="../dist/jquery.imagemapster.zepto.js"
+    ></script> -->
+
+    <link rel="stylesheet" href="stylesheets/base.css" />
+    <style type="text/css">
+      thead {
+        color: green;
+      }
+      tbody {
+        color: blue;
+      }
+      tfoot {
+        color: red;
+      }
+
+      table,
+      th,
+      td {
+        border: 1px solid black;
+        border-collapse: collapse;
+        padding: 5px;
+      }
+    </style>
+
+    <script type="text/javascript">
+      $(document).ready(function () {
+        'use strict';
+
+        var state = history.state || {};
+
+        $('#beatlesimage').mapster({
+          mapKey: 'data-name',
+          clickNavigate: state.clickNavigate === true ? true : false,
+          navigateMode: 'open',
+          onClick: function () {
+            return true;
+          }
+        });
+
+        function updateOptions() {
+          var options = $('#beatlesimage').mapster('get_options');
+          $('#navigateMode').text(options.navigateMode);
+          $('#clickNavigate').text(options.clickNavigate);
+          var state = {
+            navigateMode: options.navigateMode,
+            clickNavigate: options.clickNavigate
+          };
+          $('area.nav-target').each(function (_, area) {
+            var qs = Object.assign({}, state, {
+              name: $(area).data('firstname')
+            });
+            $(area).attr('href', 'navigate-target.html?' + $.param(qs));
+          });
+          history.replaceState(state, null);
+          // rebind in order to re-read the href from html source
+          $('#beatlesimage').mapster('rebind', options);
+        }
+
+        $('#clickNavigate').on('click', function () {
+          var options = $('#beatlesimage').mapster('get_options');
+          $('#beatlesimage').mapster('set_options', {
+            clickNavigate: options.clickNavigate === true ? false : true
+          });
+          updateOptions();
+        });
+
+        updateOptions();
+      });
+    </script>
+  </head>
+
+  <body>
+    <p>
+      You can toggle the values of clickNavigate. The expected result when
+      clicking a member of the band is the same regardless of the value of
+      clickNavigate.
+    </p>
+    <table style="border: 1px">
+      <thead>
+        <tr>
+          <th />
+          <th>Paul</th>
+          <th>Ringo</th>
+          <th>John</th>
+          <th>George</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <th>name</th>
+          <td>Paul</td>
+          <td>someone@somewhere.com</td>
+          <td>John</td>
+          <td>George</td>
+        </tr>
+        <tr>
+          <th>destination</th>
+          <td>Current Window</td>
+          <td>Mail Program</td>
+          <td>New Tab/Window</td>
+          <td>Parent Window</td>
+        </tr>
+      </tbody>
+    </table>
+    <br />
+    <div>NavigateMode: <span id="navigateMode">TBD</span></div>
+    <div>
+      ClickNavigate: <a id="clickNavigate" href="javascript:void(0);">TBD</a>
+    </div>
+    <br />
+    <img
+      id="beatlesimage"
+      src="images/beatles_basic.jpg"
+      usemap="#beatles-map"
+    />
+    <map name="beatles-map">
+      <area
+        shape="rect"
+        data-name="beatles"
+        data-firstname="Paul"
+        class="nav-target"
+        coords="36,46,121,131"
+        target="_self"
+        href="navigate-target.html?name=Paul"
+      />
+      <area
+        shape="rect"
+        data-name="beatles"
+        data-firstname="Ringo"
+        coords="113,76,198,161"
+        href="mailto:someone@somewhere.com"
+      />
+      <area
+        shape="rect"
+        data-name="beatles"
+        data-firstname="John"
+        class="nav-target"
+        coords="192,50,277,135"
+        target="_blank"
+        href="navigate-target.html?name=John"
+      />
+      <area
+        shape="rect"
+        data-name="beatles"
+        data-firstname="George"
+        class="nav-target"
+        coords="262,60,347,145"
+        target="_parent"
+        href="navigate-target.html?name=George"
+      />
+    </map>
+  </body>
+</html>
