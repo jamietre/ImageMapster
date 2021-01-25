@@ -1,0 +1,229 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Navigation Demo - Simple</title>
+    <script
+      type="text/javascript"
+      src="https://cdn.jsdelivr.net/npm/es6-promise/dist/es6-promise.auto.min.js"
+    ></script>
+
+    <script type="text/javascript" src="redist/jquery.3.5.1.min.js"></script>
+    <script
+      type="text/javascript"
+      src="../dist/jquery.imagemapster.js"
+    ></script>
+
+    <!-- <script type="text/javascript" src="redist/zepto.1.2.0.min.js"></script>
+    <script
+      type="text/javascript"
+      src="../dist/jquery.imagemapster.zepto.js"
+    ></script> -->
+
+    <link rel="stylesheet" href="stylesheets/base.css" />
+    <style type="text/css">
+      thead {
+        color: green;
+      }
+      tbody {
+        color: blue;
+      }
+      tfoot {
+        color: red;
+      }
+
+      table,
+      th,
+      td {
+        border: 1px solid black;
+        border-collapse: collapse;
+        padding: 5px;
+      }
+    </style>
+
+    <script type="text/javascript">
+      $(document).ready(function () {
+        'use strict';
+
+        var state = history.state || {};
+
+        $('#beatlesimage').mapster({
+          mapKey: 'data-name',
+          clickNavigate: state.clickNavigate === true ? true : false,
+          navigateMode: state.navigateMode || 'location',
+          onClick: function () {
+            return true;
+          }
+        });
+
+        function updateOptions() {
+          var options = $('#beatlesimage').mapster('get_options');
+          $('#navigateMode').text(options.navigateMode);
+          $('#clickNavigate').text(options.clickNavigate);
+          var state = {
+            navigateMode: options.navigateMode,
+            clickNavigate: options.clickNavigate
+          };
+          $('area').each(function (_, area) {
+            var qs = Object.assign({}, state, {
+              name: $(area).data('firstname')
+            });
+            $(area).attr('href', 'navigate-target.html?' + $.param(qs));
+          });
+          history.replaceState(state, null);
+          // rebind in order to re-read the href from html source
+          $('#beatlesimage').mapster('rebind', options);
+        }
+
+        $('#navigateMode').on('click', function () {
+          var options = $('#beatlesimage').mapster('get_options');
+          $('#beatlesimage').mapster('set_options', {
+            navigateMode: options.navigateMode === 'open' ? 'location' : 'open'
+          });
+          updateOptions();
+        });
+
+        $('#clickNavigate').on('click', function () {
+          var options = $('#beatlesimage').mapster('get_options');
+          $('#beatlesimage').mapster('set_options', {
+            clickNavigate: options.clickNavigate === true ? false : true
+          });
+          updateOptions();
+        });
+
+        updateOptions();
+      });
+    </script>
+  </head>
+
+  <body>
+    <div class="navmenu">
+      Return to <a href="index.html">Main Menu</a>
+      <hr />
+    </div>
+    <h2>Navigation Demo - Simple</h2>
+    <p>
+      Simple example of Navigation comparing ClickNavigate and OnClick
+      navigation support between legacy ImageMapster behavior and behavior added
+      in v1.5.0.
+    </p>
+    <p>
+      Prior to v1.5.0, behavior worked as described in navigateMode of
+      `location`. As of v1.5.0, the default behavior remains `location` for
+      backwards compat, however navigateMode can be set to `open` which will
+      provide the following fixes/benefits:
+    </p>
+    <ul>
+      <li>
+        All navigation is performed using window.open instead of
+        window.location.href which allows for support of hyperlinks as well as
+        mailto, etc.
+      </li>
+      <li>
+        If specified, target property of area element will be retrieved and
+        passed to window.open call. If no target is provided, a default of
+        `_self` is used to mirror legacy behavior.
+      </li>
+      <li>
+        href & target value will always look first at the specific AREA element
+        clicked and if no href is specified, use the AreaData default which is
+        the first AREA element that ImageMapster found for the primaryKey
+        identified via mapKey. If mapKey configuration property is not
+        specified, each AREA is configured with a unique primaryKey so the href
+        will come from AreaData but will be the same value as the AREA element
+        since areas will not be grouped.
+      </li>
+    </ul>
+    <p>
+      You can toggle the values of navigateMode and clickNavigate. The expected
+      result when clicking a member of the band is:
+    </p>
+    <table style="border: 1px">
+      <thead>
+        <tr>
+          <th>navigateMode</th>
+          <th>clickNavigate</th>
+          <th>Paul</th>
+          <th>Ringo</th>
+          <th>John</th>
+          <th>George</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td rowspan="2">location</td>
+          <td>false</td>
+          <td>Paul</td>
+          <td>Ringo</td>
+          <td>John</td>
+          <td>George</td>
+        </tr>
+        <tr>
+          <td>true</td>
+          <td>Paul</td>
+          <td>Paul</td>
+          <td>Paul</td>
+          <td>Paul</td>
+        </tr>
+        <tr>
+          <td rowspan="2">open</td>
+          <td>false</td>
+          <td>Paul</td>
+          <td>Ringo</td>
+          <td>John</td>
+          <td>George</td>
+        </tr>
+        <tr>
+          <td>true</td>
+          <td>Paul</td>
+          <td>Ringo</td>
+          <td>John</td>
+          <td>George</td>
+        </tr>
+      </tbody>
+    </table>
+    <br />
+    <div>
+      NavigateMode: <a id="navigateMode" href="javascript:void(0);">TBD</a>
+    </div>
+    <div>
+      ClickNavigate: <a id="clickNavigate" href="javascript:void(0);">TBD</a>
+    </div>
+    <br />
+    <img
+      id="beatlesimage"
+      src="images/beatles_basic.jpg"
+      usemap="#beatles-map"
+    />
+    <map name="beatles-map">
+      <area
+        shape="rect"
+        data-name="beatles"
+        data-firstname="Paul"
+        coords="36,46,121,131"
+        href="navigate-target.html?name=Paul"
+      />
+      <area
+        shape="rect"
+        data-name="beatles"
+        data-firstname="Ringo"
+        coords="113,76,198,161"
+        href="navigate-target.html?name=Ringo"
+      />
+      <area
+        shape="rect"
+        data-name="beatles"
+        data-firstname="John"
+        coords="192,50,277,135"
+        href="navigate-target.html?name=John"
+      />
+      <area
+        shape="rect"
+        data-name="beatles"
+        data-firstname="George"
+        coords="262,60,347,145"
+        href="navigate-target.html?name=George"
+      />
+    </map>
+  </body>
+</html>

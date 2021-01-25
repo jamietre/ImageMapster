@@ -103,6 +103,7 @@
       isPrimary: true,
       areaId: -1,
       href: '',
+      hrefTarget: null,
       value: value || '',
       options: {},
       // "null" means unchanged. Use "isSelected" method to just test true/false

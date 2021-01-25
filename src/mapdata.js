@@ -261,7 +261,39 @@
       cbResult,
       that = this,
       ar = me.getDataForArea(this),
-      opts = me.options;
+      opts = me.options,
+      navDetails;
+
+    function navigateTo(mode, href, target) {
+      switch (mode) {
+        // if no target is specified, use legacy
+        // behavior and change current window
+        case 'open':
+          window.open(href, target || '_self');
+          return;
+
+        // default legacy behavior of ImageMapster
+        default:
+          window.location.href = href;
+          return;
+      }
+    }
+
+    function getNavDetails(ar, mode, defaultHref) {
+      if (mode === 'open') {
+        var elHref = $(ar.area).attr('href'),
+          useEl = elHref && elHref !== '#';
+
+        return {
+          href: useEl ? elHref : ar.href,
+          target: useEl ? $(ar.area).attr('target') : ar.hrefTarget
+        };
+      }
+
+      return {
+        href: defaultHref
+      };
+    }
 
     function clickArea(ar) {
       var areaOpts, target;
@@ -288,9 +320,13 @@
           if (!cbResult) {
             return false;
           }
-          target = $(ar.area).attr('href');
-          if (target !== '#') {
-            window.location.href = target;
+          target = getNavDetails(
+            ar,
+            opts.navigateMode,
+            $(ar.area).attr('href')
+          );
+          if (target.href !== '#') {
+            navigateTo(opts.navigateMode, target.href, target.target);
             return false;
           }
         }
@@ -318,8 +354,9 @@
 
     mousedown.call(this, e);
 
-    if (opts.clickNavigate && ar.href) {
-      window.location.href = ar.href;
+    navDetails = getNavDetails(ar, opts.navigateMode, ar.href);
+    if (opts.clickNavigate && navDetails.href) {
+      navigateTo(opts.navigateMode, navDetails.href, navDetails.target);
       return;
     }
 
@@ -881,6 +918,7 @@
         href = $area.attr('href');
         if (href && href !== '#' && !dataItem.href) {
           dataItem.href = href;
+          dataItem.hrefTarget = $area.attr('target');
         }
 
         if (!mapArea.nohref) {

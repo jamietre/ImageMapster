@@ -43,6 +43,7 @@
     },
     defaults: {
       clickNavigate: false,
+      navigateMode: 'location', // location|open
       wrapClass: null,
       wrapCss: null,
       onGetList: null,
