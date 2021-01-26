@@ -165,6 +165,9 @@ module.exports = function (grunt) {
       },
       npm: {
         command: 'npm publish'
+      },
+      npmpre: {
+        command: 'npm publish --tag next'
       }
     },
     eslint: {
@@ -192,6 +195,7 @@ module.exports = function (grunt) {
   grunt.registerTask('example', ['build', 'connect:examples', 'watch']);
   grunt.registerTask('test', ['build', 'connect:tests', 'watch']);
   grunt.registerTask('postBump', ['dist', 'bump-commit', 'shell:npm']);
+  grunt.registerTask('postBumpPre', ['dist', 'bump-commit', 'shell:npmpre']);
   grunt.registerTask('preBump', ['clean', 'dist']);
   grunt.registerTask('patch', ['preBump', 'bump-only:patch', 'postBump']);
   grunt.registerTask('minor', ['preBump', 'bump-only:minor', 'postBump']);
@@ -199,9 +203,9 @@ module.exports = function (grunt) {
   grunt.registerTask('prerelease', [
     'preBump',
     'bump-only:prerelease',
-    'postBump'
+    'postBumpPre'
   ]);
-  grunt.registerTask('prepatch', ['preBump', 'bump-only:prepatch', 'postBump']);
-  grunt.registerTask('preminor', ['preBump', 'bump-only:preminor', 'postBump']);
-  grunt.registerTask('premajor', ['preBump', 'bump-only:premajor', 'postBump']);
+  grunt.registerTask('prepatch', ['preBump', 'bump-only:prepatch', 'postBumpPre']);
+  grunt.registerTask('preminor', ['preBump', 'bump-only:preminor', 'postBumpPre']);
+  grunt.registerTask('premajor', ['preBump', 'bump-only:premajor', 'postBumpPre']);
 };
