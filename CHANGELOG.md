@@ -13,6 +13,12 @@
 
 ## Version 1.5.0 (planned)
 
+## Version 1.5.0-beta.1 - 2021.01.26
+
+- Applied `next` tag to NPM v1.5.0-beta.1 and re-applied `latest` tag to NPM v1.4.0
+
+## Version 1.5.0-beta.0 - 2021.01.26
+
 - [Issue 352](https://github.com/jamietre/ImageMapster/issues/352) Fix inconsistency of navigation href via onClick vs. clickNavigate
 - [Issue 353](https://github.com/jamietre/ImageMapster/issues/353) Add `navigationMode` configuration option to improve AREA element href & target support
 - [Issue 356](https://github.com/jamietre/ImageMapster/issues/356) Add tooltip close support for `image-click` event
