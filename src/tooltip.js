@@ -18,7 +18,7 @@
     showToolTip: false,
     toolTip: null,
     toolTipFade: true,
-    toolTipClose: ['area-mouseout', 'image-mouseout','generic-mouseout'],
+    toolTipClose: ['area-mouseout', 'image-mouseout', 'generic-mouseout'],
     onShowToolTip: null,
     onHideToolTip: null
   });
@@ -232,7 +232,7 @@
      *  @config {bool}          [template]      a template to use instead of the default. If this property exists and is null,
      *                                          then no template will be used.
      *  @config {string}        [closeEvents]   A string with one or more comma-separated values that determine when the tooltip
-     *                                          closes: 'area-click','tooltip-click','image-mouseout' are valid values
+     *                                          closes: 'area-click','tooltip-click','image-mouseout','image-click' are valid values
      *                                          then no template will be used.
      *  @config {int}           [offsetx]       the horizontal amount to offset the tooltip
      *  @config {int}           [offsety]       the vertical amount to offset the tooltip
@@ -338,6 +338,14 @@
       },
       tipClosed
     );
+    bindToolTipClose(
+      closeOpts,
+      'image-click',
+      'click',
+      $(md.image),
+      null,
+      tipClosed
+    );
 
     showToolTip(tooltip, target, md.image, options.container, options);
 
@@ -399,7 +407,7 @@
    *  @config {bool}           [template] a template to use instead of the default. If this property exists and is null,
    *                                      then no template will be used.
    *  @config {string}         [closeEvents] A string with one or more comma-separated values that determine when the tooltip
-   *                                         closes: 'area-click','tooltip-click','image-mouseout','generic-click','generic-mouseout' are valid values
+   *                                         closes: 'area-click','tooltip-click','image-mouseout','image-click','generic-click','generic-mouseout' are valid values
    *  @config {int}            [offsetx] the horizontal amount to offset the tooltip.
    *  @config {int}            [offsety] the vertical amount to offset the tooltip.
    *  @config {string|object}  [css] CSS to apply to the outermost element of the tooltip
