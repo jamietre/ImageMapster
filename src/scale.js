@@ -158,7 +158,7 @@
     if (duration) {
       promises = [];
       me.currentAction = 'resizing';
-      els.each(function (_, e) {
+      els.filter(':visible').each(function (_, e) {
         p = u.defer();
         promises.push(p);
 
