@@ -1,5 +1,5 @@
 /*!
-* imagemapster - v1.5.0-beta.1 - 2021-01-25
+* imagemapster - v1.5.0 - 2021-01-29
 * https://github.com/jamietre/ImageMapster/
 * Copyright (c) 2011 - 2021 James Treworgy
 * License: MIT
@@ -107,7 +107,7 @@
 (function ($) {
   'use strict';
 
-  var mapster_version = '1.5.0-beta.1';
+  var mapster_version = '1.5.0';
 
   // all public functions in $.mapster.impl are methods
   $.fn.mapster = function (method) {
@@ -166,6 +166,11 @@
       configTimeout: 30000,
       noHrefIsMask: true,
       scaleMap: true,
+      enableAutoResizeSupport: false, // TODO: Remove in next major release
+      autoResize: false,
+      autoResizeDelay: 0,
+      autoResizeDuration: 0,
+      onAutoResize: null,
       safeLoad: false,
       areas: []
     },
@@ -2069,7 +2074,8 @@
       _tooltip_events: [], // {}         info on events we bound to a tooltip container, so we can properly unbind them
       scaleInfo: null, // {}         info about the image size, scaling, defaults
       index: -1, // index of this in map_cache - so we have an ID to use for wraper div
-      activeAreaEvent: null
+      activeAreaEvent: null,
+      autoResizeTimer: null // tracks autoresize timer based on options.autoResizeDelay
     });
   }
 
@@ -2522,6 +2528,9 @@
     wrapId: function () {
       return 'mapster_wrap_' + this.index;
     },
+    instanceEventNamespace: function () {
+      return '.mapster.' + this.wrapId();
+    },
     _idFromKey: function (key) {
       return typeof key === 'string' &&
         Object.prototype.hasOwnProperty.call(this._xref, key)
@@ -2777,13 +2786,19 @@
 
       // now that we have processed all the areas, set css for wrapper, scale map if needed
 
-      css = {
-        display: 'block',
-        position: 'relative',
-        padding: 0,
-        width: scale.width,
-        height: scale.height
-      };
+      css = $.extend(
+        {
+          display: 'block',
+          position: 'relative',
+          padding: 0
+        },
+        opts.enableAutoResizeSupport === true
+          ? {}
+          : {
+              width: scale.width,
+              height: scale.height
+            }
+      );
 
       if (opts.wrapCss) {
         $.extend(css, opts.wrapCss);
@@ -2841,6 +2856,10 @@
 
       me.complete = true;
       me.processCommandQueue();
+
+      if (opts.enableAutoResizeSupport === true) {
+        me.configureAutoResize();
+      }
 
       if (opts.onConfigured && typeof opts.onConfigured === 'function') {
         opts.onConfigured.call(img, true);
@@ -3000,6 +3019,8 @@
     clearEvents: function () {
       $(this.map).find('area').off('.mapster');
       $(this.images).off('.mapster');
+      $(window).off(this.instanceEventNamespace());
+      $(window.document).off(this.instanceEventNamespace());
     },
     _clearCanvases: function (preserveState) {
       // remove the canvas elements created
@@ -3025,6 +3046,10 @@
 
       me.images.clear();
 
+      if (me.autoResizeTimer) {
+        clearTimeout(me.autoResizeTimer);
+      }
+      me.autoResizeTimer = null;
       this.image = null;
       u.ifFunction(this.clearToolTip, this);
     },
@@ -3683,12 +3708,15 @@
 
     // resize all the elements that are part of the map except the image itself (which is not visible)
     // but including the div wrapper
-    els = $(me.wrapper).find('.mapster_el').add(me.wrapper);
+    els = $(me.wrapper).find('.mapster_el');
+    if (me.options.enableAutoResizeSupport !== true) {
+      els = els.add(me.wrapper);
+    }
 
     if (duration) {
       promises = [];
       me.currentAction = 'resizing';
-      els.each(function (_, e) {
+      els.filter(':visible').each(function (_, e) {
         p = u.defer();
         promises.push(p);
 
@@ -3713,6 +3741,45 @@
       resizeMapData();
       finishResize();
     }
+  };
+
+  m.MapData.prototype.autoResize = function (duration, callback) {
+    var me = this;
+    me.resize($(me.wrapper).width(), null, duration, callback);
+  };
+
+  m.MapData.prototype.configureAutoResize = function () {
+    var me = this,
+      ns = me.instanceEventNamespace();
+
+    function resizeMap() {
+      // Evaluate this at runtime to allow for set_options
+      // to change behavior as set_options intentionally
+      // does not change any rendering behavior when invoked.
+      // To improve perf, in next major release this should
+      // be refactored to add/remove listeners when autoResize
+      // changes rather than always having listeners attached
+      // and conditionally resizing
+      if (me.options.autoResize !== true) {
+        return;
+      }
+
+      me.autoResize(me.options.autoResizeDuration, me.options.onAutoResize);
+    }
+
+    function debounce() {
+      if (me.autoResizeTimer) {
+        clearTimeout(me.autoResizeTimer);
+      }
+      me.autoResizeTimer = setTimeout(resizeMap, me.options.autoResizeDelay);
+    }
+
+    $(me.image).on('load' + ns, resizeMap); //Detect late image loads in IE11
+    $(window).on('focus' + ns, resizeMap);
+    $(window).on('resize' + ns, debounce);
+    $(window).on('readystatechange' + ns, resizeMap);
+    $(window.document).on('fullscreenchange' + ns, resizeMap);
+    resizeMap();
   };
 
   m.MapArea = u.subclass(m.MapArea, function () {
@@ -3748,13 +3815,26 @@
   };
 
   m.impl.resize = function (width, height, duration, callback) {
-    if (!width && !height) {
-      return false;
-    }
     var x = new m.Method(
       this,
       function () {
-        this.resize(width, height, duration, callback);
+        var me = this,
+          noDimensions = !width && !height,
+          isAutoResize =
+            me.options.enableAutoResizeSupport &&
+            me.options.autoResize &&
+            noDimensions;
+
+        if (isAutoResize) {
+          me.autoResize(duration, callback);
+          return;
+        }
+
+        if (noDimensions) {
+          return false;
+        }
+
+        me.resize(width, height, duration, callback);
       },
       null,
       {
