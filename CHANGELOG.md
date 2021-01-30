@@ -11,7 +11,7 @@
 - Migrate to modern testframework
 - Update website and host on Github
 
-## Version 1.5.0 (planned)
+## Version 1.5.0 - 2021.01.29
 
 - [Issue 357](https://github.com/jamietre/ImageMapster/issues/357) AltImages become visible after `resize` when duration is specified
 - [Issue 359](https://github.com/jamietre/ImageMapster/issues/359) Add autoresize feature
