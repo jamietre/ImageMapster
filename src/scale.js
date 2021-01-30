@@ -171,6 +171,7 @@
           easing: 'linear'
         });
       });
+      els.filter(':hidden').css(newsize);
 
       p = u.defer();
       promises.push(p);

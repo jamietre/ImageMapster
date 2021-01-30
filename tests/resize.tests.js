@@ -9,33 +9,97 @@ this.tests.push(
       'use strict';
 
       var img = $('img'),
-        map = img.mapster(),
-        x = img.width(),
-        y = img.height();
+        altImages = {
+          img1: 'images/usa_map_720_alt_1.jpg',
+          img2: 'images/usa_map_720_alt_2.jpg',
+          img3: 'images/usa_map_720_alt_3.jpg',
+          img4: 'images/usa_map_720_alt_4.jpg',
+          img5: 'images/usa_map_720_alt_5.jpg'
+        },
+        map = img.mapster({
+          altImages: altImages
+        }),
+        x = parseInt(img.css('width').replace('px', ''), 10),
+        y = parseInt(img.css('height').replace('px', ''), 10),
+        newWidth = x + 200;
 
       this.when(function (cb) {
-        map.mapster('resize', 200, 0, cb);
+        map.mapster('resize', newWidth, 0, cb);
       }).then(function () {
-        var expectedHeight = Math.round((200 / x) * y);
-        a.equals(200, img.width(), 'image width is correct after resize');
+        var expectedWidth = newWidth + 'px',
+          expectedHeight = Math.round((newWidth / x) * y) + 'px';
         a.equals(
+          img.css('width'),
+          expectedWidth,
+          'image width is correct after resize'
+        );
+        a.equals(
+          img.css('height'),
           expectedHeight,
-          img.height(),
           'image height is correct after resize'
         );
 
         var wrapper = img.closest('div');
 
         a.equals(
-          'mapster_wrap',
           wrapper.attr('id').substring(0, 12),
+          'mapster_wrap',
           'sanity check - we have the wrapper element'
         );
-        a.equals(200, wrapper.width(), 'wrapper width matches image width');
         a.equals(
+          wrapper.css('width'),
+          expectedWidth,
+          'wrapper width matches image width'
+        );
+        a.equals(
+          wrapper.css('height'),
           expectedHeight,
-          wrapper.height(),
           'wrapper height matches image height'
+        );
+        Object.values(altImages).map(function (ai) {
+          var selector = 'img[src="' + ai + '"]',
+            altImg = $(wrapper).children(selector);
+          a.equals(
+            altImg.css('width'),
+            expectedWidth,
+            'altimage ' + ai + ' width matches image width'
+          );
+          a.equals(
+            altImg.css('height'),
+            expectedHeight,
+            'altimage ' + ai + ' height matches image height'
+          );
+          a.equals(
+            altImg.css('display'),
+            'none',
+            'altimage ' + ai + ' has display of none'
+          );
+        });
+      });
+    })
+);
+
+this.tests.push(
+  iqtest
+    .create('autoresize', 'autoresize feature')
+    .add('wrapper does not have width/height', function (a) {
+      'use strict';
+
+      var img = $('img');
+      this.when(function (cb) {
+        img.mapster({ enableAutoResizeSupport: true, onConfigured: cb });
+      }).then(function () {
+        var wrapper = img.closest('div');
+        a.equals(
+          wrapper.attr('id').substring(0, 12),
+          'mapster_wrap',
+          'sanity check - we have the wrapper element'
+        );
+        a.equals(wrapper[0].style.width, '', 'wrapper width is not specified');
+        a.equals(
+          wrapper[0].style.height,
+          '',
+          'wrapper height is not specified'
         );
       });
     })

@@ -149,16 +149,9 @@
           enableTestLink();
         });
 
-        // Zepto returns height/width of 0/0 when image is not visible
-        // so force image to be displayed
-        if (window.Zepto) {
-          $('#testElements').toggle(true);
-          $('#toggleTestImage').hide();
-        } else {
-          $('#toggleTestImage').on('click', function () {
-            $('#testElements').toggle('fast');
-          });
-        }
+        $('#toggleTestImage').on('click', function () {
+          $('#testElements').toggle('fast');
+        });
 
         enableTestLink();
 
