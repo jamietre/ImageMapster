@@ -13,6 +13,8 @@
 
 ## Version 1.5.0 (planned)
 
+- [Issue 357](https://github.com/jamietre/ImageMapster/issues/357) AltImages become visible after `resize` when duration is specified
+
 ## Version 1.5.0-beta.1 - 2021.01.26
 
 - Applied `next` tag to NPM v1.5.0-beta.1 and re-applied `latest` tag to NPM v1.4.0

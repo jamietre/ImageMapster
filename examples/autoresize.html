@@ -1,0 +1,221 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Automatic Resize Demo</title>
+
+    <script
+      type="text/javascript"
+      src="https://cdn.jsdelivr.net/npm/es6-promise/dist/es6-promise.auto.min.js"
+    ></script>
+
+    <script type="text/javascript" src="redist/jquery.3.5.1.min.js"></script>
+    <script
+      type="text/javascript"
+      src="../dist/jquery.imagemapster.js"
+    ></script>
+
+    <!-- <script type="text/javascript" src="redist/zepto.1.2.0.min.js"></script>
+    <script
+      type="text/javascript"
+      src="../dist/jquery.imagemapster.zepto.js"
+    ></script> -->
+
+    <link rel="stylesheet" href="stylesheets/base.css" />
+    <script type="text/javascript">
+      $(document).ready(function () {
+        'use strict';
+
+        // apply mapster to all images
+        $('img').mapster({
+          enableAutoResizeSupport: true,
+          autoResize: true,
+          autoResizeDelay: 0,
+          autoResizeDuration: 0,
+          onAutoResize: function () {
+            //console.log('auto resized!');
+          }
+        });
+
+        $('.toggle-autoresize-image').on('click', function () {
+          var imageId = $(this).data('imageid'),
+            selector = '#' + imageId,
+            options = $(selector).mapster('get_options');
+
+          $(selector).mapster('set_options', {
+            autoResize: !options.autoResize
+          });
+        });
+
+        $('.toggle-autoresize-all').on('click', function () {
+          var $images = $('img'),
+            isEnabled = $(this).data('enabled');
+
+          $images.mapster('set_options', { autoResize: isEnabled });
+          if (isEnabled) {
+            $images.mapster('resize', null, null, 0, function () {
+              //console.log('manually triggered auto-resize');
+            });
+          }
+        });
+      });
+    </script>
+  </head>
+  <body>
+    <div class="navmenu">
+      Return to <a href="index.html">Main Menu</a>
+      <hr />
+    </div>
+    <h2>Automatic Resize Demo</h2>
+    <p>
+      Demonstrates automatic resize feature of ImageMapster introduced in
+      v1.5.0. To enable automatic resize, you must set two configuration values:
+    </p>
+    <ul>
+      <li>
+        enableAutoResizeSupport (true|false) - Set this to true to enable the
+        feature. If you want to enable/disable this feature after initializing
+        mapster, you must use `rebind`.
+      </li>
+      <li>
+        autoResize (true|false) - When auto resize support is enabled and
+        autoResize === true, ImageMapster will automatically resize the image to
+        the size of its container. This option can be toggled via set_options
+        API.
+      </li>
+    </ul>
+    <p>Additional Auto Resize Configuration Options:</p>
+    <ul>
+      <li>
+        autoResizeDelay (int) - The amount of time to delay resizing when window
+        resize event occurs. Default is 0 (zero).
+      </li>
+      <li>
+        autoResizeDuration (int) - Corresponds to `resize` API duration
+        parameter. Default is 0 (zero).
+      </li>
+      <li>
+        onAutoResize (func) - Correponds to `resize` API callback parameter.
+        Default is null.
+      </li>
+    </ul>
+    <p>
+      Change the size of the window to see how the image automatically resizes
+      to its container size.
+    </p>
+    <ul>
+      <li>
+        <a
+          href="javascript:void(0);"
+          class="toggle-autoresize-image"
+          data-imageid="beatlesimage1"
+          >Toggle Auto Resize for Top Left Image</a
+        >
+      </li>
+      <li>
+        <a
+          href="javascript:void(0);"
+          class="toggle-autoresize-image"
+          data-imageid="beatlesimage2"
+          >Toggle Auto Resize for Top Middle Image</a
+        >
+      </li>
+      <li>
+        <a
+          href="javascript:void(0);"
+          class="toggle-autoresize-image"
+          data-imageid="beatlesimage3"
+          >Toggle Auto Resize for Top Right Image</a
+        >
+      </li>
+      <li>
+        <a
+          href="javascript:void(0);"
+          class="toggle-autoresize-image"
+          data-imageid="beatlesimage4"
+          >Toggle Auto Resize for Bottom Image</a
+        >
+      </li>
+
+      <li style="margin-top: 20px">
+        <a
+          href="javascript:void(0);"
+          class="toggle-autoresize-all"
+          data-enabled="true"
+          >Enable Auto Resize for all Images</a
+        >
+      </li>
+      <li>
+        <a
+          href="javascript:void(0);"
+          class="toggle-autoresize-all"
+          data-enabled="false"
+          >Disable Auto Resize for all Images</a
+        >
+      </li>
+    </ul>
+    <div>
+      <div
+        style="width: 10%; margin: 10px; float: left; border: 5px solid blue"
+      >
+        <img
+          id="beatlesimage1"
+          src="images/beatles_basic.jpg"
+          usemap="#beatles-map1"
+          style="width: 100%"
+        />
+      </div>
+      <div
+        style="width: 30%; margin: 10px; float: left; border: 5px solid green"
+      >
+        <img
+          id="beatlesimage2"
+          src="images/beatles_basic.jpg"
+          usemap="#beatles-map2"
+          style="width: 100%"
+        />
+      </div>
+      <div style="width: 40%; margin: 10px; float: left; border: 5px solid red">
+        <img
+          id="beatlesimage3"
+          src="images/beatles_basic.jpg"
+          usemap="#beatles-map3"
+          style="width: 100%"
+        />
+      </div>
+      <div style="clear: both" />
+    </div>
+    <div style="border: 5px solid orange; padding: 20px; margin: 40px">
+      <img
+        id="beatlesimage4"
+        src="images/beatles_basic.jpg"
+        usemap="#beatles-map4"
+        style="width: 100%"
+      />
+    </div>
+    <map name="beatles-map1">
+      <area shape="rect" coords="36,46,121,131" href="#" />
+      <area shape="rect" coords="113,76,198,161" href="#" />
+      <area shape="rect" coords="192,50,277,135" href="#" />
+      <area shape="rect" coords="262,60,347,145" href="#" />
+    </map>
+    <map name="beatles-map2">
+      <area shape="rect" coords="36,46,121,131" href="#" />
+      <area shape="rect" coords="113,76,198,161" href="#" />
+      <area shape="rect" coords="192,50,277,135" href="#" />
+      <area shape="rect" coords="262,60,347,145" href="#" />
+    </map>
+    <map name="beatles-map3">
+      <area shape="rect" coords="36,46,121,131" href="#" />
+      <area shape="rect" coords="113,76,198,161" href="#" />
+      <area shape="rect" coords="192,50,277,135" href="#" />
+      <area shape="rect" coords="262,60,347,145" href="#" />
+    </map>
+    <map name="beatles-map4">
+      <area shape="rect" coords="36,46,121,131" href="#" />
+      <area shape="rect" coords="113,76,198,161" href="#" />
+      <area shape="rect" coords="192,50,277,135" href="#" />
+      <area shape="rect" coords="262,60,347,145" href="#" />
+    </map>
+  </body>
+</html>
