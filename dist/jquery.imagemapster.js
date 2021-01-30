@@ -1,5 +1,5 @@
 /*!
-* imagemapster - v1.5.0 - 2021-01-29
+* imagemapster - v1.5.1 - 2021-01-30
 * https://github.com/jamietre/ImageMapster/
 * Copyright (c) 2011 - 2021 James Treworgy
 * License: MIT
@@ -107,7 +107,7 @@
 (function ($) {
   'use strict';
 
-  var mapster_version = '1.5.0';
+  var mapster_version = '1.5.1';
 
   // all public functions in $.mapster.impl are methods
   $.fn.mapster = function (method) {
@@ -3726,6 +3726,7 @@
           easing: 'linear'
         });
       });
+      els.filter(':hidden').css(newsize);
 
       p = u.defer();
       promises.push(p);
