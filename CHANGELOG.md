@@ -14,6 +14,7 @@
 ## Version 1.5.0 (planned)
 
 - [Issue 357](https://github.com/jamietre/ImageMapster/issues/357) AltImages become visible after `resize` when duration is specified
+- [Issue 359](https://github.com/jamietre/ImageMapster/issues/359) Add autoresize feature
 
 ## Version 1.5.0-beta.1 - 2021.01.26
 
