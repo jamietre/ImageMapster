@@ -29,7 +29,8 @@
       _tooltip_events: [], // {}         info on events we bound to a tooltip container, so we can properly unbind them
       scaleInfo: null, // {}         info about the image size, scaling, defaults
       index: -1, // index of this in map_cache - so we have an ID to use for wraper div
-      activeAreaEvent: null
+      activeAreaEvent: null,
+      autoResizeTimer: null // tracks autoresize timer based on options.autoResizeDelay
     });
   }
 
@@ -482,6 +483,9 @@
     wrapId: function () {
       return 'mapster_wrap_' + this.index;
     },
+    instanceEventNamespace: function () {
+      return '.mapster.' + this.wrapId();
+    },
     _idFromKey: function (key) {
       return typeof key === 'string' &&
         Object.prototype.hasOwnProperty.call(this._xref, key)
@@ -737,13 +741,19 @@
 
       // now that we have processed all the areas, set css for wrapper, scale map if needed
 
-      css = {
-        display: 'block',
-        position: 'relative',
-        padding: 0,
-        width: scale.width,
-        height: scale.height
-      };
+      css = $.extend(
+        {
+          display: 'block',
+          position: 'relative',
+          padding: 0
+        },
+        opts.enableAutoResizeSupport === true
+          ? {}
+          : {
+              width: scale.width,
+              height: scale.height
+            }
+      );
 
       if (opts.wrapCss) {
         $.extend(css, opts.wrapCss);
@@ -801,6 +811,10 @@
 
       me.complete = true;
       me.processCommandQueue();
+
+      if (opts.enableAutoResizeSupport === true) {
+        me.configureAutoResize();
+      }
 
       if (opts.onConfigured && typeof opts.onConfigured === 'function') {
         opts.onConfigured.call(img, true);
@@ -960,6 +974,8 @@
     clearEvents: function () {
       $(this.map).find('area').off('.mapster');
       $(this.images).off('.mapster');
+      $(window).off(this.instanceEventNamespace());
+      $(window.document).off(this.instanceEventNamespace());
     },
     _clearCanvases: function (preserveState) {
       // remove the canvas elements created
@@ -985,6 +1001,10 @@
 
       me.images.clear();
 
+      if (me.autoResizeTimer) {
+        clearTimeout(me.autoResizeTimer);
+      }
+      me.autoResizeTimer = null;
       this.image = null;
       u.ifFunction(this.clearToolTip, this);
     },

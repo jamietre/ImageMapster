@@ -65,6 +65,11 @@
       configTimeout: 30000,
       noHrefIsMask: true,
       scaleMap: true,
+      enableAutoResizeSupport: false, // TODO: Remove in next major release
+      autoResize: false,
+      autoResizeDelay: 0,
+      autoResizeDuration: 0,
+      onAutoResize: null,
       safeLoad: false,
       areas: []
     },

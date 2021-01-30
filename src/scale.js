@@ -153,7 +153,10 @@
 
     // resize all the elements that are part of the map except the image itself (which is not visible)
     // but including the div wrapper
-    els = $(me.wrapper).find('.mapster_el').add(me.wrapper);
+    els = $(me.wrapper).find('.mapster_el');
+    if (me.options.enableAutoResizeSupport !== true) {
+      els = els.add(me.wrapper);
+    }
 
     if (duration) {
       promises = [];
@@ -183,6 +186,45 @@
       resizeMapData();
       finishResize();
     }
+  };
+
+  m.MapData.prototype.autoResize = function (duration, callback) {
+    var me = this;
+    me.resize($(me.wrapper).width(), null, duration, callback);
+  };
+
+  m.MapData.prototype.configureAutoResize = function () {
+    var me = this,
+      ns = me.instanceEventNamespace();
+
+    function resizeMap() {
+      // Evaluate this at runtime to allow for set_options
+      // to change behavior as set_options intentionally
+      // does not change any rendering behavior when invoked.
+      // To improve perf, in next major release this should
+      // be refactored to add/remove listeners when autoResize
+      // changes rather than always having listeners attached
+      // and conditionally resizing
+      if (me.options.autoResize !== true) {
+        return;
+      }
+
+      me.autoResize(me.options.autoResizeDuration, me.options.onAutoResize);
+    }
+
+    function debounce() {
+      if (me.autoResizeTimer) {
+        clearTimeout(me.autoResizeTimer);
+      }
+      me.autoResizeTimer = setTimeout(resizeMap, me.options.autoResizeDelay);
+    }
+
+    $(me.image).on('load' + ns, resizeMap); //Detect late image loads in IE11
+    $(window).on('focus' + ns, resizeMap);
+    $(window).on('resize' + ns, debounce);
+    $(window).on('readystatechange' + ns, resizeMap);
+    $(window.document).on('fullscreenchange' + ns, resizeMap);
+    resizeMap();
   };
 
   m.MapArea = u.subclass(m.MapArea, function () {
@@ -218,13 +260,26 @@
   };
 
   m.impl.resize = function (width, height, duration, callback) {
-    if (!width && !height) {
-      return false;
-    }
     var x = new m.Method(
       this,
       function () {
-        this.resize(width, height, duration, callback);
+        var me = this,
+          noDimensions = !width && !height,
+          isAutoResize =
+            me.options.enableAutoResizeSupport &&
+            me.options.autoResize &&
+            noDimensions;
+
+        if (isAutoResize) {
+          me.autoResize(duration, callback);
+          return;
+        }
+
+        if (noDimensions) {
+          return false;
+        }
+
+        me.resize(width, height, duration, callback);
       },
       null,
       {
