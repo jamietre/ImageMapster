@@ -11,6 +11,10 @@
 - Migrate to modern testframework
 - Update website and host on Github
 
+## Version 1.5.1 - 2021.01.30
+
+- [Issue 362](https://github.com/jamietre/ImageMapster/issues/362) Apply width/height to hidden elements on `resize` when `duration` specified
+
 ## Version 1.5.0 - 2021.01.29
 
 - [Issue 357](https://github.com/jamietre/ImageMapster/issues/357) AltImages become visible after `resize` when duration is specified
