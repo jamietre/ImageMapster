@@ -200,9 +200,11 @@
 
       switch (mapArea.shape) {
         case 'rect':
+        case 'rectangle':
           context.rect(c[0], c[1], c[2] - c[0], c[3] - c[1]);
           break;
         case 'poly':
+        case 'polygon':
           context.moveTo(c[0], c[1]);
 
           for (i = 2; i < mapArea.length; i += 2) {
@@ -396,6 +398,7 @@
 
       switch (mapArea.shape) {
         case 'rect':
+        case 'rectangle':
           template =
             '<v:rect ' +
             el_class +
@@ -415,6 +418,7 @@
             '</v:rect>';
           break;
         case 'poly':
+        case 'polygon':
           template =
             '<v:shape ' +
             el_class +

@@ -278,7 +278,7 @@
       me.originalCoords.push(parseFloat(el));
     });
     me.length = me.originalCoords.length;
-    me.shape = areaEl.shape.toLowerCase();
+    me.shape = u.getShape(areaEl);
     me.nohref = areaEl.nohref || !areaEl.href;
     me.configure(keys);
   };
