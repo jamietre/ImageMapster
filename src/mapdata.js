@@ -98,7 +98,7 @@
 
     function cbFinal(areaId) {
       if (me.currentAreaId !== areaId && me.highlightId >= 0) {
-        deferred.resolve();
+        deferred.resolve({ completeAction: true });
       }
     }
     if (me.activeAreaEvent) {
@@ -106,7 +106,7 @@
       me.activeAreaEvent = 0;
     }
     if (delay < 0) {
-      deferred.reject();
+      deferred.resolve({ completeAction: false });
     } else {
       if (area.owner.currentAction || delay) {
         me.activeAreaEvent = window.setTimeout(
@@ -212,7 +212,12 @@
     me.currentAreaId = -1;
     ar.area = null;
 
-    queueMouseEvent(me, opts.mouseoutDelay, ar).then(me.clearEffects);
+    queueMouseEvent(me, opts.mouseoutDelay, ar).then(function (result) {
+      if (!result.completeAction) {
+        return;
+      }
+      me.clearEffects();
+    });
 
     if (u.isFunction(opts.onMouseout)) {
       opts.onMouseout.call(this, {
