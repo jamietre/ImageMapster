@@ -86,6 +86,11 @@
     return me.isSelected();
   }
 
+  function isNoHref(areaEl) {
+    var $area = $(areaEl);
+    return u.hasAttribute($area, 'nohref') || !u.hasAttribute($area, 'href');
+  }
+
   /**
    * An AreaData object; represents a conceptual area that can be composed of
    * one or more MapArea objects
@@ -177,14 +182,8 @@
         : u.boolOrDefault(this.effectiveOptions().isDeselectable, true);
     },
     isNotRendered: function () {
-      var area = $(this.area);
-      return (
-        area.attr('nohref') ||
-        !area.attr('href') ||
-        this.effectiveOptions().isMask
-      );
+      return isNoHref(this.area) || this.effectiveOptions().isMask;
     },
-
     /**
      * Return the overall options effective for this area.
      * This should get the default options, and merge in area-specific options, finally
@@ -279,7 +278,7 @@
     });
     me.length = me.originalCoords.length;
     me.shape = u.getShape(areaEl);
-    me.nohref = areaEl.nohref || !areaEl.href;
+    me.nohref = isNoHref(areaEl);
     me.configure(keys);
   };
   m.MapArea.prototype = {

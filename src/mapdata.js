@@ -124,6 +124,10 @@
     return deferred;
   }
 
+  function shouldNavigateTo(href) {
+    return !!href && href !== '#';
+  }
+
   /**
    * Mousedown event. This is captured only to prevent browser from drawing an outline around an
    * area when it's clicked.
@@ -288,7 +292,7 @@
     function getNavDetails(ar, mode, defaultHref) {
       if (mode === 'open') {
         var elHref = $(ar.area).attr('href'),
-          useEl = elHref && elHref !== '#';
+          useEl = shouldNavigateTo(elHref);
 
         return {
           href: useEl ? elHref : ar.href,
@@ -331,7 +335,7 @@
             opts.navigateMode,
             $(ar.area).attr('href')
           );
-          if (target.href !== '#') {
+          if (shouldNavigateTo(target.href)) {
             navigateTo(opts.navigateMode, target.href, target.target);
             return false;
           }
@@ -361,7 +365,7 @@
     mousedown.call(this, e);
 
     navDetails = getNavDetails(ar, opts.navigateMode, ar.href);
-    if (opts.clickNavigate && navDetails.href) {
+    if (opts.clickNavigate && shouldNavigateTo(navDetails.href)) {
       navigateTo(opts.navigateMode, navDetails.href, navDetails.target);
       return;
     }
@@ -935,7 +939,7 @@
         }
 
         href = $area.attr('href');
-        if (href && href !== '#' && !dataItem.href) {
+        if (shouldNavigateTo(href) && !dataItem.href) {
           dataItem.href = href;
           dataItem.hrefTarget = $area.attr('target');
         }
