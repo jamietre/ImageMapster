@@ -38,6 +38,9 @@
       me.drawSelection();
 
       me.selected = true;
+      me.staticStateOverridden = u.isBool(me.effectiveOptions().staticState)
+        ? true
+        : false;
       me.changeState('select', true);
     }
 
@@ -56,6 +59,9 @@
   function deselect(partial) {
     var me = this;
     me.selected = false;
+    me.staticStateOverridden = u.isBool(me.effectiveOptions().staticState)
+      ? true
+      : false;
     me.changeState('select', false);
 
     // release information about last area options when deselecting.
@@ -113,6 +119,8 @@
       options: {},
       // "null" means unchanged. Use "isSelected" method to just test true/false
       selected: null,
+      // "true" means selected has been set via API AND staticState is true/false
+      staticStateOverridden: false,
       // xref to MapArea objects
       areasXref: [],
       // (temporary storage) - the actual area moused over
@@ -158,7 +166,9 @@
     // Return the effective selected state of an area, incorporating staticState
     isSelectedOrStatic: function () {
       var o = this.effectiveOptions();
-      return u.isBool(o.staticState) ? o.staticState : this.isSelected();
+      return !u.isBool(o.staticState) || this.staticStateOverridden
+        ? this.isSelected()
+        : o.staticState;
     },
     isSelected: function () {
       return u.isBool(this.selected)
