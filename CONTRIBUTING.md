@@ -18,12 +18,9 @@ A bug is a _demonstrable problem_ that is caused by the code in the repository. 
 
 Guidelines for bug reports:
 
-0. **Lint your code** &mdash; Use [jshint](http://jshint.com/) to ensure your problem isn't caused by a simple error in your own code.
-
+1. **Lint your code** &mdash; Use [eslint](http://eslint.org/) to ensure your problem isn't caused by a simple error in your own code.
 1. **Use the GitHub issue search** &mdash; check if the issue has already been reported.
-
 1. **Check if the issue has been fixed** &mdash; try to reproduce it using the latest `master` or development branch in the repository.
-
 1. **Isolate the problem** &mdash; ideally create a [reduced test case](https://css-tricks.com/reduced-test-cases/) and a [live example](https://jsfiddle.net).
 
 A good bug report shouldn't leave others needing to chase you up for more information. Please try to be as detailed as possible in your report. What is your environment? What steps will reproduce the issue? What browser(s) and OS experience the problem? Do other browsers show the bug differently? What would you expect to be the outcome? All these details will help people to fix any potential bugs.

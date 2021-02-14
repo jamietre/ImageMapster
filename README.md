@@ -57,13 +57,13 @@ Alternatively, you can include ImageMapster from one of the following CDNs:
 Activate all image maps on the page with default options: on mouseover areas are highlighted with a gray fill with no border, and clicking an area causes it to become selected.
 
 ```js
-$('img').mapster();
+$('img[usemap]').mapster();
 ```
 
-Activate image maps with some specific options.
+Activate all image maps on the page with some specific options.
 
 ```js
-$('img').mapster({
+$('img[usemap]').mapster({
   fillColor: 'ff0000',
   stroke: true,
   singleSelect: true
@@ -82,7 +82,7 @@ $('area').mapster('select');
 
 Programatically select elements from the image map. The programmatic selection/deselection methods will not honor the staticState property.
 
-**deselect**: Cause an area to become "selected"
+**deselect**: Cause an area to become "deselected"
 
 ```js
 $('area').mapster('deselect');
@@ -97,7 +97,7 @@ $('area').mapster('set', selected);
 You can also select or deselect areas using a their `mapKey`. This is an attribute on each area in your HTML that identifies it. You define a mapKey using a configuration option: `mapKey: 'data-key'`.
 
 ```js
-$('img').mapster('set', true, 'key1,key2');
+$('img[usemap]').mapster('set', true, 'key1,key2');
 ```
 
 If two areas share the same value for the `mapKey` they will be automatically grouped together when activated. You can also use the values of the mapKey to select areas from code.
@@ -105,7 +105,7 @@ If two areas share the same value for the `mapKey` they will be automatically gr
 You can pass options to change the rendering effects when using set as the last parameter:
 
 ```js
-$('img').mapster('set', true, 'key', { fillColor: 'ff0000' });
+$('img[usemap]').mapster('set', true, 'key', { fillColor: 'ff0000' });
 ```
 
 MapKeys can contain more than one value. The first value always defines groups when you mouse over. Other values can be used to create logical groups. For example:
@@ -135,10 +135,10 @@ Mousing over each state would cause just that state to be higlighted. You can al
 
 ```js
 // select all New England states
-$('img').mapster('set', true, 'new-england');
+$('#usamap').mapster('set', true, 'new-england');
 
 // select just Maine, New Hampshire & Vermont
-$('img').mapster('set', true, 'really-cold');
+$('#usamap').mapster('set', true, 'really-cold');
 ```
 
 Groups created this way are _independent_ of the primary group. If you select "new-england" from code, you can't unselect just "MA" by clicking on it. You would have to unselect "new-england" from code.
@@ -158,7 +158,7 @@ ImageMapster includes several examples. To view the examples:
 
 ## Zepto Compatibility
 
-As of ImageMapster v1.3.2, ImageMapster contains full support for Zepto v1.2.0. The latest Zepto compatible version of ImageMapster is [1.5.1](https://github.com/jamietre/ImageMapster/releases/tag/v1.5.1).
+As of ImageMapster v1.3.2, ImageMapster contains full support for Zepto v1.2.0. The latest Zepto compatible version of ImageMapster is [1.5.2](https://github.com/jamietre/ImageMapster/releases/tag/v1.5.2).
 
 Prior to ImageMapster v1.3.2 and with any version of Zepto except v1.2.0, ImageMapster is unlikely to work as expected. In the early versions of ImageMapster, Zepto support was maintained, however due to changes in Zepto, as of v1.2.5 of ImageMapster, support for Zepto compatability was not maintained as it required too much effort and pushing ImageMapster forward with jQuery was the priority.
 
@@ -177,8 +177,8 @@ To use ImageMapster >= v1.3.2 < 2.0.0 with Zepto v.1.2.0, Zepto must contain the
 
 :warning: **_As of ImageMapster v1.3.0, if targeting ES5 browers, you must include a Promise polyfill such as [es6-promise](https://www.npmjs.com/package/es6-promise). See [Issue 341](https://github.com/jamietre/ImageMapster/issues/341) for details._**
 
-1. [jsDelivr](https://www.jsdelivr.com/package/npm/imagemapster?version=1.5.1) - https://www.jsdelivr.com/package/npm/imagemapster?version=1.5.1
-2. [cdnjs](https://cdnjs.com/libraries/imagemapster/1.5.1) - https://cdnjs.com/libraries/imagemapster/1.5.1
+1. [jsDelivr](https://www.jsdelivr.com/package/npm/imagemapster?version=1.5.2) - https://www.jsdelivr.com/package/npm/imagemapster?version=1.5.2
+2. [cdnjs](https://cdnjs.com/libraries/imagemapster/1.5.2) - https://cdnjs.com/libraries/imagemapster/1.5.2
 
 Use `jquery.imagemapster.zepto.min.js`
 
@@ -194,7 +194,7 @@ Use `jquery.imagemapster.zepto.min.js`
 ></script>
 <script
   language="text/javascript"
-  src="/path/to/cdn/for/v1.5.1/dist/jquery.imagemapster.zepto.min.js"
+  src="/path/to/cdn/for/v1.5.2/dist/jquery.imagemapster.zepto.min.js"
 ></script>
 ```
 
@@ -207,7 +207,7 @@ Using `webpack` and `zepto-modules` as an example:
 #### Install from NPM
 
 ```sh
-npm install zepto-modules imagemapster@1.5.1 --save
+npm install zepto-modules imagemapster@1.5.2 --save
 ```
 
 #### src/yourzepto.js

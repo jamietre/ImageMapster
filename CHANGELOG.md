@@ -11,6 +11,14 @@
 - Migrate to modern testframework
 - Update website and host on Github
 
+## Version 1.5.2 - 2021.02.14
+- [Issue 137](https://github.com/jamietre/ImageMapster/issues/137) area href empty or not specified
+- [Issue 170](https://github.com/jamietre/ImageMapster/issues/170) Tooltips/Highlight/Select incorrect when AREA `shape` attribute is missing or its value is non-conforming/empty
+- [Issue 364](https://github.com/jamietre/ImageMapster/issues/364) `Uncaught (in promise) undefined` when mouseoutDelay -1
+- [Issue 365](https://github.com/jamietre/ImageMapster/issues/365) Visual 'selection' cannot be removed via API when `staticState === true`
+- [Issue 366](https://github.com/jamietre/ImageMapster/issues/366) area w/ `staticState === false` that has been selected via API becomes unselected when clicking another area
+- [Issue 367](https://github.com/jamietre/ImageMapster/issues/367) `select`/`set` options not applied or not applied correctly
+
 ## Version 1.5.1 - 2021.01.30
 
 - [Issue 362](https://github.com/jamietre/ImageMapster/issues/362) Apply width/height to hidden elements on `resize` when `duration` specified

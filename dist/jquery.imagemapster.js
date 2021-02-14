@@ -1,5 +1,5 @@
 /*!
-* imagemapster - v1.5.1 - 2021-01-30
+* imagemapster - v1.5.2 - 2021-02-14
 * https://github.com/jamietre/ImageMapster/
 * Copyright (c) 2011 - 2021 James Treworgy
 * License: MIT
@@ -107,7 +107,7 @@
 (function ($) {
   'use strict';
 
-  var mapster_version = '1.5.1';
+  var mapster_version = '1.5.2';
 
   // all public functions in $.mapster.impl are methods
   $.fn.mapster = function (method) {
@@ -443,7 +443,22 @@
             }
           };
         return fade_func;
-      })()
+      })(),
+      getShape: function (areaEl) {
+        // per HTML spec, invalid value and missing value default is 'rect'
+        // Handling as follows:
+        //   - Missing/Empty value will be treated as 'rect' per spec
+        //   - Avoid handling invalid values do to perf impact
+        // Note - IM currently does not support shape of 'default' so while its technically
+        // a valid attribute value it should not be used.
+        // https://html.spec.whatwg.org/multipage/image-maps.html#the-area-element
+        return (areaEl.shape || 'rect').toLowerCase();
+      },
+      hasAttribute: function (el, attrName) {
+        var attr = $(el).attr(attrName);
+        // For some browsers, `attr` is undefined; for others, `attr` is false.
+        return typeof attr !== 'undefined' && attr !== false;
+      }
     },
     getBoundList: function (opts, key_list) {
       if (!opts.boundList) {
@@ -1419,9 +1434,11 @@
 
       switch (mapArea.shape) {
         case 'rect':
+        case 'rectangle':
           context.rect(c[0], c[1], c[2] - c[0], c[3] - c[1]);
           break;
         case 'poly':
+        case 'polygon':
           context.moveTo(c[0], c[1]);
 
           for (i = 2; i < mapArea.length; i += 2) {
@@ -1615,6 +1632,7 @@
 
       switch (mapArea.shape) {
         case 'rect':
+        case 'rectangle':
           template =
             '<v:rect ' +
             el_class +
@@ -1634,6 +1652,7 @@
             '</v:rect>';
           break;
         case 'poly':
+        case 'polygon':
           template =
             '<v:shape ' +
             el_class +
@@ -2143,7 +2162,7 @@
 
     function cbFinal(areaId) {
       if (me.currentAreaId !== areaId && me.highlightId >= 0) {
-        deferred.resolve();
+        deferred.resolve({ completeAction: true });
       }
     }
     if (me.activeAreaEvent) {
@@ -2151,7 +2170,7 @@
       me.activeAreaEvent = 0;
     }
     if (delay < 0) {
-      deferred.reject();
+      deferred.resolve({ completeAction: false });
     } else {
       if (area.owner.currentAction || delay) {
         me.activeAreaEvent = window.setTimeout(
@@ -2167,6 +2186,10 @@
       }
     }
     return deferred;
+  }
+
+  function shouldNavigateTo(href) {
+    return !!href && href !== '#';
   }
 
   /**
@@ -2257,7 +2280,12 @@
     me.currentAreaId = -1;
     ar.area = null;
 
-    queueMouseEvent(me, opts.mouseoutDelay, ar).then(me.clearEffects);
+    queueMouseEvent(me, opts.mouseoutDelay, ar).then(function (result) {
+      if (!result.completeAction) {
+        return;
+      }
+      me.clearEffects();
+    });
 
     if (u.isFunction(opts.onMouseout)) {
       opts.onMouseout.call(this, {
@@ -2328,7 +2356,7 @@
     function getNavDetails(ar, mode, defaultHref) {
       if (mode === 'open') {
         var elHref = $(ar.area).attr('href'),
-          useEl = elHref && elHref !== '#';
+          useEl = shouldNavigateTo(elHref);
 
         return {
           href: useEl ? elHref : ar.href,
@@ -2371,7 +2399,7 @@
             opts.navigateMode,
             $(ar.area).attr('href')
           );
-          if (target.href !== '#') {
+          if (shouldNavigateTo(target.href)) {
             navigateTo(opts.navigateMode, target.href, target.target);
             return false;
           }
@@ -2401,7 +2429,7 @@
     mousedown.call(this, e);
 
     navDetails = getNavDetails(ar, opts.navigateMode, ar.href);
-    if (opts.clickNavigate && navDetails.href) {
+    if (opts.clickNavigate && shouldNavigateTo(navDetails.href)) {
       navigateTo(opts.navigateMode, navDetails.href, navDetails.target);
       return;
     }
@@ -2975,7 +3003,7 @@
         }
 
         href = $area.attr('href');
-        if (href && href !== '#' && !dataItem.href) {
+        if (shouldNavigateTo(href) && !dataItem.href) {
           dataItem.href = href;
           dataItem.hrefTarget = $area.attr('target');
         }
@@ -3077,6 +3105,33 @@
   var m = $.mapster,
     u = m.utils;
 
+  function optsAreEqual(opts1, opts2) {
+    // deep compare is not trivial and current testing framework
+    // doesn't provide a way to detect this accurately so only
+    // implementing basic compare at this time.
+    // TODO: Implement deep obj compare or for perf reasons shallow
+    //       with a short-circuit if deep is required for full compare
+    //       since config options should only require shallow
+    return opts1 === opts2;
+  }
+
+  /**
+   * Update selected state of this area
+   *
+   * @param {boolean} selected Determines whether areas are selected or deselected
+   */
+  function updateSelected(selected) {
+    var me = this,
+      prevSelected = me.selected;
+
+    me.selected = selected;
+    me.staticStateOverridden = u.isBool(me.effectiveOptions().staticState)
+      ? true
+      : false;
+
+    return prevSelected !== selected;
+  }
+
   /**
    * Select this area
    *
@@ -3084,34 +3139,62 @@
    * @param {object} options Options for rendering the selection
    */
   function select(options) {
-    // need to add the new one first so that the double-opacity effect leaves the current one highlighted for singleSelect
+    function buildOptions() {
+      // map the altImageId if an altimage was passed
+      return $.extend(me.effectiveRenderOptions('select'), options, {
+        altImageId: o.images.add(options.altImage)
+      });
+    }
 
     var me = this,
-      o = me.owner;
+      o = me.owner,
+      hasOptions = !$.isEmptyObject(options),
+      newOptsCache = hasOptions ? buildOptions() : null,
+      // Per docs, options changed via set_options for an area that is
+      // already selected will not be reflected until the next time
+      // the area becomes selected.
+      changeOptions = hasOptions
+        ? !optsAreEqual(me.optsCache, newOptsCache)
+        : false,
+      selectedHasChanged = false,
+      isDrawn = me.isSelectedOrStatic();
+
+    // This won't clear staticState === true areas that have not been overridden via API set/select/deselect.
+    // This could be optimized to only clear if we are the only one selected.  However, there are scenarios
+    // that do not respect singleSelect (e.g. initialization) so we force clear if there should only be one.
+    // TODO: Only clear if we aren't the only one selected (depends on #370)
     if (o.options.singleSelect) {
       o.clearSelections();
+      // we may (staticState === true)  or may not still be visible
+      isDrawn = me.isSelectedOrStatic();
     }
 
-    // because areas can overlap - we can't depend on the selection state to tell us anything about the inner areas.
-    // don't check if it's already selected
-    if (!me.isSelected()) {
-      if (options) {
-        // cache the current options, and map the altImageId if an altimage
-        // was passed
-
-        me.optsCache = $.extend(me.effectiveRenderOptions('select'), options, {
-          altImageId: o.images.add(options.altImage)
-        });
-      }
-
-      me.drawSelection();
-
-      me.selected = true;
-      me.changeState('select', true);
+    if (changeOptions) {
+      me.optsCache = newOptsCache;
     }
 
-    if (o.options.singleSelect) {
+    // Update before we start drawing for methods
+    // that rely on internal selected value.
+    // Force update because area can be selected
+    // at multiple levels (selected / area_options.selected / staticState / etc.)
+    // and could have been cleared.
+    selectedHasChanged = me.updateSelected(true);
+
+    if (isDrawn && changeOptions) {
+      // no way to remove just this area from canvas so must refresh everything
+
+      // explicitly remove vml element since it uses removeSelections instead of refreshSelections
+      // TODO: Not sure why removeSelections isn't incorporated in to refreshSelections
+      //       need to investigate and possibly consolidate
+      o.graphics.removeSelections(me.areaId);
       o.graphics.refreshSelections();
+    } else if (!isDrawn) {
+      me.drawSelection();
+    }
+
+    // don't fire until everything is done
+    if (selectedHasChanged) {
+      me.changeState('select', true);
     }
   }
 
@@ -3123,20 +3206,28 @@
    */
 
   function deselect(partial) {
-    var me = this;
-    me.selected = false;
-    me.changeState('select', false);
+    var me = this,
+      selectedHasChanged = false;
+
+    // update before we start drawing for methods
+    // that rely on internal selected value
+    // force update because area can be selected
+    // at multiple levels (selected / area_options.selected / staticState / etc.)
+    selectedHasChanged = me.updateSelected(false);
 
     // release information about last area options when deselecting.
-
     me.optsCache = null;
     me.owner.graphics.removeSelections(me.areaId);
 
     // Complete selection removal process. This is separated because it's very inefficient to perform the whole
     // process for multiple removals, as the canvas must be totally redrawn at the end of the process.ar.remove
-
     if (!partial) {
       me.owner.removeSelectionFinish();
+    }
+
+    // don't fire until everything is done
+    if (selectedHasChanged) {
+      me.changeState('select', false);
     }
   }
 
@@ -3153,6 +3244,11 @@
       me.deselect();
     }
     return me.isSelected();
+  }
+
+  function isNoHref(areaEl) {
+    var $area = $(areaEl);
+    return u.hasAttribute($area, 'nohref') || !u.hasAttribute($area, 'href');
   }
 
   /**
@@ -3177,6 +3273,8 @@
       options: {},
       // "null" means unchanged. Use "isSelected" method to just test true/false
       selected: null,
+      // "true" means selected has been set via API AND staticState is true/false
+      staticStateOverridden: false,
       // xref to MapArea objects
       areasXref: [],
       // (temporary storage) - the actual area moused over
@@ -3196,6 +3294,7 @@
     select: select,
     deselect: deselect,
     toggle: toggle,
+    updateSelected: updateSelected,
     areas: function () {
       var i,
         result = [];
@@ -3222,7 +3321,9 @@
     // Return the effective selected state of an area, incorporating staticState
     isSelectedOrStatic: function () {
       var o = this.effectiveOptions();
-      return u.isBool(o.staticState) ? o.staticState : this.isSelected();
+      return !u.isBool(o.staticState) || this.staticStateOverridden
+        ? this.isSelected()
+        : o.staticState;
     },
     isSelected: function () {
       return u.isBool(this.selected)
@@ -3246,14 +3347,8 @@
         : u.boolOrDefault(this.effectiveOptions().isDeselectable, true);
     },
     isNotRendered: function () {
-      var area = $(this.area);
-      return (
-        area.attr('nohref') ||
-        !area.attr('href') ||
-        this.effectiveOptions().isMask
-      );
+      return isNoHref(this.area) || this.effectiveOptions().isMask;
     },
-
     /**
      * Return the overall options effective for this area.
      * This should get the default options, and merge in area-specific options, finally
@@ -3347,8 +3442,8 @@
       me.originalCoords.push(parseFloat(el));
     });
     me.length = me.originalCoords.length;
-    me.shape = areaEl.shape.toLowerCase();
-    me.nohref = areaEl.nohref || !areaEl.href;
+    me.shape = u.getShape(areaEl);
+    me.nohref = isNoHref(areaEl);
     me.configure(keys);
   };
   m.MapArea.prototype = {
@@ -3441,8 +3536,9 @@
       if (el.nodeName === 'AREA') {
         iCoords = u.split(el.coords, parseInt);
 
-        switch (el.shape) {
+        switch (u.getShape(el)) {
           case 'circle':
+          case 'circ':
             curX = iCoords[0];
             curY = iCoords[1];
             radius = iCoords[2];
@@ -3455,6 +3551,7 @@
               );
             }
             break;
+          case 'rectangle':
           case 'rect':
             coords.push(
               iCoords[0],
