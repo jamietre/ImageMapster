@@ -1,0 +1,171 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Shapes HTML Spec Test</title>
+
+    <script
+      type="text/javascript"
+      src="https://cdn.jsdelivr.net/npm/es6-promise/dist/es6-promise.auto.min.js"
+    ></script>
+
+    <script type="text/javascript" src="redist/jquery.3.5.1.min.js"></script>
+    <script
+      type="text/javascript"
+      src="../dist/jquery.imagemapster.js"
+    ></script>
+
+    <!-- <script type="text/javascript" src="redist/zepto.1.2.0.min.js"></script>
+    <script
+      type="text/javascript"
+      src="../dist/jquery.imagemapster.zepto.js"
+    ></script> -->
+
+    <link rel="stylesheet" href="stylesheets/base.css" />
+
+    <script type="text/javascript">
+      $(document).ready(function () {
+        'use strict';
+
+        $('img[usemap]').mapster({
+          mapKey: 'group',
+          showToolTip: true,
+          render_highlight: {
+            fillColor: 'FFFF00'
+          },
+          render_select: {
+            fillColor: '00FF00'
+          },
+          toolTip: function (data) {
+            return (
+              'Shape attribute value:<br/> [' +
+              $(data.target).attr('shape') +
+              ']'
+            );
+          }
+        });
+      });
+    </script>
+  </head>
+
+  <body>
+    <div class="navmenu">
+      Return to <a href="index.html">Main Menu</a>
+      <hr />
+    </div>
+
+    <h2>Shapes HTML Spec Test</h2>
+    <p>
+      Test 'shape' attributes using various combinations of values. If working
+      as expected, behavior of all 4 imagemaps should function identically. This
+      should be converted to a unit test once the testing framework is updated.
+    </p>
+    <p>The behavior of each shape should be:</p>
+    <ul>
+      <li>Highlight - Yellow</li>
+      <li>Select - Green</li>
+      <li>Tooltip - Immediately above shape</li>
+    </ul>
+    <p>All 'shape' attributes use conforming value (rect/poly/circle)</p>
+    <!-- shape value conforming -->
+    <img
+      id="shapeimage_conforming"
+      src="images/shapes.jpg"
+      style="width: 512; height: 176; border: 0"
+      alt=""
+      usemap="#shapesmap_conforming"
+    />
+    <map name="shapesmap_conforming">
+      <area shape="rect" group="rectangle" coords="378,39,463,116" href="#" />
+      <area
+        shape="poly"
+        group="blue-circle"
+        coords="286,34, 298,42, 308,54, 314,79, 307,103, 292,118, 270,125, 242,122, 227,112, 216,97, 212,73, 219,53, 227,43, 240,34, 264,29"
+        href="#"
+      />
+      <area shape="circle" group="outer-circle" coords="100,81,59" href="#" />
+    </map>
+
+    <!-- shape value non-conforming -->
+    <p>
+      All 'shape' attributes use non-conforming value (rectangle/polygon/circ)
+    </p>
+    <img
+      id="shapeimage_nonconforming"
+      src="images/shapes.jpg"
+      style="width: 512; height: 176; border: 0"
+      alt=""
+      usemap="#shapesmap_nonconforming"
+    />
+    <map name="shapesmap_nonconforming">
+      <area
+        shape="rectangle"
+        group="rectangle"
+        coords="378,39,463,116"
+        href="#"
+      />
+      <area
+        shape="polygon"
+        group="blue-circle"
+        coords="286,34, 298,42, 308,54, 314,79, 307,103, 292,118, 270,125, 242,122, 227,112, 216,97, 212,73, 219,53, 227,43, 240,34, 264,29"
+        href="#"
+      />
+      <area shape="circ" group="outer-circle" coords="100,81,59" href="#" />
+    </map>
+
+    <!-- shape value missing -->
+    <p>
+      All 'shape' attributes use conforming value (poly/circle) with rectangle
+      shape attribute missing which should default to rect per HTML spec
+    </p>
+    <img
+      id="shapeimage_missing"
+      src="images/shapes.jpg"
+      style="width: 512; height: 176; border: 0"
+      usemap="#shapesmap_missing"
+    />
+    <map name="shapesmap_missing">
+      <area
+        group="rectangle"
+        alt="rectangle"
+        coords="378,39,463,116"
+        href="#"
+      />
+      <area
+        shape="poly"
+        group="blue-circle"
+        coords="286,34, 298,42, 308,54, 314,79, 307,103, 292,118, 270,125, 242,122, 227,112, 216,97, 212,73, 219,53, 227,43, 240,34, 264,29"
+        href="#"
+      />
+      <area shape="circle" group="outer-circle" coords="100,81,59" href="#" />
+    </map>
+
+    <!-- shape value empty -->
+    <p>
+      All 'shape' attributes use non-conforming value (polygon/circ) with
+      rectangle shape attribute empty which should default to rect per HTML spec
+    </p>
+    <img
+      id="shapeimage_empty"
+      src="images/shapes.jpg"
+      style="width: 512; height: 176; border: 0"
+      usemap="#shapesmap_empty"
+    />
+    <map name="shapesmap_empty">
+      <area
+        group="rectangle"
+        shape=""
+        alt="rectangle"
+        coords="378,39,463,116"
+        href="#"
+      />
+      <area
+        shape="poly"
+        group="blue-circle"
+        coords="286,34, 298,42, 308,54, 314,79, 307,103, 292,118, 270,125, 242,122, 227,112, 216,97, 212,73, 219,53, 227,43, 240,34, 264,29"
+        href="#"
+      />
+      <area shape="circle" group="outer-circle" coords="100,81,59" href="#" />
+    </map>
+  </body>
+</html>

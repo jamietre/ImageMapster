@@ -342,7 +342,22 @@
             }
           };
         return fade_func;
-      })()
+      })(),
+      getShape: function (areaEl) {
+        // per HTML spec, invalid value and missing value default is 'rect'
+        // Handling as follows:
+        //   - Missing/Empty value will be treated as 'rect' per spec
+        //   - Avoid handling invalid values do to perf impact
+        // Note - IM currently does not support shape of 'default' so while its technically
+        // a valid attribute value it should not be used.
+        // https://html.spec.whatwg.org/multipage/image-maps.html#the-area-element
+        return (areaEl.shape || 'rect').toLowerCase();
+      },
+      hasAttribute: function (el, attrName) {
+        var attr = $(el).attr(attrName);
+        // For some browsers, `attr` is undefined; for others, `attr` is false.
+        return typeof attr !== 'undefined' && attr !== false;
+      }
     },
     getBoundList: function (opts, key_list) {
       if (!opts.boundList) {

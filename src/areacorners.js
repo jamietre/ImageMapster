@@ -72,8 +72,9 @@
       if (el.nodeName === 'AREA') {
         iCoords = u.split(el.coords, parseInt);
 
-        switch (el.shape) {
+        switch (u.getShape(el)) {
           case 'circle':
+          case 'circ':
             curX = iCoords[0];
             curY = iCoords[1];
             radius = iCoords[2];
@@ -86,6 +87,7 @@
               );
             }
             break;
+          case 'rectangle':
           case 'rect':
             coords.push(
               iCoords[0],
