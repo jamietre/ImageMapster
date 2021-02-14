@@ -8,6 +8,33 @@
   var m = $.mapster,
     u = m.utils;
 
+  function optsAreEqual(opts1, opts2) {
+    // deep compare is not trivial and current testing framework
+    // doesn't provide a way to detect this accurately so only
+    // implementing basic compare at this time.
+    // TODO: Implement deep obj compare or for perf reasons shallow
+    //       with a short-circuit if deep is required for full compare
+    //       since config options should only require shallow
+    return opts1 === opts2;
+  }
+
+  /**
+   * Update selected state of this area
+   *
+   * @param {boolean} selected Determines whether areas are selected or deselected
+   */
+  function updateSelected(selected) {
+    var me = this,
+      prevSelected = me.selected;
+
+    me.selected = selected;
+    me.staticStateOverridden = u.isBool(me.effectiveOptions().staticState)
+      ? true
+      : false;
+
+    return prevSelected !== selected;
+  }
+
   /**
    * Select this area
    *
@@ -15,37 +42,62 @@
    * @param {object} options Options for rendering the selection
    */
   function select(options) {
-    // need to add the new one first so that the double-opacity effect leaves the current one highlighted for singleSelect
+    function buildOptions() {
+      // map the altImageId if an altimage was passed
+      return $.extend(me.effectiveRenderOptions('select'), options, {
+        altImageId: o.images.add(options.altImage)
+      });
+    }
 
     var me = this,
-      o = me.owner;
+      o = me.owner,
+      hasOptions = !$.isEmptyObject(options),
+      newOptsCache = hasOptions ? buildOptions() : null,
+      // Per docs, options changed via set_options for an area that is
+      // already selected will not be reflected until the next time
+      // the area becomes selected.
+      changeOptions = hasOptions
+        ? !optsAreEqual(me.optsCache, newOptsCache)
+        : false,
+      selectedHasChanged = false,
+      isDrawn = me.isSelectedOrStatic();
+
+    // This won't clear staticState === true areas that have not been overridden via API set/select/deselect.
+    // This could be optimized to only clear if we are the only one selected.  However, there are scenarios
+    // that do not respect singleSelect (e.g. initialization) so we force clear if there should only be one.
+    // TODO: Only clear if we aren't the only one selected (depends on #370)
     if (o.options.singleSelect) {
       o.clearSelections();
+      // we may (staticState === true)  or may not still be visible
+      isDrawn = me.isSelectedOrStatic();
     }
 
-    // because areas can overlap - we can't depend on the selection state to tell us anything about the inner areas.
-    // don't check if it's already selected
-    if (!me.isSelected()) {
-      if (options) {
-        // cache the current options, and map the altImageId if an altimage
-        // was passed
-
-        me.optsCache = $.extend(me.effectiveRenderOptions('select'), options, {
-          altImageId: o.images.add(options.altImage)
-        });
-      }
-
-      me.drawSelection();
-
-      me.selected = true;
-      me.staticStateOverridden = u.isBool(me.effectiveOptions().staticState)
-        ? true
-        : false;
-      me.changeState('select', true);
+    if (changeOptions) {
+      me.optsCache = newOptsCache;
     }
 
-    if (o.options.singleSelect) {
+    // Update before we start drawing for methods
+    // that rely on internal selected value.
+    // Force update because area can be selected
+    // at multiple levels (selected / area_options.selected / staticState / etc.)
+    // and could have been cleared.
+    selectedHasChanged = me.updateSelected(true);
+
+    if (isDrawn && changeOptions) {
+      // no way to remove just this area from canvas so must refresh everything
+
+      // explicitly remove vml element since it uses removeSelections instead of refreshSelections
+      // TODO: Not sure why removeSelections isn't incorporated in to refreshSelections
+      //       need to investigate and possibly consolidate
+      o.graphics.removeSelections(me.areaId);
       o.graphics.refreshSelections();
+    } else if (!isDrawn) {
+      me.drawSelection();
+    }
+
+    // don't fire until everything is done
+    if (selectedHasChanged) {
+      me.changeState('select', true);
     }
   }
 
@@ -57,23 +109,28 @@
    */
 
   function deselect(partial) {
-    var me = this;
-    me.selected = false;
-    me.staticStateOverridden = u.isBool(me.effectiveOptions().staticState)
-      ? true
-      : false;
-    me.changeState('select', false);
+    var me = this,
+      selectedHasChanged = false;
+
+    // update before we start drawing for methods
+    // that rely on internal selected value
+    // force update because area can be selected
+    // at multiple levels (selected / area_options.selected / staticState / etc.)
+    selectedHasChanged = me.updateSelected(false);
 
     // release information about last area options when deselecting.
-
     me.optsCache = null;
     me.owner.graphics.removeSelections(me.areaId);
 
     // Complete selection removal process. This is separated because it's very inefficient to perform the whole
     // process for multiple removals, as the canvas must be totally redrawn at the end of the process.ar.remove
-
     if (!partial) {
       me.owner.removeSelectionFinish();
+    }
+
+    // don't fire until everything is done
+    if (selectedHasChanged) {
+      me.changeState('select', false);
     }
   }
 
@@ -140,6 +197,7 @@
     select: select,
     deselect: deselect,
     toggle: toggle,
+    updateSelected: updateSelected,
     areas: function () {
       var i,
         result = [];

@@ -54,12 +54,57 @@
       $(document).ready(function () {
         'use strict';
 
-        var $image = $('#veg_image');
+        var $image = $('#veg_image'),
+          imageOptions = {
+            mapKey: 'name',
+            fillOpacity: 0.4,
+            fillColor: 'd42e16',
+            strokeColor: '3320FF',
+            strokeOpacity: 0.8,
+            strokeWidth: 5,
+            render_select: {
+              strokeWidth: 10
+            },
+            render_highlight: {
+              strokeWidth: 5
+            },
+            stroke: true,
+            clickNavigate: false,
+            onConfigured: function () {
+              updateOptions();
+              updateKeys();
+            },
+            onStateChange: function () {
+              updateKeys();
+            },
+            onClick: function () {
+              return true;
+            },
+            showToolTip: true,
+            toolTip: function (data) {
+              return $(data.target).data('tooltip');
+            },
+            areas: [
+              {
+                key: 'redpepper',
+                staticState: true
+              },
+              {
+                key: 'celery',
+                staticState: false
+              }
+            ]
+          };
+
+        $('#resetMap').on('click', function () {
+          $image.mapster('unbind').mapster(imageOptions);
+        });
 
         $('.toggleSelected').on('click', function () {
           var key = $(this).data('name'),
-            isSelected = $image.mapster('get', key);
-          $image.mapster('set', !isSelected, key);
+            isSelected = $(this).data('selected'),
+            options = $(this).data('options') ? { strokeWidth: 3 } : null;
+          $image.mapster('set', isSelected, key, options);
         });
 
         function updateKeys() {
@@ -89,46 +134,7 @@
           updateOptions();
         });
 
-        $image.mapster({
-          mapKey: 'name',
-          fillOpacity: 0.4,
-          fillColor: 'd42e16',
-          strokeColor: '3320FF',
-          strokeOpacity: 0.8,
-          strokeWidth: 5,
-          render_select: {
-            strokeWidth: 10
-          },
-          render_highlight: {
-            strokeWidth: 5
-          },
-          stroke: true,
-          clickNavigate: false,
-          onConfigured: function () {
-            updateOptions();
-            updateKeys();
-          },
-          onStateChange: function () {
-            updateKeys();
-          },
-          onClick: function () {
-            return true;
-          },
-          showToolTip: true,
-          toolTip: function (data) {
-            return $(data.target).data('tooltip');
-          },
-          areas: [
-            {
-              key: 'redpepper',
-              staticState: true
-            },
-            {
-              key: 'celery',
-              staticState: false
-            }
-          ]
-        });
+        $image.mapster(imageOptions);
       });
     </script>
   </head>
@@ -272,26 +278,120 @@
     </div>
     <br />
     <div>Selected Keys: <span id="selectedKeys"></span></div>
-    <ul>
-      <li>
-        <a
-          href="javascript:void(0);"
-          class="toggleSelected"
-          data-name="redpepper"
-          >Toggle Redpepper</a
-        >
-      </li>
-      <li>
-        <a href="javascript:void(0);" class="toggleSelected" data-name="celery"
-          >Toggle Celery</a
-        >
-      </li>
-      <li>
-        <a href="javascript:void(0);" class="toggleSelected" data-name="carrots"
-          >Toggle Carrots</a
-        >
-      </li>
-    </ul>
+    <table>
+      <thhead>
+        <tr>
+          <th>area</th>
+          <th>Select No Options</th>
+          <th>Select With Options</th>
+          <th>Deselect</th>
+        </tr>
+      </thhead>
+      <tbody>
+        <tr>
+          <td>Red Pepper</td>
+          <td>
+            <button
+              class="toggleSelected"
+              data-name="redpepper"
+              data-selected="true"
+              data-options="false"
+            >
+              Select
+            </button>
+          </td>
+          <td>
+            <button
+              class="toggleSelected"
+              data-name="redpepper"
+              data-selected="true"
+              data-options="true"
+            >
+              Select
+            </button>
+          </td>
+          <td>
+            <button
+              class="toggleSelected"
+              data-name="redpepper"
+              data-selected="false"
+              data-options="false"
+            >
+              Deselect
+            </button>
+          </td>
+        </tr>
+        <tr>
+          <td>Celery</td>
+          <td>
+            <button
+              class="toggleSelected"
+              data-name="celery"
+              data-selected="true"
+              data-options="false"
+            >
+              Select
+            </button>
+          </td>
+          <td>
+            <button
+              class="toggleSelected"
+              data-name="celery"
+              data-selected="true"
+              data-options="true"
+            >
+              Select
+            </button>
+          </td>
+          <td>
+            <button
+              class="toggleSelected"
+              data-name="celery"
+              data-selected="false"
+              data-options="false"
+            >
+              Deselect
+            </button>
+          </td>
+        </tr>
+        <tr>
+          <td>Carrots</td>
+          <td>
+            <button
+              class="toggleSelected"
+              data-name="carrots"
+              data-selected="true"
+              data-options="false"
+            >
+              Select
+            </button>
+          </td>
+          <td>
+            <button
+              class="toggleSelected"
+              data-name="carrots"
+              data-selected="true"
+              data-options="true"
+            >
+              Select
+            </button>
+          </td>
+          <td>
+            <button
+              class="toggleSelected"
+              data-name="carrots"
+              data-selected="false"
+              data-options="false"
+            >
+              Deselect
+            </button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <div>
+      <button id="resetMap">Reset Map</button>
+    </div>
 
     <img id="veg_image" src="images/vegetables.jpg" usemap="#veg_map" />
     <map id="veg_map" name="veg_map">
