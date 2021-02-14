@@ -10,6 +10,9 @@
 - Create React component
 - Migrate to modern testframework
 - Update website and host on Github
+- Zoom to Area
+- Make callback data structures consistent
+- Improve docs
 
 ## Version 1.5.2 - 2021.02.14
 - [Issue 137](https://github.com/jamietre/ImageMapster/issues/137) area href empty or not specified
