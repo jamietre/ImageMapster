@@ -218,6 +218,9 @@
           strokeWidth: 4,
           stroke: true,
           clickNavigate: false,
+          onConfigured: function () {
+            updateOptions();
+          },
           onClick: function () {
             return true;
           },
@@ -226,7 +229,6 @@
             return $(data.target).data('tooltip');
           }
         });
-        updateOptions();
       });
     </script>
     <map id="veg_map" name="veg_map">

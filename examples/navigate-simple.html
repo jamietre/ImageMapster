@@ -51,6 +51,9 @@
           mapKey: 'data-name',
           clickNavigate: state.clickNavigate === true ? true : false,
           navigateMode: state.navigateMode || 'location',
+          onConfigured: function () {
+            updateOptions();
+          },
           onClick: function () {
             return true;
           }
@@ -90,8 +93,6 @@
           });
           updateOptions();
         });
-
-        updateOptions();
       });
     </script>
   </head>
