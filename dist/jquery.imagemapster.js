@@ -1,5 +1,5 @@
 /*!
-* imagemapster - v1.5.2 - 2021-02-14
+* imagemapster - v1.5.3 - 2021-02-14
 * https://github.com/jamietre/ImageMapster/
 * Copyright (c) 2011 - 2021 James Treworgy
 * License: MIT
@@ -107,7 +107,7 @@
 (function ($) {
   'use strict';
 
-  var mapster_version = '1.5.2';
+  var mapster_version = '1.5.3';
 
   // all public functions in $.mapster.impl are methods
   $.fn.mapster = function (method) {
@@ -2062,7 +2062,7 @@
   };
 })(jQuery);
 
-/* 
+/*
   mapdata.js
   The MapData object, repesents an instance of a single bound imagemap
 */
@@ -2336,7 +2336,8 @@
       that = this,
       ar = me.getDataForArea(this),
       opts = me.options,
-      navDetails;
+      navDetails,
+      areaOpts;
 
     function navigateTo(mode, href, target) {
       switch (mode) {
@@ -2370,7 +2371,7 @@
     }
 
     function clickArea(ar) {
-      var areaOpts, target;
+      var target;
       canChangeState =
         ar.isSelectable() && (ar.isDeselectable() || !ar.isSelected());
 
@@ -2413,17 +2414,6 @@
       if (opts.boundList && opts.boundList.length > 0) {
         m.setBoundListProperties(opts, list_target, ar.isSelected());
       }
-
-      areaOpts = ar.effectiveOptions();
-      if (areaOpts.includeKeys) {
-        list = u.split(areaOpts.includeKeys);
-        $.each(list, function (_, e) {
-          var ar = me.getDataForKey(e.toString());
-          if (!ar.options.isMask) {
-            clickArea(ar);
-          }
-        });
-      }
     }
 
     mousedown.call(this, e);
@@ -2437,6 +2427,16 @@
     if (ar && !ar.owner.currentAction) {
       opts = me.options;
       clickArea(ar);
+      areaOpts = ar.effectiveOptions();
+      if (areaOpts.includeKeys) {
+        list = u.split(areaOpts.includeKeys);
+        $.each(list, function (_, e) {
+          var ar = me.getDataForKey(e.toString());
+          if (!ar.options.isMask) {
+            clickArea(ar);
+          }
+        });
+      }
     }
   }
 

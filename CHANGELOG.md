@@ -14,6 +14,9 @@
 - Make callback data structures consistent
 - Improve docs
 
+## Version 1.5.3 - 2021.02.14
+- [Issue 374](https://github.com/jamietre/ImageMapster/issues/374) Uncaught RangeError: Maximum call stack size exceeded when includeKeys has circular reference
+
 ## Version 1.5.2 - 2021.02.14
 - [Issue 137](https://github.com/jamietre/ImageMapster/issues/137) area href empty or not specified
 - [Issue 170](https://github.com/jamietre/ImageMapster/issues/170) Tooltips/Highlight/Select incorrect when AREA `shape` attribute is missing or its value is non-conforming/empty
