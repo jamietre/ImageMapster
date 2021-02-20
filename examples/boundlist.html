@@ -137,6 +137,7 @@
             //   return $veglist.empty().append(listItems).find('input');
             // })(),
             singleSelect: true,
+            isSelectable: true,
             showToolTip: true,
             toolTip: function (data) {
               return $(data.target).data('tooltip');
@@ -150,11 +151,13 @@
           };
 
         $('#reset_map').on('click', function () {
+          $veglist.empty();
           $image.mapster('unbind').mapster(imageOptions);
         });
 
         $('#rebind_map').on('click', function () {
-          var options = $.extend({}, imageOptions);
+          $veglist.empty();
+          var options = $.extend({}, $image.mapster('get_options'));
           options.areas.push({
             key: 'squash',
             selected: true
@@ -182,9 +185,20 @@
           $image.mapster('set', null, 'carrots,celery');
         });
 
+        $('#toggle_isselectable').on('click', function () {
+          $veglist.empty();
+          var options = $image.mapster('get_options');
+          $image
+            .mapster('unbind')
+            .mapster(
+              $.extend({}, options, { isSelectable: !options.isSelectable })
+            );
+        });
+
         function updateOptions() {
           var options = $image.mapster('get_options');
           $('#singleSelect').text(options.singleSelect);
+          $('#isSelectable').text(options.isSelectable);
         }
 
         function updateKeys() {
@@ -226,8 +240,10 @@
         >
         comes in to play.
       </li>
+      <li>List should display and sync regardless of value of isSelectable</li>
     </ul>
     <p>Single Select: <span id="singleSelect"></span></p>
+    <p>IsSelectable: <span id="isSelectable"></span></p>
     <p>Selected Keys: <span id="selectedKeys"></span></p>
     <div>
       <div style="float: left">
@@ -253,6 +269,9 @@
         </div>
         <div class="control">
           <button id="toggle_veggies2">Toggle Carrots &amp; Celery</button>
+        </div>
+        <div class="control">
+          <button id="toggle_isselectable">Toggle isSelectable</button>
         </div>
       </div>
       <div style="clear: both"></div>

@@ -1005,7 +1005,7 @@
 
       // populate areas from config options
       me.setAreaOptions(opts.areas);
-      if (opts.isSelectable && opts.onGetList) {
+      if (opts.onGetList) {
         me.setBoundList(opts);
       }
 
