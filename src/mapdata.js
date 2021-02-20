@@ -825,8 +825,16 @@
         me.configureAutoResize();
       }
 
+      me.onConfigured();
+    },
+
+    onConfigured: function() {
+      var me = this,
+        $img = $(me.image),
+        opts = me.options;
+
       if (opts.onConfigured && typeof opts.onConfigured === 'function') {
-        opts.onConfigured.call(img, true);
+        opts.onConfigured.call($img, true);
       }
     },
 

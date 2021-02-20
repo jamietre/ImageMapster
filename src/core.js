@@ -1,6 +1,6 @@
-/* 
+/*
   core.js
-  ImageMapster core 
+  ImageMapster core
 */
 
 (function ($) {
@@ -925,6 +925,7 @@
           me.bindImages().then(function () {
             me.buildDataset(true);
             me.complete = true;
+            me.onConfigured();
           });
           //this.redrawSelections();
         },
