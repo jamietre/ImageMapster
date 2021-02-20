@@ -216,7 +216,7 @@ this.tests.push(
             );
 
             // test clicking
-            $('area[state="AZ"]').first().click();
+            $('area[state="AZ"]').first().trigger('click');
             selected = map.mapster('get', 'AZ');
             a.equals(true, selected, "Click-selected area returned 'get'");
             a.collectionEquals(
@@ -227,7 +227,7 @@ this.tests.push(
 
             /// try to click select "staticstate areas
 
-            $('area[state="OR"]').first().click();
+            $('area[state="OR"]').first().trigger('click');
             selected = map.mapster('get', 'OR');
             a.equals(
               selected,
@@ -256,7 +256,7 @@ this.tests.push(
               'get effective options returned correct static state for OR'
             );
 
-            $('area[state="WA"]').first().click();
+            $('area[state="WA"]').first().trigger('click');
             selected = map.mapster('get', 'WA');
             a.equals(
               selected,
@@ -298,14 +298,14 @@ this.tests.push(
               a.equals(map.mapster('get'), 'MI', 'Single select worked.');
 
               map.mapster('set_options', { isDeselectable: false });
-              $('area[state="MI"]').first().click();
+              $('area[state="MI"]').first().trigger('click');
               a.equals(
                 map.mapster('get', 'MI'),
                 true,
                 'Cannot deselect single selected item with isDeselectable=false'
               );
 
-              $('area[state="UT"]').first().click();
+              $('area[state="UT"]').first().trigger('click');
 
               a.equals(map.mapster('get'), 'UT', 'New single state selected');
 
@@ -315,7 +315,7 @@ this.tests.push(
                 areas: [{ key: 'ME', isDeselectable: false }]
               });
 
-              $('area[state="UT"]').first().click();
+              $('area[state="UT"]').first().trigger('click');
               a.equals(
                 map.mapster('get', 'UT'),
                 false,
@@ -324,13 +324,13 @@ this.tests.push(
 
               map.mapster('set', true, 'CA,HI,ME');
 
-              $('area[state="ME"]').first().click();
+              $('area[state="ME"]').first().trigger('click');
               a.equals(
                 map.mapster('get', 'ME'),
                 true,
                 'Could not deselect one item marked as !isDeselectable'
               );
-              $('area[state="CA"]').first().click();
+              $('area[state="CA"]').first().trigger('click');
               a.equals(
                 map.mapster('get', 'CA'),
                 false,
