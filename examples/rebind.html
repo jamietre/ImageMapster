@@ -1,0 +1,186 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Rebind Test</title>
+
+    <script
+      type="text/javascript"
+      src="https://cdn.jsdelivr.net/npm/es6-promise/dist/es6-promise.auto.min.js"
+    ></script>
+
+    <script type="text/javascript" src="redist/jquery.3.5.1.min.js"></script>
+    <script
+      type="text/javascript"
+      src="../dist/jquery.imagemapster.js"
+    ></script>
+
+    <!-- <script type="text/javascript" src="redist/zepto.1.2.0.min.js"></script>
+    <script
+      type="text/javascript"
+      src="../dist/jquery.imagemapster.zepto.js"
+    ></script> -->
+
+    <link rel="stylesheet" href="stylesheets/base.css" />
+
+    <style type="text/css">
+      button {
+        margin: 5px;
+      }
+    </style>
+
+    <script type="text/javascript">
+      $(document).ready(function () {
+        'use strict';
+
+        function updateKeys() {
+          var keys = $image.mapster('get');
+          $('#selectedKeys').text(keys || 'No Keys Selected');
+        }
+
+        var $image = $('#beatles'),
+          $log = $('#log'),
+          $ringo = $('#ringo'),
+          origOptions = {
+            mapKey: 'data-name',
+            wrapClass: 'wrapper',
+            onConfigured: function () {
+              $log.append($('<div/>').text('onConfigured called'));
+              updateKeys();
+            },
+            onStateChange: function () {
+              updateKeys();
+            }
+          };
+
+        $('#rebindexistingoptions').on('click', function () {
+          $image.mapster('rebind', $image.mapster('get_options'));
+        });
+
+        $('#rebindorigoptions').on('click', function () {
+          $image.mapster('rebind', origOptions);
+        });
+
+        $('#rebindwithnewoptions').on('click', function () {
+          $image.mapster(
+            'rebind',
+            $.extend({}, origOptions, {
+              areas: [
+                {
+                  key: 'paul',
+                  staticState: true
+                },
+                {
+                  key: 'george',
+                  selected: true
+                }
+              ]
+            })
+          );
+        });
+
+        $('#rebindpersistselected').on('click', function () {
+          var areas = $image
+            .mapster('get')
+            .split(',')
+            .map(function (key) {
+              return { key: key, selected: true };
+            });
+          $image.mapster('rebind', $.extend({}, origOptions, { areas: areas }));
+        });
+
+        $('#swapareakeys').on('click', function () {
+          $('area').each(function (_, area) {
+            var $area = $(area),
+              keys = $area.attr('data-name').split(',').reverse();
+            $area.attr('data-name', keys);
+          });
+          $image.mapster('rebind', $image.mapster('get_options'));
+        });
+
+        $('#changeringokeys').on('click', function () {
+          $ringo.attr('data-name', 'ringo');
+          $image.mapster('rebind', $image.mapster('get_options'));
+        });
+
+        $('#reset').on('click', function () {
+          $image.mapster('unbind').mapster(origOptions);
+        });
+
+        $image.mapster(origOptions);
+      });
+    </script>
+  </head>
+
+  <body>
+    <div class="navmenu">
+      Return to <a href="index.html">Main Menu</a>
+      <hr />
+    </div>
+    <h2>Rebind Test</h2>
+    <p>
+      Test 'rebind' using various combinations of values. This should be
+      converted to a unit test once the testing framework is updated.
+    </p>
+    <p>The behavior should be:</p>
+    <ul>
+      <li>onConfigured should appear in log on page load</li>
+      <li>onConfigured should be appended to log after rebind</li>
+      <li>
+        Rebind should apply configuration specified and not preserve selected
+        state
+      </li>
+    </ul>
+    <p>Selected Keys: <span id="selectedKeys"></span></p>
+    <div>
+      <button id="rebindexistingoptions">Rebind Current Options</button>
+      <button id="rebindorigoptions">Rebind Original Options</button>
+      <button id="rebindwithnewoptions">Rebind Changed Options</button>
+      <button id="rebindpersistselected">Rebind Persist Selected</button>
+      <br />
+      <button id="swapareakeys">Swap Area Key Order</button>
+      <button id="changeringokeys">Change Ringo Keys</button>
+      <br />
+      <button id="reset">Reset Map</button>
+    </div>
+    <div>
+      <img
+        id="beatles"
+        src="images/beatles_basic.jpg"
+        style="width: 400px; height: 240px"
+        usemap="#beatles-map"
+      />
+    </div>
+    <map name="beatles-map">
+      <area
+        id="paul"
+        shape="rect"
+        data-name="paul,beatles"
+        coords="36,46,121,131"
+        href="#"
+      />
+      <area
+        id="ringo"
+        shape="rect"
+        data-name="ringo,beatles"
+        coords="113,76,198,161"
+        href="#"
+      />
+      <area
+        id="john"
+        shape="rect"
+        data-name="john,beatles"
+        coords="192,50,277,135"
+        href="#"
+      />
+      <area
+        id="george"
+        shape="rect"
+        data-name="george,beatles"
+        coords="262,60,347,145"
+        href="#"
+      />
+    </map>
+    <div id="log"></div>
+  </body>
+</html>

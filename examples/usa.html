@@ -357,15 +357,13 @@
         }
 
         function addCheckBoxes(items) {
-          var item, selected;
+          var item;
           $statelist.children().remove();
           for (var i = 0; i < items.length; i++) {
-            selected = items[i].isSelected();
             item = $(
               '<div><input type="checkbox" name="' +
                 items[i].key +
                 '"' +
-                (selected ? 'checked' : '') +
                 '><span class="sel" key="' +
                 items[i].key +
                 '">' +

@@ -310,6 +310,13 @@
           selected: state
         });
       }
+      if (state_type === 'select' && this.owner.options.boundList) {
+        this.owner.setBoundListProperties(
+          this.owner.options,
+          m.getBoundList(this.owner.options, this.key),
+          state
+        );
+      }
     },
 
     // highlight this area

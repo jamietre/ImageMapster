@@ -1,6 +1,6 @@
-/* 
+/*
   core.js
-  ImageMapster core 
+  ImageMapster core
 */
 
 (function ($) {
@@ -376,24 +376,6 @@
         }
       });
       return result;
-    },
-    // Causes changes to the bound list based on the user action (select or deselect)
-    // area: the jQuery area object
-    // returns the matching elements from the bound list for the first area passed (normally only one should be passed, but
-    // a list can be passed
-    setBoundListProperties: function (opts, target, selected) {
-      target.each(function (_, e) {
-        if (opts.listSelectedClass) {
-          if (selected) {
-            $(e).addClass(opts.listSelectedClass);
-          } else {
-            $(e).removeClass(opts.listSelectedClass);
-          }
-        }
-        if (opts.listSelectedAttribute) {
-          $(e).prop(opts.listSelectedAttribute, selected);
-        }
-      });
     },
     getMapDataIndex: function (obj) {
       var img, id;
@@ -838,14 +820,7 @@
       // Clean up after a group that applied to the same map
       function finishSetForMap(map_data) {
         $.each(area_list, function (_, el) {
-          var newState = setSelection(el);
-          if (map_data.options.boundList) {
-            m.setBoundListProperties(
-              map_data.options,
-              m.getBoundList(map_data.options, key_list),
-              newState
-            );
-          }
+          setSelection(el);
         });
         if (!selected) {
           map_data.removeSelectionFinish();
@@ -925,6 +900,7 @@
           me.bindImages().then(function () {
             me.buildDataset(true);
             me.complete = true;
+            me.onConfigured();
           });
           //this.redrawSelections();
         },
