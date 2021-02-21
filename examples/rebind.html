@@ -23,6 +23,12 @@
 
     <link rel="stylesheet" href="stylesheets/base.css" />
 
+    <style type="text/css">
+      button {
+        margin: 5px;
+      }
+    </style>
+
     <script type="text/javascript">
       $(document).ready(function () {
         'use strict';
@@ -34,7 +40,8 @@
 
         var $image = $('#beatles'),
           $log = $('#log'),
-          options = {
+          $ringo = $('#ringo'),
+          origOptions = {
             mapKey: 'data-name',
             wrapClass: 'wrapper',
             onConfigured: function () {
@@ -46,11 +53,61 @@
             }
           };
 
-        $('#rebind').on('click', function () {
+        $('#rebindexistingoptions').on('click', function () {
           $image.mapster('rebind', $image.mapster('get_options'));
         });
 
-        $image.mapster(options);
+        $('#rebindorigoptions').on('click', function () {
+          $image.mapster('rebind', origOptions);
+        });
+
+        $('#rebindwithnewoptions').on('click', function () {
+          $image.mapster(
+            'rebind',
+            $.extend({}, origOptions, {
+              areas: [
+                {
+                  key: 'paul',
+                  staticState: true
+                },
+                {
+                  key: 'george',
+                  selected: true
+                }
+              ]
+            })
+          );
+        });
+
+        $('#rebindpersistselected').on('click', function () {
+          var areas = $image
+            .mapster('get')
+            .split(',')
+            .map(function (key) {
+              return { key: key, selected: true };
+            });
+          $image.mapster('rebind', $.extend({}, origOptions, { areas: areas }));
+        });
+
+        $('#swapareakeys').on('click', function () {
+          $('area').each(function (_, area) {
+            var $area = $(area),
+              keys = $area.attr('data-name').split(',').reverse();
+            $area.attr('data-name', keys);
+          });
+          $image.mapster('rebind', $image.mapster('get_options'));
+        });
+
+        $('#changeringokeys').on('click', function () {
+          $ringo.attr('data-name', 'ringo');
+          $image.mapster('rebind', $image.mapster('get_options'));
+        });
+
+        $('#reset').on('click', function () {
+          $image.mapster('unbind').mapster(origOptions);
+        });
+
+        $image.mapster(origOptions);
       });
     </script>
   </head>
@@ -62,17 +119,29 @@
     </div>
     <h2>Rebind Test</h2>
     <p>
-      Test 'rebind' using various combinations of values. This should
-      be converted to a unit test once the testing framework is updated.
+      Test 'rebind' using various combinations of values. This should be
+      converted to a unit test once the testing framework is updated.
     </p>
     <p>The behavior should be:</p>
     <ul>
       <li>onConfigured should appear in log on page load</li>
       <li>onConfigured should be appended to log after rebind</li>
+      <li>
+        Rebind should apply configuration specified and not preserve selected
+        state
+      </li>
     </ul>
     <p>Selected Keys: <span id="selectedKeys"></span></p>
     <div>
-      <button id="rebind">Rebind</button>
+      <button id="rebindexistingoptions">Rebind Current Options</button>
+      <button id="rebindorigoptions">Rebind Original Options</button>
+      <button id="rebindwithnewoptions">Rebind Changed Options</button>
+      <button id="rebindpersistselected">Rebind Persist Selected</button>
+      <br />
+      <button id="swapareakeys">Swap Area Key Order</button>
+      <button id="changeringokeys">Change Ringo Keys</button>
+      <br />
+      <button id="reset">Reset Map</button>
     </div>
     <div>
       <img
@@ -86,28 +155,28 @@
       <area
         id="paul"
         shape="rect"
-        data-name="paul"
+        data-name="paul,beatles"
         coords="36,46,121,131"
         href="#"
       />
       <area
         id="ringo"
         shape="rect"
-        data-name="ringo"
+        data-name="ringo,beatles"
         coords="113,76,198,161"
         href="#"
       />
       <area
         id="john"
         shape="rect"
-        data-name="john"
+        data-name="john,beatles"
         coords="192,50,277,135"
         href="#"
       />
       <area
         id="george"
         shape="rect"
-        data-name="george"
+        data-name="george,beatles"
         coords="262,60,347,145"
         href="#"
       />

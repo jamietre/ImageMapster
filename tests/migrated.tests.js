@@ -283,120 +283,152 @@ this.tests.push(
 
             // test rebind
             newOpts = $.extend({}, map.mapster('get_options'), {
-              singleSelect: true,
               onConfigured: getPromise('configured5').resolve
             });
             map.mapster('rebind', newOpts);
             getPromise('configured5').then(function () {
               a.collectionEquals(
-                map.mapster('get'),
                 'TX,AK',
-                'Rebind with singleSelect reverted to original state'
+                map.mapster('get'),
+                'Rebind reverted to configured state'
               );
 
-              map.mapster('set', true, 'MI');
-              a.equals(map.mapster('get'), 'MI', 'Single select worked.');
-
-              map.mapster('set_options', { isDeselectable: false });
-              $('area[state="MI"]').first().trigger('click');
+              map.mapster('set', true, 'OR');
+              selected = map.mapster('get', 'OR');
               a.equals(
-                map.mapster('get', 'MI'),
+                selected,
                 true,
-                'Cannot deselect single selected item with isDeselectable=false'
+                "Can select 'staticState=false' area with 'set'"
               );
 
-              $('area[state="UT"]').first().trigger('click');
-
-              a.equals(map.mapster('get'), 'UT', 'New single state selected');
-
-              map.mapster('set_options', {
-                singleSelect: false,
-                isDeselectable: true,
-                areas: [{ key: 'ME', isDeselectable: false }]
+              newOpts = $.extend({}, map.mapster('get_options'), {
+                singleSelect: true,
+                onConfigured: getPromise('configured6').resolve
               });
+              map.mapster('rebind', newOpts);
+              getPromise('configured6').then(function () {
+                // Note - selected keys revert to original state due to
+                //        options being passed and not having anything to
+                //        due specifically with singleSelect.  Rebind
+                //        does not persist previously selected state
+                //        as of commit https://github.com/jamietre/ImageMapster/commit/3de37f3
+                //        so this test is asserting that areas selected
+                //        by configuration are selected even when
+                //        singleSelect === true
+                a.collectionEquals(
+                  'TX,AK',
+                  map.mapster('get'),
+                  'Rebind with singleSelect reverted to configured state'
+                );
 
-              $('area[state="UT"]').first().trigger('click');
-              a.equals(
-                map.mapster('get', 'UT'),
-                false,
-                'Was able to deselect item after removing singleSelect'
-              );
+                map.mapster('set', true, 'MI');
+                a.equals(map.mapster('get'), 'MI', 'Single select worked.');
 
-              map.mapster('set', true, 'CA,HI,ME');
+                map.mapster('set_options', { isDeselectable: false });
+                $('area[state="MI"]').first().trigger('click');
+                a.equals(
+                  map.mapster('get', 'MI'),
+                  true,
+                  'Cannot deselect single selected item with isDeselectable=false'
+                );
 
-              $('area[state="ME"]').first().trigger('click');
-              a.equals(
-                map.mapster('get', 'ME'),
-                true,
-                'Could not deselect one item marked as !isDeselectable'
-              );
-              $('area[state="CA"]').first().trigger('click');
-              a.equals(
-                map.mapster('get', 'CA'),
-                false,
-                'Could deselect other items '
-              );
+                $('area[state="UT"]').first().trigger('click');
 
-              // Test manual highlighting
+                a.equals(map.mapster('get'), 'UT', 'New single state selected');
 
-              a.equals(
-                map.mapster('highlight'),
-                null,
-                'nothing is highlighted'
-              );
+                map.mapster('set_options', {
+                  singleSelect: false,
+                  isDeselectable: true,
+                  areas: [{ key: 'ME', isDeselectable: false }]
+                });
 
-              $('area[state="CA"]').first().mapster('highlight');
+                $('area[state="UT"]').first().trigger('click');
+                a.equals(
+                  map.mapster('get', 'UT'),
+                  false,
+                  'Was able to deselect item after removing singleSelect'
+                );
 
-              a.equals(map.mapster('highlight'), 'CA', 'highlighted manually');
+                map.mapster('set', true, 'CA,HI,ME');
 
-              map.mapster('highlight', 'LA');
+                $('area[state="ME"]').first().trigger('click');
+                a.equals(
+                  map.mapster('get', 'ME'),
+                  true,
+                  'Could not deselect one item marked as !isDeselectable'
+                );
+                $('area[state="CA"]').first().trigger('click');
+                a.equals(
+                  map.mapster('get', 'CA'),
+                  false,
+                  'Could deselect other items '
+                );
 
-              a.equals(
-                map.mapster('highlight'),
-                'LA',
-                'highlighted manually using other technique'
-              );
+                // Test manual highlighting
 
-              map.mapster('highlight', false);
+                a.equals(
+                  map.mapster('highlight'),
+                  null,
+                  'nothing is highlighted'
+                );
 
-              a.equals(
-                map.mapster('highlight'),
-                null,
-                'everything unhighlighted'
-              );
+                $('area[state="CA"]').first().mapster('highlight');
 
-              // restore internal canvas setting or these tests won't work
-              // if (disableCanvas) {
-              //     map.mapster('test', 'has_canvas=true');
-              // } else {
+                a.equals(
+                  map.mapster('highlight'),
+                  'CA',
+                  'highlighted manually'
+                );
 
-              //     // cleanup tests - skip to play with map afterwards
-              //     // return;
+                map.mapster('highlight', 'LA');
 
-              //     if (has_canvas) {
-              //         a.equals($('canvas').length, 2, 'There are 2 canvases.');
-              //         map.mapster(map_options);
-              //         a.equals($('canvas').length, 2, 'There are 2 canvases (recreate was clean)');
-              //     }
-              // }
-              map.mapster('unbind');
-              a.equals(
-                $('canvas').length,
-                0,
-                'No canvases remain after an unbind.'
-              );
+                a.equals(
+                  map.mapster('highlight'),
+                  'LA',
+                  'highlighted manually using other technique'
+                );
 
-              a.equals(
-                $('#test_elements *').length,
-                domCount,
-                '# elements in DOM is the same.'
-              );
+                map.mapster('highlight', false);
 
-              getPromise('finished').resolve();
+                a.equals(
+                  map.mapster('highlight'),
+                  null,
+                  'everything unhighlighted'
+                );
 
-              // if (disableCanvas) {
-              //     $.mapster.hasCanvas=oldHasCanvas;
-              // }
+                // restore internal canvas setting or these tests won't work
+                // if (disableCanvas) {
+                //     map.mapster('test', 'has_canvas=true');
+                // } else {
+
+                //     // cleanup tests - skip to play with map afterwards
+                //     // return;
+
+                //     if (has_canvas) {
+                //         a.equals($('canvas').length, 2, 'There are 2 canvases.');
+                //         map.mapster(map_options);
+                //         a.equals($('canvas').length, 2, 'There are 2 canvases (recreate was clean)');
+                //     }
+                // }
+                map.mapster('unbind');
+                a.equals(
+                  $('canvas').length,
+                  0,
+                  'No canvases remain after an unbind.'
+                );
+
+                a.equals(
+                  $('#test_elements *').length,
+                  domCount,
+                  '# elements in DOM is the same.'
+                );
+
+                getPromise('finished').resolve();
+
+                // if (disableCanvas) {
+                //     $.mapster.hasCanvas=oldHasCanvas;
+                // }
+              });
             });
           });
         });

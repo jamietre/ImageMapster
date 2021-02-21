@@ -938,6 +938,7 @@
         if (rebind) {
           mapArea = me.mapAreas[$area.data('mapster') - 1];
           mapArea.configure(curKey);
+          mapArea.areaDataXref = [];
         } else {
           mapArea = new m.MapArea(me, area, curKey);
           me.mapAreas.push(mapArea);
@@ -1012,7 +1013,13 @@
       if (opts.boundList && opts.boundList.length > 0) {
         me.refreshBoundList(opts);
       }
-      me.redrawSelections();
+
+      if (rebind) {
+        me.graphics.removeSelections();
+        me.graphics.refreshSelections();
+      } else {
+        me.redrawSelections();
+      }
     },
     processCommandQueue: function () {
       var cur,
