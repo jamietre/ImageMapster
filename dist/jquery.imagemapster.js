@@ -1,5 +1,5 @@
 /*!
-* imagemapster - v1.5.3 - 2021-02-14
+* imagemapster - v1.5.4 - 2021-02-20
 * https://github.com/jamietre/ImageMapster/
 * Copyright (c) 2011 - 2021 James Treworgy
 * License: MIT
@@ -99,15 +99,15 @@
   }
 })(jQuery);
 
-/* 
+/*
   core.js
-  ImageMapster core 
+  ImageMapster core
 */
 
 (function ($) {
   'use strict';
 
-  var mapster_version = '1.5.3';
+  var mapster_version = '1.5.4';
 
   // all public functions in $.mapster.impl are methods
   $.fn.mapster = function (method) {
@@ -477,24 +477,6 @@
         }
       });
       return result;
-    },
-    // Causes changes to the bound list based on the user action (select or deselect)
-    // area: the jQuery area object
-    // returns the matching elements from the bound list for the first area passed (normally only one should be passed, but
-    // a list can be passed
-    setBoundListProperties: function (opts, target, selected) {
-      target.each(function (_, e) {
-        if (opts.listSelectedClass) {
-          if (selected) {
-            $(e).addClass(opts.listSelectedClass);
-          } else {
-            $(e).removeClass(opts.listSelectedClass);
-          }
-        }
-        if (opts.listSelectedAttribute) {
-          $(e).prop(opts.listSelectedAttribute, selected);
-        }
-      });
     },
     getMapDataIndex: function (obj) {
       var img, id;
@@ -939,14 +921,7 @@
       // Clean up after a group that applied to the same map
       function finishSetForMap(map_data) {
         $.each(area_list, function (_, el) {
-          var newState = setSelection(el);
-          if (map_data.options.boundList) {
-            m.setBoundListProperties(
-              map_data.options,
-              m.getBoundList(map_data.options, key_list),
-              newState
-            );
-          }
+          setSelection(el);
         });
         if (!selected) {
           map_data.removeSelectionFinish();
@@ -1026,6 +1001,7 @@
           me.bindImages().then(function () {
             me.buildDataset(true);
             me.complete = true;
+            me.onConfigured();
           });
           //this.redrawSelections();
         },
@@ -2410,10 +2386,6 @@
       if (canChangeState) {
         ar.toggle();
       }
-
-      if (opts.boundList && opts.boundList.length > 0) {
-        m.setBoundListProperties(opts, list_target, ar.isSelected());
-      }
     }
 
     mousedown.call(this, e);
@@ -2735,6 +2707,63 @@
         }
       });
     },
+    // Causes changes to the bound list based on the user action (select or deselect)
+    // area: the jQuery area object
+    // returns the matching elements from the bound list for the first area passed
+    // (normally only one should be passed, but a list can be passed)
+    setBoundListProperties: function (opts, target, selected) {
+      target.each(function (_, e) {
+        if (opts.listSelectedClass) {
+          if (selected) {
+            $(e).addClass(opts.listSelectedClass);
+          } else {
+            $(e).removeClass(opts.listSelectedClass);
+          }
+        }
+        if (opts.listSelectedAttribute) {
+          $(e).prop(opts.listSelectedAttribute, selected);
+        }
+      });
+    },
+    clearBoundListProperties: function (opts) {
+      var me = this;
+      if (!opts.boundList) {
+        return;
+      }
+      me.setBoundListProperties(opts, opts.boundList, false);
+    },
+    refreshBoundList: function (opts) {
+      var me = this;
+      me.clearBoundListProperties(opts);
+      me.setBoundListProperties(
+        opts,
+        m.getBoundList(opts, me.getSelected()),
+        true
+      );
+    },
+    setBoundList: function (opts) {
+      var me = this,
+        sorted_list = me.data.slice(0),
+        sort_func;
+      if (opts.sortList) {
+        if (opts.sortList === 'desc') {
+          sort_func = function (a, b) {
+            return a === b ? 0 : a > b ? -1 : 1;
+          };
+        } else {
+          sort_func = function (a, b) {
+            return a === b ? 0 : a < b ? -1 : 1;
+          };
+        }
+
+        sorted_list.sort(function (a, b) {
+          a = a.value;
+          b = b.value;
+          return sort_func(a, b);
+        });
+      }
+      me.options.boundList = opts.onGetList.call(me.image, sorted_list);
+    },
     ///called when images are done loading
     initialize: function () {
       var imgCopy,
@@ -2746,8 +2775,6 @@
         i,
         size,
         img,
-        sort_func,
-        sorted_list,
         scale,
         me = this,
         opts = me.options;
@@ -2859,29 +2886,6 @@
 
       u.setOpacity(me.images[1], 1);
 
-      if (opts.isSelectable && opts.onGetList) {
-        sorted_list = me.data.slice(0);
-        if (opts.sortList) {
-          if (opts.sortList === 'desc') {
-            sort_func = function (a, b) {
-              return a === b ? 0 : a > b ? -1 : 1;
-            };
-          } else {
-            sort_func = function (a, b) {
-              return a === b ? 0 : a < b ? -1 : 1;
-            };
-          }
-
-          sorted_list.sort(function (a, b) {
-            a = a.value;
-            b = b.value;
-            return sort_func(a, b);
-          });
-        }
-
-        me.options.boundList = opts.onGetList.call(me.image, sorted_list);
-      }
-
       me.complete = true;
       me.processCommandQueue();
 
@@ -2889,8 +2893,16 @@
         me.configureAutoResize();
       }
 
+      me.onConfigured();
+    },
+
+    onConfigured: function () {
+      var me = this,
+        $img = $(me.image),
+        opts = me.options;
+
       if (opts.onConfigured && typeof opts.onConfigured === 'function') {
-        opts.onConfigured.call(img, true);
+        opts.onConfigured.call($img, true);
       }
     },
 
@@ -2966,6 +2978,7 @@
         if (rebind) {
           mapArea = me.mapAreas[$area.data('mapster') - 1];
           mapArea.configure(curKey);
+          mapArea.areaDataXref = [];
         } else {
           mapArea = new m.MapArea(me, area, curKey);
           me.mapAreas.push(mapArea);
@@ -3033,7 +3046,20 @@
 
       // populate areas from config options
       me.setAreaOptions(opts.areas);
-      me.redrawSelections();
+      if (opts.onGetList) {
+        me.setBoundList(opts);
+      }
+
+      if (opts.boundList && opts.boundList.length > 0) {
+        me.refreshBoundList(opts);
+      }
+
+      if (rebind) {
+        me.graphics.removeSelections();
+        me.graphics.refreshSelections();
+      } else {
+        me.redrawSelections();
+      }
     },
     processCommandQueue: function () {
       var cur,
@@ -3406,6 +3432,13 @@
           state: state_type,
           selected: state
         });
+      }
+      if (state_type === 'select' && this.owner.options.boundList) {
+        this.owner.setBoundListProperties(
+          this.owner.options,
+          m.getBoundList(this.owner.options, this.key),
+          state
+        );
       }
     },
 

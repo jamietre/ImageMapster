@@ -14,6 +14,13 @@
 - Make callback data structures consistent
 - Improve docs
 
+## Version 1.5.4 - 2021.02.20
+- [Issue 83](https://github.com/jamietre/ImageMapster/issues/83) Fix boundlist sync with selected state
+- [Issue 377](https://github.com/jamietre/ImageMapster/issues/377) onConfigured not called after rebind
+- [Issue 378](https://github.com/jamietre/ImageMapster/issues/378) drawn areas do not match selected state after rebind
+- [Issue 380](https://github.com/jamietre/ImageMapster/issues/380) onGetList not called when isSelectable !== true
+- [Issue 381](https://github.com/jamietre/ImageMapster/issues/381) tests not waiting for onConfigured before continuing
+
 ## Version 1.5.3 - 2021.02.14
 - [Issue 374](https://github.com/jamietre/ImageMapster/issues/374) Uncaught RangeError: Maximum call stack size exceeded when includeKeys has circular reference
 
