@@ -8,9 +8,9 @@ assignees: ''
 
 <!--
 
-Have you read ImageMapster's Code of Conduct? By filing an Issue, you are expected to comply with it, including treating everyone with respect: https://github.com/imagemapster/CODE_OF_CONDUCT.md
+Have you read ImageMapster's Code of Conduct? By filing an Issue, you are expected to comply with it, including treating everyone with respect: https://github.com/jamietre/ImageMapster/blob/main/CODE_OF_CONDUCT.md
 
-Have you read ImageMapster's Contributing guidelines?  If not, please review them before filing an issue https://github.com/imagemapster/CONTRIBUTING.md
+Have you read ImageMapster's Contributing guidelines?  If not, please review them before filing an issue https://github.com/jamietre/ImageMapster/blob/main/CONTRIBUTING.md
 
 Do you want to ask a question? Are you looking for support? StackOverflow with the imagemapster tag is the best place for getting support: https://stackoverflow.com/questions/tagged/imagemapster
 

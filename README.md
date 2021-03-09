@@ -1,6 +1,6 @@
 # ImageMapster: A jQuery Plugin to make image maps useful
 
-[![license](https://img.shields.io/github/license/jamietre/ImageMapster)](https://github.com/jamietre/ImageMapster/blob/master/LICENSE)
+[![license](https://img.shields.io/github/license/jamietre/ImageMapster)](LICENSE)
 [![gh stable](https://img.shields.io/github/v/release/jamietre/imagemapster?sort=semver&label=stable)](https://GitHub.com/jamietre/ImageMapster/releases/)
 [![gh latest](https://img.shields.io/github/v/release/jamietre/imagemapster?include_prereleases&sort=semver&label=latest)](https://GitHub.com/jamietre/ImageMapster/releases/)
 [![npm downloads](https://img.shields.io/npm/dm/imagemapster?label=npm)](https://www.npmjs.com/package/imagemapster)
@@ -12,7 +12,7 @@ ImageMapster activates the areas in HTML imagemaps so you can highlight and sele
 
 ## Release Information
 
-See the [change log](https://github.com/jamietre/ImageMapster/blob/master/CHANGELOG.md) for details on the release history and roadmap.
+See the [change log](CHANGELOG.md) for details on the release history and roadmap.
 
 Read the [release notes](http://blog.outsharked.com/2012/06/imagemapster-125-released.html) for 1.2.5, the last significant feature update.
 
