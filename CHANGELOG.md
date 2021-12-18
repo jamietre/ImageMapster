@@ -48,7 +48,7 @@
 ## Version 1.5.0-beta.0 - 2021.01.26
 
 - [Issue 352](https://github.com/jamietre/ImageMapster/issues/352) Fix inconsistency of navigation href via onClick vs. clickNavigate
-- [Issue 353](https://github.com/jamietre/ImageMapster/issues/353) Add `navigationMode` configuration option to improve AREA element href & target support
+- [Issue 353](https://github.com/jamietre/ImageMapster/issues/353) Add `navigateMode` configuration option to improve AREA element href & target support
 - [Issue 356](https://github.com/jamietre/ImageMapster/issues/356) Add tooltip close support for `image-click` event
 
 ## Version 1.4.0 - 2021.01.24
