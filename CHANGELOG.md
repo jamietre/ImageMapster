@@ -14,6 +14,9 @@
 - Make callback data structures consistent
 - Improve docs
 
+## Version 1.6.0 - 2024.03.12
+- [Issue 394](https://github.com/jamietre/ImageMapster/issues/394) [TouchScreen only] Weird highlight glitch when touch on the other area beside the map.
+
 ## Version 1.5.4 - 2021.02.20
 - [Issue 83](https://github.com/jamietre/ImageMapster/issues/83) Fix boundlist sync with selected state
 - [Issue 377](https://github.com/jamietre/ImageMapster/issues/377) onConfigured not called after rebind

@@ -1,7 +1,7 @@
 /*!
-* imagemapster - v1.5.4 - 2021-02-20
+* imagemapster - v1.6.0 - 2024-03-12
 * https://github.com/jamietre/ImageMapster/
-* Copyright (c) 2011 - 2021 James Treworgy
+* Copyright (c) 2011 - 2024 James Treworgy
 * License: MIT
 */
 (function (factory) {
@@ -31,7 +31,7 @@
       factory(jQuery);
   }
 }(function (jQuery) {
-    /* 
+    /*
   jqueryextensions.js
   Extend/intercept jquery behavior
 */
@@ -66,23 +66,22 @@
       // https://github.com/jquery/jquery/issues/2871#issuecomment-175175180
       // https://jsbin.com/bupesajoza/edit?html,js,output
       var setupListener = function (ns, type, listener) {
-        if (ns.includes('noPreventDefault')) {
-          window.addEventListener(type, listener, { passive: true });
+        if (ns.includes('mapster') && ns.includes('noPreventDefault')) {
+          this.addEventListener(type, listener, { passive: true });
         } else {
-          console.warn('non-passive events - listener not added');
           return false;
         }
       };
 
-      // special events for noPreventDefault
+      // special events for mapster.noPreventDefault
       $.event.special.touchstart = {
         setup: function (_, ns, listener) {
-          return setupListener(ns, 'touchstart', listener);
+          return setupListener.call(this, ns, 'touchstart', listener);
         }
       };
       $.event.special.touchend = {
         setup: function (_, ns, listener) {
-          return setupListener(ns, 'touchend', listener);
+          return setupListener.call(this, ns, 'touchend', listener);
         }
       };
     }
@@ -107,7 +106,7 @@
 (function ($) {
   'use strict';
 
-  var mapster_version = '1.5.4';
+  var mapster_version = '1.6.0';
 
   // all public functions in $.mapster.impl are methods
   $.fn.mapster = function (method) {
