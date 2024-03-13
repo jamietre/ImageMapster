@@ -5,12 +5,13 @@ Shared resources, setup & teardown. This must be included for all tests.
 */
 
 /* global iqtest */
+/* exported image areas map_options u */
 
 var image,
   areas,
   map_options,
   map_copy,
-  u = iqtest.impl.utility; // eslint-disable-line no-unused-vars
+  u = iqtest.impl.utility;
 
 $(document).ready(function () {
   'use strict';
@@ -27,11 +28,10 @@ var group_setup = function () {
   // always start with a clean map for each group
   $('#usa_image').replaceWith(map_copy.clone());
 
-  image = $('#usa_image'); // eslint-disable-line no-unused-vars
-  areas = $('#usa_image_map'); // eslint-disable-line no-unused-vars
+  image = $('#usa_image');
+  areas = $('#usa_image_map');
 
-  // eslint-disable-next-line no-unused-vars
-  map_options = {
+    map_options = {
     isSelectable: true,
     singleSelect: false,
     mapKey: 'state',

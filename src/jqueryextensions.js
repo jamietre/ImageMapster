@@ -1,4 +1,4 @@
-/* 
+/*
   jqueryextensions.js
   Extend/intercept jquery behavior
 */
@@ -33,23 +33,22 @@
       // https://github.com/jquery/jquery/issues/2871#issuecomment-175175180
       // https://jsbin.com/bupesajoza/edit?html,js,output
       var setupListener = function (ns, type, listener) {
-        if (ns.includes('noPreventDefault')) {
-          window.addEventListener(type, listener, { passive: true });
+        if (ns.includes('mapster') && ns.includes('noPreventDefault')) {
+          this.addEventListener(type, listener, { passive: true });
         } else {
-          console.warn('non-passive events - listener not added');
           return false;
         }
       };
 
-      // special events for noPreventDefault
+      // special events for mapster.noPreventDefault
       $.event.special.touchstart = {
         setup: function (_, ns, listener) {
-          return setupListener(ns, 'touchstart', listener);
+          return setupListener.call(this, ns, 'touchstart', listener);
         }
       };
       $.event.special.touchend = {
         setup: function (_, ns, listener) {
-          return setupListener(ns, 'touchend', listener);
+          return setupListener.call(this, ns, 'touchend', listener);
         }
       };
     }
