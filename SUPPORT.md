@@ -16,4 +16,4 @@ Have questions? Looking for support for ImageMapster?
 
 - You can review the [source code on GitHub](https://github.com/jamietre/ImageMapster).
 
-If you identify a bug, please file a [bug report](https://github.com/jamietre/ImageMapster/issues/new?template=bug_report.md) and if you'd like to see a new feature, please file a [feature request](https://github.com/jamietre/ImageMapster/issues/new?template=feature_request.md)!
+If you identify a bug, please file a [bug report](https://github.com/jamietre/ImageMapster/issues/new?template=bug_report.yml) and if you'd like to see a new feature, please file a [feature request](https://github.com/jamietre/ImageMapster/issues/new?template=feature_request.yml)!

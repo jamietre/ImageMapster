@@ -159,9 +159,6 @@ ImageMapster includes several examples. To view the examples:
 > [!NOTE]\
 > By default, examples will run using jQuery.  To run examples using Zepto, modify the examples HTML file per the information in [Development -> Examples](#examples-1).
 
-```diff
-```
-
 ## Zepto Compatibility
 
 As of ImageMapster v1.3.2, ImageMapster contains full support for Zepto v1.2.0. The latest Zepto compatible version of ImageMapster is [1.6.0](https://github.com/jamietre/ImageMapster/releases/tag/v1.6.0).
