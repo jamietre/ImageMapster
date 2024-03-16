@@ -42,7 +42,7 @@ Download the latest version of ImageMapster from the [Releases](https://github.c
 ></script>
 <script
   language="text/javascript"
-  src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"
+  src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"
 ></script>
 <script language="text/javascript" src="jquery.imagemapster.min.js"></script>
 ```
@@ -156,6 +156,12 @@ ImageMapster includes several examples. To view the examples:
 1. Clone the repo
 2. Open [index.html](examples/index.html) directly from your file system in a browser
 
+> [!NOTE]\
+> By default, examples will run using jQuery.  To run examples using Zepto, modify the examples HTML file per the information in [Development -> Examples](#examples-1).
+
+```diff
+```
+
 ## Zepto Compatibility
 
 As of ImageMapster v1.3.2, ImageMapster contains full support for Zepto v1.2.0. The latest Zepto compatible version of ImageMapster is [1.6.0](https://github.com/jamietre/ImageMapster/releases/tag/v1.6.0).
@@ -259,18 +265,84 @@ The source code is broken into several modules to make management easier and to 
 
 1. Clone the repo
 2. Install NPM dependencies - `npm install`
-3. Install [Grunt Cli](https://gruntjs.com/getting-started) - `npm install -g grunt-cli`
-4. Generate a Build:
-   - Debug Build (uncompressed) - `grunt build`
-   - Release Build (uncompressed/compressed/sourcemap) - `grunt dist`
+3. Generate a Build:
+   - Debug Build (uncompressed) - `npm run build`
+   - Release Build (uncompressed/compressed/sourcemap) - `npm run dist`
 
 ### Debug
 
 1. Clone the repo
 2. Install NPM dependencies - `npm install`
-3. Install [Grunt Cli](https://gruntjs.com/getting-started) - `npm install -g grunt-cli`
-4. Run the debug task - `grunt debug`
+3. Run the debug task - `npm run debug`
+
+### Tests
+
+1. Clone the repo
+2. Install NPM dependencies - `npm install`
+3. Run the test task - `npm run test`
+
+> [!NOTE]\
+> By default, tests will run using jQuery.  To run tests using Zepto, modify [imagemapster-test-runner](./tests/imagemapster-test-runner.html) as follows, commenting out references to jQuery scripts and uncommenting references to zepto scripts.
+
+```dif
+...
+
+- <script type="text/javascript" src="redist/jquery.3.7.1.js"></script>
++ <!-- <script type="text/javascript" src="redist/jquery.3.7.1.js"></script> -->
+
+...
+
+- <!-- <script type="text/javascript" src="redist/zepto.1.2.0.js"></script> -->
++ <script type="text/javascript" src="redist/zepto.1.2.0.js"></script>
+
+...
+
+- <script
++ <!-- <script
+   type="text/javascript"
+   src="../dist/jquery.imagemapster.js"
+- ></script>
++ ></script> -->
+- <!-- <script
++ <script
+  type="text/javascript"
+  src="../dist/jquery.imagemapster.zepto.js"
+- ></script> -->
++ ></script>
+
+...
+```
+
+### Examples
+
+1. Clone the repo
+2. Install NPM dependencies - `npm install`
+3. Run the example task - `npm run example`
+
+> [!NOTE]\
+> By default, examples will run using jQuery.  To run examples using Zepto, modify the examples HTML file (e.g., [USA](./examples/usa.html)) as follows, commenting out references to jQuery scripts and uncommenting references to zepto scripts.
+
+```dif
+...
+
++ <!--
+  <script type="text/javascript" src="redist/jquery.3.7.1.min.js"></script>
+  <script
+    type="text/javascript"
+    src="../dist/jquery.imagemapster.js"
+  ></script>
++ -->
+- <!-- <script type="text/javascript" src="redist/zepto.1.2.0.min.js"></script>
++ <script type="text/javascript" src="redist/zepto.1.2.0.min.js"></script>
+  <script
+    type="text/javascript"
+    src="../dist/jquery.imagemapster.zepto.js"
+- ></script> -->
++ ></script>
+
+...
+```
 
 ## License
 
-Copyright &copy; 2011-21 [James Treworgy](https://github.com/jamietre). Licensed under the [MIT License](LICENSE).
+Copyright &copy; 2011-24 [James Treworgy](https://github.com/jamietre). Licensed under the [MIT License](LICENSE).
