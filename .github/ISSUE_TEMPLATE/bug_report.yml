@@ -17,7 +17,7 @@ body:
     id: description
     attributes:
       description: |
-        A clear and concise description of what the bug is including screenshots, if applicable, to help explain the problem. Make sure to add **all the information needed to understand the bug** so that someone can help. If the info is missing we'll add the 'needs author feedback' label and close the issue until there is enough information.
+        A clear and concise description of what the bug is including screenshots, if applicable, to help explain the problem. Make sure to add **all the information needed to understand the bug** so that someone can help. If there is not enough information to **easily** understand and reproduce the issue, we'll add the 'needs author feedback' label and close the issue until there is enough information provided.
       label: Describe the bug
     validations:
       required: true
