@@ -73,23 +73,10 @@ this.tests.push(
               'Only imagemap bound images were obtained on generic create'
             );
 
-            var els = $('img,div'),
-              els_count = els.find('img[usemap]').length,
-              els_configured = 0;
-
-            map = $('img,div').mapster(
-              $.extend(
-                { mapKey: 'state' },
-                {
-                  onConfigured: function () {
-                    els_configured = els_configured + 1;
-                    if (els_configured === els_count) {
-                      getPromise('configured3').resolve();
-                    }
-                  }
-                }
-              )
-            );
+            map = $('img,div').mapster({
+              mapKey: 'state',
+              onConfigured: getPromise('configured3').resolve
+            });
 
             getPromise('configured3').then(function () {
               a.equals(
