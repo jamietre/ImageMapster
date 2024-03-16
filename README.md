@@ -284,7 +284,7 @@ The source code is broken into several modules to make management easier and to 
 > [!NOTE]\
 > By default, tests will run using jQuery.  To run tests using Zepto, modify [imagemapster-test-runner](./tests/imagemapster-test-runner.html) as follows, commenting out references to jQuery scripts and uncommenting references to zepto scripts.
 
-```dif
+```diff
 ...
 
 - <script type="text/javascript" src="redist/jquery.3.7.1.js"></script>
@@ -322,7 +322,7 @@ The source code is broken into several modules to make management easier and to 
 > [!NOTE]\
 > By default, examples will run using jQuery.  To run examples using Zepto, modify the examples HTML file (e.g., [USA](./examples/usa.html)) as follows, commenting out references to jQuery scripts and uncommenting references to zepto scripts.
 
-```dif
+```diff
 ...
 
 + <!--
