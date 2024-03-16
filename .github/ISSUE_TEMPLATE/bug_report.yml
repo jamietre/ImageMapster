@@ -1,55 +1,87 @@
----
-name: Bug report
-about: Create a report to help us improve
-title: ''
-labels: ''
-assignees: ''
----
+name: 🐞 Bug Report
+description: Create a report to help us improve
+title: '[🐞] '
+labels: 'bug'
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Have you read ImageMapster's [Code of Conduct](https://github.com/jamietre/ImageMapster/blob/main/CODE_OF_CONDUCT.md)? By filing an Issue, you are expected to comply with it, including treating everyone with respect.
+        Have you read ImageMapster's [Contributing guidelines](https://github.com/jamietre/ImageMapster/blob/main/CONTRIBUTING.md)?  If not, please review them before filing an issue.
+        Do you want to ask a question? Are you looking for support? [StackOverflow with the imagemapster tag](https://stackoverflow.com/questions/tagged/imagemapster) is the best place for getting support.
 
-<!--
+  - type: markdown
+    attributes:
+      value: |
+        Make sure to add **all the information needed to understand the bug** so that someone can help. If the info is missing we'll add the 'needs author feedback' label and close the issue until there is enough information.
 
-Have you read ImageMapster's Code of Conduct? By filing an Issue, you are expected to comply with it, including treating everyone with respect: https://github.com/jamietre/ImageMapster/blob/main/CODE_OF_CONDUCT.md
+  - type: textarea
+    id: description
+    attributes:
+      description: |
+        A clear and concise description of what the bug is including screenshots, if applicable, to help explain the problem.
+      label: Describe the bug
+    validations:
+      required: true
 
-Have you read ImageMapster's Contributing guidelines?  If not, please review them before filing an issue https://github.com/jamietre/ImageMapster/blob/main/CONTRIBUTING.md
+  - type: input
+    id: reproduction
+    attributes:
+      label: Reproduction
+      description: Please provide a link to a location (e.g., repo, [jsFiddle](https://www.jsfiddle.net), etc.) that reproduces the problem you ran into. Please see the [contributing docs](https://github.com/jamietre/ImageMapster/blob/main/CONTRIBUTING.md) for suggestions on creating a reproduction. A [minimal reproduction](https://stackoverflow.com/help/minimal-reproducible-example) **is required** ([Why?](https://antfu.me/posts/why-reproductions-are-required)). If a report is vague (e.g., just a generic error message) and has no reproduction, it will receive a "needs author feedback" label and close the issue until there is enough information provided.
+      placeholder: Reproduction URL
+    validations:
+      required: true
 
-Do you want to ask a question? Are you looking for support? StackOverflow with the imagemapster tag is the best place for getting support: https://stackoverflow.com/questions/tagged/imagemapster
+  - type: textarea
+    id: reproduction_steps
+    attributes:
+      label: Steps to reproduce
+      description: Please provide any reproduction steps that may need to be described.
+      placeholder: |
+        1. Go to '...'
+        2. Click on '....'
+        3. Scroll down to '....'
+        4. See error
+    validations:
+      required: true
 
--->
+  - type: input
+    id: im_version
+    attributes:
+      label: ImageMapster Version
+      description: Which version of ImageMapster did you experience the issue on?
+      placeholder: v1.6.0
+    validations:
+      required: true
 
-Make sure to add **all the information needed to understand the bug** so that someone can help. If the info is missing we'll add the 'needs author feedback' label and close the issue until there is enough information.
+  - type: textarea
+    id: environment_info
+    attributes:
+      label: Environment Info
+      description: Which device(s), operating system(s) & browser(s) did you experience the issue on?  If multiple, please list all.
+      placeholder: |
+        1. Windows 11 - Chrome 122.0.6261.129
+        2. Windows 11 - Edge 122.0.2365.80
+        3. macOS 14.4 - Safari 17.0
+        4. Samsung Galaxy S24 - Android 14 - Chrome 122.0.6261.119
+    validations:
+      required: true
 
-**Describe the bug**
-A clear and concise description of what the bug is.
+  - type: textarea
+    id: behavior_expected
+    attributes:
+      label: Expected Behavior
+      placeholder: |
+        A clear and concise description of what you expected to happen.
+    validations:
+      required: true
 
-**To Reproduce**
-Steps to reproduce the behavior:
-
-1. Go to '...'
-2. Click on '....'
-3. Scroll down to '....'
-4. See error
-
-**Expected behavior**
-A clear and concise description of what you expected to happen.
-
-**Screenshots**
-If applicable, add screenshots to help explain your problem.
-
-**Desktop (please complete the following information):**
-
-- OS: [e.g. iOS]
-- Browser [e.g. chrome, safari]
-- Version [e.g. 22]
-
-**Smartphone (please complete the following information):**
-
-- Device: [e.g. iPhone6]
-- OS: [e.g. iOS8.1]
-- Browser [e.g. stock browser, safari]
-- Version [e.g. 22]
-
-**Additional context**
-Any other information you want to share that is relevant to the issue being
-reported. This might include the lines of code that you have identified as
-causing the bug, and potential solutions (and your opinions on their
-merits).
+  - type: textarea
+    id: additional_information
+    attributes:
+      label: Additional Information
+      description: |
+        Any other information you want to share that is relevant to the issue being reported. This might include the lines of code that you have identified as causing the bug, and potential solutions (and your opinions on their merits).
+    validations:
+      required: false

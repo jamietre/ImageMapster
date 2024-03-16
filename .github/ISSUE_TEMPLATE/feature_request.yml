@@ -1,19 +1,40 @@
----
-name: Feature request
-about: Suggest an idea for this project
-title: ''
-labels: ''
-assignees: ''
----
+name: ✨ Feature Request
+description: Suggest an idea for this project
+title: '[✨] '
+labels: 'new feature'
+body:
+  - type: markdown
+    attributes:
+      value: |
 
-**Is your feature request related to a problem and/or adding functionality? Please describe.**
-A clear and concise description of what the problem is and/or why the functionality you're proposing is desired/needed.
+  - type: textarea
+    id: description
+    attributes:
+      description: A clear and concise description of what the problem is and/or why the functionality you're proposing is desired/needed.
+      label: Is your feature request related to a problem and/or adding functionality? Please describe
+    validations:
+      required: true
 
-**Describe the solution you'd like**
-A clear and concise description of what you want to happen.
+  - type: textarea
+    id: solution
+    attributes:
+      description: A clear and concise description of what you want to happen.
+      label: Describe the solution you'd like
+    validations:
+      required: true
 
-**Describe alternatives you've considered**
-A clear and concise description of any alternative solutions or features you've considered.
+  - type: textarea
+    id: alternatives
+    attributes:
+      description: A clear and concise description of any alternative solutions or features you've considered.
+      label: Describe alternatives you've considered
+    validations:
+      required: true
 
-**Additional context**
-Add any other context or screenshots about the feature request here.
+  - type: textarea
+    id: additional_information
+    attributes:
+      description: Add any other context or screenshots about the feature request here.
+      label: Additional context
+    validations:
+      required: true
