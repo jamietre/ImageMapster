@@ -45,45 +45,53 @@
       $(document).ready(function () {
         'use strict';
 
-        var state = history.state || {};
+        var state = history.state || {
+          clickNavigate: false,
+          navigateMode: 'open'
+        };
 
+        updateAreas(); // ensure hrefs are set before we initialize so that IM picks them up
         $('#beatlesimage').mapster({
           mapKey: 'data-name',
-          clickNavigate: state.clickNavigate === true ? true : false,
-          navigateMode: 'open',
+          clickNavigate: state.clickNavigate,
+          navigateMode: state.navigateMode,
           onConfigured: function () {
-            updateOptions();
+            // retrieve options from map rather than using state
+            // to ensure we reflect what IM is using and as a way
+            // to verify that options were applied as expected
+            var options = $('#beatlesimage').mapster('get_options');
+            $('#navigateMode').text(options.navigateMode);
+            $('#clickNavigate').text(options.clickNavigate);
           },
           onClick: function () {
+            // force navigation even when clickNavigate === false
             return true;
           }
         });
 
-        function updateOptions() {
-          var options = $('#beatlesimage').mapster('get_options');
-          $('#navigateMode').text(options.navigateMode);
-          $('#clickNavigate').text(options.clickNavigate);
-          var state = {
-            navigateMode: options.navigateMode,
-            clickNavigate: options.clickNavigate
-          };
+        function updateAreas() {
           $('area.nav-target').each(function (_, area) {
             var qs = Object.assign({}, state, {
               name: $(area).data('firstname')
             });
             $(area).attr('href', 'navigate-target.html?' + $.param(qs));
           });
-          history.replaceState(state, null);
-          // rebind in order to re-read the href from html source
-          $('#beatlesimage').mapster('rebind', options);
         }
 
         $('#clickNavigate').on('click', function () {
-          var options = $('#beatlesimage').mapster('get_options');
-          $('#beatlesimage').mapster('set_options', {
-            clickNavigate: options.clickNavigate === true ? false : true
-          });
-          updateOptions();
+          var options = Object.assign(
+            {},
+            $('#beatlesimage').mapster('get_options'),
+            { clickNavigate: !state.clickNavigate }
+          );
+          state = {
+            navigateMode: options.navigateMode,
+            clickNavigate: options.clickNavigate
+          };
+          history.replaceState(state, null);
+          updateAreas();
+          // rebind in order to re-read the href from html source
+          $('#beatlesimage').mapster('rebind', options);
         });
       });
     </script>
@@ -96,8 +104,8 @@
     </div>
     <h2>Navigation Demo - Full</h2>
     <p>
-      Demonstrates navigateMode of `open` introduced in v1.5.0. For a
-      comparison with legacy behavior (navigateMode `location`) see the
+      Demonstrates navigateMode of `open` introduced in v1.5.0. For a comparison
+      with legacy behavior (navigateMode `location`) see the
       <a href="navigate-simple.html">Navigation Demo - Simple</a> example.
     </p>
     <p>
