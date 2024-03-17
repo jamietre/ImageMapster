@@ -11,7 +11,8 @@
     "dist": "grunt dist",
     "debug": "grunt debug",
     "test": "grunt test",
-    "example": "grunt example"
+    "example": "grunt example",
+    "doc": "grunt docco"
   },
   "repository": {
     "type": "git",
@@ -47,6 +48,7 @@
     "jquery": ">=1.7.0"
   },
   "devDependencies": {
+    "docco-next": "^0.9.14",
     "eslint": "^8.57.0",
     "eslint-config-jquery": "^3.0.2",
     "eslint-config-prettier": "^9.1.0",
@@ -58,7 +60,6 @@
     "grunt-contrib-connect": "^4.0.0",
     "grunt-contrib-uglify": "^5.2.2",
     "grunt-contrib-watch": "^1.1.0",
-    "grunt-docco": "^0.5.0",
     "grunt-eslint": "^24.3.0",
     "grunt-shell": "^4.0.0",
     "grunt-umd": "^3.0.0",

@@ -340,6 +340,15 @@ The source code is broken into several modules to make management easier and to 
 ...
 ```
 
+### Docs
+
+> [!NOTE]\
+> The docs have not been maintained and therefore are not under version control.
+
+1. Clone the repo
+2. Install NPM dependencies - `npm install`
+3. Run the doc task - `npm run doc`
+
 ## License
 
 Copyright &copy; 2011-24 [James Treworgy](https://github.com/jamietre). Licensed under the [MIT License](LICENSE).

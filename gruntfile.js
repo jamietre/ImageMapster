@@ -1,3 +1,5 @@
+var doccoNext = require('docco-next');
+
 // eslint-disable-next-line strict, no-undef
 module.exports = function (grunt) {
   // eslint-disable-next-line no-undef
@@ -137,7 +139,7 @@ module.exports = function (grunt) {
       source: {
         src: ['src/**/*.js'],
         options: {
-          output: 'docs/'
+          output: 'docs'
         }
       }
     },
@@ -208,4 +210,21 @@ module.exports = function (grunt) {
   grunt.registerTask('prepatch', ['preBump', 'bump-only:prepatch', 'postBumpPre']);
   grunt.registerTask('preminor', ['preBump', 'bump-only:preminor', 'postBumpPre']);
   grunt.registerTask('premajor', ['preBump', 'bump-only:premajor', 'postBumpPre']);
+  grunt.registerMultiTask('docco', 'Docco-next processor.', function() {
+    var done = this.async(),
+      // docco-next documentation is lacking when it comes to using the API
+      // the following is based on what the CLI does with arguments passed in
+      // https://github.com/mobily-enterprises/docco-next/blob/master/docco.js#L186
+      config = this.options({
+        plugin: this.options.plugin || {}, // docco-next expects at least empty object
+        outputExtension: this.options.outputExtension || 'html', // docco-next expects a value
+        sources: this.filesSrc,
+      });
+    doccoNext
+      .documentAll(config)
+      .then(done)
+      .catch(function (e) {
+        done(e);
+      });
+  });
 };
