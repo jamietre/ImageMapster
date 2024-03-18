@@ -279,36 +279,9 @@ The source code is broken into several modules to make management easier and to 
 3. Run the test task - `npm run test`
 
 > [!NOTE]\
-> By default, tests will run using jQuery.  To run tests using Zepto, modify [imagemapster-test-runner](./tests/imagemapster-test-runner.html) as follows, commenting out references to jQuery scripts and uncommenting references to zepto scripts.
+> By default, tests will run using the latest version of jQuery.  The library to use when running tests can be changed via the dropdown.
 
-```diff
-...
-
-- <script type="text/javascript" src="redist/jquery.3.7.1.js"></script>
-+ <!-- <script type="text/javascript" src="redist/jquery.3.7.1.js"></script> -->
-
-...
-
-- <!-- <script type="text/javascript" src="redist/zepto.1.2.0.js"></script> -->
-+ <script type="text/javascript" src="redist/zepto.1.2.0.js"></script>
-
-...
-
-- <script
-+ <!-- <script
-   type="text/javascript"
-   src="../dist/jquery.imagemapster.js"
-- ></script>
-+ ></script> -->
-- <!-- <script
-+ <script
-  type="text/javascript"
-  src="../dist/jquery.imagemapster.zepto.js"
-- ></script> -->
-+ ></script>
-
-...
-```
+![Test Runner Library](testrunnerlibrary.png)
 
 ### Examples
 
