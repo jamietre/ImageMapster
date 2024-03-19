@@ -1,3 +1,4 @@
+// eslint-disable-next-line no-undef
 var doccoNext = require('docco-next');
 
 // eslint-disable-next-line strict, no-undef
@@ -99,15 +100,13 @@ module.exports = function (grunt) {
       tests: {
         options: {
           port: 9101,
-          open:
-            'http://<%= connect.options.hostname %>:<%= connect.tests.options.port %>/tests/imagemapster-test-runner.html'
+          open: 'http://<%= connect.options.hostname %>:<%= connect.tests.options.port %>/tests/imagemapster-test-runner.html'
         }
       },
       examples: {
         options: {
           port: 9102,
-          open:
-            'http://<%= connect.options.hostname %>:<%= connect.examples.options.port %>/examples/index.html'
+          open: 'http://<%= connect.options.hostname %>:<%= connect.examples.options.port %>/examples/index.html'
         }
       }
     },
@@ -165,26 +164,50 @@ module.exports = function (grunt) {
         stderr: true,
         failOnError: true
       },
-      npm: {
+      npmpublish: {
         command: 'npm publish'
       },
-      npmpre: {
+      npmpublishpre: {
         command: 'npm publish --tag next'
+      },
+      npmversion: {
+        command:
+          'npm version --no-git-tag-version --allow-same-version <%= pkg.version %>'
+      },
+      formatcheck: {
+        command: 'prettier . --check'
+      },
+      formatfix: {
+        command: 'prettier . --write'
+      },
+      mdlintcheck: {
+        command: 'markdownlint-cli2 "**/*.md"'
+      },
+      mdlintfix: {
+        command: 'markdownlint-cli2 --fix "**/*.md"'
       }
     },
     eslint: {
       options: {
         failOnError: true,
-        extensions: ['.js', '.html']
+        extensions: ['.js', '.html', '.yml', '.yaml', '.md', '.json', '.jsonc']
       },
-      target: ['.']
+      check: {
+        src: ['.']
+      },
+      fix: {
+        options: {
+          fix: true
+        },
+        src: ['.']
+      }
     }
   });
 
   grunt.registerTask('default', ['build']);
   grunt.registerTask('build', [
     'clean',
-    'eslint',
+    'lint',
     'concat:jquery',
     'concat:zepto',
     'umd:jquery',
@@ -196,21 +219,59 @@ module.exports = function (grunt) {
   grunt.registerTask('debug', ['build', 'connect', 'watch']);
   grunt.registerTask('example', ['build', 'connect:examples', 'watch']);
   grunt.registerTask('test', ['build', 'connect:tests', 'watch']);
-  grunt.registerTask('postBump', ['dist', 'bump-commit', 'shell:npm']);
-  grunt.registerTask('postBumpPre', ['dist', 'bump-commit', 'shell:npmpre']);
+  grunt.registerTask('lint', ['eslint:check', 'shell:mdlintcheck']);
+  grunt.registerTask('lint:fix', ['eslint:fix', 'shell:mdlintfix']);
+  grunt.registerTask('format', ['shell:formatcheck']);
+  grunt.registerTask('format:fix', ['shell:formatfix']);
+  grunt.registerTask('postBump', ['dist', 'bump-commit', 'shell:npmpublish']);
+  grunt.registerTask('postBumpPre', [
+    'dist',
+    'bump-commit',
+    'shell:npmpublishpre'
+  ]);
   grunt.registerTask('preBump', ['clean', 'dist']);
-  grunt.registerTask('patch', ['preBump', 'bump-only:patch', 'postBump']);
-  grunt.registerTask('minor', ['preBump', 'bump-only:minor', 'postBump']);
-  grunt.registerTask('major', ['preBump', 'bump-only:major', 'postBump']);
+  grunt.registerTask('patch', [
+    'preBump',
+    'bump-only:patch',
+    'shell:npmversion',
+    'postBump'
+  ]);
+  grunt.registerTask('minor', [
+    'preBump',
+    'bump-only:minor',
+    'shell:npmversion',
+    'postBump'
+  ]);
+  grunt.registerTask('major', [
+    'preBump',
+    'bump-only:major',
+    'shell:npmversion',
+    'postBump'
+  ]);
   grunt.registerTask('prerelease', [
     'preBump',
     'bump-only:prerelease',
     'postBumpPre'
   ]);
-  grunt.registerTask('prepatch', ['preBump', 'bump-only:prepatch', 'postBumpPre']);
-  grunt.registerTask('preminor', ['preBump', 'bump-only:preminor', 'postBumpPre']);
-  grunt.registerTask('premajor', ['preBump', 'bump-only:premajor', 'postBumpPre']);
-  grunt.registerMultiTask('docco', 'Docco-next processor.', function() {
+  grunt.registerTask('prepatch', [
+    'preBump',
+    'bump-only:prepatch',
+    'shell:npmversion',
+    'postBumpPre'
+  ]);
+  grunt.registerTask('preminor', [
+    'preBump',
+    'bump-only:preminor',
+    'shell:npmversion',
+    'postBumpPre'
+  ]);
+  grunt.registerTask('premajor', [
+    'preBump',
+    'bump-only:premajor',
+    'shell:npmversion',
+    'postBumpPre'
+  ]);
+  grunt.registerMultiTask('docco', 'Docco-next processor.', function () {
     var done = this.async(),
       // docco-next documentation is lacking when it comes to using the API
       // the following is based on what the CLI does with arguments passed in
@@ -218,7 +279,7 @@ module.exports = function (grunt) {
       config = this.options({
         plugin: this.options.plugin || {}, // docco-next expects at least empty object
         outputExtension: this.options.outputExtension || 'html', // docco-next expects a value
-        sources: this.filesSrc,
+        sources: this.filesSrc
       });
     doccoNext
       .documentAll(config)

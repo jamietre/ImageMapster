@@ -567,8 +567,8 @@
       return !ar
         ? ''
         : ar.isPrimary
-        ? ar.key
-        : this.getPrimaryKeysForMapAreas(ar.areas()).join(',');
+          ? ar.key
+          : this.getPrimaryKeysForMapAreas(ar.areas()).join(',');
     },
 
     /**
@@ -909,8 +909,8 @@
       sel = m.hasVml()
         ? 'area'
         : default_group
-        ? 'area[coords]'
-        : 'area[' + opts.mapKey + ']';
+          ? 'area[coords]'
+          : 'area[' + opts.mapKey + ']';
 
       areas = $(me.map).find(sel).off('.mapster');
 

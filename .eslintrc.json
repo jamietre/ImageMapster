@@ -1,6 +1,15 @@
 {
   "root": true,
-  "extends": ["eslint:recommended", "jquery", "prettier"],
+  "extends": [
+    "eslint:recommended",
+    "jquery",
+    "prettier",
+    "plugin:yml/standard",
+    "plugin:yml/prettier",
+    "plugin:markdown/recommended-legacy",
+    "plugin:jsonc/recommended-with-jsonc",
+    "plugin:jsonc/prettier"
+  ],
   "plugins": ["html"],
   "reportUnusedDisableDirectives": true,
   "parserOptions": {
@@ -17,5 +26,18 @@
     "strict": ["error", "function"],
     "no-nested-ternary": 0,
     "camelcase": 0
-  }
+  },
+  "settings": {
+    "html/indent": "+2",
+    "html/report-bad-indent": "error"
+  },
+  "overrides": [
+    {
+      "files": ["**/*.md/*.js"],
+      "parserOptions": {
+        "ecmaVersion": 6,
+        "sourceType": "module"
+      }
+    }
+  ]
 }

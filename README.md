@@ -49,8 +49,8 @@ Download the latest version of ImageMapster from the [Releases](https://github.c
 
 Alternatively, you can include ImageMapster from one of the following CDNs:
 
-1. [jsDelivr](https://www.jsdelivr.com/package/npm/imagemapster) - https://www.jsdelivr.com/package/npm/imagemapster
-2. [cdnjs](https://cdnjs.com/libraries/imagemapster) - https://cdnjs.com/libraries/imagemapster
+1. [jsDelivr](https://www.jsdelivr.com/package/npm/imagemapster) - <https://www.jsdelivr.com/package/npm/imagemapster>
+2. [cdnjs](https://cdnjs.com/libraries/imagemapster) - <https://cdnjs.com/libraries/imagemapster>
 
 ### Usage
 
@@ -143,13 +143,13 @@ $('#usamap').mapster('set', true, 'really-cold');
 
 Groups created this way are _independent_ of the primary group. If you select "new-england" from code, you can't unselect just "MA" by clicking on it. You would have to unselect "new-england" from code.
 
-To simply indentify a set of areas to turn on or off, but not treat them as a logical group, you can use CSS classes and select areas directly, or use the <code>keys</code> option to identify the primary keys associated with a group (see documentation).
+To simply indentify a set of areas to turn on or off, but not treat them as a logical group, you can use CSS classes and select areas directly, or use the `keys` option to identify the primary keys associated with a group (see documentation).
 
 #### Options
 
 Please see the [ImageMapster web site](http://www.outsharked.com/imagemapster/default.aspx?docs.html) for complete documentation.
 
-## Examples
+## Demos
 
 ImageMapster includes several examples. To view the examples:
 
@@ -157,7 +157,7 @@ ImageMapster includes several examples. To view the examples:
 2. Open [index.html](examples/index.html) directly from your file system in a browser
 
 > [!NOTE]\
-> By default, examples will run using jQuery.  To run examples using Zepto, modify the examples HTML file per the information in [Development -> Examples](#examples-1).
+> By default, examples will run using jQuery. To run examples using Zepto, modify the examples HTML file per the information in [Development -> Examples](#examples).
 
 ## Zepto Compatibility
 
@@ -176,14 +176,14 @@ To use ImageMapster >= v1.3.2 < 2.0.0 with Zepto v.1.2.0, Zepto must contain the
 - touch
 - selector (required as of v1.5.0)
 
-### CDN
+### Browser - Zepto
 
 :warning: **_As of ImageMapster v1.3.0, if targeting ES5 browers, you must include a Promise polyfill such as [es6-promise](https://www.npmjs.com/package/es6-promise). See [Issue 341](https://github.com/jamietre/ImageMapster/issues/341) for details._**
 
-1. [jsDelivr](https://www.jsdelivr.com/package/npm/imagemapster?version=1.6.0) - https://www.jsdelivr.com/package/npm/imagemapster?version=1.6.0
-2. [cdnjs](https://cdnjs.com/libraries/imagemapster/1.6.0) - https://cdnjs.com/libraries/imagemapster/1.6.0
+Download the latest Zepto version of ImageMapster from the [Releases](https://github.com/jamietre/ImageMapster/releases) page and include in your webpage:
 
-Use `jquery.imagemapster.zepto.min.js`
+> [!NOTE]\
+> Make sure to use `jquery.imagemapster.zepto.min.js`
 
 ```html
 <!-- Optional: If targeting ES5 browers, as of ImageMapster v1.3.0, a Promise polyfill is required! -->
@@ -201,7 +201,12 @@ Use `jquery.imagemapster.zepto.min.js`
 ></script>
 ```
 
-### NPM
+Alternatively, you can include the Zepto version of ImageMapster from one of the following CDNs:
+
+1. [jsDelivr](https://www.jsdelivr.com/package/npm/imagemapster?version=1.6.0) - <https://www.jsdelivr.com/package/npm/imagemapster?version=1.6.0>
+2. [cdnjs](https://cdnjs.com/libraries/imagemapster/1.6.0) - <https://cdnjs.com/libraries/imagemapster/1.6.0>
+
+### NPM - Zepto
 
 The maintainers of Zepto decided not to support any module loaders so there is no official support of Zepto using AMD/CJS/etc. Given this, the Zepto version of ImageMapster expects a dependency of `jquery` when using a module loader. The Zepto version of ImageMapster will work with jQuery or Zepto. If you'd like to utilize Zepto, there are some projects that wrap Zepto and support UMD such as [zepto-modules](https://www.npmjs.com/package/zepto-modules). In order to use Zepto, you will need to configure your bundler to map `jquery` to your Zepto build.
 
@@ -232,18 +237,22 @@ module.exports = $;
 ```js
 import $ from './yourzepto.js';
 import im from 'imagemapster/dist/jquery.imagemapster.zepto.js';
-...
-$(yourImage).mapster({ ... });
+
+$(yourImage).mapster({
+  // your config here
+});
 ```
 
 #### webpack.config.js
 
 ```js
-resolve: {
-  alias: {
-    jquery: path.resolve('./src/yourzepto');
+module.exports = {
+  resolve: {
+    alias: {
+      jquery: path.resolve('./src/yourzepto')
+    }
   }
-}
+};
 ```
 
 ## Find out More
@@ -279,36 +288,9 @@ The source code is broken into several modules to make management easier and to 
 3. Run the test task - `npm run test`
 
 > [!NOTE]\
-> By default, tests will run using jQuery.  To run tests using Zepto, modify [imagemapster-test-runner](./tests/imagemapster-test-runner.html) as follows, commenting out references to jQuery scripts and uncommenting references to zepto scripts.
+> By default, tests will run using the latest version of jQuery. The library to use when running tests can be changed via the dropdown.
 
-```diff
-...
-
-- <script type="text/javascript" src="redist/jquery.3.7.1.js"></script>
-+ <!-- <script type="text/javascript" src="redist/jquery.3.7.1.js"></script> -->
-
-...
-
-- <!-- <script type="text/javascript" src="redist/zepto.1.2.0.js"></script> -->
-+ <script type="text/javascript" src="redist/zepto.1.2.0.js"></script>
-
-...
-
-- <script
-+ <!-- <script
-   type="text/javascript"
-   src="../dist/jquery.imagemapster.js"
-- ></script>
-+ ></script> -->
-- <!-- <script
-+ <script
-  type="text/javascript"
-  src="../dist/jquery.imagemapster.zepto.js"
-- ></script> -->
-+ ></script>
-
-...
-```
+![Test Runner Library](testrunnerlibrary.png)
 
 ### Examples
 
@@ -317,7 +299,7 @@ The source code is broken into several modules to make management easier and to 
 3. Run the example task - `npm run example`
 
 > [!NOTE]\
-> By default, examples will run using jQuery.  To run examples using Zepto, modify the examples HTML file (e.g., [USA](./examples/usa.html)) as follows, commenting out references to jQuery scripts and uncommenting references to zepto scripts.
+> By default, examples will run using jQuery. To run examples using Zepto, modify the examples HTML file (e.g., [USA](./examples/usa.html)) as follows, commenting out references to jQuery scripts and uncommenting references to zepto scripts.
 
 ```diff
 ...

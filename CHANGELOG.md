@@ -15,9 +15,11 @@
 - Improve docs
 
 ## Version 1.6.0 - 2024.03.12
+
 - [Issue 394](https://github.com/jamietre/ImageMapster/issues/394) [TouchScreen only] Weird highlight glitch when touch on the other area beside the map.
 
 ## Version 1.5.4 - 2021.02.20
+
 - [Issue 83](https://github.com/jamietre/ImageMapster/issues/83) Fix boundlist sync with selected state
 - [Issue 377](https://github.com/jamietre/ImageMapster/issues/377) onConfigured not called after rebind
 - [Issue 378](https://github.com/jamietre/ImageMapster/issues/378) drawn areas do not match selected state after rebind
@@ -25,9 +27,11 @@
 - [Issue 381](https://github.com/jamietre/ImageMapster/issues/381) tests not waiting for onConfigured before continuing
 
 ## Version 1.5.3 - 2021.02.14
+
 - [Issue 374](https://github.com/jamietre/ImageMapster/issues/374) Uncaught RangeError: Maximum call stack size exceeded when includeKeys has circular reference
 
 ## Version 1.5.2 - 2021.02.14
+
 - [Issue 137](https://github.com/jamietre/ImageMapster/issues/137) area href empty or not specified
 - [Issue 170](https://github.com/jamietre/ImageMapster/issues/170) Tooltips/Highlight/Select incorrect when AREA `shape` attribute is missing or its value is non-conforming/empty
 - [Issue 364](https://github.com/jamietre/ImageMapster/issues/364) `Uncaught (in promise) undefined` when mouseoutDelay -1
@@ -134,22 +138,24 @@
 - Tooltip enhancements: tooltips can be called against arbitrary elements.
 - AltImage enhancements: see below
 
-_tooltip-enhancements branch_
+### tooltip-enhancements branch
 
 - [Issue 72](https://github.com/jamietre/ImageMapster/issues/72): `scaleMap` not working propery when using bootstrap (css on `body` causing incorrect evaluation of native image size)
 - Enhanced tooltip API to allow creating arbitrary tool tips bound to any area, or at an arbitrary position.
 
-_altimage-enhancements branch_
+### altimage-enhancements branch
 
 - Add `altImages` option that accepts an option defining aliases to alternate images. The name of each property is an alias that can be specified as a valid `altImage` option value elsewhere
 
 Example use of this option:
 
 ```js
-altImages: {
-  roadmap: 'images/usamap-roads.png',
-  elevation: 'images/uasmap-elevation.png'
-}
+var config = {
+  altImages: {
+    roadmap: 'images/usamap-roads.png',
+    elevation: 'images/uasmap-elevation.png'
+  }
+};
 ```
 
 then:

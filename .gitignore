@@ -14,5 +14,7 @@ src/*.min.js
 tests/*.min.js
 node_modules/
 build/
-.vscode/
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
 docs/
