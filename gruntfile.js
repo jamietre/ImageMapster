@@ -174,21 +174,41 @@ module.exports = function (grunt) {
       },
       npmversion: {
         command: 'npm version --no-git-tag-version --allow-same-version <%= pkg.version %>'
+      },
+      formatcheck: {
+        command: 'prettier . --check'
+      },
+      formatfix: {
+        command: 'prettier . --write'
+      },
+      mdlintcheck: {
+        command: 'markdownlint-cli2 "**/*.md"'
+      },
+      mdlintfix: {
+        command: 'markdownlint-cli2 --fix "**/*.md"'
       }
     },
     eslint: {
       options: {
         failOnError: true,
-        extensions: ['.js', '.html']
+        extensions: ['.js', '.html', '.yml', '.yaml', '.md', '.json', '.jsonc']
       },
-      target: ['.']
+      check: {
+        src: ['.']
+      },
+      fix: {
+        options: {
+          fix: true
+        },
+        src: ['.']
+      }
     }
   });
 
   grunt.registerTask('default', ['build']);
   grunt.registerTask('build', [
     'clean',
-    'eslint',
+    'lint',
     'concat:jquery',
     'concat:zepto',
     'umd:jquery',
@@ -200,6 +220,10 @@ module.exports = function (grunt) {
   grunt.registerTask('debug', ['build', 'connect', 'watch']);
   grunt.registerTask('example', ['build', 'connect:examples', 'watch']);
   grunt.registerTask('test', ['build', 'connect:tests', 'watch']);
+  grunt.registerTask('lint', ['eslint:check', 'shell:mdlintcheck']);
+  grunt.registerTask('lint:fix', ['eslint:fix', 'shell:mdlintfix']);
+  grunt.registerTask('format', ['shell:formatcheck']);
+  grunt.registerTask('format:fix', ['shell:formatfix']);
   grunt.registerTask('postBump', ['dist', 'bump-commit', 'shell:npmpublish']);
   grunt.registerTask('postBumpPre', ['dist', 'bump-commit', 'shell:npmpublishpre']);
   grunt.registerTask('preBump', ['clean', 'dist']);
