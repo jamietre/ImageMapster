@@ -232,22 +232,22 @@
       return u.isBool(this.selected)
         ? this.selected
         : u.isBool(this.owner.area_options.selected)
-        ? this.owner.area_options.selected
-        : false;
+          ? this.owner.area_options.selected
+          : false;
     },
     isSelectable: function () {
       return u.isBool(this.effectiveOptions().staticState)
         ? false
         : u.isBool(this.owner.options.staticState)
-        ? false
-        : u.boolOrDefault(this.effectiveOptions().isSelectable, true);
+          ? false
+          : u.boolOrDefault(this.effectiveOptions().isSelectable, true);
     },
     isDeselectable: function () {
       return u.isBool(this.effectiveOptions().staticState)
         ? false
         : u.isBool(this.owner.options.staticState)
-        ? false
-        : u.boolOrDefault(this.effectiveOptions().isDeselectable, true);
+          ? false
+          : u.boolOrDefault(this.effectiveOptions().isDeselectable, true);
     },
     isNotRendered: function () {
       return isNoHref(this.area) || this.effectiveOptions().isMask;

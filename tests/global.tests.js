@@ -31,7 +31,7 @@ var group_setup = function () {
   image = $('#usa_image');
   areas = $('#usa_image_map');
 
-    map_options = {
+  map_options = {
     isSelectable: true,
     singleSelect: false,
     mapKey: 'state',

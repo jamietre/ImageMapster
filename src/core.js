@@ -599,8 +599,8 @@
       return d && d.g_vml_
         ? false
         : $('<canvas />')[0].getContext
-        ? true
-        : false;
+          ? true
+          : false;
     }
 
     /**

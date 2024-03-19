@@ -100,15 +100,13 @@ module.exports = function (grunt) {
       tests: {
         options: {
           port: 9101,
-          open:
-            'http://<%= connect.options.hostname %>:<%= connect.tests.options.port %>/tests/imagemapster-test-runner.html'
+          open: 'http://<%= connect.options.hostname %>:<%= connect.tests.options.port %>/tests/imagemapster-test-runner.html'
         }
       },
       examples: {
         options: {
           port: 9102,
-          open:
-            'http://<%= connect.options.hostname %>:<%= connect.examples.options.port %>/examples/index.html'
+          open: 'http://<%= connect.options.hostname %>:<%= connect.examples.options.port %>/examples/index.html'
         }
       }
     },
@@ -173,7 +171,8 @@ module.exports = function (grunt) {
         command: 'npm publish --tag next'
       },
       npmversion: {
-        command: 'npm version --no-git-tag-version --allow-same-version <%= pkg.version %>'
+        command:
+          'npm version --no-git-tag-version --allow-same-version <%= pkg.version %>'
       },
       formatcheck: {
         command: 'prettier . --check'
@@ -225,20 +224,54 @@ module.exports = function (grunt) {
   grunt.registerTask('format', ['shell:formatcheck']);
   grunt.registerTask('format:fix', ['shell:formatfix']);
   grunt.registerTask('postBump', ['dist', 'bump-commit', 'shell:npmpublish']);
-  grunt.registerTask('postBumpPre', ['dist', 'bump-commit', 'shell:npmpublishpre']);
+  grunt.registerTask('postBumpPre', [
+    'dist',
+    'bump-commit',
+    'shell:npmpublishpre'
+  ]);
   grunt.registerTask('preBump', ['clean', 'dist']);
-  grunt.registerTask('patch', ['preBump', 'bump-only:patch', 'shell:npmversion', 'postBump']);
-  grunt.registerTask('minor', ['preBump', 'bump-only:minor', 'shell:npmversion', 'postBump']);
-  grunt.registerTask('major', ['preBump', 'bump-only:major', 'shell:npmversion', 'postBump']);
+  grunt.registerTask('patch', [
+    'preBump',
+    'bump-only:patch',
+    'shell:npmversion',
+    'postBump'
+  ]);
+  grunt.registerTask('minor', [
+    'preBump',
+    'bump-only:minor',
+    'shell:npmversion',
+    'postBump'
+  ]);
+  grunt.registerTask('major', [
+    'preBump',
+    'bump-only:major',
+    'shell:npmversion',
+    'postBump'
+  ]);
   grunt.registerTask('prerelease', [
     'preBump',
     'bump-only:prerelease',
     'postBumpPre'
   ]);
-  grunt.registerTask('prepatch', ['preBump', 'bump-only:prepatch', 'shell:npmversion', 'postBumpPre']);
-  grunt.registerTask('preminor', ['preBump', 'bump-only:preminor', 'shell:npmversion', 'postBumpPre']);
-  grunt.registerTask('premajor', ['preBump', 'bump-only:premajor', 'shell:npmversion', 'postBumpPre']);
-  grunt.registerMultiTask('docco', 'Docco-next processor.', function() {
+  grunt.registerTask('prepatch', [
+    'preBump',
+    'bump-only:prepatch',
+    'shell:npmversion',
+    'postBumpPre'
+  ]);
+  grunt.registerTask('preminor', [
+    'preBump',
+    'bump-only:preminor',
+    'shell:npmversion',
+    'postBumpPre'
+  ]);
+  grunt.registerTask('premajor', [
+    'preBump',
+    'bump-only:premajor',
+    'shell:npmversion',
+    'postBumpPre'
+  ]);
+  grunt.registerMultiTask('docco', 'Docco-next processor.', function () {
     var done = this.async(),
       // docco-next documentation is lacking when it comes to using the API
       // the following is based on what the CLI does with arguments passed in
@@ -246,7 +279,7 @@ module.exports = function (grunt) {
       config = this.options({
         plugin: this.options.plugin || {}, // docco-next expects at least empty object
         outputExtension: this.options.outputExtension || 'html', // docco-next expects a value
-        sources: this.filesSrc,
+        sources: this.filesSrc
       });
     doccoNext
       .documentAll(config)
