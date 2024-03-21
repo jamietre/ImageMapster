@@ -7,8 +7,7 @@
     "plugin:yml/standard",
     "plugin:yml/prettier",
     "plugin:markdown/recommended-legacy",
-    "plugin:jsonc/recommended-with-jsonc",
-    "plugin:jsonc/prettier"
+    "plugin:jsonc/recommended-with-jsonc"
   ],
   "plugins": ["html"],
   "reportUnusedDisableDirectives": true,
