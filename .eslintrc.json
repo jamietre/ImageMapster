@@ -6,7 +6,7 @@
     "prettier",
     "plugin:yml/standard",
     "plugin:yml/prettier",
-    "plugin:markdown/recommended-legacy",
+    "plugin:mdx/recommended",
     "plugin:jsonc/recommended-with-jsonc"
   ],
   "plugins": ["html"],
@@ -28,7 +28,8 @@
   },
   "settings": {
     "html/indent": "+2",
-    "html/report-bad-indent": "error"
+    "html/report-bad-indent": "error",
+    "mdx/code-blocks": true
   },
   "overrides": [
     {

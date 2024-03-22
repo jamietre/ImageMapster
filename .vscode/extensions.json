@@ -1,7 +1,7 @@
 {
   "recommendations": [
     "dbaeumer.vscode-eslint",
-    "DavidAnson.vscode-markdownlint",
+    "unifiedjs.vscode-mdx",
     "esbenp.prettier-vscode"
   ]
 }

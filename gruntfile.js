@@ -179,12 +179,6 @@ module.exports = function (grunt) {
       },
       formatfix: {
         command: 'prettier . --write'
-      },
-      mdlintcheck: {
-        command: 'markdownlint-cli2 "**/*.md"'
-      },
-      mdlintfix: {
-        command: 'markdownlint-cli2 --fix "**/*.md"'
       }
     },
     eslint: {
@@ -219,8 +213,8 @@ module.exports = function (grunt) {
   grunt.registerTask('debug', ['build', 'connect', 'watch']);
   grunt.registerTask('example', ['build', 'connect:examples', 'watch']);
   grunt.registerTask('test', ['build', 'connect:tests', 'watch']);
-  grunt.registerTask('lint', ['eslint:check', 'shell:mdlintcheck']);
-  grunt.registerTask('lint:fix', ['eslint:fix', 'shell:mdlintfix']);
+  grunt.registerTask('lint', ['eslint:check']);
+  grunt.registerTask('lint:fix', ['eslint:fix']);
   grunt.registerTask('format', ['shell:formatcheck']);
   grunt.registerTask('format:fix', ['shell:formatfix']);
   grunt.registerTask('postBump', ['dist', 'bump-commit', 'shell:npmpublish']);
