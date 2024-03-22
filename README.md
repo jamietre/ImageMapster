@@ -30,7 +30,9 @@ npm install jquery imagemapster --save
 
 #### Browser
 
-:warning: **_As of ImageMapster v1.3.0, if targeting ES5 browers, you must include a Promise polyfill such as [es6-promise](https://www.npmjs.com/package/es6-promise). See [Issue 341](https://github.com/jamietre/ImageMapster/issues/341) for details._**
+> ⚠️ **Warning**
+>
+> As of ImageMapster v1.3.0, if targeting ES5 browers, you must include a Promise polyfill such as [es6-promise](https://www.npmjs.com/package/es6-promise). See [Issue 341](https://github.com/jamietre/ImageMapster/issues/341) for details.
 
 Download the latest version of ImageMapster from the [Releases](https://github.com/jamietre/ImageMapster/releases) page and include in your webpage:
 
@@ -156,7 +158,8 @@ ImageMapster includes several examples. To view the examples:
 1. Clone the repo
 2. Open [index.html](examples/index.html) directly from your file system in a browser
 
-> [!NOTE]\
+> ℹ️ **Note**
+>
 > By default, examples will run using jQuery. To run examples using Zepto, modify the examples HTML file per the information in [Development -> Examples](#examples).
 
 ## Zepto Compatibility
@@ -165,7 +168,9 @@ As of ImageMapster v1.3.2, ImageMapster contains full support for Zepto v1.2.0. 
 
 Prior to ImageMapster v1.3.2 and with any version of Zepto except v1.2.0, ImageMapster is unlikely to work as expected. In the early versions of ImageMapster, Zepto support was maintained, however due to changes in Zepto, as of v1.2.5 of ImageMapster, support for Zepto compatability was not maintained as it required too much effort and pushing ImageMapster forward with jQuery was the priority.
 
-:warning: **_Given that Zepto is no longer actively developed and with plans in the ImageMapster Roadmap to convert to a Native JS Library, ImageMapster will be officially dropping support of Zepto as of ImageMapster v2.0.0._**
+> ⚠️ **Warning**
+>
+> Given that Zepto is no longer actively developed and with plans in the ImageMapster Roadmap to convert to a Native JS Library, ImageMapster will be officially dropping support of Zepto as of ImageMapster v2.0.0.
 
 To use ImageMapster >= v1.3.2 < 2.0.0 with Zepto v.1.2.0, Zepto must contain the following [Zepto Modules](https://github.com/madrobby/zepto#zepto-modules) at a minimum:
 
@@ -178,11 +183,14 @@ To use ImageMapster >= v1.3.2 < 2.0.0 with Zepto v.1.2.0, Zepto must contain the
 
 ### Browser - Zepto
 
-:warning: **_As of ImageMapster v1.3.0, if targeting ES5 browers, you must include a Promise polyfill such as [es6-promise](https://www.npmjs.com/package/es6-promise). See [Issue 341](https://github.com/jamietre/ImageMapster/issues/341) for details._**
+> ⚠️ **Warning**
+>
+> As of ImageMapster v1.3.0, if targeting ES5 browers, you must include a Promise polyfill such as [es6-promise](https://www.npmjs.com/package/es6-promise). See [Issue 341](https://github.com/jamietre/ImageMapster/issues/341) for details.
 
 Download the latest Zepto version of ImageMapster from the [Releases](https://github.com/jamietre/ImageMapster/releases) page and include in your webpage:
 
-> [!NOTE]\
+> ℹ️ **Note**
+>
 > Make sure to use `jquery.imagemapster.zepto.min.js`
 
 ```html
@@ -287,7 +295,8 @@ The source code is broken into several modules to make management easier and to 
 2. Install NPM dependencies - `npm install`
 3. Run the test task - `npm run test`
 
-> [!NOTE]\
+> ℹ️ **Note**
+>
 > By default, tests will run using the latest version of jQuery. The library to use when running tests can be changed via the dropdown.
 
 ![Test Runner Library](testrunnerlibrary.png)
@@ -298,7 +307,8 @@ The source code is broken into several modules to make management easier and to 
 2. Install NPM dependencies - `npm install`
 3. Run the example task - `npm run example`
 
-> [!NOTE]\
+> ℹ️ **Note**\\
+>
 > By default, examples will run using jQuery. To run examples using Zepto, modify the examples HTML file (e.g., [USA](./examples/usa.html)) as follows, commenting out references to jQuery scripts and uncommenting references to zepto scripts.
 
 ```diff
@@ -324,7 +334,8 @@ The source code is broken into several modules to make management easier and to 
 
 ### Docs
 
-> [!NOTE]\
+> ℹ️ **Note**
+>
 > The docs have not been maintained and therefore are not under version control.
 
 1. Clone the repo
