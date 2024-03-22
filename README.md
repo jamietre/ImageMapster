@@ -307,7 +307,7 @@ The source code is broken into several modules to make management easier and to 
 2. Install NPM dependencies - `npm install`
 3. Run the example task - `npm run example`
 
-> ℹ️ **Note**\\
+> ℹ️ **Note**
 >
 > By default, examples will run using jQuery. To run examples using Zepto, modify the examples HTML file (e.g., [USA](./examples/usa.html)) as follows, commenting out references to jQuery scripts and uncommenting references to zepto scripts.
 
