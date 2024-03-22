@@ -14,14 +14,14 @@ The [issue tracker](https://github.com/jamietre/ImageMapster/issues) is the pref
 
 ## Bug reports
 
-A bug is a _demonstrable problem_ that is caused by the code in the repository. Good bug reports are extremely helpful, so thank you!
+A bug is a *demonstrable problem* that is caused by the code in the repository. Good bug reports are extremely helpful, so thank you!
 
 Guidelines for bug reports:
 
 1. **Lint your code** - Use [eslint](http://eslint.org/) to ensure your problem isn't caused by a simple error in your own code.
-1. **Use the GitHub issue search** - Check if the issue has already been [reported](https://github.com/jamietre/ImageMapster/issues?q=is%3Aissue+).
-1. **Check if the issue has been fixed** - Try to reproduce it using the latest `main` or development branch in the repository.
-1. **Isolate the problem** - Create a [reduced test case](https://css-tricks.com/reduced-test-cases/) and a [live example](https://jsfiddle.net) using the latest version of ImageMapster and preferrably, the latest version of jQuery/zepto.
+2. **Use the GitHub issue search** - Check if the issue has already been [reported](https://github.com/jamietre/ImageMapster/issues?q=is%3Aissue+).
+3. **Check if the issue has been fixed** - Try to reproduce it using the latest `main` or development branch in the repository.
+4. **Isolate the problem** - Create a [reduced test case](https://css-tricks.com/reduced-test-cases/) and a [live example](https://jsfiddle.net) using the latest version of ImageMapster and preferrably, the latest version of jQuery/zepto.
 
 A good bug report shouldn't leave others needing to chase you up for more information. Please try to be as detailed as possible in your report. What is your environment? What steps will reproduce the issue? What browser(s) and OS experience the problem? Do other browsers show the bug differently? What would you expect to be the outcome? All these details will help people to fix any potential bugs.
 

@@ -9,9 +9,9 @@ body:
         ## Before Submitting an Issue
 
         1. Have you read ImageMapster's [Code of Conduct](https://github.com/jamietre/ImageMapster/blob/main/CODE_OF_CONDUCT.md)? By filing an Issue, you are expected to comply with it, including treating everyone with respect.
-        1. Have you read ImageMapster's [Contributing Guidelines](https://github.com/jamietre/ImageMapster/blob/main/CONTRIBUTING.md)?  If not, please review them before filing an issue.
-        1. Have you searched [existing issues](https://github.com/jamietre/ImageMapster/issues?q=is%3Aissue+) to see if your issue has already been reported?
-        1. Do you want to ask a question? Are you looking for support? **Please do not use the issue tracker for personal support requests.** For questions, how to's, etc, please see the [Support Page](https://github.com/jamietre/ImageMapster/blob/main/SUPPORT.md) for options.
+        2. Have you read ImageMapster's [Contributing Guidelines](https://github.com/jamietre/ImageMapster/blob/main/CONTRIBUTING.md)?  If not, please review them before filing an issue.
+        3. Have you searched [existing issues](https://github.com/jamietre/ImageMapster/issues?q=is%3Aissue+) to see if your issue has already been reported?
+        4. Do you want to ask a question? Are you looking for support? **Please do not use the issue tracker for personal support requests.** For questions, how to's, etc, please see the [Support Page](https://github.com/jamietre/ImageMapster/blob/main/SUPPORT.md) for options.
 
   - type: textarea
     id: description

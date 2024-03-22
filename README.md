@@ -1,8 +1,8 @@
 # ImageMapster: A jQuery Plugin to make image maps useful
 
 [![license](https://img.shields.io/github/license/jamietre/ImageMapster)](LICENSE)
-[![gh stable](https://img.shields.io/github/v/release/jamietre/imagemapster?sort=semver&label=stable)](https://GitHub.com/jamietre/ImageMapster/releases/)
-[![gh latest](https://img.shields.io/github/v/release/jamietre/imagemapster?include_prereleases&sort=semver&label=latest)](https://GitHub.com/jamietre/ImageMapster/releases/)
+[![gh stable](https://img.shields.io/github/v/release/jamietre/imagemapster?sort=semver\&label=stable)](https://GitHub.com/jamietre/ImageMapster/releases/)
+[![gh latest](https://img.shields.io/github/v/release/jamietre/imagemapster?include_prereleases\&sort=semver\&label=latest)](https://GitHub.com/jamietre/ImageMapster/releases/)
 [![npm downloads](https://img.shields.io/npm/dm/imagemapster?label=npm)](https://www.npmjs.com/package/imagemapster)
 [![jsDelivr downloads](https://data.jsdelivr.com/v1/package/npm/imagemapster/badge?style=rounded)](https://www.jsdelivr.com/package/npm/imagemapster)
 [![cdnjs version](https://img.shields.io/cdnjs/v/imagemapster.svg?color=orange)](https://cdnjs.com/libraries/imagemapster)
@@ -143,7 +143,7 @@ $('#usamap').mapster('set', true, 'new-england');
 $('#usamap').mapster('set', true, 'really-cold');
 ```
 
-Groups created this way are _independent_ of the primary group. If you select "new-england" from code, you can't unselect just "MA" by clicking on it. You would have to unselect "new-england" from code.
+Groups created this way are *independent* of the primary group. If you select "new-england" from code, you can't unselect just "MA" by clicking on it. You would have to unselect "new-england" from code.
 
 To simply indentify a set of areas to turn on or off, but not treat them as a logical group, you can use CSS classes and select areas directly, or use the `keys` option to identify the primary keys associated with a group (see documentation).
 
@@ -344,4 +344,4 @@ The source code is broken into several modules to make management easier and to 
 
 ## License
 
-Copyright &copy; 2011-24 [James Treworgy](https://github.com/jamietre). Licensed under the [MIT License](LICENSE).
+Copyright © 2011-24 [James Treworgy](https://github.com/jamietre). Licensed under the [MIT License](LICENSE).

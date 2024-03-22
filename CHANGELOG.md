@@ -16,7 +16,7 @@
 
 ## Version 1.6.0 - 2024.03.12
 
-- [Issue 394](https://github.com/jamietre/ImageMapster/issues/394) [TouchScreen only] Weird highlight glitch when touch on the other area beside the map.
+- [Issue 394](https://github.com/jamietre/ImageMapster/issues/394) \[TouchScreen only] Weird highlight glitch when touch on the other area beside the map.
 
 ## Version 1.5.4 - 2021.02.20
 
@@ -71,7 +71,7 @@
 - [Issue 324](https://github.com/jamietre/ImageMapster/issues/324) Improve project health
 - [Issue 325](https://github.com/jamietre/ImageMapster/issues/325) Add badges & CDN info to readme
 - [Issue 327](https://github.com/jamietre/ImageMapster/issues/327) Add linter & format files
-- [Issue 328](https://github.com/jamietre/ImageMapster/issues/328) Fix tracking internal map_cache on unbind
+- [Issue 328](https://github.com/jamietre/ImageMapster/issues/328) Fix tracking internal map\_cache on unbind
 - [Issue 330](https://github.com/jamietre/ImageMapster/issues/330) Fix shapes example rectangle responds to mouseevents
 - [Issue 332](https://github.com/jamietre/ImageMapster/issues/332) Fix programmatic area highlight to single area at a time
 - [Issue 333](https://github.com/jamietre/ImageMapster/issues/333) Fix USA example area highlight & select
@@ -254,7 +254,7 @@ Notes
 - added tests for tooltip external & event bound invocation
 - added invoking tooltip from area, e.g. $('some-area').mapster('tooltip')
 - added invoking tooltip from key, e.g. .mapster('tooltip',key);
-- Bug fix for get_options, showToolTip (related)
+- Bug fix for get\_options, showToolTip (related)
 - Bug fix - area id 0 on VML rendereding deselection causes all selections to disappear (introduced in beta 2)
 - Changed "get" to return true "selected" state and not "isSelected()" which includes staticState items in selected.
 - Bug fix - stroke sometimes rendered improperly when using render-specific options
