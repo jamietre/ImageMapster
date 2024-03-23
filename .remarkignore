@@ -4,3 +4,4 @@ examples/redist/
 build/
 dist/
 node_modules/
+/docs/

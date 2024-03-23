@@ -4,5 +4,16 @@
   "editor.codeActionsOnSave": {
     "source.fixAll.eslint": "explicit"
   },
-  "eslint.validate": ["javascript", "html", "markdown", "yaml", "json", "jsonc"]
+  "eslint.validate": [
+    "javascript",
+    "html",
+    "markdown",
+    "mdx",
+    "yaml",
+    "json",
+    "jsonc",
+    "typescript",
+    "astro"
+  ],
+  "prettier.documentSelectors": ["**/*.astro"]
 }
