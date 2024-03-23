@@ -13,14 +13,14 @@ Please do not create a Pull Request without creating an issue first.
 
 ## What is this change for?
 
-- [ ] Feature / enhancement - *Any change should be discussed in the associated Issue before proceeding. Failure to do so may result in the rejection of the pull request.*
+- [ ] Feature / enhancement - _Any change should be discussed in the associated Issue before proceeding. Failure to do so may result in the rejection of the pull request._
 - [ ] Bug
 - [ ] Docs
 - [ ] Tests
 
 ## Description (required)
 
-***Please provide enough information so that others can review your pull request.***
+_**Please provide enough information so that others can review your pull request.**_
 Explain the **details** for making this change. What existing problem does the pull request solve and/or what capability does it add?
 Example: When "Adding a function to do X", explain why it is necessary to have a way to do X.
 

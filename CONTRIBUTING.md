@@ -14,7 +14,7 @@ The [issue tracker](https://github.com/jamietre/ImageMapster/issues) is the pref
 
 ## Bug reports
 
-A bug is a *demonstrable problem* that is caused by the code in the repository. Good bug reports are extremely helpful, so thank you!
+A bug is a _demonstrable problem_ that is caused by the code in the repository. Good bug reports are extremely helpful, so thank you!
 
 Guidelines for bug reports:
 
