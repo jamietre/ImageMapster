@@ -70,7 +70,7 @@ this.tests.push(
                 'test',
                 "typeof m !== 'undefined' && m.map_cache && m.map_cache.length"
               ),
-              'Only imagemap bound images were obtained on generic create'
+              'Only image map bound images were obtained on generic create'
             );
 
             map = $('img,div').mapster({
@@ -85,7 +85,7 @@ this.tests.push(
                   'test',
                   "typeof m !== 'undefined' && m.map_cache && m.map_cache.length"
                 ),
-                'Only imagemap bound images were obtained on generic create with other elements'
+                'Only image map bound images were obtained on generic create with other elements'
               );
 
               getPromise('stage2').resolve();

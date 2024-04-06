@@ -5,7 +5,7 @@ this.tests = this.tests || [];
 this.tests.push(
   iqtest
     .create('tooltips', 'tests for imagemapster tooltips')
-    .add('Imagemap tooltips', function (a) {
+    .add('Image map tooltips', function (a) {
       'use strict';
 
       var me = this,

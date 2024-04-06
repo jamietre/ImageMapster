@@ -1,6 +1,6 @@
-/* 
+/*
   mapimage.js
-  The MapImage object, repesents an instance of a single bound imagemap
+  The MapImage object, repesents an instance of a single bound image map
 */
 
 (function ($) {

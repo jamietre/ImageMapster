@@ -8,7 +8,7 @@
 [![cdnjs version](https://img.shields.io/cdnjs/v/imagemapster.svg?color=orange)](https://cdnjs.com/libraries/imagemapster)
 [![code style: prettier](https://img.shields.io/badge/code_style-prettier-ff69b4.svg)](https://github.com/prettier/prettier)
 
-ImageMapster activates the areas in HTML imagemaps so you can highlight and select them. It has lots of other features for manual control, tooltips, resizing, and more. It is designed to be compatible with every common platform, and is tested with Internet Explorer 6-10, Firefox 3.0+, Safari, Opera, and Chrome. It works on mobile devices and doesn't use Flash.
+ImageMapster activates the areas in HTML image maps so you can highlight and select them. It has lots of other features for manual control, tooltips, resizing, and more. It is designed to be compatible with every common platform, and is tested with Internet Explorer 6-10, Firefox 3.0+, Safari, Opera, and Chrome. It works on mobile devices and doesn't use Flash.
 
 ## Release Information
 
@@ -43,10 +43,10 @@ Download the latest version of ImageMapster from the [Releases](https://github.c
   src="https://cdn.jsdelivr.net/npm/es6-promise/dist/es6-promise.auto.min.js"
 ></script>
 <script
-  language="text/javascript"
+  type="text/javascript"
   src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"
 ></script>
-<script language="text/javascript" src="jquery.imagemapster.min.js"></script>
+<script type="text/javascript" src="jquery.imagemapster.min.js"></script>
 ```
 
 Alternatively, you can include ImageMapster from one of the following CDNs:
@@ -74,7 +74,7 @@ $('img[usemap]').mapster({
 
 #### Methods
 
-There are lots of ways to manipulate the imagemap from Javascript. Here area a few, see the [ImageMapster web site](http://www.outsharked.com/imagemapster) for complete documentation.
+There are lots of ways to manipulate the image map from Javascript. Here area a few, see the [ImageMapster web site](http://www.outsharked.com/imagemapster) for complete documentation.
 
 **select**: Cause an area to become "selected"
 
@@ -187,11 +187,7 @@ To use ImageMapster >= v1.3.2 < 2.0.0 with Zepto v.1.2.0, Zepto must contain the
 >
 > As of ImageMapster v1.3.0, if targeting ES5 browers, you must include a Promise polyfill such as [es6-promise](https://www.npmjs.com/package/es6-promise). See [Issue 341](https://github.com/jamietre/ImageMapster/issues/341) for details.
 
-Download the latest Zepto version of ImageMapster from the [Releases](https://github.com/jamietre/ImageMapster/releases) page and include in your webpage:
-
-> ℹ️ **Note**
->
-> Make sure to use `jquery.imagemapster.zepto.min.js`
+Download the latest Zepto version of ImageMapster from the [Releases](https://github.com/jamietre/ImageMapster/releases) page and include in your webpage **making sure to use `jquery.imagemapster.zepto.min.js` or `jquery.imagemapster.zepto.js`**:
 
 ```html
 <!-- Optional: If targeting ES5 browers, as of ImageMapster v1.3.0, a Promise polyfill is required! -->
@@ -199,12 +195,9 @@ Download the latest Zepto version of ImageMapster from the [Releases](https://gi
   type="text/javascript"
   src="https://cdn.jsdelivr.net/npm/es6-promise/dist/es6-promise.auto.min.js"
 ></script>
+<script type="text/javascript" src="/path/to/your/custom/zeptodist"></script>
 <script
-  language="text/javascript"
-  src="/path/to/your/custom/zeptodist"
-></script>
-<script
-  language="text/javascript"
+  type="text/javascript"
   src="/path/to/cdn/for/v1.6.0/dist/jquery.imagemapster.zepto.min.js"
 ></script>
 ```

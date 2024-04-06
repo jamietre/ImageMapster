@@ -9,7 +9,7 @@
 
   /**
    * Compute positions that will place a target with dimensions [width,height] outside
-   * but near the boundaries of the elements "elements". When an imagemap is passed, the
+   * but near the boundaries of the elements "elements". When an image map is passed, the
    *
    * @param  {Element|Element[]} elements An element or an array of elements (such as a jQuery object)
    * @param  {Element} image The image to which area elements are bound, if this is an image map.

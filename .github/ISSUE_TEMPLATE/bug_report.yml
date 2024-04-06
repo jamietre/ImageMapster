@@ -26,7 +26,7 @@ body:
     id: reproduction
     attributes:
       label: Reproduction
-      description: Please provide a link to a location (e.g., repo, [jsFiddle](https://www.jsfiddle.net), etc.) that reproduces the problem you ran into using the latest version of ImageMapster. Please see the [contributing docs](https://github.com/jamietre/ImageMapster/blob/main/CONTRIBUTING.md) for suggestions on creating a reproduction. A [minimal reproduction](https://stackoverflow.com/help/minimal-reproducible-example) **is required** ([Why?](https://antfu.me/posts/why-reproductions-are-required)). If a report is vague (e.g., just a generic error message) and has no reproduction, it will receive a "needs author feedback" label and the issue closed until there is enough information provided.
+      description: Please provide a link to a location (e.g., repo, [JSFiddle](https://www.jsfiddle.net), etc.) that reproduces the problem you ran into using the latest version of ImageMapster. Please see the [contributing docs](https://github.com/jamietre/ImageMapster/blob/main/CONTRIBUTING.md) for suggestions on creating a reproduction. A [minimal reproduction](https://stackoverflow.com/help/minimal-reproducible-example) **is required** ([Why?](https://antfu.me/posts/why-reproductions-are-required)). If a report is vague (e.g., just a generic error message) and has no reproduction, it will receive a "needs author feedback" label and the issue closed until there is enough information provided.
       placeholder: Reproduction URL
     validations:
       required: true
