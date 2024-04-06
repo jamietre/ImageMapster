@@ -3,8 +3,11 @@ import starlight from '@astrojs/starlight';
 
 // https://astro.build/config
 export default defineConfig({
-  site: import.meta.env.SITE_URL || 'https://jamietre.github.io',
-  base: import.meta.env.BASE_PATH || 'ImageMapster',
+  // astro hasn't made import.meta.env available yet so we need
+  // to use process to obtain variables
+  // https://github.com/withastro/astro/issues/3897#issuecomment-1181381500
+  site: process.env.SITE_URL || 'https://jamietre.github.io',
+  base: process.env.BASE_PATH || 'ImageMapster',
   integrations: [
     starlight({
       title: 'My Docs',
