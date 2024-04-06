@@ -1,0 +1,119 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Frog Menu Demo</title>
+
+    <script
+      type="text/javascript"
+      src="https://cdn.jsdelivr.net/npm/es6-promise/dist/es6-promise.auto.min.js"
+    ></script>
+
+    <script type="text/javascript" src="redist/jquery.3.7.1.min.js"></script>
+    <script
+      type="text/javascript"
+      src="../dist/jquery.imagemapster.js"
+    ></script>
+
+    <!-- <script type="text/javascript" src="redist/zepto.1.2.0.min.js"></script>
+    <script
+      type="text/javascript"
+      src="../dist/jquery.imagemapster.zepto.js"
+    ></script> -->
+
+    <link rel="stylesheet" href="stylesheets/base.css" />
+    <script>
+      $(function () {
+        'use strict';
+
+        $('#frog-img').mapster({
+          mapKey: 'data-name',
+          singleSelect: true,
+          altImage: 'images/frog_map_alt.jpg',
+          altImageOpacity: 0.8,
+          fillOpacity: 0.5,
+          fillColor: 'f4ff75',
+          areas: [
+            {
+              key: 'menu1hot',
+              staticState: false,
+              includeKeys: 'menu1'
+            },
+            {
+              key: 'menu2hot',
+              staticState: false,
+              includeKeys: 'menu2'
+            },
+            {
+              key: 'menu3hot',
+              staticState: false,
+              includeKeys: 'menu3'
+            },
+            {
+              key: 'menu4hot',
+              staticState: false,
+              includeKeys: 'menu4'
+            }
+          ]
+        });
+      });
+    </script>
+  </head>
+  <body>
+    <div class="navmenu">
+      Return to <a href="index.html">Main Menu</a>
+      <hr />
+    </div>
+    <h2>Frog Menu Demo</h2>
+
+    <div>
+      <img id="frog-img" src="images/frog_map.jpg" usemap="#frog-map" />
+
+      <map name="frog-map">
+        <area
+          shape="rect"
+          data-name="menu1hot"
+          coords="10,10,120,330"
+          href="#"
+        />
+        <area shape="rect" data-name="menu1" coords="10,340,110,390" href="#" />
+        <area
+          shape="rect"
+          data-name="menu2hot"
+          coords="120,10,230,330"
+          href="#"
+        />
+        <area
+          shape="rect"
+          data-name="menu2"
+          coords="120,340,220,390"
+          href="#"
+        />
+        <area
+          shape="rect"
+          data-name="menu3hot"
+          coords="230,10,340,330"
+          href="#"
+        />
+        <area
+          shape="rect"
+          data-name="menu3"
+          coords="230,340,330,390"
+          href="#"
+        />
+        <area
+          shape="rect"
+          data-name="menu4hot"
+          coords="340,10,450,330"
+          href="#"
+        />
+        <area
+          shape="rect"
+          data-name="menu4"
+          coords="340,340,440,390"
+          href="#"
+        />
+      </map>
+    </div>
+  </body>
+</html>

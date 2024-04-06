@@ -1,6 +1,6 @@
 /*
   mapdata.js
-  The MapData object, repesents an instance of a single bound imagemap
+  The MapData object, repesents an instance of a single bound image map
 */
 
 (function ($) {
@@ -770,7 +770,7 @@
       me.wrapper = wrap;
 
       // me.images[1] is the copy of the original image. It should be loaded & at its native size now so we can obtain the true
-      // width & height. This is needed to scale the imagemap if not being shown at its native size. It is also needed purely
+      // width & height. This is needed to scale the image map if not being shown at its native size. It is also needed purely
       // to finish binding in case the original image was not visible. It can be impossible in some browsers to obtain the
       // native size of a hidden image.
 

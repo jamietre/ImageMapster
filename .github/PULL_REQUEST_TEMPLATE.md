@@ -1,4 +1,6 @@
-# IMPORTANT: Please do not create a Pull Request without creating an issue first
+# IMPORTANT
+
+Please do not create a Pull Request without creating an issue first.
 
 ## Before Submitting a Pull Request
 
@@ -18,7 +20,7 @@
 
 ## Description (required)
 
-**_Please provide enough information so that others can review your pull request._**
+_**Please provide enough information so that others can review your pull request.**_
 Explain the **details** for making this change. What existing problem does the pull request solve and/or what capability does it add?
 Example: When "Adding a function to do X", explain why it is necessary to have a way to do X.
 

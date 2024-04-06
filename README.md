@@ -8,7 +8,7 @@
 [![cdnjs version](https://img.shields.io/cdnjs/v/imagemapster.svg?color=orange)](https://cdnjs.com/libraries/imagemapster)
 [![code style: prettier](https://img.shields.io/badge/code_style-prettier-ff69b4.svg)](https://github.com/prettier/prettier)
 
-ImageMapster activates the areas in HTML imagemaps so you can highlight and select them. It has lots of other features for manual control, tooltips, resizing, and more. It is designed to be compatible with every common platform, and is tested with Internet Explorer 6-10, Firefox 3.0+, Safari, Opera, and Chrome. It works on mobile devices and doesn't use Flash.
+ImageMapster activates the areas in HTML image maps so you can highlight and select them. It has lots of other features for manual control, tooltips, resizing, and more. It is designed to be compatible with every common platform, and is tested with Internet Explorer 6-10, Firefox 3.0+, Safari, Opera, and Chrome. It works on mobile devices and doesn't use Flash.
 
 ## Release Information
 
@@ -30,7 +30,9 @@ npm install jquery imagemapster --save
 
 #### Browser
 
-:warning: **_As of ImageMapster v1.3.0, if targeting ES5 browers, you must include a Promise polyfill such as [es6-promise](https://www.npmjs.com/package/es6-promise). See [Issue 341](https://github.com/jamietre/ImageMapster/issues/341) for details._**
+> ⚠️ **Warning**
+>
+> As of ImageMapster v1.3.0, if targeting ES5 browers, you must include a Promise polyfill such as [es6-promise](https://www.npmjs.com/package/es6-promise). See [Issue 341](https://github.com/jamietre/ImageMapster/issues/341) for details.
 
 Download the latest version of ImageMapster from the [Releases](https://github.com/jamietre/ImageMapster/releases) page and include in your webpage:
 
@@ -41,10 +43,10 @@ Download the latest version of ImageMapster from the [Releases](https://github.c
   src="https://cdn.jsdelivr.net/npm/es6-promise/dist/es6-promise.auto.min.js"
 ></script>
 <script
-  language="text/javascript"
+  type="text/javascript"
   src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"
 ></script>
-<script language="text/javascript" src="jquery.imagemapster.min.js"></script>
+<script type="text/javascript" src="jquery.imagemapster.min.js"></script>
 ```
 
 Alternatively, you can include ImageMapster from one of the following CDNs:
@@ -72,7 +74,7 @@ $('img[usemap]').mapster({
 
 #### Methods
 
-There are lots of ways to manipulate the imagemap from Javascript. Here area a few, see the [ImageMapster web site](http://www.outsharked.com/imagemapster) for complete documentation.
+There are lots of ways to manipulate the image map from Javascript. Here area a few, see the [ImageMapster web site](http://www.outsharked.com/imagemapster) for complete documentation.
 
 **select**: Cause an area to become "selected"
 
@@ -156,7 +158,8 @@ ImageMapster includes several examples. To view the examples:
 1. Clone the repo
 2. Open [index.html](examples/index.html) directly from your file system in a browser
 
-> [!NOTE]\
+> ℹ️ **Note**
+>
 > By default, examples will run using jQuery. To run examples using Zepto, modify the examples HTML file per the information in [Development -> Examples](#examples).
 
 ## Zepto Compatibility
@@ -165,7 +168,9 @@ As of ImageMapster v1.3.2, ImageMapster contains full support for Zepto v1.2.0. 
 
 Prior to ImageMapster v1.3.2 and with any version of Zepto except v1.2.0, ImageMapster is unlikely to work as expected. In the early versions of ImageMapster, Zepto support was maintained, however due to changes in Zepto, as of v1.2.5 of ImageMapster, support for Zepto compatability was not maintained as it required too much effort and pushing ImageMapster forward with jQuery was the priority.
 
-:warning: **_Given that Zepto is no longer actively developed and with plans in the ImageMapster Roadmap to convert to a Native JS Library, ImageMapster will be officially dropping support of Zepto as of ImageMapster v2.0.0._**
+> ⚠️ **Warning**
+>
+> Given that Zepto is no longer actively developed and with plans in the ImageMapster Roadmap to convert to a Native JS Library, ImageMapster will be officially dropping support of Zepto as of ImageMapster v2.0.0.
 
 To use ImageMapster >= v1.3.2 < 2.0.0 with Zepto v.1.2.0, Zepto must contain the following [Zepto Modules](https://github.com/madrobby/zepto#zepto-modules) at a minimum:
 
@@ -178,12 +183,11 @@ To use ImageMapster >= v1.3.2 < 2.0.0 with Zepto v.1.2.0, Zepto must contain the
 
 ### Browser - Zepto
 
-:warning: **_As of ImageMapster v1.3.0, if targeting ES5 browers, you must include a Promise polyfill such as [es6-promise](https://www.npmjs.com/package/es6-promise). See [Issue 341](https://github.com/jamietre/ImageMapster/issues/341) for details._**
+> ⚠️ **Warning**
+>
+> As of ImageMapster v1.3.0, if targeting ES5 browers, you must include a Promise polyfill such as [es6-promise](https://www.npmjs.com/package/es6-promise). See [Issue 341](https://github.com/jamietre/ImageMapster/issues/341) for details.
 
-Download the latest Zepto version of ImageMapster from the [Releases](https://github.com/jamietre/ImageMapster/releases) page and include in your webpage:
-
-> [!NOTE]\
-> Make sure to use `jquery.imagemapster.zepto.min.js`
+Download the latest Zepto version of ImageMapster from the [Releases](https://github.com/jamietre/ImageMapster/releases) page and include in your webpage **making sure to use `jquery.imagemapster.zepto.min.js` or `jquery.imagemapster.zepto.js`**:
 
 ```html
 <!-- Optional: If targeting ES5 browers, as of ImageMapster v1.3.0, a Promise polyfill is required! -->
@@ -191,12 +195,9 @@ Download the latest Zepto version of ImageMapster from the [Releases](https://gi
   type="text/javascript"
   src="https://cdn.jsdelivr.net/npm/es6-promise/dist/es6-promise.auto.min.js"
 ></script>
+<script type="text/javascript" src="/path/to/your/custom/zeptodist"></script>
 <script
-  language="text/javascript"
-  src="/path/to/your/custom/zeptodist"
-></script>
-<script
-  language="text/javascript"
+  type="text/javascript"
   src="/path/to/cdn/for/v1.6.0/dist/jquery.imagemapster.zepto.min.js"
 ></script>
 ```
@@ -287,7 +288,8 @@ The source code is broken into several modules to make management easier and to 
 2. Install NPM dependencies - `npm install`
 3. Run the test task - `npm run test`
 
-> [!NOTE]\
+> ℹ️ **Note**
+>
 > By default, tests will run using the latest version of jQuery. The library to use when running tests can be changed via the dropdown.
 
 ![Test Runner Library](testrunnerlibrary.png)
@@ -298,7 +300,8 @@ The source code is broken into several modules to make management easier and to 
 2. Install NPM dependencies - `npm install`
 3. Run the example task - `npm run example`
 
-> [!NOTE]\
+> ℹ️ **Note**
+>
 > By default, examples will run using jQuery. To run examples using Zepto, modify the examples HTML file (e.g., [USA](./examples/usa.html)) as follows, commenting out references to jQuery scripts and uncommenting references to zepto scripts.
 
 ```diff
@@ -324,7 +327,8 @@ The source code is broken into several modules to make management easier and to 
 
 ### Docs
 
-> [!NOTE]\
+> ℹ️ **Note**
+>
 > The docs have not been maintained and therefore are not under version control.
 
 1. Clone the repo
@@ -333,4 +337,4 @@ The source code is broken into several modules to make management easier and to 
 
 ## License
 
-Copyright &copy; 2011-24 [James Treworgy](https://github.com/jamietre). Licensed under the [MIT License](LICENSE).
+Copyright © 2011-24 [James Treworgy](https://github.com/jamietre). Licensed under the [MIT License](LICENSE).

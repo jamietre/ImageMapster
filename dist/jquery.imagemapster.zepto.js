@@ -1,5 +1,5 @@
 /*!
-* imagemapster - v1.6.0 - 2024-03-12
+* imagemapster - v1.6.0 - 2024-04-05
 * https://github.com/jamietre/ImageMapster/
 * Copyright (c) 2011 - 2024 James Treworgy
 * License: MIT
@@ -31,7 +31,7 @@
       factory(root.jQuery || root.Zepto);
   }
 }(typeof self !== 'undefined' ? self : this, function (jQuery) {
-    /* 
+/* 
   zepto.js
   Monkey patch for Zepto to add some methods ImageMapster needs
 */
@@ -725,8 +725,8 @@
       return d && d.g_vml_
         ? false
         : $('<canvas />')[0].getContext
-        ? true
-        : false;
+          ? true
+          : false;
     }
 
     /**
@@ -2632,8 +2632,8 @@
       return !ar
         ? ''
         : ar.isPrimary
-        ? ar.key
-        : this.getPrimaryKeysForMapAreas(ar.areas()).join(',');
+          ? ar.key
+          : this.getPrimaryKeysForMapAreas(ar.areas()).join(',');
     },
 
     /**
@@ -2974,8 +2974,8 @@
       sel = m.hasVml()
         ? 'area'
         : default_group
-        ? 'area[coords]'
-        : 'area[' + opts.mapKey + ']';
+          ? 'area[coords]'
+          : 'area[' + opts.mapKey + ']';
 
       areas = $(me.map).find(sel).off('.mapster');
 
@@ -3380,22 +3380,22 @@
       return u.isBool(this.selected)
         ? this.selected
         : u.isBool(this.owner.area_options.selected)
-        ? this.owner.area_options.selected
-        : false;
+          ? this.owner.area_options.selected
+          : false;
     },
     isSelectable: function () {
       return u.isBool(this.effectiveOptions().staticState)
         ? false
         : u.isBool(this.owner.options.staticState)
-        ? false
-        : u.boolOrDefault(this.effectiveOptions().isSelectable, true);
+          ? false
+          : u.boolOrDefault(this.effectiveOptions().isSelectable, true);
     },
     isDeselectable: function () {
       return u.isBool(this.effectiveOptions().staticState)
         ? false
         : u.isBool(this.owner.options.staticState)
-        ? false
-        : u.boolOrDefault(this.effectiveOptions().isDeselectable, true);
+          ? false
+          : u.boolOrDefault(this.effectiveOptions().isDeselectable, true);
     },
     isNotRendered: function () {
       return isNoHref(this.area) || this.effectiveOptions().isMask;

@@ -1,0 +1,7 @@
+# NOTE - This file is only used when running remark-cli, it is not used by eslint.
+tests/redist/
+examples/redist/
+build/
+dist/
+node_modules/
+/docs/

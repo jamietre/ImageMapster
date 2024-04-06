@@ -17,4 +17,5 @@ build/
 .vscode/*
 !.vscode/extensions.json
 !.vscode/settings.json
-docs/
+/docs/
+

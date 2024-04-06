@@ -471,7 +471,7 @@
    * invoked on an image, or an area; then queues the command if the MapData is in an active state.
    *
    * @param {[jQuery]}    that        The target of the invocation
-   * @param {[function]}  func_map    The callback if the target is an imagemap
+   * @param {[function]}  func_map    The callback if the target is an image map
    * @param {[function]}  func_area   The callback if the target is an area
    * @param {[object]}    opt         Options: { key: a map key if passed explicitly
    *                                             name: the command name, if it can be queued,

@@ -8,3 +8,5 @@ node_modules/
 package-lock.json
 !.*.json
 !.*.jsonc
+/docs/
+**/*.d.ts

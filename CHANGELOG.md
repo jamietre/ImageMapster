@@ -16,7 +16,7 @@
 
 ## Version 1.6.0 - 2024.03.12
 
-- [Issue 394](https://github.com/jamietre/ImageMapster/issues/394) [TouchScreen only] Weird highlight glitch when touch on the other area beside the map.
+- [Issue 394](https://github.com/jamietre/ImageMapster/issues/394) \[TouchScreen only] Weird highlight glitch when touch on the other area beside the map.
 
 ## Version 1.5.4 - 2021.02.20
 
@@ -190,7 +190,7 @@ Bug fixes:
 
 Features:
 
-- [Issue #52](https://github.com/jamietre/ImageMapster/issues/52) Add "clickNavigate" feature to allow basic imagemap functionality
+- [Issue #52](https://github.com/jamietre/ImageMapster/issues/52) Add "clickNavigate" feature to allow basic image map functionality
 - Add "highlight" option to programatically set/unset the highlight effect (as if a user just moused over an area vs. clicked)
 - Detect touchscreen devices and disable "mouseover"
 - [Issue #11](https://github.com/jamietre/ImageMapster/issues/11) Detect excanvas automatically and force into IE mode if present

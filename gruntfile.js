@@ -48,6 +48,14 @@ module.exports = function (grunt) {
         src: '<%= umd.jquery.options.dest %>',
         dest: 'dist/jquery.<%= pkg.name %>.js'
       },
+      jqueryesmdist: {
+        options: {
+          banner: '<%= banner %>',
+          process: true
+        },
+        src: '<%= umd.jqueryesm.options.dest %>',
+        dest: 'dist/jquery.<%= pkg.name %>.mjs'
+      },
       zeptodist: {
         options: {
           banner: '<%= banner %>',
@@ -68,6 +76,10 @@ module.exports = function (grunt) {
         src: '<%= concat.jquerydist.dest %>',
         dest: 'dist/jquery.<%= pkg.name %>.min.js'
       },
+      jqueryesm: {
+        src: '<%= concat.jqueryesmdist.dest %>',
+        dest: 'dist/jquery.<%= pkg.name %>.min.mjs'
+      },
       zepto: {
         src: '<%= concat.zeptodist.dest %>',
         dest: 'dist/jquery.<%= pkg.name %>.zepto.min.js'
@@ -79,6 +91,13 @@ module.exports = function (grunt) {
           src: '<%= concat.jquery.dest %>',
           dest: 'build/jquery.<%= pkg.name %>.jquery.umd.js',
           template: 'jqueryplugin.hbs'
+        }
+      },
+      jqueryesm: {
+        options: {
+          src: '<%= concat.jquery.dest %>',
+          dest: 'build/jquery.<%= pkg.name %>.jquery.esm.js',
+          template: 'jqueryplugin.esm.hbs'
         }
       },
       zepto: {
@@ -179,18 +198,27 @@ module.exports = function (grunt) {
       },
       formatfix: {
         command: 'prettier . --write'
-      },
-      mdlintcheck: {
-        command: 'markdownlint-cli2 "**/*.md"'
-      },
-      mdlintfix: {
-        command: 'markdownlint-cli2 --fix "**/*.md"'
       }
     },
     eslint: {
       options: {
         failOnError: true,
-        extensions: ['.js', '.html', '.yml', '.yaml', '.md', '.json', '.jsonc']
+        extensions: [
+          '.js',
+          '.jsx',
+          '.cjs',
+          '.mjs',
+          '.html',
+          '.yml',
+          '.yaml',
+          '.md',
+          '.mdx',
+          '.json',
+          '.jsonc',
+          '.ts',
+          '.tsx',
+          '.astro'
+        ]
       },
       check: {
         src: ['.']
@@ -211,16 +239,18 @@ module.exports = function (grunt) {
     'concat:jquery',
     'concat:zepto',
     'umd:jquery',
+    'umd:jqueryesm',
     'umd:zepto',
     'concat:jquerydist',
+    'concat:jqueryesmdist',
     'concat:zeptodist'
   ]);
   grunt.registerTask('dist', ['build', 'uglify']);
   grunt.registerTask('debug', ['build', 'connect', 'watch']);
   grunt.registerTask('example', ['build', 'connect:examples', 'watch']);
   grunt.registerTask('test', ['build', 'connect:tests', 'watch']);
-  grunt.registerTask('lint', ['eslint:check', 'shell:mdlintcheck']);
-  grunt.registerTask('lint:fix', ['eslint:fix', 'shell:mdlintfix']);
+  grunt.registerTask('lint', ['eslint:check']);
+  grunt.registerTask('lint:fix', ['eslint:fix']);
   grunt.registerTask('format', ['shell:formatcheck']);
   grunt.registerTask('format:fix', ['shell:formatfix']);
   grunt.registerTask('postBump', ['dist', 'bump-commit', 'shell:npmpublish']);
