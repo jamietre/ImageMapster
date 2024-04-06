@@ -27,6 +27,9 @@ jobs:
       - name: Checkout your repository using git
         uses: actions/checkout@v4
       - name: Install, build, and upload your site output
+        env:
+          SITE_URL: https://${{ github.repository.owner }}.github.io
+          BASE_PATH: ${{ github.event.repository.name }}
         uses: withastro/action@v2
         with:
           path: site

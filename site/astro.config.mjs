@@ -3,8 +3,8 @@ import starlight from '@astrojs/starlight';
 
 // https://astro.build/config
 export default defineConfig({
-  site: 'https://techfg.github.io',
-  base: 'ImageMapster',
+  site: import.meta.env.SITE_URL || 'https://jamietre.github.io',
+  base: import.meta.env.BASE_PATH || 'ImageMapster',
   integrations: [
     starlight({
       title: 'My Docs',
