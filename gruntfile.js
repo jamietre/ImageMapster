@@ -48,6 +48,14 @@ module.exports = function (grunt) {
         src: '<%= umd.jquery.options.dest %>',
         dest: 'dist/jquery.<%= pkg.name %>.js'
       },
+      jqueryesmdist: {
+        options: {
+          banner: '<%= banner %>',
+          process: true
+        },
+        src: '<%= umd.jqueryesm.options.dest %>',
+        dest: 'dist/jquery.<%= pkg.name %>.mjs'
+      },
       zeptodist: {
         options: {
           banner: '<%= banner %>',
@@ -68,6 +76,10 @@ module.exports = function (grunt) {
         src: '<%= concat.jquerydist.dest %>',
         dest: 'dist/jquery.<%= pkg.name %>.min.js'
       },
+      jqueryesm: {
+        src: '<%= concat.jqueryesmdist.dest %>',
+        dest: 'dist/jquery.<%= pkg.name %>.min.mjs'
+      },
       zepto: {
         src: '<%= concat.zeptodist.dest %>',
         dest: 'dist/jquery.<%= pkg.name %>.zepto.min.js'
@@ -79,6 +91,13 @@ module.exports = function (grunt) {
           src: '<%= concat.jquery.dest %>',
           dest: 'build/jquery.<%= pkg.name %>.jquery.umd.js',
           template: 'jqueryplugin.hbs'
+        }
+      },
+      jqueryesm: {
+        options: {
+          src: '<%= concat.jquery.dest %>',
+          dest: 'build/jquery.<%= pkg.name %>.jquery.esm.js',
+          template: 'jqueryplugin.esm.hbs'
         }
       },
       zepto: {
@@ -220,8 +239,10 @@ module.exports = function (grunt) {
     'concat:jquery',
     'concat:zepto',
     'umd:jquery',
+    'umd:jqueryesm',
     'umd:zepto',
     'concat:jquerydist',
+    'concat:jqueryesmdist',
     'concat:zeptodist'
   ]);
   grunt.registerTask('dist', ['build', 'uglify']);

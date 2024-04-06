@@ -3,6 +3,20 @@
   "version": "1.6.0",
   "description": "jQuery plugin that activates areas in HTML imagemaps with support for highlighting, selecting, tooltips, resizing and more",
   "main": "dist/jquery.imagemapster.min.js",
+  "module": "dist/jquery.imagemapster.min.mjs",
+  "exports": {
+    ".": {
+      "import": {
+        "development": "./dist/jquery.imagemapster.mjs",
+        "default": "./dist/jquery.imagemapster.min.mjs"
+      },
+      "require": {
+        "development": "./dist/jquery.imagemapster.js",
+        "default": "./dist/jquery.imagemapster.min.js"
+      },
+      "default": "./dist/jquery.imagemapster.min.js"
+    }
+  },
   "files": [
     "dist/**/*"
   ],
