@@ -1,4 +1,4 @@
-/* 
+/*
   tooltip.js
   Tooltip functionality
   Requires areacorners.js
@@ -273,7 +273,7 @@
     options.fadeDuration =
       options.fadeDuration ||
       (md.options.toolTipFade
-        ? md.options.fadeDuration || areaOpts.fadeDuration
+        ? u.isNumeric(areaOpts.fadeDuration) ? areaOpts.fadeDuration : md.options.fadeDuration
         : 0);
 
     target = ad.area

@@ -257,6 +257,9 @@
       isFunction: function (obj) {
         return typeof obj === 'function';
       },
+      isNumeric: function (obj) {
+        return !isNaN(parseFloat(obj));
+      },
       // evaluates "obj", if function, calls it with args
       // (todo - update this to handle variable lenght/more than one arg)
       ifFunction: function (obj, that, args) {
@@ -1103,6 +1106,6 @@
     };
     return me;
   })();
-
+  console.log('foo3456');
   $.mapster.impl.init();
 })(jQuery);
