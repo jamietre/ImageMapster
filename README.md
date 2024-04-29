@@ -19,7 +19,7 @@ Available on the [ImageMapster Website](https://jamietre.github.io/ImageMapster)
 
 See the [change log](CHANGELOG.md) for details on the release history and roadmap.
 
-## Find out More
+## Support
 
 See how to obtain [ImageMapster Support](SUPPORT.md).
 
