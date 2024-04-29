@@ -14,6 +14,19 @@
 - Make callback data structures consistent
 - Improve docs
 
+## Version 1.7.0 - 2024.04.28
+
+- [Issue 138](https://github.com/jamietre/ImageMapster/issues/138) 📘 Docs incorrectly state that highlighting will be disabled when staticState option is specified
+- [Issue 228](https://github.com/jamietre/ImageMapster/issues/228) 📘 onClick event will not fire if `clickNavigate` is set to `true`
+- [Issue 322](https://github.com/jamietre/ImageMapster/issues/322) 📘 Migrate website to github
+- [Issue 382](https://github.com/jamietre/ImageMapster/issues/382) 📘 rebind docs are not correct regarding preserving selected state
+- [Issue 408](https://github.com/jamietre/ImageMapster/issues/408) 🐞 navigate example pages are unresponsive
+- [Issue 410](https://github.com/jamietre/ImageMapster/issues/410) 🐞 grunt docco task failing with Fatal error: marked is not a function
+- [Issue 412](https://github.com/jamietre/ImageMapster/issues/412) ✨ Improve ability to run tests with all supported libraries & versions
+- [Issue 414](https://github.com/jamietre/ImageMapster/issues/414) 🐞 configTimeout not respected for value specified
+- [Issue 415](https://github.com/jamietre/ImageMapster/issues/415) ✨ Add ESM support
+- [Issue 418](https://github.com/jamietre/ImageMapster/issues/418) 🐞 fadeDuration specified in area options is not honored for tooltips
+
 ## Version 1.6.0 - 2024.03.12
 
 - [Issue 394](https://github.com/jamietre/ImageMapster/issues/394) \[TouchScreen only] Weird highlight glitch when touch on the other area beside the map.

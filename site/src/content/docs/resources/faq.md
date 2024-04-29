@@ -85,7 +85,7 @@ On some older Android devices, the native web browser does not seem to handle im
 
 There are lots of ways to do this.
 
-1. Use an online tool such as [image-map.net](https://www.image-map.net/) and/or [imagemap.org](https://imagemap.org/).
+1. Use an online tool such as [image-map.net](https://www.image-map.net/).
 2. Commercial drawing tools like Photoshop have capabilities to create image maps.
 3. If you're creating a map for a geographical entity, like states or countries, someone's probably done it already. Google is your friend. Check [Wikipedia Commons](http://commons.wikimedia.org/wiki/Commons:Image_map_resources) for public domain maps, too.
 

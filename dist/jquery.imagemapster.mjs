@@ -1,6 +1,6 @@
 /*!
-* imagemapster - v1.6.0 - 2024-04-05
-* https://github.com/jamietre/ImageMapster/
+* imagemapster - v1.7.0 - 2024-04-29
+* https://jamietre.github.io/ImageMapster
 * Copyright (c) 2011 - 2024 James Treworgy
 * License: MIT
 */
@@ -82,7 +82,7 @@ function imagemapsterFactory(jQuery) {
 (function ($) {
   'use strict';
 
-  var mapster_version = '1.6.0';
+  var mapster_version = '1.7.0';
 
   // all public functions in $.mapster.impl are methods
   $.fn.mapster = function (method) {
@@ -115,7 +115,8 @@ function imagemapsterFactory(jQuery) {
       includeKeys: '',
       altImage: null,
       altImageId: null, // used internally
-      altImages: {}
+      altImages: {},
+      altImageOpacity: null
     },
     defaults: {
       clickNavigate: false,
@@ -124,7 +125,7 @@ function imagemapsterFactory(jQuery) {
       wrapCss: null,
       onGetList: null,
       sortList: false,
-      listenToList: false,
+      // listenToList: false, // not used - see mapdata.js line 1002
       mapKey: '',
       mapValue: '',
       singleSelect: false,
@@ -146,7 +147,6 @@ function imagemapsterFactory(jQuery) {
       autoResizeDelay: 0,
       autoResizeDuration: 0,
       onAutoResize: null,
-      safeLoad: false,
       areas: []
     },
     shared_defaults: {
@@ -332,6 +332,9 @@ function imagemapsterFactory(jQuery) {
       },
       isFunction: function (obj) {
         return typeof obj === 'function';
+      },
+      isNumeric: function (obj) {
+        return !isNaN(parseFloat(obj));
       },
       // evaluates "obj", if function, calls it with args
       // (todo - update this to handle variable lenght/more than one arg)
@@ -547,7 +550,7 @@ function imagemapsterFactory(jQuery) {
    * invoked on an image, or an area; then queues the command if the MapData is in an active state.
    *
    * @param {[jQuery]}    that        The target of the invocation
-   * @param {[function]}  func_map    The callback if the target is an imagemap
+   * @param {[function]}  func_map    The callback if the target is an image map
    * @param {[function]}  func_area   The callback if the target is an area
    * @param {[object]}    opt         Options: { key: a map key if passed explicitly
    *                                             name: the command name, if it can be queued,
@@ -1179,11 +1182,11 @@ function imagemapsterFactory(jQuery) {
     };
     return me;
   })();
-
+  console.log('foo3456');
   $.mapster.impl.init();
 })(jQuery);
 
-/* 
+/*
   graphics.js
   Graphics object handles all rendering.
 */
@@ -1734,9 +1737,9 @@ function imagemapsterFactory(jQuery) {
   );
 })(jQuery);
 
-/* 
+/*
   mapimage.js
-  The MapImage object, repesents an instance of a single bound imagemap
+  The MapImage object, repesents an instance of a single bound image map
 */
 
 (function ($) {
@@ -1744,7 +1747,8 @@ function imagemapsterFactory(jQuery) {
 
   var m = $.mapster,
     u = m.utils,
-    ap = [];
+    ap = [],
+    configCheckInterval = 50;
   /**
    * An object encapsulating all the images used by a MapData.
    */
@@ -1903,7 +1907,7 @@ function imagemapsterFactory(jQuery) {
     bind: function () {
       var me = this,
         promise,
-        triesLeft = me.owner.options.configTimeout / 200,
+        triesLeft = me.owner.options.configTimeout / configCheckInterval,
         /* A recursive function to continue checking that the images have been
                loaded until a timeout has elapsed */
 
@@ -1929,7 +1933,7 @@ function imagemapsterFactory(jQuery) {
             if (triesLeft-- > 0) {
               me.imgTimeout = window.setTimeout(function () {
                 check.call(me, true);
-              }, 50);
+              }, configCheckInterval);
             } else {
               me.imageLoadError.call(me);
             }
@@ -2015,7 +2019,7 @@ function imagemapsterFactory(jQuery) {
 
 /*
   mapdata.js
-  The MapData object, repesents an instance of a single bound imagemap
+  The MapData object, repesents an instance of a single bound image map
 */
 
 (function ($) {
@@ -2785,7 +2789,7 @@ function imagemapsterFactory(jQuery) {
       me.wrapper = wrap;
 
       // me.images[1] is the copy of the original image. It should be loaded & at its native size now so we can obtain the true
-      // width & height. This is needed to scale the imagemap if not being shown at its native size. It is also needed purely
+      // width & height. This is needed to scale the image map if not being shown at its native size. It is also needed purely
       // to finish binding in case the original image was not visible. It can be impossible in some browsers to obtain the
       // native size of a hidden image.
 
@@ -2876,7 +2880,7 @@ function imagemapsterFactory(jQuery) {
         $img = $(me.image),
         opts = me.options;
 
-      if (opts.onConfigured && typeof opts.onConfigured === 'function') {
+      if (u.isFunction(opts.onConfigured)) {
         opts.onConfigured.call($img, true);
       }
     },
@@ -3481,7 +3485,7 @@ function imagemapsterFactory(jQuery) {
 
   /**
    * Compute positions that will place a target with dimensions [width,height] outside
-   * but near the boundaries of the elements "elements". When an imagemap is passed, the
+   * but near the boundaries of the elements "elements". When an image map is passed, the
    *
    * @param  {Element|Element[]} elements An element or an array of elements (such as a jQuery object)
    * @param  {Element} image The image to which area elements are bound, if this is an image map.
@@ -3658,7 +3662,7 @@ function imagemapsterFactory(jQuery) {
   };
 })(jQuery);
 
-/* 
+/*
   scale.js
   Resize and zoom functionality
   Requires areacorners.js
@@ -3713,7 +3717,7 @@ function imagemapsterFactory(jQuery) {
   /**
    * Resize the image map. Only one of newWidth and newHeight should be passed to preserve scale
    *
-   * @param  {int}   width       The new width OR an object containing named parameters matching this function sig
+   * @param  {int}   width       The new width
    * @param  {int}   height      The new height
    * @param  {int}   effectDuration Time in ms for the resize animation, or zero for no animation
    * @param  {function} callback    A function to invoke when the operation finishes
@@ -4049,7 +4053,7 @@ function imagemapsterFactory(jQuery) {
     */
 })(jQuery);
 
-/* 
+/*
   tooltip.js
   Tooltip functionality
   Requires areacorners.js
@@ -4324,7 +4328,7 @@ function imagemapsterFactory(jQuery) {
     options.fadeDuration =
       options.fadeDuration ||
       (md.options.toolTipFade
-        ? md.options.fadeDuration || areaOpts.fadeDuration
+        ? u.isNumeric(areaOpts.fadeDuration) ? areaOpts.fadeDuration : md.options.fadeDuration
         : 0);
 
     target = ad.area
