@@ -1,0 +1,26 @@
+<img
+  id="shapes-img"
+  alt="Shapes Hotspots"
+  src="https://raw.githubusercontent.com/jamietre/ImageMapster/master/examples/images/shapes.jpg"
+  usemap="#shapes-map"
+/>
+<map name="shapes-map">
+  <area shape="rect" data-group="rectangle" alt="" coords="378,39,463,116" />
+  <area
+    shape="poly"
+    data-group="blue-circle"
+    alt=""
+    coords="286,34, 298,42, 308,54, 314,79, 307,103, 292,118, 270,125, 242,122, 227,112, 216,97, 212,73, 219,53, 227,43, 240,34, 264,29"
+    href="#"
+  />
+  <!-- concentric circles for stroke highlighting -->
+  <area
+    shape="circle"
+    data-group="inner-circle,inner-circle-mask"
+    coords="101,81,36"
+    href="#"
+  />
+  <area shape="circle" data-group="outer-circle-mask" coords="148,81,12" />
+  <area shape="circle" data-group="outer-circle" coords="100,81,59" href="#" />
+  <!-- End circles -->
+</map>

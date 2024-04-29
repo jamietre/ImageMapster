@@ -1,0 +1,12 @@
+The Shapes demo shows how to create hotspots within other hotspots. It also uses [includeKeys][cr-includekeys] like the Frog demo to activate areas from other areas, but slightly differently; the target area isn't itself a hotspot. Finally, it uses [isMask][cr-ismask] to exclude a small area from the outer ring of the circle. When using masks to exclude areas within other areas, the [stroke][cr-stroke] option will also render a border around the interior perimeter of the outer area.
+
+In the code, you will notice that the inner circle area is included in two groups: `inner-circle` and `inner-circle-mask`. This makes it possible to use the inner circle as a mask for the outer circle, so it is excluded when the outer ring is highlighted, as well as its own hotspot, without duplicating the area data.
+
+With Internet Explorer 6-8, using VML, masking cannot be done natively. In this case the effect is simulated by rendering the masked area with a specific color that can be defined with the [fillColorMask][cr-fillcolormask] option. This option is ignored when using HTML5 canvases. The default is white, which is used for the inner circle, and 2nd small circle in the ring is set specifically to match the color of the ring area.
+
+[See this demo in a JSFiddle](https://jsfiddle.net/techfg/L8t6u3gd/latest)
+
+[cr-includekeys]: ../../../content/docs/reference/configuration-reference.md#includekeys
+[cr-ismask]: ../../../content/docs/reference/configuration-reference.md#ismask
+[cr-stroke]: ../../../content/docs/reference/configuration-reference.md#stroke
+[cr-fillcolormask]: ../../../content/docs/reference/configuration-reference.md#fillcolormask

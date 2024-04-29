@@ -1,0 +1,193 @@
+---
+title: Introduction
+description: ImageMapster - a jQuery plugin that lets you activate HTML image maps
+---
+
+import {
+  FeatureGrid,
+  FeatureDetail,
+  Feature
+} from '../../../components/features';
+
+ImageMapster makes HTML image maps useful. It is a [jQuery plugin](https://learn.jquery.com/plugins/) that lets you activate [HTML Image Maps](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/map) without using Flash. It works
+just about everywhere that Javascript does, including modern browsers, Internet Explorer 6+, and mobile devices like iPads, iPhones and Androids.
+
+See [getting started](./getting-started.md) for information on how to install and use ImageMapster.
+
+## Features
+
+### Highlight and select areas
+
+<FeatureGrid>
+  <Feature imageFilename="highlight.gif" altText="Highlight Areas">
+    <FeatureDetail>
+      Automatic  highlighting of HTML image maps on mouseover
+    </FeatureDetail>
+
+    <FeatureDetail>
+      Control [color][cr-fillcolor], [opacity][cr-fillopacity], [border][cr-stroke],
+      [fade effects][cr-fade], and more for highlight and select
+    </FeatureDetail>
+  </Feature>
+
+  <Feature imageFilename="multiple.gif" altText="Select Areas">
+    <FeatureDetail>
+      Click to select/deselect one or more areas, or allow highlighting only
+      by disabling [isSelectable][cr-isselectable]
+    </FeatureDetail>
+
+    <FeatureDetail>
+      Use like a toggle or menu with the [singleSelect][cr-singleselect]
+      option
+    </FeatureDetail>
+
+    <FeatureDetail>
+      Define areas as inactive or always active with
+      [staticState][cr-staticstate]
+    </FeatureDetail>
+  </Feature>
+</FeatureGrid>
+
+### Create cool effects using alternate images
+
+<FeatureGrid>
+  <Feature imageFilename="alt.gif" altText="Alternate Images">
+    <FeatureDetail>
+      Use any other image to render fill and select effects with
+      [altImage][cr-altimage]
+    </FeatureDetail>
+
+    <FeatureDetail>
+      Regular fills and borders can be used in combination with alternate image
+      to create complex highlight and selection effects
+    </FeatureDetail>
+  </Feature>
+</FeatureGrid>
+
+### Bind the image map to an external list
+
+<FeatureGrid>
+  <Feature imageFilename="external.gif" altText="External Lists">
+    <FeatureDetail>
+      Link user actions to an external list using [boundList][cr-boundlist]
+    </FeatureDetail>
+
+    <FeatureDetail>
+      Automatically generate list from user-defined attributes in the image map
+      data with [onGetList][cr-ongetlist], optionally sorted by specifying a sort order
+      using [sortlist][cr-sortlist]
+    </FeatureDetail>
+  </Feature>
+</FeatureGrid>
+
+### Show tooltips for areas or area groups
+
+<FeatureGrid>
+  <Feature imageFilename="tooltip.gif" altText="Tooltip">
+    <FeatureDetail>Effortlessly create area-specific [tooltips][cr-areatooltipoptions]</FeatureDetail>
+
+    <FeatureDetail>Use the default tooltip container, or create a custom [toolTipContainer][cr-tooltipcontainer] using any HTML template</FeatureDetail>
+
+    <FeatureDetail>Manually activate or deactivate tooltips with the [tooltip][ar-tooltip] method</FeatureDetail>
+  </Feature>
+</FeatureGrid>
+
+### Use masks to create complex functionality
+
+<FeatureGrid>
+  <Feature imageFilename="group.gif" altText="Area Groups">
+    <FeatureDetail>
+      Group areas together into logical entities that will be selected or
+      highlighted together
+    </FeatureDetail>
+
+    <FeatureDetail>
+      Link groups so that activating one group also activates another group
+      using [includeKeys][cr-includekeys]
+    </FeatureDetail>
+
+    <FeatureDetail>
+      Exclude areas inside of other areas by using [isMask][cr-ismask]
+    </FeatureDetail>
+
+    <FeatureDetail>
+      Areas can be members of more than one group, allowing you to get creative.  For example, create
+      concentric selection areas by defining an interior area as both a mask and
+      its own selection group
+    </FeatureDetail>
+  </Feature>
+</FeatureGrid>
+
+### Automatically resize and scale
+
+<FeatureGrid>
+  <Feature imageFilename="resize.gif" altText="Automatic resize">
+    <FeatureDetail>
+      Automatically resize image maps using the [resize options][cr-resizeoptions]
+    </FeatureDetail>
+
+    <FeatureDetail>
+      Image map data can be automatically scaled to match the display size of an
+      image using [scaleMap][cr-scalemap]
+    </FeatureDetail>
+
+    <FeatureDetail>
+      Manually resize image maps by calling the [resize][ar-resize] method
+    </FeatureDetail>
+  </Feature>
+</FeatureGrid>
+
+## History
+
+ImageMapster was created by [James Treworgy](https://github.com/jamietre).  It
+started as a fork of David Lynch's [Maphilight](https://github.com/kemayo/maphilight)
+in early 2011. He wanted to add the ability to keep areas selected. Having a lot
+of ideas for interesting things that could be done with image maps, he ended up
+adding many more features. The code base that ImageMapster started from has
+basically been re-written from the ground up, however a few parts of the code, most
+notably the core VML rendering, still inherit directly from its Maphilight roots.
+
+James put a great deal of effort into ensuring that ImageMapster will work
+reliably in many environments. Often, images will not be finished loading when
+the rest of a page has finished being configured. Javascript code will usually
+begin running before some page images have finished loading. It is critical
+that images be completely loaded before ImageMapster can configure itself: it
+needs to know their native and display sizes, make copies, and do other work.
+The software uses a number of different methods, depending on the browser, to
+ensure that everything is ready when it begins configuration.
+
+Additonally, ImageMapster will _queue commands_ issued to it before
+configuration is complete. This means you can write post-configuration code
+that works against your image map without concern for the timing of images
+being loaded. Any commands that ImageMapster receives before it's done
+configuring will be queued, and processed in order once configuration is
+complete.
+
+ImageMapster uses HTML5 canvases to do its work in modern browsers. In older
+browsers (Internet Explorer 6-8) it uses VML to achieve similar effects.
+
+ImageMapster works in all major browsers (IE6+, Firefox 2+, Opera, Chrome, Edge,
+Safari) and on mobile devices.
+
+James put in a lot of work making ImageMapster what it is today.  If inclined,
+find out about [how to thank him](../resources/faq.md#how-can-i-thank-you-for-your-work).
+
+[cr-fillcolor]: ../reference/configuration-reference.md#fillcolor
+[cr-fillopacity]: ../reference/configuration-reference.md#fillopacity
+[cr-stroke]: ../reference/configuration-reference.md#stroke
+[cr-fade]: ../reference/configuration-reference.md#fade
+[cr-isselectable]: ../reference/configuration-reference.md#isselectable
+[cr-singleselect]: ../reference/configuration-reference.md#singleselect
+[cr-staticstate]: ../reference/configuration-reference.md#staticstate
+[cr-altimage]: ../reference/configuration-reference.md#altimage
+[cr-boundlist]: ../reference/configuration-reference.md#boundlist
+[cr-ongetlist]: ../reference/configuration-reference.md#ongetlist
+[cr-sortlist]: ../reference/configuration-reference.md#sortlist
+[cr-areatooltipoptions]: ../reference/configuration-reference.md#area-tooltip-options
+[cr-includekeys]: ../reference/configuration-reference.md#includekeys
+[cr-ismask]: ../reference/configuration-reference.md#ismask
+[cr-resizeoptions]: ../reference/configuration-reference.md#resize-options
+[cr-scalemap]: ../reference/configuration-reference.md#scalemap
+[cr-tooltipcontainer]: ../reference/configuration-reference.md#tooltipcontainer
+[ar-tooltip]: ../reference/api-reference.md#tooltip
+[ar-resize]: ../reference/api-reference.md#resize

@@ -1,0 +1,17 @@
+This example shows how to manually resize maps dynamically with the [resize][ar-resize] method. Resizing an active
+mapster-bound image map will retain all current state data. With VML (IE < 8), the actual selection data can't be resized dynamically, so it will be redrawn after
+the operation finishes. By using images that have a larger native size than the initial display size, resizing can be used to zoom and enhance detail.
+
+You can also configure ImageMapster to automatically resize images (e.g., when the browser window resizes) via the [autoResize][cr-autoresize] option in order to avoid having to manually handle resizing.
+
+During a resize (manual or auto), ImageMapster can adjust the image map of any image loaded to its effective size. That is, if you have an image map that doesn't
+match the size you need to use in an application, you can just set the CSS or height/width properties for an image to whatever you need, and ImageMapster will automatically
+adjust the `area` data in the image map. Automatic scaling is the default behavior, however if you _do not_ want this functionality, it can be disabled by setting [scaleMap][cr-scalemap] option.
+
+At this time, scaling during a resize only works when the aspect ratio is maintained. While it won't stop you from changing the size to different proportions from its natural ones, the results will be unpredictable.
+
+[See this demo in a JSFiddle](https://jsfiddle.net/techfg/mbquc8k7/latest)
+
+[cr-autoresize]: ../../../content/docs/reference/configuration-reference.md#autoresize
+[cr-scalemap]: ../../../content/docs/reference/configuration-reference.md#scalemap
+[ar-resize]: ../../../content/docs/reference/api-reference.md#resize

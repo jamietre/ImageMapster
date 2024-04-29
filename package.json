@@ -23,18 +23,19 @@
   "scripts": {
     "build": "grunt build",
     "dist": "grunt dist",
-    "debug": "grunt debug",
+    "dev": "grunt dev",
     "test": "grunt test",
     "example": "grunt example",
     "doc": "grunt docco",
     "lint": "grunt lint",
     "lint:fix": "grunt lint:fix",
     "format": "grunt format",
-    "format:fix": "grunt format:fix"
+    "format:fix": "grunt format:fix",
+    "checklinks": "grunt checklinks"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/jamietre/ImageMapster.git"
+    "url": "https://github.com/jamietre/ImageMapster.git"
   },
   "keywords": [
     "jquery",
@@ -56,14 +57,13 @@
   ],
   "author": {
     "name": "James Treworgy",
-    "url": "http://www.outsharked.com/imagemapster/default.aspx?about.html",
-    "email": "jamie@outsharked.com"
+    "url": "https://github.com/jamietre"
   },
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/jamietre/ImageMapster/issues"
   },
-  "homepage": "https://github.com/jamietre/ImageMapster/",
+  "homepage": "https://jamietre.github.io/ImageMapster",
   "peerDependencies": {
     "jquery": ">=1.7.0"
   },
@@ -72,13 +72,13 @@
     "eslint": "^8.57.0",
     "eslint-config-jquery": "^3.0.2",
     "eslint-config-prettier": "^9.1.0",
-    "eslint-plugin-astro": "^0.32.0",
-    "eslint-plugin-html": "^8.0.0",
-    "eslint-plugin-jsonc": "^2.14.1",
+    "eslint-plugin-astro": "^1.1.0",
+    "eslint-plugin-html": "^8.1.1",
+    "eslint-plugin-jsonc": "^2.15.1",
     "eslint-plugin-markdown": "^4.0.1",
     "eslint-plugin-mdx": "^3.1.5",
     "eslint-plugin-react": "^7.34.1",
-    "eslint-plugin-yml": "^1.12.2",
+    "eslint-plugin-yml": "^1.14.0",
     "grunt": "^1.6.1",
     "grunt-bump": "^0.8.0",
     "grunt-contrib-clean": "^2.0.1",
@@ -86,6 +86,7 @@
     "grunt-contrib-connect": "^4.0.0",
     "grunt-contrib-uglify": "^5.2.2",
     "grunt-contrib-watch": "^1.1.0",
+    "grunt-env": "^1.0.1",
     "grunt-eslint": "^24.3.0",
     "grunt-shell": "^4.0.0",
     "grunt-umd": "^3.0.0",
@@ -96,11 +97,13 @@
     "remark-cli": "^12.0.0",
     "remark-frontmatter": "^5.0.0",
     "remark-gfm": "^4.0.0",
-    "remark-preset-lint-consistent": "^5.1.2",
-    "remark-preset-lint-markdown-style-guide": "^5.1.3",
-    "remark-preset-lint-recommended": "^6.1.3",
+    "remark-lint-no-dead-urls": "^1.1.0",
+    "remark-preset-lint-consistent": "^6.0.0",
+    "remark-preset-lint-markdown-style-guide": "^6.0.0",
+    "remark-preset-lint-recommended": "^7.0.0",
     "remark-preset-prettier": "^2.0.1",
-    "typescript": "^5.4.3",
-    "typescript-eslint": "^7.3.1"
+    "remark-validate-links": "^13.0.1",
+    "typescript": "^5.4.5",
+    "typescript-eslint": "^7.7.1"
   }
 }

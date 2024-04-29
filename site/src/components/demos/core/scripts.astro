@@ -1,0 +1,29 @@
+<script>
+  /*
+    Loading all the demo scripts (map.js) from here rather than within each demo component to
+    avoid having to import jquery & imagemapster within each map.js.  We do this for a few
+    reasons:
+      1) We don't want to have import statements in the map.js because they are used directly
+        in the "script" tab of the demo and in the associated jsFiddles. We could remove the
+        code programatically when rendering the js code but because of #2 & #3, we just avoid
+      2) We utilize the map.js in the associated JSFiddle's with a straight copy/paste (along
+        with the map.html)
+      3) A separate JS file will be generated for each component during build and the scripts
+        themselves are small so for optimization, we put them all in to a single script
+  */
+
+  // jQuery is a CJS module so we wrap with ESM to obtain the export
+  // and attach to window.  We have to do this in a separate file
+  // otherwise the code that sets window.$ will be placed below
+  // all the import statements in the generated bundle.
+  import './jquery-loader.ts';
+  import 'imagemapster';
+
+  // demos - this must be maintained if any demos are added/removed
+  import '../beatles/map.js';
+  import '../frog/map.js';
+  import '../resize/map.js';
+  import '../shapes/map.js';
+  import '../usa/map.js';
+  import '../vegetables/map.js';
+</script>

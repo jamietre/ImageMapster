@@ -1,0 +1,11 @@
+---
+import Demo from '../core/demo.astro';
+import { Content as Narrative } from './narrative.mdx';
+import Skeleton from '../../../assets/images/skeleton.png';
+import { Image } from 'astro:assets';
+---
+
+<Demo>
+  <Image slot="map" id="skeleton-demo" alt="Skeleton Joints" src={Skeleton} />
+  <Narrative slot="narrative" />
+</Demo>

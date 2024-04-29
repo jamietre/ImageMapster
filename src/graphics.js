@@ -1,4 +1,4 @@
-/* 
+/*
   graphics.js
   Graphics object handles all rendering.
 */

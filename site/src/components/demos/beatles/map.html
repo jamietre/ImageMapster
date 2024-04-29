@@ -1,0 +1,39 @@
+<img
+  id="beatles-img"
+  alt="Beatles Menu"
+  src="https://raw.githubusercontent.com/jamietre/ImageMapster/master/examples/images/beatles_basic.jpg"
+  usemap="#beatles-map"
+/>
+
+<map name="beatles-map">
+  <area shape="rect" data-name="paul,all" coords="36,46,121,131" href="#" />
+  <area shape="rect" data-name="ringo,all" coords="113,76,198,161" href="#" />
+  <area shape="rect" data-name="john,all" coords="192,50,277,135" href="#" />
+  <area shape="rect" data-name="george,all" coords="262,60,347,145" href="#" />
+</map>
+
+<div id="beatles-caption">
+  <div id="beatles-caption-band-member">
+    <div id="beatles-caption-header"></div>
+    <div id="beatles-caption-text"></div>
+  </div>
+  <span id="beatles-caption-instructions">
+    Hover over a band member to learn more about them!
+  </span>
+</div>
+
+<style>
+  #beatles-caption {
+    border: 1px solid var(--im-border-color);
+    margin-top: 1rem;
+    padding: 1rem;
+  }
+
+  #beatles-caption-band-member {
+    display: none;
+  }
+
+  #beatles-caption-band-member > div:not(:first-child) {
+    margin-top: 1rem;
+  }
+</style>

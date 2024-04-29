@@ -1,0 +1,12 @@
+---
+import Demo from '../core/demo.astro';
+import Map from './map.html';
+import { Content as Narrative } from './narrative.mdx';
+import rawMarkup from './map.html?raw';
+import rawScript from './map.js?raw';
+---
+
+<Demo rawScript={rawScript} rawMarkup={rawMarkup}>
+  <Map slot="map" />
+  <Narrative slot="narrative" />
+</Demo>
