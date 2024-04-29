@@ -1,0 +1,18 @@
+This example shows how to activate areas from code, and change options on the
+fly using the [set_options][ar-setoptions] method. The [isSelectable][cr-isselectable] option
+has been disabled to prevent selection of areas - only mouseover highlighting is
+in effect. Finally, it uses the [onMouseover][cr-onmouseover] and [onMouseout][cr-onmouseout] events to
+show captions for each area.
+
+This example also uses multiple groups assigned to each area to activate all areas easily. Each area has two keys:
+the primary one which is unique, and another which is the same for each area -- "all". The "all" key is used to activate
+all the areas at once when the mouse enters the image.
+
+This example, like the frog menu, mimics a CSS3 example: Stu Nicholls' [creating an image map using CSS only](https://web.archive.org/web/20210129103207/http://www.cssplay.co.uk/articles/imagemap/examples/ten.html) article.
+
+[See this demo in a JSFiddle](https://jsfiddle.net/techfg/rkjsm1gc/latest)
+
+[cr-isselectable]: ../../../content/docs/reference/configuration-reference.md#isselectable
+[cr-onmouseover]: ../../../content/docs/reference/configuration-reference.md#onmouseover
+[cr-onmouseout]: ../../../content/docs/reference/configuration-reference.md#onmouseout
+[ar-setoptions]: ../../../content/docs/reference/api-reference.md#set_options

@@ -861,7 +861,7 @@
         $img = $(me.image),
         opts = me.options;
 
-      if (opts.onConfigured && typeof opts.onConfigured === 'function') {
+      if (u.isFunction(opts.onConfigured)) {
         opts.onConfigured.call($img, true);
       }
     },

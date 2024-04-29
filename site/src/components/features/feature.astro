@@ -1,0 +1,54 @@
+---
+interface Props {
+   imageFilename: string;
+   altText: string;
+}
+
+const imageBasePath = '/src/assets/images/features';
+const imageFilter = `${imageBasePath}/*.{jpeg,jpg,png,gif}`;
+const { imageFilename, altText } = Astro.props;
+import type { ImageMetadata } from 'astro';
+import { Image } from 'astro:assets';
+const images = import.meta.glob<{ default: ImageMetadata }>(`/src/assets/images/features/*.{jpeg,jpg,png,gif}`)
+const imagePath = `${imageBasePath}/${imageFilename}`;
+if (!images[imagePath]) throw new Error(`"${imagePath}" does not exist in glob: "${imageFilter}"`);
+---
+
+<div class="feature sl-flex">
+  <div class="feature-image">
+    <Image src={images[imagePath]()} alt={altText} />
+  </div>
+  <div class="feature-bullets">
+    <ul>
+      <slot />
+    </ul>
+  </div>
+</div>
+
+<style>
+	.feature {
+    display: grid;
+    grid-template-columns: 1fr;
+		gap: clamp(0.5rem, calc(0.125rem + 1vw), 1rem);
+    align-items: center;
+	}
+  .feature-image img {
+    width: 50%;
+    height: auto;
+  }
+  .feature-image {
+
+  }
+  .feature-image, .feature-bullets {
+    display: flex;
+    align-items: center;
+  }
+  @media (min-width: 50rem) {
+    .feature {
+      grid-template-columns: 150px 1fr;
+    }
+    .feature-image img {
+      width: 100%;
+    }
+  }
+</style>

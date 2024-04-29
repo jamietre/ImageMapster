@@ -39,7 +39,8 @@
       includeKeys: '',
       altImage: null,
       altImageId: null, // used internally
-      altImages: {}
+      altImages: {},
+      altImageOpacity: null
     },
     defaults: {
       clickNavigate: false,
@@ -48,7 +49,7 @@
       wrapCss: null,
       onGetList: null,
       sortList: false,
-      listenToList: false,
+      // listenToList: false, // not used - see mapdata.js line 1002
       mapKey: '',
       mapValue: '',
       singleSelect: false,
@@ -70,7 +71,6 @@
       autoResizeDelay: 0,
       autoResizeDuration: 0,
       onAutoResize: null,
-      safeLoad: false,
       areas: []
     },
     shared_defaults: {
@@ -256,6 +256,9 @@
       },
       isFunction: function (obj) {
         return typeof obj === 'function';
+      },
+      isNumeric: function (obj) {
+        return !isNaN(parseFloat(obj));
       },
       // evaluates "obj", if function, calls it with args
       // (todo - update this to handle variable lenght/more than one arg)
@@ -1103,6 +1106,6 @@
     };
     return me;
   })();
-
+  console.log('foo3456');
   $.mapster.impl.init();
 })(jQuery);

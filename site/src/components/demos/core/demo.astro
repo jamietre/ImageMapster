@@ -1,0 +1,72 @@
+---
+interface Props {
+  rawMarkup?: string;
+  rawScript?: string;
+}
+import { Tabs, TabItem, Code } from '@astrojs/starlight/components';
+import ImageMap from '../../imagemap.astro';
+const { rawMarkup, rawScript } = Astro.props;
+---
+
+<Tabs>
+  <TabItem label="Demo">
+    <ImageMap class:list={['im-map-container']}>
+      <slot name="map" />
+    </ImageMap>
+    <slot name="narrative" />
+  </TabItem>
+  {
+    rawMarkup && (
+      <TabItem label="HTML">
+        <Code code={rawMarkup} lang="html" />
+      </TabItem>
+    )
+  }
+  {
+    rawScript && (
+      <TabItem label="Script">
+        <Code code={rawScript} lang="js" />
+      </TabItem>
+    )
+  }
+</Tabs>
+
+<style is:global>
+  .im-map-container {
+    --im-border-color: var(--sl-color-text-accent);
+    width: 75%;
+  }
+
+  .im-map-container img {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+
+  .expressive-code .frame {
+    --im-scrollbar-color-thumb: var(--ec-sbThumbCol);
+    /* expressive code default uses inherit which ultimately uses the pre tag background which is: var(--code-background) which is assigned to var(--ec-frm-edBg); */
+    --im-scrollbar-color-track: inherit;
+  }
+
+  .expressive-code pre {
+    overflow: auto !important;
+    max-height: 500px !important;
+  }
+
+  .expressive-code .copy {
+    /* Move the "copy-code" button which is absolutely positioned - Using 16px which isn't ideal but avoids javascript and is fairly common */
+    margin-right: 16px !important;
+  }
+
+  /* FF compatibility - this is becoming the standard https://developer.chrome.com/docs/css-ui/scrollbar-styling */
+  .expressive-code pre {
+    scrollbar-color: var(--im-scrollbar-color-thumb)
+      var(--im-scrollbar-color-track);
+  }
+
+  /* Expressive code uses webkit properties */
+  .expressive-code pre::-webkit-scrollbar-corner {
+    background-color: var(--im-scrollbar-color-track);
+  }
+</style>

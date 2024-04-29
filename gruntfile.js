@@ -198,6 +198,12 @@ module.exports = function (grunt) {
       },
       formatfix: {
         command: 'prettier . --write'
+      },
+      checklinks: {
+        // Except for links within MDX blocks, will check all links including heading links to other files
+        // see comments in .remarkrc.js
+        command:
+          'remark --ext md,mdx --no-config --use remark-validate-links --use remark-lint-no-dead-urls .'
       }
     },
     eslint: {
@@ -229,13 +235,16 @@ module.exports = function (grunt) {
         },
         src: ['.']
       }
+    },
+    env: {
+      dist: {
+        CHECK_LINKS: 'true'
+      }
     }
   });
 
-  grunt.registerTask('default', ['build']);
+  grunt.registerTask('default', ['clean', 'lint', 'build']);
   grunt.registerTask('build', [
-    'clean',
-    'lint',
     'concat:jquery',
     'concat:zepto',
     'umd:jquery',
@@ -245,10 +254,22 @@ module.exports = function (grunt) {
     'concat:jqueryesmdist',
     'concat:zeptodist'
   ]);
-  grunt.registerTask('dist', ['build', 'uglify']);
-  grunt.registerTask('debug', ['build', 'connect', 'watch']);
-  grunt.registerTask('example', ['build', 'connect:examples', 'watch']);
-  grunt.registerTask('test', ['build', 'connect:tests', 'watch']);
+  grunt.registerTask('dist', ['env:dist', 'clean', 'lint', 'build', 'uglify']);
+  grunt.registerTask('dev', ['build', 'connect', 'watch']);
+  grunt.registerTask('example', [
+    'clean',
+    'lint',
+    'build',
+    'connect:examples',
+    'watch'
+  ]);
+  grunt.registerTask('test', [
+    'clean',
+    'lint',
+    'build',
+    'connect:tests',
+    'watch'
+  ]);
   grunt.registerTask('lint', ['eslint:check']);
   grunt.registerTask('lint:fix', ['eslint:fix']);
   grunt.registerTask('format', ['shell:formatcheck']);
@@ -318,4 +339,5 @@ module.exports = function (grunt) {
         done(e);
       });
   });
+  grunt.registerTask('checklinks', ['shell:checklinks']);
 };

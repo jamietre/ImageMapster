@@ -26,7 +26,7 @@ Example: When "Adding a function to do X", explain why it is necessary to have a
 
 ## Test plan (required)
 
-Demonstrate the code is solid. Example: The exact commands you ran and their output, screenshots / videos if the pull request changes UI. The existing test framework (iqTest) is somewhat limited so if you are unable to add a test due to a limitation in the framework, please instead create a new example specific to the fuctionality changed/added covered in the PR.
+Demonstrate the code is solid. Example: The exact commands you ran and their output, screenshots / videos if the pull request changes UI. The existing test framework (iqTest) is somewhat limited so if you are unable to add a test due to a limitation in the framework, please instead create a new example specific to the functionality changed/added covered in the PR.
 
 ## Closing issues
 

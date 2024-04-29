@@ -1,0 +1,78 @@
+---
+interface Props {
+  pageId: string;
+  pageUrl: string;
+}
+const { pageId, pageUrl } = Astro.props;
+---
+
+<div
+  id="disqus_thread"
+  class="disqus"
+  data-disqus-id={pageId}
+  data-disqus-url={pageUrl}
+>
+</div>
+
+<style is:global>
+  .disqus,
+  .disqus * {
+    /*
+      Disqus does not set a color-scheme on its document and per the CSS spec: "If the color scheme of an iframe differs from embedding
+      document iframe gets an opaque canvas bg appropriate to its color scheme".  Since we have a color-scheme and DISQUS does not, the
+      opaque canvas gets applied so to avoid, we set color-scheme back to initial which is what the embedding document will use since it
+      does not specify a color-scheme explicitly.
+        https://github.com/w3c/csswg-drafts/issues/4772#issuecomment-591553929
+        https://sergeyski.com/css-color-scheme-and-iframes-lessons-learned-from-disqus-background-bug/
+        https://stackoverflow.com/a/65313819
+    */
+    color-scheme: initial;
+  }
+</style>
+<script is:inline>
+  var disqus_config = function () {
+    const container = document.getElementById('disqus_thread');
+    this.page.url = container.dataset.disqusUrl;
+    this.page.identifier = container.dataset.disqusId;
+  };
+
+  const loadDisqus = function () {
+    var d = document,
+      s = d.createElement('script');
+    s.id = 'disqus_script';
+    s.src = 'https://outsharked.disqus.com/embed.js';
+    s.setAttribute('data-timestamp', `${+new Date()}`);
+    (d.head || d.body).appendChild(s);
+  };
+
+  const handleMutations = (mutations) => {
+    mutations.forEach((record) => {
+      if (record.type === 'attributes') {
+        if (
+          record.attributeName !== 'data-theme' ||
+          !window.DISQUS ||
+          record.oldValue === record.target.dataset.theme
+        ) {
+          return;
+        }
+        window.DISQUS.reset({
+          reload: true,
+          config: disqus_config
+        });
+      }
+    });
+  };
+
+  const observer = new MutationObserver(handleMutations);
+  observer.observe(document.documentElement, {
+    attributeFilter: ['data-theme'],
+    attributeOldValue: true
+  });
+  loadDisqus();
+</script>
+<noscript>
+  Please enable JavaScript to view the
+  <a href="https://disqus.com/?ref_noscript" rel="nofollow">
+    comments powered by Disqus.
+  </a>
+</noscript>

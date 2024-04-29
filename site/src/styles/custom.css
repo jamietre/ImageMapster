@@ -1,0 +1,116 @@
+/* Start - Style external link icons */
+:root {
+  --external-link-icon-svg: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 2048 2048' %3E%3Cpath d='M1792 256v640h-128V475l-851 850-90-90 850-851h-421V256h640zm-512 1007h128v529H256V640h529v128H384v896h896v-401z' /%3E%3C/svg%3E");
+}
+
+a.external-link::after,
+span.external-link::after {
+  content: '';
+  -webkit-mask-position: 50%;
+  mask-position: 50%;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  background-color: currentColor !important;
+  -webkit-mask-image: var(--external-link-icon-svg);
+  mask-image: var(--external-link-icon-svg);
+  -webkit-clip-path: inset(0.3125em 0) padding-box;
+  clip-path: inset(0.3125em 0) padding-box;
+  margin: 0 0.125rem;
+  padding: 0 0.375em;
+  -webkit-mask-size: 0.75em 1.5em;
+  mask-size: 0.75em 1.5em;
+}
+/* End - Style external link icons */
+
+/* Start - Custom styles for heading anchor links. */
+.sl-markdown-content .heading-wrapper {
+  --icon-size: 0.75em;
+  --icon-spacing: 0.25em;
+  line-height: var(--sl-line-height-headings);
+}
+
+/* Headings after non-headings have more spacing. */
+.sl-markdown-content
+  :not(.heading-wrapper)
+  + :is(.heading-wrapper):not(:where(.not-content *)) {
+  margin-top: 1.5em;
+}
+
+/* Set font-size on wrapper element, so line-height, margins etc. match heading size. */
+.sl-markdown-content .level-h2 {
+  font-size: var(--sl-text-h2);
+}
+.sl-markdown-content .level-h3 {
+  font-size: var(--sl-text-h3);
+}
+.sl-markdown-content .level-h4 {
+  font-size: var(--sl-text-h4);
+}
+.sl-markdown-content .level-h5 {
+  font-size: var(--sl-text-h5);
+}
+
+.sl-markdown-content .heading-wrapper > :first-child {
+  margin-inline-end: calc(var(--icon-size) + var(--icon-spacing));
+  display: inline;
+}
+
+.sl-markdown-content .anchor-link {
+  margin-inline-start: calc(-1 * (var(--icon-size)));
+  color: var(--sl-color-gray-3);
+}
+.sl-markdown-content .anchor-link:hover,
+.sl-markdown-content .anchor-link:focus {
+  color: var(--sl-color-text-accent);
+}
+.sl-markdown-content .heading-wrapper svg {
+  display: inline;
+  width: var(--icon-size);
+}
+
+@media (hover: hover) {
+  .sl-markdown-content .anchor-link {
+    opacity: 0;
+  }
+}
+.sl-markdown-content .heading-wrapper:hover > .anchor-link,
+.sl-markdown-content .anchor-link:focus {
+  opacity: 1;
+}
+
+/* Float anchor links to the left of headings on larger screens. */
+@media (min-width: 95em) {
+  .sl-markdown-content .heading-wrapper {
+    display: flex;
+    flex-direction: row-reverse;
+    justify-content: flex-end;
+    gap: var(--icon-spacing);
+    margin-inline-start: calc(-1 * (var(--icon-size) + var(--icon-spacing)));
+  }
+  .sl-markdown-content .heading-wrapper > :first-child,
+  .sl-markdown-content .anchor-link {
+    margin: 0;
+  }
+}
+/* End - Custom styles for heading anchor links. */
+
+/* Start - Custom Style to make it sticky & add scrollbar */
+/* TODO - Remove when https://github.com/withastro/starlight/issues/1746 is fixed */
+@media (min-width: 72rem) {
+  .right-sidebar {
+    position: sticky;
+    top: var(--sl-nav-height);
+    border-inline-start: 1px solid var(--sl-color-gray-6);
+    max-width: var(--sl-sidebar-width);
+    width: auto;
+    height: calc(100vh - var(--sl-nav-height));
+    overflow-y: auto;
+    margin-right: var(--sl-sidebar-pad-x);
+    scrollbar-width: auto;
+  }
+
+  .right-sidebar-panel .sl-container {
+    width: auto;
+  }
+}
+/* End - Custom Style to make it sticky */

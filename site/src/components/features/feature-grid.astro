@@ -1,0 +1,20 @@
+<div class:list={['feature-grid', 'not-content']}><slot /></div>
+
+<style>
+	.feature-grid {
+		display: grid;
+		gap: 1rem;
+    align-items: center;
+	}
+
+	.feature-grid > :global(*) {
+		margin-top: 0 !important;
+	}
+
+	@media (min-width: 50rem) {
+		.feature-grid {
+			gap: 1.5rem;
+      flex-direction: column;
+		}
+	}
+</style>

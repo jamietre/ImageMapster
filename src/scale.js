@@ -1,4 +1,4 @@
-/* 
+/*
   scale.js
   Resize and zoom functionality
   Requires areacorners.js
@@ -53,7 +53,7 @@
   /**
    * Resize the image map. Only one of newWidth and newHeight should be passed to preserve scale
    *
-   * @param  {int}   width       The new width OR an object containing named parameters matching this function sig
+   * @param  {int}   width       The new width
    * @param  {int}   height      The new height
    * @param  {int}   effectDuration Time in ms for the resize animation, or zero for no animation
    * @param  {function} callback    A function to invoke when the operation finishes

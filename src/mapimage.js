@@ -8,7 +8,8 @@
 
   var m = $.mapster,
     u = m.utils,
-    ap = [];
+    ap = [],
+    configCheckInterval = 50;
   /**
    * An object encapsulating all the images used by a MapData.
    */
@@ -167,7 +168,7 @@
     bind: function () {
       var me = this,
         promise,
-        triesLeft = me.owner.options.configTimeout / 200,
+        triesLeft = me.owner.options.configTimeout / configCheckInterval,
         /* A recursive function to continue checking that the images have been
                loaded until a timeout has elapsed */
 
@@ -193,7 +194,7 @@
             if (triesLeft-- > 0) {
               me.imgTimeout = window.setTimeout(function () {
                 check.call(me, true);
-              }, 50);
+              }, configCheckInterval);
             } else {
               me.imageLoadError.call(me);
             }

@@ -1,0 +1,22 @@
+---
+interface Props {
+  class?: string;
+}
+const { class: className } = Astro.props;
+---
+
+<div class:list={['not-content', className]}>
+  <slot />
+</div>
+
+<style is:global>
+  /* ImageMapster Styles */
+  .mapster_tooltip {
+    color: var(--sl-color-text) !important;
+    background-color: var(--sl-color-bg) !important;
+    opacity: 1 !important;
+    box-shadow: none !important;
+    border-color: var(--sl-color-text-accent) !important;
+    padding: 0.75rem !important;
+  }
+</style>
