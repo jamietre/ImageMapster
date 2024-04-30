@@ -14,7 +14,7 @@
 - Make callback data structures consistent
 - Improve docs
 
-## Version 1.7.0 - 2024.04.28
+## Version 1.7.0 - 2024.04.29
 
 - [Issue 138](https://github.com/jamietre/ImageMapster/issues/138) 📘 Docs incorrectly state that highlighting will be disabled when staticState option is specified
 - [Issue 228](https://github.com/jamietre/ImageMapster/issues/228) 📘 onClick event will not fire if `clickNavigate` is set to `true`
