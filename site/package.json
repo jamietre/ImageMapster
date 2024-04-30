@@ -14,7 +14,6 @@
     "@astrojs/starlight": "^0.21.5",
     "astro": "^4.7.0",
     "astro-rehype-relative-markdown-links": "^0.13.1",
-    "imagemapster": "file:..",
     "jquery": "^3.7.1",
     "rehype-autolink-headings": "^7.1.0",
     "rehype-external-links": "^3.0.0",

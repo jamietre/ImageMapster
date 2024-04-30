@@ -31,7 +31,7 @@ See the [contributing guidelines](CONTRIBUTING.md) for details on how to contrib
 
 The below covers the ImageMapster jQuery plugin. For information on how to develop the ImageMapster website, see its [README](site/README.md).
 
-You can simultaneously make changes to both the plugin and the website by running `npm run dev` in both the plugin (./) and site (./site) directories. Any changes made to the plugin will be reflected in the site as its [imagemapster](./site/package.json#L17) dependency is linked to the root plugin package.
+You can simultaneously make changes to both the plugin and the website by running `npm run dev` in both the plugin (`./`) and site (`./site`) directories. Any changes made to the plugin will be reflected in the site as it is [imported directly](./site/src/components/demos/core/scripts.astro#L20) from the build output.
 
 ### Build
 
