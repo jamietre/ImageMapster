@@ -2586,7 +2586,7 @@ define(['./iqtest'], function(u,when,when_timeout, iq_asserts, buster_asserts, u
         if (u.isBool(groupResult)) {
             group.passed = groupResult;
             group.doWriterEvent("groupEnd");
-            doEvent.call(this,this,"teardown");
+            doEvent.call(group,group,"teardown");
             group.promise.resolve();
         }
     }
