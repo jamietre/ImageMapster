@@ -236,7 +236,7 @@ $('#myimage').mapster({
 **Type:** `integer`<br/>
 **Default:** `0`
 
-Time in milliseconds before removing highlight after mouse exists an area. Also applies `area-mouseout` event of [toolTipClose](#tooltipclose).
+Time in milliseconds before removing highlight after mouse exits an area. Also applies to `area-mouseout` event of [toolTipClose](#tooltipclose).
 
 Normally, when the user's mouse pointer exits an area, the highlight effect is removed immediately. This behavior can be changed with this option. Setting it to a positive number causes a delay of `n` milliseconds before the effect is removed. Setting to `-1` causes the effect to remain active until another hotspot is entered (e.g., it will only be removed when superceded by a different area being highlighted).
 
