@@ -1045,6 +1045,7 @@
     },
     clearMapData: function (preserveState) {
       var me = this;
+      me.ensureNoHighlight();
       this._clearCanvases(preserveState);
 
       // release refs to DOM elements
