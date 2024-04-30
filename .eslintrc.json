@@ -24,7 +24,8 @@
     "one-var": ["error", { "var": "consecutive" }],
     "strict": ["error", "function"],
     "no-nested-ternary": 0,
-    "camelcase": 0
+    "camelcase": 0,
+    "no-console": ["error", { "allow": ["warn", "error"] }]
   },
   "settings": {
     "html/indent": "+2",

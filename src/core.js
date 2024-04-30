@@ -1106,6 +1106,5 @@
     };
     return me;
   })();
-  console.log('foo3456');
   $.mapster.impl.init();
 })(jQuery);
