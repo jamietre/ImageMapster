@@ -1,5 +1,5 @@
 /*!
-* imagemapster - v1.7.0 - 2024-04-29
+* imagemapster - v1.8.0 - 2024-05-01
 * https://jamietre.github.io/ImageMapster
 * Copyright (c) 2011 - 2024 James Treworgy
 * License: MIT
@@ -31,7 +31,7 @@
       factory(root.jQuery || root.Zepto);
   }
 }(typeof self !== 'undefined' ? self : this, function (jQuery) {
-/* 
+/*
   zepto.js
   Monkey patch for Zepto to add some methods ImageMapster needs
 */
@@ -55,6 +55,47 @@
       };
     }
   });
+
+  var origFnExtend = $.fn.extend;
+  if (!origFnExtend) {
+    $.fn.extend = function (obj) {
+      $.extend($.fn, obj);
+    };
+  }
+
+  var origAddSelf = $.fn.addSelf;
+  if (!origAddSelf) {
+    /*
+      Including Zepto Stack module manually since it is small and avoids updating docs, rebuilding zepto dist, etc.
+      This is needed to support autoresize functionality which needs to resize when the map and/or one (or more) of
+      its parents is not visible. Ideally, we could use ResizeObserver/MutationObserver to detect when we hide/show 
+      and resize on that event instead of resizing while we are not visible but until official support of older browsers 
+      is dropped, we need to go this route.
+
+      Source: https://github.com/madrobby/zepto/blob/main/src/stack.js
+    */
+    // Zepto.js
+    // (c) 2010-2016 Thomas Fuchs
+    // Zepto.js may be freely distributed under the MIT license.
+    $.fn.end = function () {
+      return this.prevObject || $();
+    };
+
+    $.fn.andSelf = function () {
+      return this.add(this.prevObject || $());
+    };
+
+    'filter,add,not,eq,first,last,find,closest,parents,parent,children,siblings'
+      .split(',')
+      .forEach(function (property) {
+        var fn = $.fn[property];
+        $.fn[property] = function () {
+          var ret = fn.apply(this, arguments);
+          ret.prevObject = this;
+          return ret;
+        };
+      });
+  }
 })(jQuery);
 
 /*
@@ -125,6 +166,122 @@
 })(jQuery);
 
 /*
+  When autoresize is enabled, we obtain the width of the wrapper element and resize to that, however when we're hidden because of
+  one of our ancenstors, jQuery width function returns 0. Ideally, we could use ResizeObserver/MutationObserver to detect
+  when we hide/show and resize on that event instead of resizing while we are not visible but until official support of older 
+  browsers is dropped, we need to go this route.  The plugin below will provide the actual width even when we're not visible.
+
+  Source: https://raw.githubusercontent.com/dreamerslab/jquery.actual/master/jquery.actual.js
+*/
+/*! Copyright 2012, Ben Lin (http://dreamerslab.com/)
+ * Licensed under the MIT License (LICENSE.txt).
+ *
+ * Version: 1.0.19
+ *
+ * Requires: jQuery >= 1.2.3
+ */
+/* eslint-disable one-var */
+(function ($) {
+  'use strict';
+
+  $.fn.addBack = $.fn.addBack || $.fn.andSelf;
+
+  $.fn.extend({
+    actual: function (method, options) {
+      // check if the jQuery method exist
+      if (!this[method]) {
+        throw (
+          '$.actual => The jQuery method "' +
+          method +
+          '" you called does not exist'
+        );
+      }
+
+      var defaults = {
+        absolute: false,
+        clone: false,
+        includeMargin: false,
+        display: 'block'
+      };
+
+      var configs = $.extend(defaults, options);
+
+      var $target = this.eq(0);
+      var fix, restore;
+
+      if (configs.clone === true) {
+        fix = function () {
+          var style = 'position: absolute !important; top: -1000 !important; ';
+
+          // this is useful with css3pie
+          $target = $target.clone().attr('style', style).appendTo('body');
+        };
+
+        restore = function () {
+          // remove DOM element after getting the width
+          $target.remove();
+        };
+      } else {
+        var tmp = [];
+        var style = '';
+        var $hidden;
+
+        fix = function () {
+          // get all hidden parents
+          $hidden = $target.parents().addBack().filter(':hidden');
+          style +=
+            'visibility: hidden !important; display: ' +
+            configs.display +
+            ' !important; ';
+
+          if (configs.absolute === true)
+            style += 'position: absolute !important; ';
+
+          // save the origin style props
+          // set the hidden el css to be got the actual value later
+          $hidden.each(function () {
+            // Save original style. If no style was set, attr() returns undefined
+            var $this = $(this);
+            var thisStyle = $this.attr('style');
+
+            tmp.push(thisStyle);
+            // Retain as much of the original style as possible, if there is one
+            $this.attr('style', thisStyle ? thisStyle + ';' + style : style);
+          });
+        };
+
+        restore = function () {
+          // restore origin style values
+          $hidden.each(function (i) {
+            var $this = $(this);
+            var _tmp = tmp[i];
+
+            if (_tmp === undefined) {
+              $this.removeAttr('style');
+            } else {
+              $this.attr('style', _tmp);
+            }
+          });
+        };
+      }
+
+      fix();
+      // get the actual value with user specific methed
+      // it can be 'width', 'height', 'outerWidth', 'innerWidth'... etc
+      // configs.includeMargin only works for 'outerWidth' and 'outerHeight'
+      var actual = /(outer)/.test(method)
+        ? $target[method](configs.includeMargin)
+        : $target[method]();
+
+      restore();
+      // IMPORTANT, this plugin only return the value of the first element
+      return actual;
+    }
+  });
+})(jQuery);
+/* eslint-enable one-var */
+
+/*
   core.js
   ImageMapster core
 */
@@ -132,7 +289,7 @@
 (function ($) {
   'use strict';
 
-  var mapster_version = '1.7.0';
+  var mapster_version = '1.8.0';
 
   // all public functions in $.mapster.impl are methods
   $.fn.mapster = function (method) {
@@ -1232,7 +1389,6 @@
     };
     return me;
   })();
-  console.log('foo3456');
   $.mapster.impl.init();
 })(jQuery);
 
@@ -3114,6 +3270,7 @@
     },
     clearMapData: function (preserveState) {
       var me = this;
+      me.ensureNoHighlight();
       this._clearCanvases(preserveState);
 
       // release refs to DOM elements
@@ -3905,7 +4062,19 @@
 
   m.MapData.prototype.autoResize = function (duration, callback) {
     var me = this;
-    me.resize($(me.wrapper).width(), null, duration, callback);
+
+    /*
+      When autoresize is enabled, we obtain the width of the wrapper element and resize to that, however when we're hidden because of
+      one of our ancenstors, jQuery width function returns 0. Ideally, we could use ResizeObserver/MutationObserver to detect
+      when we hide/show and resize on that event instead of resizing while we are not visible but until official support of older 
+      browsers is dropped, we need to go this route.
+    */
+    me.resize(
+      $(me.wrapper).width() || $(me.wrapper).actual('width'),
+      null,
+      duration,
+      callback
+    );
   };
 
   m.MapData.prototype.configureAutoResize = function () {
@@ -4378,7 +4547,9 @@
     options.fadeDuration =
       options.fadeDuration ||
       (md.options.toolTipFade
-        ? u.isNumeric(areaOpts.fadeDuration) ? areaOpts.fadeDuration : md.options.fadeDuration
+        ? u.isNumeric(areaOpts.fadeDuration)
+          ? areaOpts.fadeDuration
+          : md.options.fadeDuration
         : 0);
 
     target = ad.area
