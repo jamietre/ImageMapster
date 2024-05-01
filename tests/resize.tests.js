@@ -91,14 +91,57 @@ this.tests.push(
 this.tests.push(
   iqtest
     .create('autoresize', 'autoresize feature')
-    .add('wrapper does not have width/height', function (a) {
+    .add('Ensure expected behavior', function (a) {
       'use strict';
 
-      var img = $('img');
+      var me = this,
+        $img = $('img'),
+        $testElements = $('#testElements'),
+        testElementsInfo = {},
+        getPromise = function (name) {
+          return me.promises(name);
+        },
+        setCallback = function (opt, cb) {
+          var obj = {};
+          obj[opt] = function (e) {
+            // clear the callback
+            var objClear = {};
+            objClear[opt] = null;
+            $img.mapster('set_options', objClear);
+            var resolveWith = ((e || {}).this_context = this);
+            cb(resolveWith);
+          };
+          $img.mapster('set_options', obj);
+        },
+        getElementWidth = function ($el) {
+          // zepto returns outerWidth (content + padding + border) using width function
+          // while jQuery returns content width.  Use css('width') for consistency
+          // across both libraries
+          return parseInt($el.css('width').replace('px', ''), 10);
+        };
       this.when(function (cb) {
-        img.mapster({ enableAutoResizeSupport: true, onConfigured: cb });
+        testElementsInfo = {
+          orig: {
+            isVisible: $testElements.is(':visible'),
+            cssWidth: $testElements.css('width')
+          },
+          underTest: {
+            initial: 100,
+            delta: 10
+          }
+        };
+        $testElements.css('width', testElementsInfo.underTest.initial + 'px');
+        $img.mapster({
+          mapKey: 'state',
+          enableAutoResizeSupport: true,
+          autoResize: true,
+          onConfigured: cb
+        });
       }).then(function () {
-        var wrapper = img.closest('div');
+        /*
+          Test: wrapper should not have explicit width/height
+        */
+        var wrapper = $img.closest('div');
         a.equals(
           wrapper.attr('id').substring(0, 12),
           'mapster_wrap',
@@ -110,6 +153,48 @@ this.tests.push(
           '',
           'wrapper height is not specified'
         );
+
+        /*
+          Test: autoresize should complete successfully
+          see https://github.com/jamietre/ImageMapster/issues/421
+        */
+        var imageWidth = getElementWidth($img);
+        $testElements.css(
+          'width',
+          testElementsInfo.underTest.initial +
+            testElementsInfo.underTest.delta +
+            'px'
+        );
+        // make sure parent element is hidden
+        $testElements.hide();
+        a.equals(
+          $testElements.is(':hidden'),
+          true,
+          'sanity check - ensure map container is hidden'
+        );
+        a.equals(
+          $img.is(':hidden'),
+          true,
+          'sanity check - ensure map is hidden'
+        );
+        // make sure an area has 'state'
+        $img.mapster('set', true, 'KS');
+        setCallback('onAutoResize', function () {
+          a.equals(
+            getElementWidth($img),
+            imageWidth + testElementsInfo.underTest.delta,
+            'image width is correct after autoresize'
+          );
+          // restore back to initial state
+          $testElements.css('width', testElementsInfo.orig.cssWidth);
+          if (testElementsInfo.orig.isVisible) {
+            $testElements.show();
+          }
+          getPromise('finished').resolve();
+        });
+        $(window).trigger('resize');
+
+        a.resolves(getPromise('finished'), 'The last test was run');
       });
     })
 );

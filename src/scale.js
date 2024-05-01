@@ -191,7 +191,19 @@
 
   m.MapData.prototype.autoResize = function (duration, callback) {
     var me = this;
-    me.resize($(me.wrapper).width(), null, duration, callback);
+
+    /*
+      When autoresize is enabled, we obtain the width of the wrapper element and resize to that, however when we're hidden because of
+      one of our ancenstors, jQuery width function returns 0. Ideally, we could use ResizeObserver/MutationObserver to detect
+      when we hide/show and resize on that event instead of resizing while we are not visible but until official support of older 
+      browsers is dropped, we need to go this route.
+    */
+    me.resize(
+      $(me.wrapper).width() || $(me.wrapper).actual('width'),
+      null,
+      duration,
+      callback
+    );
   };
 
   m.MapData.prototype.configureAutoResize = function () {

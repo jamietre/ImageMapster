@@ -114,17 +114,32 @@ function bindUIEvents() {
     document.location.search = search.toString();
   });
 
-  // zepto returns 0 for element width/height when element is not visible
-  // so if we are running with zepto, show the images and don't allow toggle
+  // Zepto returns zero (0) when width/height is called on a non-visible
+  // element and therefore problems may arise in test execution if the test
+  // images are not visible. As of 2024.05.01, all tests have been updated to
+  // work around this issue and all tests pass with Zepto when image is hidden.
+  // If any Zepto tests fail due to dimension assertions, make the image
+  // visible and if the tests pass, investigate and update with a solution. If
+  // for some reason a solution is not possible, comment out lines 137 - 142 below
+  // and uncomment lines 127 to 135 to force show the image AND update the code
+  // in imagemapster-test-runner.html per the similar comment to this one there.
+  /*
+    if ($.zepto) {
+      $('#testElements').show();
+      $('#zeptoImageToggleInfo').show();
+      $('#toggleTestImage').hide();
+    } else {
+      $('#toggleTestImage').on('click', function () {
+        $('#testElements').toggle();
+      });
+    }
+  */
   if ($.zepto) {
-    $('#testElements').show();
     $('#zeptoImageToggleInfo').show();
-    $('#toggleTestImage').hide();
-  } else {
-    $('#toggleTestImage').on('click', function () {
-      $('#testElements').toggle();
-    });
   }
+  $('#toggleTestImage').on('click', function () {
+    $('#testElements').toggle();
+  });
 
   enableTestLink();
 

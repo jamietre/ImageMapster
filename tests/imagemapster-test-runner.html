@@ -116,12 +116,24 @@
     <div id="oldRuns"></div>
 
     <p id="zeptoImageToggleInfo" style="display: none">
-      <strong>*** Zepto Build Detected ***</strong>
+      <strong>*** IMPORTANT: Zepto Build Detected ***</strong>
       <br />
-      When using Zepto, the test images MUST be visible otherwise the resize
-      tests will fail because Zepto returns width/height of 0/0 when content
-      isn't visible. For this reason, the ability to toggle visibility of the
-      image is not supported.
+      Zepto returns zero (0) when width/height is called on a non-visible
+      element and therefore problems may arise in test execution if the test
+      images are not visible. As of 2024.05.01, all tests have been updated to
+      work around this issue and all tests pass with Zepto when image is hidden.
+      If any Zepto tests fail due to dimension assertions, make the image
+      visible and if the tests pass, investigate and update with a solution. If
+      for some reason a solution is not possible, replace this text with the
+      commented out text below and update imagemapster-test-runner.js to show
+      the image by default (there is code commented out in that file that can be
+      uncommented to accomplish).
+      <!--
+        When using Zepto, the test images MUST be visible otherwise the resize
+        tests will fail because Zepto returns width/height of 0/0 when content
+        isn't visible. For this reason, the ability to toggle visibility of the
+        image is not supported.
+      -->
     </p>
     <a href="#" id="toggleTestImage">show/hide test image</a>
 
