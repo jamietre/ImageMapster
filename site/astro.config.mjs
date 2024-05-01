@@ -58,9 +58,6 @@ export default defineConfig({
       social: {
         github: 'https://github.com/jamietre/ImageMapster'
       },
-      components: {
-        ThemeSelect: './src/components/starlight/theme-select.astro'
-      },
       customCss: ['./src/styles/custom.css'],
       sidebar: [
         {
