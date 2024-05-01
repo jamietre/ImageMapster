@@ -273,7 +273,9 @@
     options.fadeDuration =
       options.fadeDuration ||
       (md.options.toolTipFade
-        ? u.isNumeric(areaOpts.fadeDuration) ? areaOpts.fadeDuration : md.options.fadeDuration
+        ? u.isNumeric(areaOpts.fadeDuration)
+          ? areaOpts.fadeDuration
+          : md.options.fadeDuration
         : 0);
 
     target = ad.area
