@@ -9,10 +9,8 @@
 - Update to modern build system (e.g. rollup/weback/etc.)
 - Create React component
 - Migrate to modern testframework
-- Update website and host on Github
 - Zoom to Area
 - Make callback data structures consistent
-- Improve docs
 
 ## Version 1.8.0 - 2024.05.01
 
