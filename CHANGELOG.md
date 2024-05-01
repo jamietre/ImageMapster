@@ -14,7 +14,7 @@
 - Make callback data structures consistent
 - Improve docs
 
-## Version 1.7.1 - 2024.04.29
+## Version 1.8.0 - 2024.05.01
 
 - [Issue 420](https://github.com/jamietre/ImageMapster/issues/420) 🐞 Forgotten console.log in v1.7.0
 - [Issue 421](https://github.com/jamietre/ImageMapster/issues/421) 🐞 resizing map when map not visible causes `Failed to execute 'drawImage' on 'CanvasRenderingContext2D'` exception
