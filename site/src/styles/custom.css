@@ -153,3 +153,9 @@ span.external-link::after {
   }
 }
 /* End - Custom Style to make left & right nav scrollbar thin */
+
+/* Start - Fix long list item wrapping */
+.sl-markdown-content li {
+  overflow-wrap: anywhere;
+}
+/* End - Fix long list item wrapping */
