@@ -107,6 +107,7 @@ span.external-link::after {
     overflow-y: auto;
     margin-right: var(--sl-sidebar-pad-x);
     scrollbar-width: auto;
+    padding-top: 0;
   }
 
   .right-sidebar-panel .sl-container {
