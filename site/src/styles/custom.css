@@ -115,3 +115,41 @@ span.external-link::after {
   }
 }
 /* End - Custom Style to make it sticky */
+
+/* Start - Custom Style to make left & right nav scrollbar thin */
+/* TODO - If/When Starlight updates styles to apply thin scrollbars, this can be removed - see https://github.com/withastro/starlight/issues/1746#issuecomment-2065888492 */
+@media (pointer: fine) {
+  :root {
+    --im-scrollbar-size-legacy: 7px;
+    --im-scrollbar-color-track: var(--ec-frm-edBg);
+    --im-scrollbar-color-thumb: var(--ec-frm-edTabBarBrdBtmCol);
+    --im-scrollbar-color-thumb-hover: var(--sl-color-gray-4);
+  }
+
+  .right-sidebar,
+  #starlight__sidebar {
+    scrollbar-width: thin;
+  }
+
+  /* Legacy browsers with `::-webkit-scrollbar-*` support */
+  .right-sidebar::-webkit-scrollbar,
+  #starlight__sidebar::-webkit-scrollbar {
+    height: var(--im-scrollbar-size-legacy);
+    width: var(--im-scrollbar-size-legacy);
+  }
+  .right-sidebar::-webkit-scrollbar-track,
+  #starlight__sidebar::-webkit-scrollbar-track {
+    background: var(--im-scrollbar-color-track);
+    border-radius: 10px;
+  }
+  .right-sidebar::-webkit-scrollbar-thumb,
+  #starlight__sidebar::-webkit-scrollbar-thumb {
+    background: var(--im-scrollbar-color-thumb);
+    border-radius: 10px;
+  }
+  .right-sidebar::-webkit-scrollbar-thumb:hover,
+  #starlight__sidebar::-webkit-scrollbar-thumb:hover {
+    background: var(--im-scrollbar-color-thumb-hover);
+  }
+}
+/* End - Custom Style to make left & right nav scrollbar thin */
