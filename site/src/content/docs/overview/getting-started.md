@@ -51,7 +51,7 @@ Alternatively, you can include ImageMapster from one of the following CDNs:
 [Zepto](https://zeptojs.com/) is no longer being maintained and therefore ImageMapsters support for Zepto has been deprecated as of [version 1.3.2](https://github.com/jamietre/ImageMapster/blob/main/CHANGELOG.md#version-132---20210121) and will be [removed in the next major release](https://github.com/jamietre/ImageMapster/issues/343).
 :::
 
-As of ImageMapster v1.3.2, ImageMapster contains full support for Zepto v1.2.0. The latest Zepto compatible version of ImageMapster is [1.7.0](https://github.com/jamietre/ImageMapster/releases/tag/v1.7.0).
+As of ImageMapster v1.3.2, ImageMapster contains full support for Zepto v1.2.0. The latest Zepto compatible version of ImageMapster is [1.8.0](https://github.com/jamietre/ImageMapster/releases/tag/v1.8.0).
 
 Prior to ImageMapster v1.3.2 and with any version of Zepto except v1.2.0, ImageMapster is unlikely to work as expected. In the early versions of ImageMapster, Zepto support was maintained, however due to changes in Zepto, as of v1.2.5 of ImageMapster, support for Zepto compatability fell behind as it required too much effort and pushing ImageMapster forward with jQuery was the priority.
 
@@ -73,7 +73,7 @@ Using `webpack` and `zepto-modules` as an example:
 ##### Install from NPM
 
 ```sh
-npm install zepto-modules imagemapster@1.7.0 --save
+npm install zepto-modules imagemapster@1.8.0 --save
 ```
 
 ##### src/yourzepto.js
@@ -135,14 +135,14 @@ Download the latest Zepto version of ImageMapster from the [Releases](https://gi
 ></script>
 <script
   language="text/javascript"
-  src="/path/to/cdn/for/v1.7.0/dist/jquery.imagemapster.zepto.min.js"
+  src="/path/to/cdn/for/v1.8.0/dist/jquery.imagemapster.zepto.min.js"
 ></script>
 ```
 
 Alternatively, you can include the Zepto version of ImageMapster from one of the following CDNs:
 
-1. [jsDelivr](https://www.jsdelivr.com/package/npm/imagemapster?version=1.7.0) - <https://www.jsdelivr.com/package/npm/imagemapster?version=1.7.0>
-2. [cdnjs](https://cdnjs.com/libraries/imagemapster/1.7.0) - <https://cdnjs.com/libraries/imagemapster/1.7.0>
+1. [jsDelivr](https://www.jsdelivr.com/package/npm/imagemapster?version=1.8.0) - <https://www.jsdelivr.com/package/npm/imagemapster?version=1.8.0>
+2. [cdnjs](https://cdnjs.com/libraries/imagemapster/1.8.0) - <https://cdnjs.com/libraries/imagemapster/1.8.0>
 
 ## Basic Usage
 
