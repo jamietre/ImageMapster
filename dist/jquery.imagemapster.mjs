@@ -1,5 +1,5 @@
 /*!
-* imagemapster - v1.8.0 - 2024-05-01
+* imagemapster - v1.8.1 - 2024-12-21
 * https://jamietre.github.io/ImageMapster
 * Copyright (c) 2011 - 2024 James Treworgy
 * License: MIT
@@ -198,7 +198,7 @@ function imagemapsterFactory(jQuery) {
 (function ($) {
   'use strict';
 
-  var mapster_version = '1.8.0';
+  var mapster_version = '1.8.1';
 
   // all public functions in $.mapster.impl are methods
   $.fn.mapster = function (method) {
@@ -258,6 +258,7 @@ function imagemapsterFactory(jQuery) {
       configTimeout: 30000,
       noHrefIsMask: true,
       scaleMap: true,
+      scaleMapBounds: { below: 0.98, above: 1.02 },
       enableAutoResizeSupport: false, // TODO: Remove in next major release
       autoResize: false,
       autoResizeDelay: 0,
@@ -2911,7 +2912,8 @@ function imagemapsterFactory(jQuery) {
       me.scaleInfo = scale = u.scaleMap(
         me.images[0],
         me.images[1],
-        opts.scaleMap
+        opts.scaleMap,
+        opts.scaleMapBounds
       );
 
       me.base_canvas = base_canvas = me.graphics.createVisibleCanvas(me);
@@ -3791,7 +3793,7 @@ function imagemapsterFactory(jQuery) {
     u = m.utils,
     p = m.MapArea.prototype;
 
-  m.utils.getScaleInfo = function (eff, actual) {
+  m.utils.getScaleInfo = function (eff, actual, scaleMapBounds) {
     var pct;
     if (!actual) {
       pct = 1;
@@ -3799,7 +3801,11 @@ function imagemapsterFactory(jQuery) {
     } else {
       pct = eff.width / actual.width || eff.height / actual.height;
       // make sure a float error doesn't muck us up
-      if (pct > 0.98 && pct < 1.02) {
+      if (
+        scaleMapBounds &&
+        pct > scaleMapBounds.below &&
+        pct < scaleMapBounds.above
+      ) {
         pct = 1;
       }
     }
@@ -3814,7 +3820,7 @@ function imagemapsterFactory(jQuery) {
     };
   };
   // Scale a set of AREAs, return old data as an array of objects
-  m.utils.scaleMap = function (image, imageRaw, scale) {
+  m.utils.scaleMap = function (image, imageRaw, scale, scaleMapBounds) {
     // stunningly, jQuery width can return zero even as width does not, seems to happen only
     // with adBlock or maybe other plugins. These must interfere with onload events somehow.
 
@@ -3827,7 +3833,7 @@ function imagemapsterFactory(jQuery) {
     if (!vis.complete()) {
       vis = raw;
     }
-    return this.getScaleInfo(vis, scale ? raw : null);
+    return this.getScaleInfo(vis, scale ? raw : null, scaleMapBounds);
   };
 
   /**
@@ -3851,6 +3857,7 @@ function imagemapsterFactory(jQuery) {
 
     // allow omitting duration
     callback = callback || duration;
+    duration = u.isNumeric(duration) ? duration : 0;
 
     function sizeCanvas(canvas, w, h) {
       if (m.hasCanvas()) {
@@ -3902,7 +3909,8 @@ function imagemapsterFactory(jQuery) {
         {
           width: me.scaleInfo.realWidth,
           height: me.scaleInfo.realHeight
-        }
+        },
+        me.options.scaleMapBounds
       );
       $.each(me.data, function (_, e) {
         $.each(e.areas(), function (_, e) {
@@ -3975,7 +3983,7 @@ function imagemapsterFactory(jQuery) {
     /*
       When autoresize is enabled, we obtain the width of the wrapper element and resize to that, however when we're hidden because of
       one of our ancenstors, jQuery width function returns 0. Ideally, we could use ResizeObserver/MutationObserver to detect
-      when we hide/show and resize on that event instead of resizing while we are not visible but until official support of older 
+      when we hide/show and resize on that event instead of resizing while we are not visible but until official support of older
       browsers is dropped, we need to go this route.
     */
     me.resize(

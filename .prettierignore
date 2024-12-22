@@ -10,3 +10,4 @@ package-lock.json
 !.*.jsonc
 *.hbs
 /docs/
+.astro/
