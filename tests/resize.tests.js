@@ -90,6 +90,101 @@ this.tests.push(
 
 this.tests.push(
   iqtest
+    .create('getScaleInfo', 'getScaleInfo scaleMapBounds')
+    .add('respects scale boundaries', function (a) {
+      'use strict';
+
+      var result,
+        mu = $.mapster.utils,
+        bounds = { below: 0.95, above: 1.05 },
+        actual = { width: 100, height: 100 };
+
+      // scale up
+      result = mu.getScaleInfo(
+        { width: 104.998, height: 104.998 },
+        actual,
+        bounds
+      );
+      a.equals(
+        { scale: result.scale, scalePct: result.scalePct },
+        { scale: false, scalePct: 1 },
+        'should not have scaled up when less than above bound'
+      );
+
+      result = mu.getScaleInfo({ width: 105, height: 105 }, actual, bounds);
+      a.equals(
+        { scale: result.scale, scalePct: result.scalePct },
+        { scale: true, scalePct: 105 / 100 },
+        'should have scaled up when equal to above bound'
+      );
+
+      result = mu.getScaleInfo(
+        { width: 105.00000000001, height: 105.00000000001 },
+        actual,
+        0.04999
+      );
+      a.equals(
+        { scale: result.scale, scalePct: result.scalePct },
+        { scale: true, scalePct: 105.00000000001 / 100 },
+        'should have scaled up when greater than above bound'
+      );
+
+      result = mu.getScaleInfo(
+        { width: 104.998, height: 104.998 },
+        actual,
+        undefined
+      );
+      a.equals(
+        { scale: result.scale, scalePct: result.scalePct },
+        { scale: true, scalePct: 104.998 / 100 },
+        'should have scaled up when no boundary'
+      );
+
+      // scale down
+      result = mu.getScaleInfo(
+        { width: 95.0000001, height: 95.0000001 },
+        actual,
+        bounds
+      );
+      a.equals(
+        { scale: result.scale, scalePct: result.scalePct },
+        { scale: false, scalePct: 1 },
+        'should not have scaled down when greater than below bound'
+      );
+
+      result = mu.getScaleInfo({ width: 95, height: 95 }, actual, bounds);
+      a.equals(
+        { scale: result.scale, scalePct: result.scalePct },
+        { scale: true, scalePct: 95 / 100 },
+        'should have scaled down when equal to below bound'
+      );
+
+      result = mu.getScaleInfo(
+        { width: 94.999999, height: 94.999999 },
+        actual,
+        bounds
+      );
+      a.equals(
+        { scale: result.scale, scalePct: result.scalePct },
+        { scale: true, scalePct: 94.999999 / 100 },
+        'should have scaled down when less than below bound'
+      );
+
+      result = mu.getScaleInfo(
+        { width: 95.0000001, height: 95.0000001 },
+        actual,
+        undefined
+      );
+      a.equals(
+        { scale: result.scale, scalePct: result.scalePct },
+        { scale: true, scalePct: 95.0000001 / 100 },
+        'should have scaled down when no boundary'
+      );
+    })
+);
+
+this.tests.push(
+  iqtest
     .create('autoresize', 'autoresize feature')
     .add('Ensure expected behavior', function (a) {
       'use strict';
