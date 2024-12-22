@@ -661,7 +661,7 @@ $('#myimage').mapster({
 ### fillColorMask
 
 **Type:** `string`<br/>
-**Default:** `FFFFFF`
+**Default:** `FFFFFF`<br/>
 **See Also:** [`noHrefIsMask`](#nohrefismask), [`isMask`](#ismask)
 
 :::note
@@ -1101,7 +1101,7 @@ ImageMapster supports assocating an image map to an external list in order to si
 
 **Type:** `jQueryObject`<br/>
 **Default:** `null`<br/>
-**See Also:** [onGetList](#ongetlist)
+**See Also:** [`onGetList`](#ongetlist)
 
 A [jQueryObject](https://api.jquery.com/Types/#jQuery) containing a collection of elements bound to the image map that will be updated when areas are selected or deselected.
 
@@ -1212,7 +1212,7 @@ The following are `events` or callbacks - these options can be assigned function
 
 **Type:** `function()`<br/>
 **Default:** `null`<br/>
-**See Also:** [autoResize](#autoresize)
+**See Also:** [`autoResize`](#autoresize)
 
 Callback after the image map has been automatically resized.
 
@@ -1276,8 +1276,8 @@ $('#myimage').mapster({
 ### onGetList
 
 **Type:** `function(data: AreaData[])`<br/>
-**Default:** `null`
-**See Also:** [Bound List Options](#bound-list-options)
+**Default:** `null`<br/>
+**See Also:** [`Bound List Options`](#bound-list-options)
 
 Callback during mapster initialization that provides summary data about the image map and expects a jQueryObject containing the corresponding html elements in the external list.
 
@@ -1339,9 +1339,9 @@ $('#myimage').mapster({
   onMouseout: function (data) {
     var $me = $(this), // HTMLAreaElement element clicked
       e = data.e, // jQueryEventObject - see https://api.jquery.com/category/events/event-object/
-      options = data.options; // area specific options defined for this area/area group
-    (key = data.key), // mapKey for this area
-      (selected = data.selected); // true or false based on current area state
+      options = data.options, // area specific options defined for this area/area group
+      key = data.key, // mapKey for this area
+      selected = data.selected; // true or false based on current area state
 
     // ...
   }
@@ -1360,9 +1360,9 @@ $('#myimage').mapster({
   onMouseover: function (data) {
     var $me = $(this), // HTMLAreaElement element clicked
       e = data.e, // jQueryEventObject - see https://api.jquery.com/category/events/event-object/
-      options = data.options; // area specific options defined for this area/area group
-    (key = data.key), // mapKey for this area
-      (selected = data.selected); // true or false based on current area state
+      options = data.options, // area specific options defined for this area/area group
+      key = data.key, // mapKey for this area
+      selected = data.selected; // true or false based on current area state
 
     // ...
   }

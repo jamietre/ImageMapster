@@ -155,7 +155,8 @@ span.external-link::after {
 /* End - Custom Style to make left & right nav scrollbar thin */
 
 /* Start - Fix long list item wrapping */
-.sl-markdown-content li {
+/* TODO: Follow progress of https://github.com/withastro/starlight/pull/1736 and remove once Starlight has a permanent solution */
+.sl-markdown-content li:not(:where(.not-content *)) {
   overflow-wrap: anywhere;
 }
 /* End - Fix long list item wrapping */
