@@ -132,7 +132,7 @@ this.tests.push(
       result = mu.getScaleInfo(
         { width: 104.998, height: 104.998 },
         actual,
-        undefined
+        false
       );
       a.equals(
         { scale: result.scale, scalePct: result.scalePct },
@@ -173,7 +173,7 @@ this.tests.push(
       result = mu.getScaleInfo(
         { width: 95.0000001, height: 95.0000001 },
         actual,
-        undefined
+        false
       );
       a.equals(
         { scale: result.scale, scalePct: result.scalePct },
