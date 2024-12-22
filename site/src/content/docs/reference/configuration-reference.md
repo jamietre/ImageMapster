@@ -1077,7 +1077,8 @@ $('#myimage').mapster({
 ### scaleMap
 
 **Type:** `boolean`<br/>
-**Default:** `true`
+**Default:** `true`<br/>
+**See Also:** [`scaleMapBounds`](#scalemapbounds)
 
 Automatically scale image maps to the current display size of the image.
 
@@ -1090,6 +1091,29 @@ If this behavior is not desired for some reason, this can be disabled by setting
 ```js
 $('#myimage').mapster({
   scaleMap: false
+});
+```
+
+### scaleMapBounds
+
+**Type:** `false | { below: number, above: number }`<br/>
+**Default:** `{ below: 0.98, above: 1.02 }`<br/>
+**See Also:** [`scaleMap`](#scalemap)
+
+The boundary to restrict scaling when [scaleMap](#scalemap) is enabled.
+
+When an image map is resized, it's map area coordinates are scaled to correspond with the displayed image size.
+
+When the percentage of the displayed image size relative to the natural image size is between `below` and `after` (not inclusive), the map area coordinates will be scaled based on 100% of the natural image size. When the percentage is outside of this boundary (inclusive), map area coordinates will be scaled based on the displayed image size.
+
+By default, scaling will occur when the displayed image size is 98% (or less) or 102% (or more) of its natural image size.
+
+Setting this value to `false` will scale the map areas based on displayed image size without any restrictions.
+
+```js
+$('#myimage').mapster({
+  // scale down to any size but restrict scaling up to 105% or greater
+  scaleMapBounds: { below: 1, above: 1.05 }
 });
 ```
 

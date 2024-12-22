@@ -66,6 +66,7 @@
       configTimeout: 30000,
       noHrefIsMask: true,
       scaleMap: true,
+      scaleMapBounds: { below: 0.98, above: 1.02 },
       enableAutoResizeSupport: false, // TODO: Remove in next major release
       autoResize: false,
       autoResizeDelay: 0,

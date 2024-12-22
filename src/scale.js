@@ -11,7 +11,7 @@
     u = m.utils,
     p = m.MapArea.prototype;
 
-  m.utils.getScaleInfo = function (eff, actual) {
+  m.utils.getScaleInfo = function (eff, actual, scaleMapBounds) {
     var pct;
     if (!actual) {
       pct = 1;
@@ -19,7 +19,11 @@
     } else {
       pct = eff.width / actual.width || eff.height / actual.height;
       // make sure a float error doesn't muck us up
-      if (pct > 0.98 && pct < 1.02) {
+      if (
+        scaleMapBounds &&
+        pct > scaleMapBounds.below &&
+        pct < scaleMapBounds.above
+      ) {
         pct = 1;
       }
     }
@@ -34,7 +38,7 @@
     };
   };
   // Scale a set of AREAs, return old data as an array of objects
-  m.utils.scaleMap = function (image, imageRaw, scale) {
+  m.utils.scaleMap = function (image, imageRaw, scale, scaleMapBounds) {
     // stunningly, jQuery width can return zero even as width does not, seems to happen only
     // with adBlock or maybe other plugins. These must interfere with onload events somehow.
 
@@ -47,7 +51,7 @@
     if (!vis.complete()) {
       vis = raw;
     }
-    return this.getScaleInfo(vis, scale ? raw : null);
+    return this.getScaleInfo(vis, scale ? raw : null, scaleMapBounds);
   };
 
   /**
@@ -123,7 +127,8 @@
         {
           width: me.scaleInfo.realWidth,
           height: me.scaleInfo.realHeight
-        }
+        },
+        me.options.scaleMapBounds
       );
       $.each(me.data, function (_, e) {
         $.each(e.areas(), function (_, e) {

@@ -777,7 +777,8 @@
       me.scaleInfo = scale = u.scaleMap(
         me.images[0],
         me.images[1],
-        opts.scaleMap
+        opts.scaleMap,
+        opts.scaleMapBounds
       );
 
       me.base_canvas = base_canvas = me.graphics.createVisibleCanvas(me);
