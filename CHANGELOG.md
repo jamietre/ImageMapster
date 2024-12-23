@@ -14,7 +14,7 @@
 
 ## Version 1.8.1 - 2024.12.21
 
-- [Issue 424](https://github.com/jamietre/ImageMapster/issues/424) [✨] Support configurable scale boundaries during resize
+- [Issue 424](https://github.com/jamietre/ImageMapster/issues/424) ✨ Support configurable scale boundaries during resize
 
 ## Version 1.8.0 - 2024.05.01
 
