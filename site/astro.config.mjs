@@ -3,6 +3,7 @@ import starlight from '@astrojs/starlight';
 import { rehypeAutoLink, rehypeExternalLink } from './plugins/rehype.ts';
 import rehypeSlug from 'rehype-slug';
 import rehypeAstroRelativeMarkdownLinks from 'astro-rehype-relative-markdown-links';
+import { ensureLeadingSlash } from './node_modules/@astrojs/starlight/utils/path';
 
 const sharedConfig = {
   // astro hasn't made import.meta.env available yet so we need
@@ -19,7 +20,7 @@ const sharedConfig = {
 export default defineConfig({
   ...sharedConfig,
   site: process.env.SITE_URL || 'https://jamietre.github.io',
-  base: process.env.BASE_PATH || 'ImageMapster',
+  base: ensureLeadingSlash(process.env.BASE_PATH || 'ImageMapster'),
   vite: {
     resolve: {
       /*
@@ -42,10 +43,9 @@ export default defineConfig({
       [
         rehypeAstroRelativeMarkdownLinks,
         {
-          basePath: sharedConfig.base,
+          base: sharedConfig.base,
           trailingSlash: sharedConfig.trailingSlash,
-          contentPath: 'src/content/docs',
-          collectionPathMode: 'root'
+          collectionBase: false
         }
       ],
       ...rehypeAutoLink(),
