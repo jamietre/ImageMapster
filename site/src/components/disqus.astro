@@ -30,7 +30,9 @@ const { pageId, pageUrl } = Astro.props;
   }
 </style>
 <script is:inline>
-  const disqus_config = function () {
+  // NOTE - This must be a var as its wrapped by disqus which expects
+  // it on window.disqus_config and it modifies `this`
+  var disqus_config = function () {
     const container = document.getElementById('disqus_thread');
     this.page.url = container.dataset.disqusUrl;
     this.page.identifier = container.dataset.disqusId;
