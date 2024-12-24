@@ -18,6 +18,7 @@
       });
       window.addEventListener('testPassive.mapster', function () {}, opts);
       window.removeEventListener('testPassive.mapster', function () {}, opts);
+      // eslint-disable-next-line no-unused-vars
     } catch (e) {
       // intentionally ignored
     }
@@ -68,7 +69,7 @@
 /*
   When autoresize is enabled, we obtain the width of the wrapper element and resize to that, however when we're hidden because of
   one of our ancenstors, jQuery width function returns 0. Ideally, we could use ResizeObserver/MutationObserver to detect
-  when we hide/show and resize on that event instead of resizing while we are not visible but until official support of older 
+  when we hide/show and resize on that event instead of resizing while we are not visible but until official support of older
   browsers is dropped, we need to go this route.  The plugin below will provide the actual width even when we're not visible.
 
   Source: https://raw.githubusercontent.com/dreamerslab/jquery.actual/master/jquery.actual.js

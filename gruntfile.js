@@ -208,23 +208,7 @@ module.exports = function (grunt) {
     },
     eslint: {
       options: {
-        failOnError: true,
-        extensions: [
-          '.js',
-          '.jsx',
-          '.cjs',
-          '.mjs',
-          '.html',
-          '.yml',
-          '.yaml',
-          '.md',
-          '.mdx',
-          '.json',
-          '.jsonc',
-          '.ts',
-          '.tsx',
-          '.astro'
-        ]
+        failOnError: true
       },
       check: {
         src: ['.']

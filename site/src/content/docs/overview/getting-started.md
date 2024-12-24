@@ -78,8 +78,6 @@ npm install zepto-modules imagemapster@1.8.0 --save
 
 ##### src/yourzepto.js
 
-<!-- eslint-disable-next-line @typescript-eslint/no-var-requires -->
-
 ```js
 var $ = require('zepto-modules/zepto');
 

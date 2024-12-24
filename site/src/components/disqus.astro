@@ -30,14 +30,14 @@ const { pageId, pageUrl } = Astro.props;
   }
 </style>
 <script is:inline>
-  var disqus_config = function () {
+  const disqus_config = function () {
     const container = document.getElementById('disqus_thread');
     this.page.url = container.dataset.disqusUrl;
     this.page.identifier = container.dataset.disqusId;
   };
 
   const loadDisqus = function () {
-    var d = document,
+    const d = document,
       s = d.createElement('script');
     s.id = 'disqus_script';
     s.src = 'https://outsharked.disqus.com/embed.js';

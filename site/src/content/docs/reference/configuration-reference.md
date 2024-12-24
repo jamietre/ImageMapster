@@ -1324,11 +1324,10 @@ The client should return a `jQueryObject` containing all the elements that make 
 $('#myimage').mapster({
   onGetList: function (data) {
     var $me = $(this), // HTMLImageElement of the bound image,
-      items = data; // array of AreaData objects
-
-    var listItems = items.map(function (item) {
-      return buildListItem(item.key, item.value);
-    });
+      items = data, // array of AreaData objects
+      listItems = items.map(function (item) {
+        return buildListItem(item.key, item.value);
+      });
 
     // return only the input elements
     return $('#my-list').empty().append(listItems).find('input');
