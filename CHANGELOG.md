@@ -12,6 +12,12 @@
 - Zoom to Area
 - Make callback data structures consistent
 
+## Version 1.9.0 - 2024.12.24
+
+- chore: update dependencies
+- chore: migrate to eslint v9 flat config
+- chore (website): update to Astro v5
+
 ## Version 1.8.1 - 2024.12.21
 
 - [Issue 424](https://github.com/jamietre/ImageMapster/issues/424) ✨ Support configurable scale boundaries during resize
