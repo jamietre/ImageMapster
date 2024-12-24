@@ -184,7 +184,7 @@ module.exports = function (grunt) {
         failOnError: true
       },
       npmpublish: {
-        command: 'npm publish --otp 697464'
+        command: 'npm publish'
       },
       npmpublishpre: {
         command: 'npm publish --tag next'
