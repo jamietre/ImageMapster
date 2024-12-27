@@ -1,5 +1,5 @@
 /*!
-* imagemapster - v1.9.0 - 2024-12-24
+* imagemapster - v1.9.1 - 2024-12-27
 * https://jamietre.github.io/ImageMapster
 * Copyright (c) 2011 - 2024 James Treworgy
 * License: MIT
@@ -27,7 +27,7 @@ function imagemapsterFactory(jQuery) {
       });
       window.addEventListener('testPassive.mapster', function () {}, opts);
       window.removeEventListener('testPassive.mapster', function () {}, opts);
-      // eslint-disable-next-line no-unused-vars
+      // eslint-disable-next-line no-unused-vars -- intentionally ignoring
     } catch (e) {
       // intentionally ignored
     }
@@ -90,7 +90,7 @@ function imagemapsterFactory(jQuery) {
  *
  * Requires: jQuery >= 1.2.3
  */
-/* eslint-disable one-var */
+/* eslint-disable one-var -- code directly from jquery source */
 (function ($) {
   'use strict';
 
@@ -199,7 +199,7 @@ function imagemapsterFactory(jQuery) {
 (function ($) {
   'use strict';
 
-  var mapster_version = '1.9.0';
+  var mapster_version = '1.9.1';
 
   // all public functions in $.mapster.impl are methods
   $.fn.mapster = function (method) {
@@ -299,7 +299,7 @@ function imagemapsterFactory(jQuery) {
       when: {
         all: function (deferredArray) {
           // TODO: Promise breaks ES5 support
-          // eslint-disable-next-line no-undef
+          // eslint-disable-next-line no-undef -- requires polyfill per imagemapster docs
           return Promise.all(deferredArray);
         },
         defer: function () {
@@ -309,7 +309,7 @@ function imagemapsterFactory(jQuery) {
           // polyfill via native promise
           var Deferred = function () {
             // TODO: Promise breaks ES5 support
-            // eslint-disable-next-line no-undef
+            // eslint-disable-next-line no-undef  -- requires polyfill per imagemapster docs
             this.promise = new Promise(
               function (resolve, reject) {
                 this.resolve = resolve;

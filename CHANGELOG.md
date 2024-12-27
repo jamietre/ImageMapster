@@ -12,6 +12,12 @@
 - Zoom to Area
 - Make callback data structures consistent
 
+## Version 1.9.1 - 2024.12.27
+
+- chore: improve eslint config & fix issues
+- chore: fix broken links in docs
+- chore: update dependencies
+
 ## Version 1.9.0 - 2024.12.24
 
 - chore: update dependencies
