@@ -8,12 +8,14 @@ $(function () {
       render_highlight: {
         fillColor: '2aff00',
         stroke: true,
-        altImage: `https://raw.githubusercontent.com/jamietre/ImageMapster/master/examples/images/usa_map_720_alt_4.jpg`
+        altImage:
+          'https://raw.githubusercontent.com/jamietre/ImageMapster/master/examples/images/usa_map_720_alt_4.jpg'
       },
       render_select: {
         fillColor: 'ff000c',
         stroke: false,
-        altImage: `https://raw.githubusercontent.com/jamietre/ImageMapster/master/examples/images/usa_map_720_alt_5.jpg`
+        altImage:
+          'https://raw.githubusercontent.com/jamietre/ImageMapster/master/examples/images/usa_map_720_alt_5.jpg'
       },
       fadeInterval: 50,
       mapKey: 'data-state',

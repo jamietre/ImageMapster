@@ -9,8 +9,8 @@ const sharedConfig = {
   // astro hasn't made import.meta.env available yet so we need
   // to use process to obtain variables
   // https://github.com/withastro/astro/issues/3897#issuecomment-1181381500
-  base: process.env.BASE_PATH || 'ImageMapster',
-  site: process.env.SITE_URL || 'https://jamietre.github.io',
+  base: ensureLeadingSlash(process.env.BASE_PATH ?? 'ImageMapster'),
+  site: process.env.SITE_URL ?? 'https://jamietre.github.io',
   // github pages redirects to trailingSlash urls so force dev
   // server to use them to help ensure we are using proper
   // paths and avoid unnecessary 301's by GH servers
@@ -19,8 +19,6 @@ const sharedConfig = {
 
 export default defineConfig({
   ...sharedConfig,
-  site: process.env.SITE_URL || 'https://jamietre.github.io',
-  base: ensureLeadingSlash(process.env.BASE_PATH || 'ImageMapster'),
   vite: {
     resolve: {
       /*

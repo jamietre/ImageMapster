@@ -1,6 +1,6 @@
 $(function () {
   // a cross reference of area names to text for each area's tooltip
-  const xref = {
+  var xref = {
       carrots: '<b>Carrots</b> are delicious and may turn your skin orange!',
       asparagus:
         "<b>Asparagus</b> is one of the first vegetables of the spring. Being a dark green, it's great for you, and has interesting side effects.",

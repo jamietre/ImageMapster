@@ -1,128 +1,83 @@
-import html from 'eslint-plugin-html';
 import globals from 'globals';
-import path from 'node:path';
+import pluginJs from '@eslint/js';
+import pluginTypeScript from 'typescript-eslint';
+import eslintPluginYml from 'eslint-plugin-yml';
+import eslintPluginAstro from 'eslint-plugin-astro';
+import eslintPluginJsonc from 'eslint-plugin-jsonc';
+import eslintPluginHtmlInlineScripts from 'eslint-plugin-html';
+import eslintConfigPrettier from 'eslint-config-prettier';
+import eslintPluginHtml from '@html-eslint/eslint-plugin';
+import eslintPluginHtmlParser from '@html-eslint/parser';
+import eslintPluginMdx from 'eslint-plugin-mdx';
+import { dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { FlatCompat } from '@eslint/eslintrc';
-import mdxeslint from 'eslint-plugin-mdx';
-import jseslint from '@eslint/js';
-import tseslint from 'typescript-eslint';
-import eslintPluginAstro from 'eslint-plugin-astro';
-import eslintConfigPrettier from 'eslint-config-prettier';
-import eslintPluginYml from 'eslint-plugin-yml';
-import eslintPluginJsonc from 'eslint-plugin-jsonc';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+// TODO: Change to import.meta.dirname once Node 18 is no longer supported (Node >= >=20.11.0)
+const __dirname = dirname(fileURLToPath(import.meta.url));
+
 const compat = new FlatCompat({
   baseDirectory: __dirname
 });
 
+/** @type {import('eslint').Linter.Config[]} */
 export default [
-  {
-    files: [
-      '**/*.js',
-      '**/*.jsx',
-      '**/*.cjs',
-      '**/*.mjs',
-      '**/*.html',
-      '**/*.yml',
-      '**/*.yaml',
-      '**/*.md',
-      '**/*.mdx',
-      '**/*.json',
-      '**/*.jsonc',
-      '**/*.ts',
-      '**/*.tsx',
-      '**/*.astro'
-    ]
-  },
+  ...[
+    ...compat.extends('jquery'),
+    {
+      languageOptions: {
+        sourceType: 'script',
+        ecmaVersion: 5,
+        globals: { ...globals.browser, ...globals.jquery }
+      },
+      rules: {
+        'one-var': ['error', { var: 'consecutive' }],
+        strict: ['error', 'function'],
+        'no-nested-ternary': 0,
+        camelcase: 0,
+        'no-console': ['error', { allow: ['warn', 'error'] }]
+      }
+    }
+  ].map((cfg) => ({
+    ignores: [
+      'site/**',
+      '!site/src/components/demos/**/map.{js,html}',
+      '**/*.{mjs,cjs}'
+    ],
+    ...cfg
+  })),
   {
     ignores: [
-      'tests/redist/',
-      'examples/redist/',
-      '**/build/',
-      '**/dist/',
-      '**/node_modules/',
-      '!.github',
-      '!.vscode',
-      '**/package-lock.json',
-      '!**/.*.json',
-      '!**/.*.jsonc',
-      'docs/',
-      '**/*.d.ts',
-      '**/.astro/'
+      '**/redist/**',
+      '**/build/**',
+      '**/dist/**',
+      '**/.astro/**',
+      'docs/**'
     ]
   },
-  jseslint.configs.recommended,
-  ...compat.extends('jquery'),
-  eslintConfigPrettier,
-  ...eslintPluginYml.configs['flat/standard'],
-  ...eslintPluginYml.configs['flat/prettier'],
-  ...eslintPluginJsonc.configs['flat/recommended-with-jsonc'],
-  ...eslintPluginAstro.configs.recommended,
   {
-    plugins: {
-      html
-    },
-    linterOptions: {
-      reportUnusedDisableDirectives: true
-    },
+    files: ['site/src/components/demos/**/map.js'],
     languageOptions: {
-      globals: {
-        ...globals.browser,
-        ...globals.jquery
-      },
-      ecmaVersion: 5,
-      sourceType: 'script'
-    },
-    settings: {
-      'html/indent': '+2',
-      'html/report-bad-indent': 'error'
-    },
-    rules: {
-      'one-var': ['error', { var: 'consecutive' }],
-      strict: ['error', 'function'],
-      'no-nested-ternary': 0,
-      camelcase: 0,
-      'no-console': ['error', { allow: ['warn', 'error'] }]
-    }
-  },
-  {
-    ...mdxeslint.flat,
-    processor: mdxeslint.createRemarkProcessor({
-      lintCodeBlocks: true
-    }),
-    rules: {
-      ...mdxeslint.flat.rules,
-      'no-unused-vars': 'off'
-    }
-  },
-  mdxeslint.flatCodeBlocks,
-  {
-    files: ['**/*.mjs'],
-    languageOptions: {
-      ecmaVersion: 'latest',
-      sourceType: 'module'
-    }
-  },
-  {
-    files: ['.remarkrc.js'],
-    languageOptions: {
-      globals: {
-        ...globals.node
+      parserOptions: {
+        ecmaFeatures: {
+          // these files are directly displayed in `Scripts` tab in website so avoid having to include use strict
+          impliedStrict: true
+        }
       }
     }
   },
   {
-    files: ['site/**/*'],
-    languageOptions: {
-      ecmaVersion: 'latest',
-      sourceType: 'module'
-    }
+    files: ['.remarkrc.cjs'],
+    languageOptions: { globals: { ...globals.node } }
   },
-  ...tseslint.config({
-    files: ['site/**/*.ts'],
-    extends: [tseslint.configs.recommended],
+  pluginJs.configs.recommended,
+  ...pluginTypeScript.config({
+    files: ['site/**/*.{js,mjs,cjs,ts}'],
+    ignores: ['site/src/components/demos/**/map.js'],
+    extends: [
+      pluginTypeScript.configs.strictTypeChecked,
+      pluginTypeScript.configs.stylisticTypeChecked
+    ],
     languageOptions: {
       parserOptions: {
         project: true,
@@ -130,12 +85,67 @@ export default [
       }
     }
   }),
+  ...eslintPluginAstro.configs.recommended,
   {
-    files: ['site/astro.config.mjs'],
-    languageOptions: {
-      globals: {
-        ...globals.node
-      }
+    ...eslintPluginMdx.flat,
+    processor: eslintPluginMdx.createRemarkProcessor({
+      lintCodeBlocks: true
+    }),
+    rules: {
+      ...eslintPluginMdx.flat.rules,
+      'no-unused-vars': 'off'
     }
-  }
+  },
+  {
+    ...eslintPluginMdx.flatCodeBlocks,
+    rules: {
+      ...eslintPluginMdx.flatCodeBlocks.rules,
+      'no-var': 'off',
+      '@typescript-eslint/no-unused-vars': 'off',
+      '@typescript-eslint/no-require-imports': 'off'
+    }
+  },
+  {
+    // Configuration for `<script>` tag using TypeScript in `.astro` files and code blocks in markdown.
+    files: ['site/**/*.astro/*.ts', 'site/**/*.{md,mdx}/*.js'],
+    languageOptions: {
+      parserOptions: {
+        project: false
+      }
+    },
+    rules: {
+      ...pluginTypeScript.configs.disableTypeChecked.rules
+    }
+  },
+  ...eslintPluginYml.configs['flat/recommended'],
+  ...eslintPluginJsonc.configs['flat/recommended-with-jsonc'],
+  {
+    ...eslintPluginHtml.configs['flat/recommended'],
+    files: ['**/*.html'],
+    plugins: {
+      eslintPluginHtmlInlineScripts,
+      '@html-eslint': eslintPluginHtml
+    },
+    languageOptions: {
+      parser: eslintPluginHtmlParser
+    },
+    settings: {
+      'html/indent': '+2',
+      'html/report-bad-indent': 'error'
+    },
+    rules: {
+      ...eslintPluginHtml.configs['flat/recommended'].rules,
+      '@html-eslint/require-img-alt': 'off',
+      /* Disable rules that conflict with prettier */
+      '@html-eslint/require-closing-tags': 'off',
+      '@html-eslint/no-multiple-empty-lines': 'off',
+      '@html-eslint/no-extra-spacing-attrs': 'off',
+      '@html-eslint/element-newline': 'off',
+      '@html-eslint/indent': 'off',
+      '@html-eslint/quotes': 'off',
+      '@html-eslint/no-trailing-spaces': 'off',
+      '@html-eslint/attrs-newline': 'off'
+    }
+  },
+  eslintConfigPrettier
 ];

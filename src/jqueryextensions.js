@@ -18,7 +18,7 @@
       });
       window.addEventListener('testPassive.mapster', function () {}, opts);
       window.removeEventListener('testPassive.mapster', function () {}, opts);
-      // eslint-disable-next-line no-unused-vars
+      // eslint-disable-next-line no-unused-vars -- intentionally ignoring
     } catch (e) {
       // intentionally ignored
     }
@@ -81,7 +81,7 @@
  *
  * Requires: jQuery >= 1.2.3
  */
-/* eslint-disable one-var */
+/* eslint-disable one-var -- code directly from jquery source */
 (function ($) {
   'use strict';
 

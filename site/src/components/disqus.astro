@@ -30,8 +30,7 @@ const { pageId, pageUrl } = Astro.props;
   }
 </style>
 <script is:inline>
-  // NOTE - This must be a var as its wrapped by disqus which expects
-  // it on window.disqus_config and it modifies `this`
+  // eslint-disable-next-line no-var -- disqus expects it on window.disqus_config
   var disqus_config = function () {
     const container = document.getElementById('disqus_thread');
     this.page.url = container.dataset.disqusUrl;

@@ -1,5 +1,5 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en-US">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
     <title>Bound List Test</title>
@@ -67,26 +67,6 @@
                 'data-name': key
               }).text(description)
             );
-        }
-
-        // eslint-disable-next-line no-unused-vars
-        function getBoundListForAreas(areas) {
-          var listItems = $.map(areas, function (area) {
-            var $a = $(area),
-              key = $a.data('name'),
-              description = $a.data('description');
-
-            return buildListItem(key, description);
-          });
-          return $veglist.empty().append(listItems).find('input');
-        }
-
-        // eslint-disable-next-line no-unused-vars
-        function getBoundListFromItems(items) {
-          var listItems = $.map(items, function (item) {
-            return buildListItem(item.key, item.value);
-          });
-          return $veglist.empty().append(listItems).find('input');
         }
 
         var $image = $('#veg_image'),

@@ -7,7 +7,7 @@ Shared resources, setup & teardown. This must be included for all tests.
 /* global iqtest */
 /* exported image areas map_options u */
 
-/* eslint-disable no-unused-vars */
+/* eslint-disable no-unused-vars -- globals used by other test files */
 var image,
   areas,
   map_options,

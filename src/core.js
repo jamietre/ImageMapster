@@ -106,7 +106,7 @@
       when: {
         all: function (deferredArray) {
           // TODO: Promise breaks ES5 support
-          // eslint-disable-next-line no-undef
+          // eslint-disable-next-line no-undef -- requires polyfill per imagemapster docs
           return Promise.all(deferredArray);
         },
         defer: function () {
@@ -116,7 +116,7 @@
           // polyfill via native promise
           var Deferred = function () {
             // TODO: Promise breaks ES5 support
-            // eslint-disable-next-line no-undef
+            // eslint-disable-next-line no-undef  -- requires polyfill per imagemapster docs
             this.promise = new Promise(
               function (resolve, reject) {
                 this.resolve = resolve;

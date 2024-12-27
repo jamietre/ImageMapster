@@ -1,9 +1,6 @@
-// eslint-disable-next-line no-undef
 var doccoNext = require('docco-next');
 
-// eslint-disable-next-line strict, no-undef
 module.exports = function (grunt) {
-  // eslint-disable-next-line no-undef
   require('jit-grunt')(grunt, {
     'bump-only': 'grunt-bump',
     'bump-commit': 'grunt-bump'
