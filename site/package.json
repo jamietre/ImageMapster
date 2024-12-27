@@ -13,7 +13,7 @@
     "@astrojs/check": "^0.9.4",
     "@astrojs/starlight": "^0.30.3",
     "astro": "^5.1.1",
-    "astro-rehype-relative-markdown-links": "^0.17.3",
+    "astro-rehype-relative-markdown-links": "^0.18.1",
     "jquery": "^3.7.1",
     "rehype-autolink-headings": "^7.1.0",
     "rehype-external-links": "^3.0.0",
