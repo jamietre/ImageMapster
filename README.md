@@ -13,7 +13,7 @@ ImageMapster activates the areas in HTML image maps so you can highlight and sel
 
 ## Documentation
 
-See the [ImageMapster website](https://jamietre.github.io/ImageMapster) for full documentation including [how to get started](https://jamietre.github.io/ImageMapster/overview/getting-started/), [demos](https://jamietre.github.io/ImageMapster/overview/demos/), and [live examples](https://jamietre.github.io/ImageMapster/resources/live-examples/).
+See the [ImageMapster website](https://jamietre.github.io/ImageMapster/) for full documentation including [how to get started](https://jamietre.github.io/ImageMapster/overview/getting-started/), [demos](https://jamietre.github.io/ImageMapster/overview/demos/), and [live examples](https://jamietre.github.io/ImageMapster/resources/live-examples/).
 
 ## Release Information
 

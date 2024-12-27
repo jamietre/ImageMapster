@@ -3,7 +3,7 @@ title: Configuration Reference
 description: Overview of all the available configuration options.
 ---
 
-To activate all [image maps](http://en.wikipedia.org/wiki/Image_map) on the page with
+To activate all [image maps](https://en.wikipedia.org/wiki/Image_map) on the page with
 the default options, after [installing](../overview//getting-started.md#installation), just add the following to your page:
 
 ```html
@@ -906,7 +906,7 @@ When `truthy` (e.g., not null/empty) and [showToolTip](#showtooltip) is `true`, 
 When specifying a function, the `data` parameter will contain:
 
 - `key`: The [mapKey](#mapkey) of the area associated to the tooltip. If the tooltip was invoked programmatically on an HTMLElement not associated with the map, the value will be `null`.
-- `target`: An [HTMLAreaElement](https://developer.mozilla.org/en-US/docs/Web/API/HTMLAreaElement) if tooltip was triggered by mouseover or an array of [HTMLElement](https://developer.mozilla.org/en-US/docs/Web/API/HTMLelement) if the tooltip was programmatically invoked. When programmatically invoked, the array of HTMLElements will contain all HTMLElements associated with the `key` that was specified in [tooltip](./api-reference.md#tooltip) API call.
+- `target`: An [HTMLAreaElement](https://developer.mozilla.org/en-US/docs/Web/API/HTMLAreaElement) if tooltip was triggered by mouseover or an array of [HTMLElement](https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement) if the tooltip was programmatically invoked. When programmatically invoked, the array of HTMLElements will contain all HTMLElements associated with the `key` that was specified in [tooltip](./api-reference.md#tooltip) API call.
 
 [Live Example](https://html-preview.github.io/?url=https://raw.githubusercontent.com/jamietre/ImageMapster/main/examples/tooltips.html)
 

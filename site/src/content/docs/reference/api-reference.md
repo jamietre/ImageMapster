@@ -11,7 +11,7 @@ The ImageMapster API allows you to control the image maps through code. This can
 $('img').mapster(options);
 ```
 
-All images in the jQuery collection that contain a [usemap](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/img#usemap`) attribute that references a valid [map](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/map) element will be bound using the `options` specified.
+All images in the jQuery collection that contain a [usemap](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/img#usemap) attribute that references a valid [map](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/map) element will be bound using the `options` specified.
 
 For details on the available options, see [Configuration Reference][cr-base].
 

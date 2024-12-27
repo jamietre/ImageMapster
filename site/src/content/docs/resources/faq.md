@@ -20,7 +20,7 @@ If you're having an issue or are wondering how to accomplish something with Imag
 ## Is ImageMapster free?
 
 Yes. You can use it in any way you want to, under the terms of the
-[MIT license](http://en.wikipedia.org/wiki/MIT_License).
+[MIT license](https://en.wikipedia.org/wiki/MIT_License).
 
 ## How can I thank you for your work?
 
@@ -87,13 +87,13 @@ There are lots of ways to do this.
 
 1. Use an online tool such as [image-map.net](https://www.image-map.net/).
 2. Commercial drawing tools like Photoshop have capabilities to create image maps.
-3. If you're creating a map for a geographical entity, like states or countries, someone's probably done it already. Google is your friend. Check [Wikipedia Commons](http://commons.wikimedia.org/wiki/Commons:Image_map_resources) for public domain maps, too.
+3. If you're creating a map for a geographical entity, like states or countries, someone's probably done it already. Google is your friend. Check [Wikipedia Commons](https://commons.wikimedia.org/wiki/Commons:Image_map_resources) for public domain maps, too.
 
 ## How can I scale image maps to a different size?
 
 You can let ImageMapster do it for you with the [scaleMap][cr-scalemap] option. It will automatically adjust the map data when it detects that an image is not being shown in its native size. Most of the time, this is what you'd want, because most of the time an HTML image map would be designed around the native size of an image. If you don't want this behavior for some reason, you can turn set `scaleMap: false` and ImageMapster will not adjust your image map no matter what. Be aware that auto-scaling is different than auto-resizing. If you are using [autoResize][cr-autoresize], you will want to maintain the default value of `true` for `scaleMap`, otherwise your hotspots will not be located in the expected location.
 
-If you just want to use an image at a different size than the image map you happen to have represents, and would rather not have your users download an image at a larger size than you need, then you can transform it to the correct size using the [Image Map Resizer](http://blog.outsharked.com/p/quick-tricks.html) tool. This tool will also let you define a clipping area if you want to create a new image map that represents a cropped area within a map you already have.
+If you just want to use an image at a different size than the image map you happen to have represents, and would rather not have your users download an image at a larger size than you need, then you can transform it to the correct size using an image map resizing tool.
 
 ## Couldn't I do something like this with CSS3?
 
@@ -106,7 +106,7 @@ An image map doesn't really do anything other than let the browser detect when t
 You can convert SVG data to an HTML image map without too much trouble. Here are a couple resources:
 
 - [Creating an image map from SVG](https://davidlynch.org/blog/2008/03/creating-an-image-map-from-svg/)
-- [Inkscape Map](http://sourceforge.net/projects/inkscapemap/)
+- [Inkscape Map](https://sourceforge.net/projects/inkscapemap/)
 
 The actual data and shapes used by SVG and HTML image maps are pretty much identical so it's really a matter of transforming the markup.
 

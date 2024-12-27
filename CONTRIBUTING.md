@@ -18,7 +18,7 @@ A bug is a _demonstrable problem_ that is caused by the code in the repository. 
 
 Guidelines for bug reports:
 
-1. **Lint your code** - Use [eslint](http://eslint.org/) to ensure your problem isn't caused by a simple error in your own code.
+1. **Lint your code** - Use [eslint](https://eslint.org/) to ensure your problem isn't caused by a simple error in your own code.
 2. **Use the GitHub issue search** - Check if the issue has already been [reported](https://github.com/jamietre/ImageMapster/issues?q=is%3Aissue+).
 3. **Check if the issue has been fixed** - Try to reproduce it using the latest `main` or development branch in the repository.
 4. **Isolate the problem** - Create a [reduced test case](https://css-tricks.com/reduced-test-cases/) and a [live example](https://jsfiddle.net) using the latest version of ImageMapster and preferrably, the latest version of jQuery/zepto.

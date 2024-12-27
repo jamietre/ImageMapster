@@ -31,7 +31,18 @@ module.exports = {
     'remark-validate-links',
     // remark-link-no-dead-urls slows down eslint a lot so we disable during standard processing
     // and check external urls only when explicitly enabled (e.g., dist build)
-    process.env.CHECK_LINKS ? 'remark-lint-no-dead-urls' : null,
+    process.env.CHECK_LINKS
+      ? [
+          'remark-lint-no-dead-urls',
+          {
+            // TODO: jsFiddle sits behind cloudflare which has a human detector
+            // there may be a way using https://radar.cloudflare.com/ to bypass
+            // but dead-or-alive library doesn't support.  Need to find a solution
+            // to validate jsfiddle urls.
+            skipUrlPatterns: [/^https:\/\/(www\.)?jsfiddle\.net\/[^\s]*$/]
+          }
+        ]
+      : null,
     'remark-frontmatter',
     'remark-gfm'
   ].filter(Boolean)
