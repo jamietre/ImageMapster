@@ -1,3 +1,4 @@
+// @ts-check
 import { defineConfig } from 'astro/config';
 import starlight from '@astrojs/starlight';
 import { rehypeAutoLink, rehypeExternalLink } from './plugins/rehype.ts';
@@ -5,6 +6,7 @@ import rehypeSlug from 'rehype-slug';
 import rehypeAstroRelativeMarkdownLinks from 'astro-rehype-relative-markdown-links';
 import { ensureLeadingSlash } from './node_modules/@astrojs/starlight/utils/path';
 
+/** @type {{ base: string, site: string, trailingSlash: import('astro').AstroConfig["trailingSlash"] }} */
 const sharedConfig = {
   // astro hasn't made import.meta.env available yet so we need
   // to use process to obtain variables
