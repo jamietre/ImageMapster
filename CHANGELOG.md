@@ -12,6 +12,11 @@
 - Zoom to Area
 - Make callback data structures consistent
 
+## Version 1.9.2 - 2024.12.31
+
+- [Issue 427](https://github.com/jamietre/ImageMapster/issues/427) 🐞 imagemapster is not bound to an image map when imagemapster is "re"-initialized
+- chore: migrate remark & prettier config to mjs
+
 ## Version 1.9.1 - 2024.12.27
 
 - chore: improve eslint config & fix issues

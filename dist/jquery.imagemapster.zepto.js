@@ -1,5 +1,5 @@
 /*!
-* imagemapster - v1.9.1 - 2024-12-27
+* imagemapster - v1.9.2 - 2024-12-31
 * https://jamietre.github.io/ImageMapster
 * Copyright (c) 2011 - 2024 James Treworgy
 * License: MIT
@@ -290,7 +290,7 @@
 (function ($) {
   'use strict';
 
-  var mapster_version = '1.9.1';
+  var mapster_version = '1.9.2';
 
   // all public functions in $.mapster.impl are methods
   $.fn.mapster = function (method) {
@@ -1307,8 +1307,11 @@
         if (md) {
           me.unbind.apply(img);
           if (!md.complete) {
-            // will be queued
-            return true;
+            // in most situations, queueCommand should return true since we just queued unbind, however
+            // if not successfully queued, nothing remains in-process so we can continue
+            if (m.queueCommand(md, img, 'bind', [options])) {
+              return true;
+            }
           }
           md = null;
         }

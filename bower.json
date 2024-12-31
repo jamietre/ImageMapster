@@ -1,6 +1,6 @@
 {
   "name": "ImageMapster",
-  "version": "1.9.1",
+  "version": "1.9.2",
   "homepage": "https://jamietre.github.io/ImageMapster",
   "description": "jQuery plugin that activates areas in HTML image maps with support for highlighting, selecting, tooltips, resizing and more",
   "main": "dist/jquery.imagemapster.min.js",
