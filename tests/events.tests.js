@@ -4,6 +4,74 @@ this.tests = this.tests || [];
 
 this.tests.push(
   iqtest
+    .create('initialize', 'multiple initialization')
+    .add('is initialized when multiple initializations', function (a) {
+      'use strict';
+
+      var me = this,
+        getPromise = function (name) {
+          return me.promises(name);
+        };
+
+      image.mapster(
+        $.extend(map_options, {
+          onConfigured: getPromise('configured').resolve
+        })
+      );
+
+      image.mapster(
+        $.extend(map_options, {
+          onConfigured: getPromise('configured2').resolve
+        })
+      );
+
+      getPromise('configured').then(function () {
+        getPromise('configured2').then(function () {
+          getPromise('finished').resolve();
+        });
+      });
+
+      a.resolves(getPromise('finished'), 'Configured was called 2 times');
+    })
+);
+
+this.tests.push(
+  iqtest
+    .create('initialize_unbind', 'multiple initialization with unbind')
+    .add('is initialized when init, unbind, init', function (a) {
+      'use strict';
+
+      var me = this,
+        getPromise = function (name) {
+          return me.promises(name);
+        };
+
+      image.mapster(
+        $.extend(map_options, {
+          onConfigured: getPromise('configured').resolve
+        })
+      );
+
+      image.mapster('unbind');
+
+      image.mapster(
+        $.extend(map_options, {
+          onConfigured: getPromise('configured2').resolve
+        })
+      );
+
+      getPromise('configured').then(function () {
+        getPromise('configured2').then(function () {
+          getPromise('finished').resolve();
+        });
+      });
+
+      a.resolves(getPromise('finished'), 'Configured was called 2 times');
+    })
+);
+
+this.tests.push(
+  iqtest
     .create('events', 'tests for imagemapster events')
     .add('Mouse Events', function (a) {
       'use strict';

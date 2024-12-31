@@ -1,0 +1,170 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en-US">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Multiple Initialization Test</title>
+
+    <script
+      type="text/javascript"
+      src="https://cdn.jsdelivr.net/npm/es6-promise/dist/es6-promise.auto.min.js"
+    ></script>
+
+    <script type="text/javascript" src="redist/jquery.3.7.1.min.js"></script>
+    <script
+      type="text/javascript"
+      src="../dist/jquery.imagemapster.js"
+    ></script>
+
+    <!-- <script type="text/javascript" src="redist/zepto.1.2.0.min.js"></script>
+    <script
+      type="text/javascript"
+      src="../dist/jquery.imagemapster.zepto.js"
+    ></script> -->
+
+    <link rel="stylesheet" href="stylesheets/base.css" />
+    <script>
+      $(function () {
+        'use strict';
+
+        var $frogImg = $('#frog-img'),
+          $beatlesImg = $('#beatles-img'),
+          frogCounter = 0,
+          beatlesCounter = 0,
+          frogOpts = {
+            mapKey: 'data-name',
+            onConfigured: function () {
+              $('#frogOnConfigured').text(++frogCounter);
+            }
+          },
+          beatlesOpts = {
+            mapKey: 'data-name',
+            onConfigured: function () {
+              $('#beatlesOnConfigured').text(++beatlesCounter);
+            }
+          };
+
+        $frogImg.mapster(frogOpts);
+        $frogImg.mapster(frogOpts);
+
+        $beatlesImg.mapster(beatlesOpts);
+        $beatlesImg.mapster('unbind');
+        $beatlesImg.mapster(beatlesOpts);
+      });
+    </script>
+  </head>
+
+  <body>
+    <div class="navmenu">
+      Return to <a href="index.html">Main Menu</a>
+      <hr />
+    </div>
+    <h2>Multiple Initialization Test</h2>
+    <p>
+      Test 'initialize' to ensure mapster is properly initialized when multiple
+      calls to initialize are made.
+    </p>
+    <p>The behavior should be:</p>
+    <ul>
+      <li>When hovering over a hotspot on either image, it should highlight</li>
+      <li>onConfigured count should be two (2) for each image map</li>
+    </ul>
+
+    <h3>Frog</h3>
+    <p>Calls mapster multiple times in succession</p>
+    <p>Frog onConfigured called: <span id="frogOnConfigured">0</span> times</p>
+    <div>
+      <img id="frog-img" src="images/frog_map.jpg" usemap="#frog-map" />
+
+      <map name="frog-map">
+        <area
+          shape="rect"
+          data-name="menu1hot"
+          coords="10,10,120,330"
+          href="#"
+        />
+        <area shape="rect" data-name="menu1" coords="10,340,110,390" href="#" />
+        <area
+          shape="rect"
+          data-name="menu2hot"
+          coords="120,10,230,330"
+          href="#"
+        />
+        <area
+          shape="rect"
+          data-name="menu2"
+          coords="120,340,220,390"
+          href="#"
+        />
+        <area
+          shape="rect"
+          data-name="menu3hot"
+          coords="230,10,340,330"
+          href="#"
+        />
+        <area
+          shape="rect"
+          data-name="menu3"
+          coords="230,340,330,390"
+          href="#"
+        />
+        <area
+          shape="rect"
+          data-name="menu4hot"
+          coords="340,10,450,330"
+          href="#"
+        />
+        <area
+          shape="rect"
+          data-name="menu4"
+          coords="340,340,440,390"
+          href="#"
+        />
+      </map>
+    </div>
+
+    <h3>Beatles</h3>
+    <p>Calls mapster, then unbind, then mapster again in succession</p>
+    <p>
+      Beatles onConfigured called: <span id="beatlesOnConfigured">0</span> times
+    </p>
+    <div>
+      <img
+        id="beatles-img"
+        src="images/beatles_basic.jpg"
+        style="width: 400px; height: 240px"
+        usemap="#beatles-map"
+      />
+
+      <map name="beatles-map">
+        <area
+          id="paul"
+          shape="rect"
+          data-name="paul,beatles"
+          coords="36,46,121,131"
+          href="#"
+        />
+        <area
+          id="ringo"
+          shape="rect"
+          data-name="ringo,beatles"
+          coords="113,76,198,161"
+          href="#"
+        />
+        <area
+          id="john"
+          shape="rect"
+          data-name="john,beatles"
+          coords="192,50,277,135"
+          href="#"
+        />
+        <area
+          id="george"
+          shape="rect"
+          data-name="george,beatles"
+          coords="262,60,347,145"
+          href="#"
+        />
+      </map>
+    </div>
+  </body>
+</html>
