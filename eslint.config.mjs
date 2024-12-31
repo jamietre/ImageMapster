@@ -67,7 +67,7 @@ export default [
     }
   },
   {
-    files: ['.remarkrc.cjs'],
+    files: ['.remarkrc.mjs'],
     languageOptions: { globals: { ...globals.node } }
   },
   pluginJs.configs.recommended,
