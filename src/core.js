@@ -1023,8 +1023,11 @@
         if (md) {
           me.unbind.apply(img);
           if (!md.complete) {
-            // will be queued
-            return true;
+            // in most situations, queueCommand should return true since we just queued unbind, however
+            // if not successfully queued, nothing remains in-process so we can continue
+            if (m.queueCommand(md, img, 'bind', [options])) {
+              return true;
+            }
           }
           md = null;
         }
