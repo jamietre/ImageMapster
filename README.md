@@ -104,4 +104,4 @@ The source code is broken into several modules to make management easier and to 
 
 ## License
 
-Copyright © 2011-24 [James Treworgy](https://github.com/jamietre). Licensed under the [MIT License](LICENSE).
+Copyright © 2011-2025 [James Treworgy](https://github.com/jamietre). Licensed under the [MIT License](LICENSE).
